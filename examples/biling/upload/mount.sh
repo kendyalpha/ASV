@@ -1,0 +1,1 @@
+sshfs -o allow_other skloe@192.168.1.100:/home/skloe/Coding /mnt/sshfs/

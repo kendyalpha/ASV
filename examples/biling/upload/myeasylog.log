@@ -1,0 +1,741 @@
+2019-07-09 15:09:51,577 INFO [default] The program has started!
+2019-07-09 15:09:51,579 INFO [gui-serial]  serial port open successful!
+2019-07-09 15:09:52,673 INFO [GPS] initialation successful!
+2019-07-09 15:09:52,773 INFO [estimator] Too much time!
+2019-07-09 15:09:57,925 INFO [PLC] Servo and PLC initialation successful!
+2019-07-09 15:09:58,126 INFO [controller] Too much time!
+2019-07-09 15:10:19,008 ERROR [sql] SQL logic error
+2019-07-09 15:10:54,045 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x55f9bed2cb28] 
+    [2] ./testbiling(+0x25d09) [0x55f9bed2cd09] 
+    [3]  0x41100) [0x7fcfdd8d1100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7fcfdd8d1100]
+    [4]  0x42) [0x7fcfdd999f62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7fcfdd999f62]
+    [5]  0x148) [0x7fcfdd91cc88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7fcfdd91cc88]
+    [6]  0x32) [0x7fcfdd91df92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7fcfdd91df92]
+    [7]  0x105) [0x7fcfdd917de5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7fcfdd917de5]
+    [8] ./testbiling(+0x55aa1) [0x55f9bed5caa1] 
+    [9]  0xeb) [0x7fcfdd8b409b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7fcfdd8b409b]
+    [10] ./testbiling(+0x13cda) [0x55f9bed1acda] 
+
+2019-07-09 15:10:54,045 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-09 16:25:43,827 INFO [default] The program has started!
+2019-07-09 16:25:43,844 INFO [gui-serial]  serial port open successful!
+2019-07-09 16:25:44,954 INFO [GPS] initialation successful!
+2019-07-09 16:25:45,055 INFO [estimator] Too much time!
+2019-07-09 16:26:25,237 INFO [PLC] Servo and PLC initialation successful!
+2019-07-09 16:26:25,438 INFO [controller] Too much time!
+2019-07-09 16:31:40,698 ERROR [sql] SQL logic error
+2019-07-09 16:31:49,308 ERROR [sql] SQL logic error
+2019-07-09 16:32:19,303 ERROR [sql] SQL logic error
+2019-07-09 16:32:19,515 ERROR [sql] SQL logic error
+2019-07-09 16:32:52,007 ERROR [sql] SQL logic error
+2019-07-09 16:32:52,802 ERROR [sql] SQL logic error
+2019-07-09 16:33:32,908 ERROR [sql] SQL logic error
+2019-07-09 16:33:34,608 ERROR [sql] SQL logic error
+2019-07-09 16:34:14,803 ERROR [sql] SQL logic error
+2019-07-09 16:34:23,705 ERROR [sql] SQL logic error
+2019-07-09 16:35:27,004 ERROR [sql] SQL logic error
+2019-07-09 16:39:03,306 ERROR [sql] SQL logic error
+2019-07-09 16:39:14,715 ERROR [sql] SQL logic error
+2019-07-09 16:44:40,575 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x55bcd8f2db28] 
+    [2] ./testbiling(+0x25d09) [0x55bcd8f2dd09] 
+    [3]  0x41100) [0x7f3c56382100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7f3c56382100]
+    [4]  0x42) [0x7f3c5644af62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7f3c5644af62]
+    [5]  0x148) [0x7f3c563cdc88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7f3c563cdc88]
+    [6]  0x32) [0x7f3c563cef92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7f3c563cef92]
+    [7]  0x105) [0x7f3c563c8de5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7f3c563c8de5]
+    [8] ./testbiling(+0x55aa1) [0x55bcd8f5daa1] 
+    [9]  0xeb) [0x7f3c5636509b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7f3c5636509b]
+    [10] ./testbiling(+0x13cda) [0x55bcd8f1bcda] 
+
+2019-07-09 16:44:40,575 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 09:03:28,927 INFO [default] The program has started!
+2019-07-10 09:03:28,943 INFO [gui-serial]  serial port open successful!
+2019-07-10 09:03:29,007 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGSEGV] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x561f9ed77b28] 
+    [2] ./testbiling(+0x25d09) [0x561f9ed77d09] 
+    [3]  0x41100) [0x7fe154633100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7fe154633100]
+    [4] ./testbiling(+0x5ef35) [0x561f9edb0f35] 
+    [5] ./testbiling(+0x5ec16) [0x561f9edb0c16] 
+    [6] ./testbiling(+0x62373) [0x561f9edb4373] 
+    [7] ./testbiling(+0x6d93d) [0x561f9edbf93d] 
+    [8] ./testbiling(+0x662a0) [0x561f9edb82a0] 
+    [9] ./testbiling(+0xdd6d9) [0x561f9ee2f6d9] 
+    [10] ./testbiling(+0xdd4d4) [0x561f9ee2f4d4] 
+    [11] ./testbiling(+0xdcf8a) [0x561f9ee2ef8a] 
+    [12]  0xbe6af) [0x7fe154a436af]:_64-linux-gnu/libstdc++.so.6(+0xbe6af) [0x7fe154a436af]
+    [13]  0x8164) [0x7fe1560b4164]:_64-linux-gnu/libpthread.so.0(+0x8164) [0x7fe1560b4164]
+    [14]  0x3f) [0x7fe15470cdef]:_64-linux-gnu/libc.so.6(clone+0x3f) [0x7fe15470cdef]
+
+2019-07-10 09:03:29,007 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 09:03:38,291 INFO [default] The program has started!
+2019-07-10 09:03:38,294 INFO [gui-serial]  serial port open successful!
+2019-07-10 09:03:38,299 ERROR [sql] constraint failed
+2019-07-10 09:03:38,299 ERROR [sql] SQL logic error
+2019-07-10 09:03:38,299 ERROR [sql] SQL logic error
+2019-07-10 09:03:38,299 ERROR [sql] SQL logic error
+2019-07-10 09:03:38,299 ERROR [sql] SQL logic error
+2019-07-10 09:03:38,299 ERROR [sql] SQL logic error
+2019-07-10 09:03:38,299 ERROR [sql] SQL logic error
+2019-07-10 09:03:39,300 INFO [GPS] initialation successful!
+2019-07-10 09:03:39,401 INFO [estimator] Too much time!
+2019-07-10 09:04:24,587 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 09:04:24,789 INFO [controller] Too much time!
+2019-07-10 09:04:48,975 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x5633ad849b28] 
+    [2] ./testbiling(+0x25d09) [0x5633ad849d09] 
+    [3]  0x41100) [0x7fa2001f0100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7fa2001f0100]
+    [4]  0x42) [0x7fa2002b8f62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7fa2002b8f62]
+    [5]  0x148) [0x7fa20023bc88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7fa20023bc88]
+    [6]  0x32) [0x7fa20023cf92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7fa20023cf92]
+    [7]  0x105) [0x7fa200236de5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7fa200236de5]
+    [8] ./testbiling(+0x55aa1) [0x5633ad879aa1] 
+    [9]  0xeb) [0x7fa2001d309b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7fa2001d309b]
+    [10] ./testbiling(+0x13cda) [0x5633ad837cda] 
+
+2019-07-10 09:04:48,975 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 09:11:09,562 INFO [default] The program has started!
+2019-07-10 09:11:09,564 INFO [gui-serial]  serial port open successful!
+2019-07-10 09:11:10,653 INFO [GPS] initialation successful!
+2019-07-10 09:11:10,753 INFO [estimator] Too much time!
+2019-07-10 09:11:36,000 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 09:11:36,202 INFO [controller] Too much time!
+2019-07-10 09:12:14,450 ERROR [sql] SQL logic error
+2019-07-10 09:13:38,966 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x55e68b5b5b28] 
+    [2] ./testbiling(+0x25d09) [0x55e68b5b5d09] 
+    [3]  0x41100) [0x7feb89d8d100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7feb89d8d100]
+    [4]  0x42) [0x7feb89e55f62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7feb89e55f62]
+    [5]  0x148) [0x7feb89dd8c88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7feb89dd8c88]
+    [6]  0x32) [0x7feb89dd9f92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7feb89dd9f92]
+    [7]  0x105) [0x7feb89dd3de5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7feb89dd3de5]
+    [8] ./testbiling(+0x55aa1) [0x55e68b5e5aa1] 
+    [9]  0xeb) [0x7feb89d7009b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7feb89d7009b]
+    [10] ./testbiling(+0x13cda) [0x55e68b5a3cda] 
+
+2019-07-10 09:13:38,966 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 09:38:12,993 INFO [default] The program has started!
+2019-07-10 09:38:12,995 INFO [gui-serial]  serial port open successful!
+2019-07-10 09:38:14,085 INFO [GPS] initialation successful!
+2019-07-10 09:38:14,185 INFO [estimator] Too much time!
+2019-07-10 09:40:34,657 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 09:40:34,858 INFO [controller] Too much time!
+2019-07-10 09:42:38,444 INFO [default] The program has started!
+2019-07-10 09:42:38,446 INFO [gui-serial]  serial port open successful!
+2019-07-10 09:42:39,539 INFO [GPS] initialation successful!
+2019-07-10 09:42:39,639 INFO [estimator] Too much time!
+2019-07-10 09:43:19,820 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 09:43:20,022 INFO [controller] Too much time!
+2019-07-10 09:49:30,504 ERROR [sql] SQL logic error
+2019-07-10 09:49:38,401 ERROR [sql] SQL logic error
+2019-07-10 10:02:36,708 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x55700e82ab28] 
+    [2] ./testbiling(+0x25d09) [0x55700e82ad09] 
+    [3]  0x41100) [0x7f4c0d3c9100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7f4c0d3c9100]
+    [4]  0x42) [0x7f4c0d491f62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7f4c0d491f62]
+    [5]  0x148) [0x7f4c0d414c88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7f4c0d414c88]
+    [6]  0x32) [0x7f4c0d415f92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7f4c0d415f92]
+    [7]  0x105) [0x7f4c0d40fde5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7f4c0d40fde5]
+    [8] ./testbiling(+0x55aa1) [0x55700e85aaa1] 
+    [9]  0xeb) [0x7f4c0d3ac09b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7f4c0d3ac09b]
+    [10] ./testbiling(+0x13cda) [0x55700e818cda] 
+
+2019-07-10 10:02:36,708 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 10:07:43,308 INFO [default] The program has started!
+2019-07-10 10:07:43,310 INFO [gui-serial]  serial port open successful!
+2019-07-10 10:07:44,406 INFO [GPS] initialation successful!
+2019-07-10 10:07:44,507 INFO [estimator] Too much time!
+2019-07-10 10:08:44,730 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 10:08:44,931 INFO [controller] Too much time!
+2019-07-10 10:11:35,933 ERROR [sql] SQL logic error
+2019-07-10 10:13:19,835 ERROR [sql] SQL logic error
+2019-07-10 10:14:51,936 ERROR [sql] SQL logic error
+2019-07-10 10:14:53,336 ERROR [sql] SQL logic error
+2019-07-10 10:19:42,713 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x55bd0a216b28] 
+    [2] ./testbiling(+0x25d09) [0x55bd0a216d09] 
+    [3]  0x41100) [0x7fc3563c3100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7fc3563c3100]
+    [4]  0x42) [0x7fc35648bf62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7fc35648bf62]
+    [5]  0x148) [0x7fc35640ec88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7fc35640ec88]
+    [6]  0x32) [0x7fc35640ff92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7fc35640ff92]
+    [7]  0x105) [0x7fc356409de5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7fc356409de5]
+    [8] ./testbiling(+0x55aa1) [0x55bd0a246aa1] 
+    [9]  0xeb) [0x7fc3563a609b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7fc3563a609b]
+    [10] ./testbiling(+0x13cda) [0x55bd0a204cda] 
+
+2019-07-10 10:19:42,713 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 12:47:48,835 INFO [default] The program has started!
+2019-07-10 12:47:48,853 INFO [gui-serial]  serial port open successful!
+2019-07-10 12:47:49,948 INFO [GPS] initialation successful!
+2019-07-10 12:47:50,049 INFO [estimator] Too much time!
+2019-07-10 12:48:55,281 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 12:48:55,483 INFO [controller] Too much time!
+2019-07-10 12:50:29,489 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x55c496795b28] 
+    [2] ./testbiling(+0x25d09) [0x55c496795d09] 
+    [3]  0x41100) [0x7fbde8f18100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7fbde8f18100]
+    [4]  0x42) [0x7fbde8fe0f62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7fbde8fe0f62]
+    [5]  0x148) [0x7fbde8f63c88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7fbde8f63c88]
+    [6]  0x32) [0x7fbde8f64f92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7fbde8f64f92]
+    [7]  0x105) [0x7fbde8f5ede5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7fbde8f5ede5]
+    [8] ./testbiling(+0x55aa1) [0x55c4967c5aa1] 
+    [9]  0xeb) [0x7fbde8efb09b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7fbde8efb09b]
+    [10] ./testbiling(+0x13cda) [0x55c496783cda] 
+
+2019-07-10 12:50:29,489 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 12:55:15,283 INFO [default] The program has started!
+2019-07-10 12:55:15,285 INFO [gui-serial]  serial port open successful!
+2019-07-10 12:55:16,342 INFO [GPS] initialation successful!
+2019-07-10 12:55:16,442 INFO [estimator] Too much time!
+2019-07-10 12:57:07,398 ERROR [sql] SQL logic error
+2019-07-10 12:57:52,876 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 12:57:53,078 INFO [controller] Too much time!
+2019-07-10 12:59:08,992 ERROR [sql] SQL logic error
+2019-07-10 13:03:06,890 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x5612e0388b28] 
+    [2] ./testbiling(+0x25d09) [0x5612e0388d09] 
+    [3]  0x41100) [0x7f467ab8f100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7f467ab8f100]
+    [4]  0x42) [0x7f467ac57f62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7f467ac57f62]
+    [5]  0x148) [0x7f467abdac88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7f467abdac88]
+    [6]  0x32) [0x7f467abdbf92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7f467abdbf92]
+    [7]  0x105) [0x7f467abd5de5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7f467abd5de5]
+    [8] ./testbiling(+0x55aa1) [0x5612e03b8aa1] 
+    [9]  0xeb) [0x7f467ab7209b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7f467ab7209b]
+    [10] ./testbiling(+0x13cda) [0x5612e0376cda] 
+
+2019-07-10 13:03:06,890 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 13:07:06,768 INFO [default] The program has started!
+2019-07-10 13:07:06,770 INFO [gui-serial]  serial port open successful!
+2019-07-10 13:07:07,869 INFO [GPS] initialation successful!
+2019-07-10 13:07:07,969 INFO [estimator] Too much time!
+2019-07-10 13:07:33,122 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 13:07:33,324 INFO [controller] Too much time!
+2019-07-10 13:09:23,203 ERROR [sql] SQL logic error
+2019-07-10 13:10:17,813 ERROR [sql] SQL logic error
+2019-07-10 13:10:26,204 ERROR [sql] SQL logic error
+2019-07-10 13:10:58,407 ERROR [sql] SQL logic error
+2019-07-10 13:11:13,114 ERROR [sql] SQL logic error
+2019-07-10 13:11:14,905 ERROR [sql] SQL logic error
+2019-07-10 13:11:41,813 ERROR [sql] SQL logic error
+2019-07-10 13:12:00,115 ERROR [sql] SQL logic error
+2019-07-10 13:12:10,912 ERROR [sql] SQL logic error
+2019-07-10 13:12:42,317 ERROR [sql] SQL logic error
+2019-07-10 13:12:44,412 ERROR [sql] SQL logic error
+2019-07-10 13:13:02,815 ERROR [sql] SQL logic error
+2019-07-10 13:13:27,316 ERROR [sql] SQL logic error
+2019-07-10 13:13:48,917 ERROR [sql] SQL logic error
+2019-07-10 13:14:08,418 ERROR [sql] SQL logic error
+2019-07-10 13:14:12,113 ERROR [sql] SQL logic error
+2019-07-10 13:14:33,118 ERROR [sql] SQL logic error
+2019-07-10 13:14:34,711 ERROR [sql] SQL logic error
+2019-07-10 13:14:49,721 ERROR [sql] SQL logic error
+2019-07-10 13:15:03,714 ERROR [sql] SQL logic error
+2019-07-10 13:15:04,908 ERROR [sql] SQL logic error
+2019-07-10 13:15:20,909 ERROR [sql] SQL logic error
+2019-07-10 13:15:28,710 ERROR [sql] SQL logic error
+2019-07-10 13:15:46,915 ERROR [sql] SQL logic error
+2019-07-10 13:15:53,626 ERROR [sql] SQL logic error
+2019-07-10 13:15:53,810 ERROR [sql] SQL logic error
+2019-07-10 13:16:07,217 ERROR [sql] SQL logic error
+2019-07-10 13:16:39,123 ERROR [sql] SQL logic error
+2019-07-10 13:16:45,123 ERROR [sql] SQL logic error
+2019-07-10 13:17:03,823 ERROR [sql] SQL logic error
+2019-07-10 13:18:21,270 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x56032724cb28] 
+    [2] ./testbiling(+0x25d09) [0x56032724cd09] 
+    [3]  0x41100) [0x7f96abcdc100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7f96abcdc100]
+    [4]  0x42) [0x7f96abda4f62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7f96abda4f62]
+    [5]  0x148) [0x7f96abd27c88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7f96abd27c88]
+    [6]  0x32) [0x7f96abd28f92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7f96abd28f92]
+    [7]  0x105) [0x7f96abd22de5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7f96abd22de5]
+    [8] ./testbiling(+0x55aa1) [0x56032727caa1] 
+    [9]  0xeb) [0x7f96abcbf09b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7f96abcbf09b]
+    [10] ./testbiling(+0x13cda) [0x56032723acda] 
+
+2019-07-10 13:18:21,270 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 13:20:50,350 INFO [default] The program has started!
+2019-07-10 13:20:50,368 INFO [gui-serial]  serial port open successful!
+2019-07-10 13:20:51,483 INFO [GPS] initialation successful!
+2019-07-10 13:20:51,584 INFO [estimator] Too much time!
+2019-07-10 13:20:52,315 ERROR [sql] SQL logic error
+2019-07-10 13:21:21,743 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 13:21:21,945 INFO [controller] Too much time!
+2019-07-10 13:21:35,612 ERROR [sql] SQL logic error
+2019-07-10 13:22:07,917 ERROR [sql] SQL logic error
+2019-07-10 13:22:14,225 ERROR [sql] SQL logic error
+2019-07-10 13:22:21,914 ERROR [sql] SQL logic error
+2019-07-10 13:22:22,013 ERROR [sql] SQL logic error
+2019-07-10 13:22:47,524 ERROR [sql] SQL logic error
+2019-07-10 13:22:49,519 ERROR [sql] SQL logic error
+2019-07-10 13:23:03,512 ERROR [sql] SQL logic error
+2019-07-10 13:23:18,013 ERROR [sql] SQL logic error
+2019-07-10 13:23:39,720 ERROR [sql] SQL logic error
+2019-07-10 13:25:25,293 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x55bf386dab28] 
+    [2] ./testbiling(+0x25d09) [0x55bf386dad09] 
+    [3]  0x41100) [0x7efc8b353100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7efc8b353100]
+    [4]  0x42) [0x7efc8b41bf62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7efc8b41bf62]
+    [5]  0x148) [0x7efc8b39ec88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7efc8b39ec88]
+    [6]  0x32) [0x7efc8b39ff92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7efc8b39ff92]
+    [7]  0x105) [0x7efc8b399de5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7efc8b399de5]
+    [8] ./testbiling(+0x55aa1) [0x55bf3870aaa1] 
+    [9]  0xeb) [0x7efc8b33609b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7efc8b33609b]
+    [10] ./testbiling(+0x13cda) [0x55bf386c8cda] 
+
+2019-07-10 13:25:25,293 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 13:25:47,930 INFO [default] The program has started!
+2019-07-10 13:25:47,932 INFO [gui-serial]  serial port open successful!
+2019-07-10 13:25:49,019 INFO [GPS] initialation successful!
+2019-07-10 13:25:49,121 INFO [estimator] Too much time!
+2019-07-10 13:26:29,304 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 13:26:29,505 INFO [controller] Too much time!
+2019-07-10 13:29:24,226 ERROR [sql] SQL logic error
+2019-07-10 13:29:28,525 ERROR [sql] SQL logic error
+2019-07-10 13:29:42,229 ERROR [sql] SQL logic error
+2019-07-10 13:30:41,237 ERROR [sql] SQL logic error
+2019-07-10 13:30:45,926 ERROR [sql] SQL logic error
+2019-07-10 13:32:15,424 ERROR [sql] SQL logic error
+2019-07-10 13:37:43,329 ERROR [sql] SQL logic error
+2019-07-10 13:42:23,897 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGSEGV] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x5565bbf69b28] 
+    [2] ./testbiling(+0x25d09) [0x5565bbf69d09] 
+    [3]  0x41100) [0x7f417e991100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7f417e991100]
+    [4] /opt/mosek/8/tools/platform/linux64x86/bin/libmosek64.so.8.1(+0x5635cc) [0x7f417f3d15cc] 
+
+2019-07-10 14:09:27,684 INFO [default] The program has started!
+2019-07-10 14:09:27,702 INFO [gui-serial]  serial port open successful!
+2019-07-10 14:09:28,805 INFO [GPS] initialation successful!
+2019-07-10 14:09:28,906 INFO [estimator] Too much time!
+2019-07-10 14:10:34,140 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 14:10:34,342 INFO [controller] Too much time!
+2019-07-10 14:17:44,259 ERROR [sql] SQL logic error
+2019-07-10 14:18:25,152 ERROR [sql] SQL logic error
+2019-07-10 14:19:24,352 ERROR [sql] SQL logic error
+2019-07-10 14:21:23,766 ERROR [sql] SQL logic error
+2019-07-10 14:21:53,757 ERROR [sql] SQL logic error
+2019-07-10 14:21:53,966 ERROR [sql] SQL logic error
+2019-07-10 14:21:55,362 ERROR [sql] SQL logic error
+2019-07-10 14:21:56,662 ERROR [sql] SQL logic error
+2019-07-10 14:22:24,761 ERROR [sql] SQL logic error
+2019-07-10 14:22:27,959 ERROR [sql] SQL logic error
+2019-07-10 14:22:49,466 ERROR [sql] SQL logic error
+2019-07-10 14:25:58,961 ERROR [sql] SQL logic error
+2019-07-10 14:26:04,767 ERROR [sql] SQL logic error
+2019-07-10 14:27:41,772 ERROR [sql] SQL logic error
+2019-07-10 14:30:42,045 INFO [default]  stop signal  
+2019-07-10 14:30:42,045 INFO [default] Shutting down.
+2019-07-10 14:30:42,045 DEBUG [default] [root@unknown-host] [void threadloop::gpsimuloop()] [/home/skloe/Coding/ASV/examples/biling/test/../include/threadloop.h:310] Logger [GPS serial] is not registered yet!
+2019-07-10 14:53:06,279 INFO [default] The program has started!
+2019-07-10 14:53:06,281 INFO [gui-serial]  serial port open successful!
+2019-07-10 14:53:06,282 ERROR [sql] constraint failed
+2019-07-10 14:53:06,282 ERROR [sql] SQL logic error
+2019-07-10 14:53:06,282 ERROR [sql] SQL logic error
+2019-07-10 14:53:06,282 ERROR [sql] SQL logic error
+2019-07-10 14:53:06,282 ERROR [sql] SQL logic error
+2019-07-10 14:53:06,282 ERROR [sql] SQL logic error
+2019-07-10 14:53:06,282 ERROR [sql] SQL logic error
+2019-07-10 14:53:07,284 INFO [GPS] initialation successful!
+2019-07-10 14:53:07,385 INFO [estimator] Too much time!
+2019-07-10 14:53:16,800 ERROR [sql] SQL logic error
+2019-07-10 14:54:10,998 ERROR [sql] SQL logic error
+2019-07-10 14:54:23,140 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 14:54:23,341 INFO [controller] Too much time!
+2019-07-10 15:14:59,062 INFO [default] The program has started!
+2019-07-10 15:14:59,078 INFO [gui-serial]  serial port open successful!
+2019-07-10 15:15:00,175 INFO [GPS] initialation successful!
+2019-07-10 15:15:00,275 INFO [estimator] Too much time!
+2019-07-10 15:16:10,518 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 15:16:10,720 INFO [controller] Too much time!
+2019-07-10 15:17:22,761 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x55af8ada6b28] 
+    [2] ./testbiling(+0x25d09) [0x55af8ada6d09] 
+    [3]  0x41100) [0x7facb8937100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7facb8937100]
+    [4]  0x42) [0x7facb89fff62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7facb89fff62]
+    [5]  0x148) [0x7facb8982c88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7facb8982c88]
+    [6]  0x32) [0x7facb8983f92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7facb8983f92]
+    [7]  0x105) [0x7facb897dde5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7facb897dde5]
+    [8] ./testbiling(+0x55aa1) [0x55af8add6aa1] 
+    [9]  0xeb) [0x7facb891a09b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7facb891a09b]
+    [10] ./testbiling(+0x13cda) [0x55af8ad94cda] 
+
+2019-07-10 15:17:22,761 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 15:17:47,292 INFO [default] The program has started!
+2019-07-10 15:17:47,294 INFO [gui-serial]  serial port open successful!
+2019-07-10 15:17:48,388 INFO [GPS] initialation successful!
+2019-07-10 15:17:48,489 INFO [estimator] Too much time!
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        2019-07-10 15:22:59,420 INFO [default] The program has started!
+2019-07-10 15:22:59,437 INFO [gui-serial]  serial port open successful!
+2019-07-10 15:23:00,526 INFO [GPS] initialation successful!
+2019-07-10 15:23:00,627 INFO [estimator] Too much time!
+2019-07-10 15:23:50,823 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 15:23:51,024 INFO [controller] Too much time!
+2019-07-10 15:26:13,062 ERROR [sql] SQL logic error
+2019-07-10 15:35:03,571 ERROR [sql] SQL logic error
+2019-07-10 15:39:54,823 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x55ff48682b28] 
+    [2] ./testbiling(+0x25d09) [0x55ff48682d09] 
+    [3]  0x41100) [0x7f7a19aa2100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7f7a19aa2100]
+    [4]  0x42) [0x7f7a19b6af62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7f7a19b6af62]
+    [5]  0x148) [0x7f7a19aedc88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7f7a19aedc88]
+    [6]  0x32) [0x7f7a19aeef92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7f7a19aeef92]
+    [7]  0x105) [0x7f7a19ae8de5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7f7a19ae8de5]
+    [8] ./testbiling(+0x55aa1) [0x55ff486b2aa1] 
+    [9]  0xeb) [0x7f7a19a8509b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7f7a19a8509b]
+    [10] ./testbiling(+0x13cda) [0x55ff48670cda] 
+
+2019-07-10 15:39:54,823 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 16:09:39,689 INFO [default] The program has started!
+2019-07-10 16:09:39,692 INFO [gui-serial]  serial port open successful!
+2019-07-10 16:09:40,780 INFO [GPS] initialation successful!
+2019-07-10 16:09:40,881 INFO [estimator] Too much time!
+2019-07-10 16:10:21,055 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 16:10:21,256 INFO [controller] Too much time!
+2019-07-10 16:11:45,806 ERROR [sql] SQL logic error
+2019-07-10 16:19:14,274 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x55e5bfae7b28] 
+    [2] ./testbiling(+0x25d09) [0x55e5bfae7d09] 
+    [3]  0x41100) [0x7f3e89e87100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7f3e89e87100]
+    [4]  0x42) [0x7f3e89f4ff62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7f3e89f4ff62]
+    [5]  0x148) [0x7f3e89ed2c88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7f3e89ed2c88]
+    [6]  0x32) [0x7f3e89ed3f92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7f3e89ed3f92]
+    [7]  0x105) [0x7f3e89ecdde5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7f3e89ecdde5]
+    [8] ./testbiling(+0x55aa1) [0x55e5bfb17aa1] 
+    [9]  0xeb) [0x7f3e89e6a09b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7f3e89e6a09b]
+    [10] ./testbiling(+0x13cda) [0x55e5bfad5cda] 
+
+2019-07-10 16:19:14,274 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-07-10 16:20:01,528 INFO [default] The program has started!
+2019-07-10 16:20:01,532 INFO [gui-serial]  serial port open successful!
+2019-07-10 16:20:02,625 INFO [GPS] initialation successful!
+2019-07-10 16:20:02,726 INFO [estimator] Too much time!
+2019-07-10 16:20:07,835 INFO [PLC] Servo and PLC initialation successful!
+2019-07-10 16:20:08,035 INFO [controller] Too much time!
+2019-07-10 16:21:29,717 ERROR [sql] SQL logic error
+2019-07-10 16:21:36,222 ERROR [sql] SQL logic error
+2019-07-10 16:25:21,629 ERROR [sql] SQL logic error
+2019-07-10 16:25:36,626 ERROR [sql] SQL logic error
+2019-07-10 16:25:51,525 ERROR [sql] SQL logic error
+2019-07-10 16:29:07,134 ERROR [sql] SQL logic error
+2019-07-10 16:29:20,633 ERROR [sql] SQL logic error
+2019-07-10 16:29:26,528 ERROR [sql] SQL logic error
+2019-07-10 16:29:31,132 ERROR [sql] SQL logic error
+2019-07-10 16:29:31,327 ERROR [sql] SQL logic error
+2019-07-10 16:29:31,428 ERROR [sql] SQL logic error
+2019-07-10 16:30:13,337 ERROR [sql] SQL logic error
+2019-07-10 16:30:14,828 ERROR [sql] SQL logic error
+2019-07-10 16:30:56,734 ERROR [sql] SQL logic error
+2019-07-10 16:31:00,433 ERROR [sql] SQL logic error
+2019-07-10 16:31:05,632 ERROR [sql] SQL logic error
+2019-07-10 16:31:06,530 ERROR [sql] SQL logic error
+2019-07-10 16:31:06,630 ERROR [sql] SQL logic error
+2019-07-10 16:31:07,435 ERROR [sql] SQL logic error
+2019-07-10 16:31:07,534 ERROR [sql] SQL logic error
+2019-07-10 16:31:07,637 ERROR [sql] SQL logic error
+2019-07-10 16:31:07,735 ERROR [sql] SQL logic error
+2019-07-10 16:31:07,836 ERROR [sql] SQL logic error
+2019-07-10 16:31:08,137 ERROR [sql] SQL logic error
+2019-07-10 16:31:08,232 ERROR [sql] SQL logic error
+2019-07-10 16:31:08,337 ERROR [sql] SQL logic error
+2019-07-10 16:31:15,832 ERROR [sql] SQL logic error
+2019-07-10 16:31:27,530 ERROR [sql] SQL logic error
+2019-07-10 16:31:43,537 ERROR [sql] SQL logic error
+2019-07-10 16:31:44,627 ERROR [sql] SQL logic error
+2019-07-10 16:31:52,234 ERROR [sql] SQL logic error
+2019-07-10 16:32:01,137 ERROR [sql] SQL logic error
+2019-07-10 16:33:04,830 ERROR [sql] SQL logic error
+2019-07-10 16:34:21,734 ERROR [sql] SQL logic error
+2019-07-10 16:34:30,733 ERROR [sql] SQL logic error
+2019-07-10 16:39:04,507 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:04,607 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:04,707 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:04,807 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:04,907 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:05,008 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:05,108 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:05,208 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:05,308 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:05,408 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:05,508 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:05,608 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:05,709 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:05,809 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:05,909 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:06,009 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:06,109 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:06,209 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:06,309 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:06,409 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:06,509 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:06,610 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:06,710 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:06,810 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:06,910 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:07,010 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:07,110 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:07,210 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:07,311 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:07,411 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:07,511 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:07,611 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:07,711 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:07,812 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:07,912 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:08,012 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:08,112 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:08,212 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:08,312 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:08,412 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:08,513 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:08,613 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:08,713 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:08,813 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:08,913 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:09,013 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:09,113 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:09,213 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:09,313 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:09,414 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:09,514 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:09,614 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:09,714 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:09,814 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:09,914 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:10,014 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:10,115 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:10,215 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:10,315 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:10,415 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:10,515 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:10,615 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:10,716 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:10,816 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:10,916 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:11,016 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:11,116 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:11,216 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:11,316 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:11,416 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:11,517 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:11,617 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:11,717 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:11,817 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:11,917 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:12,017 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:12,118 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:12,218 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:12,318 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:12,418 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:12,518 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:12,618 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:12,718 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:12,818 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:12,918 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:13,019 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:13,119 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:13,219 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:13,319 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:13,419 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:13,520 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:13,620 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:13,720 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:13,820 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:13,920 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:14,020 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:14,120 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:14,221 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:14,321 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:14,421 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:14,521 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:14,621 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:14,721 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:14,821 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:14,922 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:15,022 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:15,122 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:15,222 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:15,322 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:15,422 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:15,523 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:15,623 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:15,723 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:15,823 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:15,924 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:16,024 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:16,124 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:16,224 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:16,324 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:16,424 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:16,524 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:16,625 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:16,725 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:16,825 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:16,925 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:17,025 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:17,125 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:17,225 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:17,326 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:17,426 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:17,526 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:17,626 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:17,726 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:17,826 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:17,927 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:18,027 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:18,127 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:18,227 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:18,327 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:18,428 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:18,528 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:18,628 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:18,728 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:18,828 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:18,928 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:19,029 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:19,129 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:19,229 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:19,329 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:19,429 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:19,529 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:19,629 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:19,730 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:19,830 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:19,930 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:20,030 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:20,130 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:20,230 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:20,331 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:20,431 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:20,531 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:20,631 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:20,731 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:20,831 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:20,932 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:21,032 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:21,132 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:21,232 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:21,332 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:21,432 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:21,532 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:21,633 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:21,733 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:21,833 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:21,933 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:22,034 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:22,134 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:22,234 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:22,334 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:22,434 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:22,534 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:22,634 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:22,735 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:22,835 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:22,935 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:23,035 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:23,135 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:23,235 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:23,336 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:23,436 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:23,536 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:23,636 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:23,736 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:23,837 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:23,937 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:24,037 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:24,137 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:24,237 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:24,337 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:24,438 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:24,538 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:24,638 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:24,738 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:24,838 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:24,938 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:25,039 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:25,139 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:25,239 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:25,339 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:25,439 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:25,539 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:25,639 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:25,739 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:25,840 ERROR [LOS] waypoints too close!
+2019-07-10 16:39:25,940 ERROR [LOS] waypoints too close!
+2019-07-10 16:40:37,738 ERROR [sql] SQL logic error
+2019-07-10 16:40:57,748 ERROR [sql] SQL logic error
+2019-07-10 16:41:14,538 ERROR [sql] SQL logic error
+2019-07-10 16:41:17,446 ERROR [sql] SQL logic error
+2019-07-10 16:41:26,750 ERROR [sql] SQL logic error
+2019-07-10 16:41:28,339 ERROR [sql] SQL logic error
+2019-07-10 16:41:31,340 ERROR [sql] SQL logic error
+2019-07-10 16:42:39,745 ERROR [sql] SQL logic error
+2019-07-10 16:46:06,645 ERROR [sql] SQL logic error
+2019-07-10 16:46:25,146 ERROR [sql] SQL logic error
+2019-07-10 16:47:19,854 ERROR [sql] SQL logic error
+2019-07-10 16:47:45,654 ERROR [sql] SQL logic error
+2019-07-10 16:47:49,858 ERROR [sql] SQL logic error
+2019-07-10 16:47:58,253 ERROR [sql] SQL logic error
+2019-07-10 16:48:04,451 ERROR [sql] SQL logic error
+2019-07-10 16:48:14,457 ERROR [sql] SQL logic error
+2019-07-10 16:48:18,066 ERROR [sql] SQL logic error
+2019-07-10 16:48:35,356 ERROR [sql] SQL logic error
+2019-07-10 16:48:53,559 ERROR [sql] SQL logic error
+2019-07-10 16:48:55,357 ERROR [sql] SQL logic error
+2019-07-10 16:49:02,458 ERROR [sql] SQL logic error
+2019-07-10 16:49:24,251 ERROR [sql] SQL logic error
+2019-07-10 16:51:55,654 ERROR [sql] SQL logic error
+2019-07-10 16:51:57,356 ERROR [sql] SQL logic error
+2019-07-10 16:51:57,460 ERROR [sql] SQL logic error
+2019-07-10 16:52:00,652 ERROR [sql] SQL logic error
+2019-07-10 16:52:03,958 ERROR [sql] SQL logic error
+2019-07-10 16:52:04,552 ERROR [sql] SQL logic error
+2019-07-10 16:52:05,451 ERROR [sql] SQL logic error
+2019-07-10 16:52:05,654 ERROR [sql] SQL logic error
+2019-07-10 16:52:06,761 ERROR [sql] SQL logic error
+2019-07-10 16:52:06,862 ERROR [sql] SQL logic error
+2019-07-10 16:52:07,061 ERROR [sql] SQL logic error
+2019-07-10 16:52:08,158 ERROR [sql] SQL logic error
+2019-07-10 16:52:08,357 ERROR [sql] SQL logic error
+2019-07-10 16:52:09,762 ERROR [sql] SQL logic error
+2019-07-10 16:52:25,555 ERROR [sql] SQL logic error
+2019-07-10 16:52:29,260 ERROR [sql] SQL logic error
+2019-07-10 16:52:38,757 ERROR [sql] SQL logic error
+2019-07-10 16:52:38,856 ERROR [sql] SQL logic error
+2019-07-10 16:52:49,455 ERROR [sql] SQL logic error
+2019-07-10 16:52:50,857 ERROR [sql] SQL logic error
+2019-07-10 16:55:42,867 ERROR [sql] SQL logic error
+2019-07-10 16:55:48,666 ERROR [sql] SQL logic error
+2019-07-10 16:58:24,167 ERROR [sql] SQL logic error
+2019-07-10 17:01:36,076 ERROR [sql] SQL logic error
+2019-07-10 17:01:57,372 ERROR [sql] SQL logic error
+2019-07-10 17:02:00,675 ERROR [sql] SQL logic error
+2019-07-10 17:02:34,269 ERROR [sql] SQL logic error
+2019-07-10 17:03:21,703 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25b28) [0x564c4f33eb28] 
+    [2] ./testbiling(+0x25d09) [0x564c4f33ed09] 
+    [3]  0x41100) [0x7f84556d7100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7f84556d7100]
+    [4]  0x42) [0x7f845579ff62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7f845579ff62]
+    [5]  0x148) [0x7f8455722c88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7f8455722c88]
+    [6]  0x32) [0x7f8455723f92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7f8455723f92]
+    [7]  0x105) [0x7f845571dde5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7f845571dde5]
+    [8] ./testbiling(+0x55aa1) [0x564c4f36eaa1] 
+    [9]  0xeb) [0x7f84556ba09b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7f84556ba09b]
+    [10] ./testbiling(+0x13cda) [0x564c4f32ccda] 
+
+2019-07-10 17:03:21,703 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]

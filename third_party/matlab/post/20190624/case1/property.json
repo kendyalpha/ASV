@@ -1,0 +1,147 @@
+{
+  "vesselname": "Biling",
+  "project_directory":"/home/skloe/Coding/ASV/examples/biling/",
+  "dbpath": "data/dbsave5.db",
+  "property": {
+    "L":3.6,
+    "B":1.6,
+    "Mass": [425, 0, 0, 0, 425, 180, 0, 180, 920],
+    "AddedMass": [74, 0, 0, 0, 136, 144, 0, 144, 198],
+    "Damping": [17, 0, 0, 0, 20, 0, 0, 0, 100],
+    "CoG": [1.6, 0],
+    "velocity_limit": {
+      "surge": [-3, 5],
+      "sway": [-1, 1],
+      "yaw": [-1, 1],
+      "roll": [-1, 1]
+    }
+  },
+  "controller": {
+    "sample_time": 0.2,
+    "surge": {
+      "position_P": 3,
+      "position_I": 0.2,
+      "velocity_P": 1,
+      "velocity_I": 0,
+      "position_allowed_error": 0.01,
+      "velocity_allowed_error": 0.001,
+      "min_output": -20,
+      "max_output": 20
+    },
+    "sway": {
+      "position_P": 2,
+      "position_I": 0.3,
+      "velocity_P": 1,
+      "velocity_I": 0,
+      "position_allowed_error": 0.01,
+      "velocity_allowed_error": 0.001,
+      "min_output": -14,
+      "max_output": 14
+    },
+    "yaw": {
+      "position_P": 10,
+      "position_I": 0.5,
+      "velocity_P": 3,
+      "velocity_I": 0,
+      "position_allowed_error": 0.001,
+      "velocity_allowed_error": 0.001,
+      "min_output": -15,
+      "max_output": 15
+    }
+  },
+  "thruster1": {
+    "type": "azimuth",
+    "position": [3.6, 0],
+    "thrust_constant": 2.8E-6,
+    "max_delta_rotation": 200,
+    "max_rotation": 1500,
+    "min_rotation": 5,
+    "max_delta_alpha": 10,
+    "max_alpha": 280,
+    "min_alpha": 80
+  },
+  "thruster2": {
+    "type": "azimuth",
+    "position": [2.23, -0.83],
+    "thrust_constant": 2.8E-6,
+    "max_delta_rotation": 200,
+    "max_rotation": 1500,
+    "min_rotation": 5,
+    "max_delta_alpha": 10,
+    "max_alpha": 190,
+    "min_alpha": -10
+  },
+  "thruster3": {
+    "type": "azimuth",
+    "position": [2.23, 0.83],
+    "thrust_constant": 2.8E-6,
+    "max_delta_rotation": 200,
+    "max_rotation": 1500,
+    "min_rotation": 5,
+    "max_delta_alpha": 10,
+    "max_alpha": 10,
+    "min_alpha": -190
+  },
+  "thruster4": {
+    "type": "azimuth",
+    "position": [0.96, -0.83],
+    "thrust_constant": 2.8E-6,
+    "max_delta_rotation": 200,
+    "max_rotation": 1500,
+    "min_rotation": 5,
+    "max_delta_alpha": 10,
+    "max_alpha": 190,
+    "min_alpha": -10
+  },
+  "thruster5": {
+    "type": "azimuth",
+    "position": [0.96, 0.83],
+    "thrust_constant": 2.8E-6,
+    "max_delta_rotation": 200,
+    "max_rotation": 1500,
+    "min_rotation": 5,
+    "max_delta_alpha": 10,
+    "max_alpha": 10,
+    "min_alpha": -190
+  },
+  "thruster6": {
+    "type": "azimuth",
+    "position": [-0.12, 0],
+    "thrust_constant": 2.8E-6,
+    "max_delta_rotation": 200,
+    "max_rotation": 1500,
+    "min_rotation": 5,
+    "max_delta_alpha": 10,
+    "max_alpha": 100,
+    "min_alpha": -100
+  },
+  "estimator": {
+    "sample_time": 0.1,
+    "KALMANON": true
+  },
+  "planner": {
+    "sample_time": 0.1,
+    "LOS": {
+      "los_radius_co":0.8,
+      "capture_radius_co":0.1
+    }
+  },
+  "GPS":{
+    "Back_anntena":[0.1, 0]
+  },
+  "comcenter":{
+    "GPS":{
+      "port":"/dev/ttyS1",
+      "baudrate":115200
+    },
+    "GUI_server":{
+      "port":"/dev/ttyS2",
+      "baudrate":115200
+    },
+    "remotecontrol":{
+      "port":"/dev/ttyS4",
+      "baudrate":115200
+    }
+  },
+  "nothing": null
+}

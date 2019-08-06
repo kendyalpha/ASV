@@ -1,0 +1,93 @@
+{
+  "vesselname": "Biling",
+  "project_directory":"/home/scar1et/Coding/ASV/examples/los_simulation/",
+  "dbpath": "data/dbsave1.db",
+  "property": {
+    "L":1.255,
+    "B":1,
+    "Mass": [24, 0, 0, 0, 24, 0, 0, 0, 2.76],
+    "AddedMass": [1.8, 0, 0, 0, 9.8, 1, 0, 1, 0],
+    "Damping": [2, 0, 0, 0, 7, 0.1, 0, 0.1, 0.5],
+    "CoG": [2.013, 0],
+    "velocity_limit": {
+      "surge": [-4, 4],
+      "sway": [-0.5, 0.5],
+      "yaw": [-2, 2],
+      "roll": [-1.5, 1]
+    }
+  },
+  "controller": {
+    "sample_time": 0.1,
+    "surge": {
+      "position_P": 0,
+      "position_I": 0,
+      "velocity_P": 1,
+      "velocity_I": 5,
+      "position_allowed_error": 0.01,
+      "velocity_allowed_error": 0.001,
+      "min_output": 0,
+      "max_output": 2
+    },
+    "sway": {
+      "position_P": 13,
+      "position_I": 2.1,
+      "velocity_P": 0.1,
+      "velocity_I": 1,
+      "position_allowed_error": 0.1,
+      "velocity_allowed_error": 0.1,
+      "min_output": -1,
+      "max_output": 1
+    },
+    "yaw": {
+      "position_P": 2,
+      "position_I": 0,
+      "velocity_P": 3,
+      "velocity_I": 1,
+      "position_allowed_error": 0.001,
+      "velocity_allowed_error": 0.001,
+      "min_output": -0.6,
+      "max_output": 0.6
+    }
+  },
+  "thruster1": {
+    "type": "rudder",
+    "position": [1.21, 0.0],
+    "thrust_constant": 2e-5,
+    "rudder_constant":0.0126,
+    "max_delta_rotation": 100,
+    "max_rotation": 320,
+    "min_rotation": 1,
+    "max_delta_varphi": 20,
+    "max_varphi": 30,
+    "min_varphi": -30
+  },
+  "estimator": {
+    "sample_time": 0.1,
+    "KALMANON": true
+  },
+  "planner": {
+    "sample_time": 0.1,
+    "LOS": {
+      "los_radius_co":0.8,
+      "capture_radius_co":0.1
+    }
+  },
+  "GPS":{
+    "Back_anntena":[2.013, 0]
+  },
+  "comcenter":{
+    "GPS":{
+      "port":"/dev/ttyUSB0",
+      "baudrate":115200
+    },
+    "GUI_server":{
+      "port":"/dev/ttyUSB1",
+      "baudrate":19200
+    },
+    "remotecontrol":{
+      "port":"/dev/ttyUSB2",
+      "baudrate":115200
+    }
+  },
+  "nothing": null
+}

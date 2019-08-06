@@ -1,0 +1,32 @@
+2019-06-23 10:40:08,378 INFO [default] The program has started!
+2019-06-23 10:40:08,392 INFO [gui-serial]  serial port open successful!
+2019-06-23 10:40:09,458 INFO [GPS] initialation successful!
+2019-06-23 10:40:09,559 INFO [estimator] Too much time!
+2019-06-23 10:41:09,780 INFO [PLC] Servo and PLC initialation successful!
+2019-06-23 10:41:10,781 INFO [controller] Too much time!
+2019-06-23 10:48:59,810 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25ac8) [0x563668aaaac8] 
+    [2] ./testbiling(+0x25ca9) [0x563668aaaca9] 
+    [3]  0x41100) [0x7f8199002100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7f8199002100]
+    [4]  0x42) [0x7f81990caf62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7f81990caf62]
+    [5]  0x148) [0x7f819904dc88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7f819904dc88]
+    [6]  0x32) [0x7f819904ef92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7f819904ef92]
+    [7]  0x105) [0x7f8199048de5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7f8199048de5]
+    [8] ./testbiling(+0x55a41) [0x563668adaa41] 
+    [9]  0xeb) [0x7f8198fe509b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7f8198fe509b]
+    [10] ./testbiling(+0x13c7a) [0x563668a98c7a] 
+
+2019-06-23 10:48:59,810 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
+2019-06-23 10:54:28,990 INFO [default] The program has started!
+2019-06-23 10:54:29,007 INFO [gui-serial]  serial port open successful!
+2019-06-23 10:54:30,105 INFO [GPS] initialation successful!
+2019-06-23 10:54:30,206 INFO [estimator] Too much time!
+2019-06-23 10:55:25,425 INFO [PLC] Servo and PLC initialation successful!
+2019-06-23 10:55:26,426 INFO [controller] Too much time!
+2019-06-23 16:03:04,333 INFO [default] The program has started!
+2019-06-23 16:03:04,351 INFO [gui-serial]  serial port open successful!
+2019-06-23 16:04:00,435 INFO [GPS] initialation successful!
+2019-06-23 16:04:00,535 INFO [estimator] Too much time!
+2019-06-23 16:04:05,750 INFO [PLC] Servo and PLC initialation successful!
+2019-06-23 16:04:06,751 INFO [controller] Too much time!

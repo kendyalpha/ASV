@@ -1,0 +1,129 @@
+{
+    "Massproperty": {
+        "AddedMass": [
+            83,
+            0,
+            0,
+            0,
+            166,
+            244,
+            0,
+            244,
+            298
+        ],
+        "CoG": [
+            2.013,
+            0,
+            -1.2
+        ],
+        "Damping": [
+            17,
+            0,
+            0,
+            0,
+            20,
+            0,
+            0,
+            0,
+            100
+        ],
+        "Mass": [
+            540,
+            0,
+            0,
+            0,
+            540,
+            200,
+            0,
+            200,
+            1000
+        ]
+    },
+    "control_rate": 10,
+    "controller": {
+        "sample_time": 0.1
+    },
+    "dbsavedir": "/home/scar1et/Coding/CPP1X/USV/DPDecom/QT/build/data/DPdata.db",
+    "happy": true,
+    "list": [
+        1,
+        0,
+        2
+    ],
+    "logsavedir": "/home/scar1et/Coding/CPP1X/USV/DPDecom/QT/build/data/log",
+    "nothing": null,
+    "object": {
+        "currency": "USD",
+        "value": 42.99
+    },
+    "pi": null,
+    "thrust_limit": {
+        "Mz": [
+            5.0,
+            3.0
+        ],
+        "x": [
+            6.0,
+            5.0
+        ],
+        "y": [
+            3.0,
+            2.0
+        ]
+    },
+    "thruster1": {
+        "max_delta_rotation": 100,
+        "max_rotation": 3000,
+        "position": [
+            1.9,
+            0
+        ],
+        "thrust_contant": [
+            5.5e-07,
+            1.3e-07
+        ],
+        "type": "tunnel"
+    },
+    "thruster2": {
+        "max_delta_rotation": 100,
+        "max_rotation": 3000,
+        "position": [
+            1.8,
+            0
+        ],
+        "thrust_contant": [
+            3.7e-07,
+            1.7e-07
+        ],
+        "type": "tunnel"
+    },
+    "thruster3": {
+        "max_alpha": 180,
+        "max_delta_alpha": 7,
+        "max_delta_rotation": 20,
+        "max_rotation": 1000,
+        "min_alpha": 0,
+        "min_rotation": 50,
+        "position": [
+            -1.893,
+            -0.216
+        ],
+        "thrust_contant": 2e-05,
+        "type": "azimuth"
+    },
+    "thruster4": {
+        "max_alpha": 0,
+        "max_delta_alpha": 7,
+        "max_delta_rotation": 20,
+        "max_rotation": 1000,
+        "min_alpha": -180,
+        "min_rotation": 50,
+        "position": [
+            -1.893,
+            0.216
+        ],
+        "thrust_contant": 2e-05,
+        "type": "azimuth"
+    },
+    "vesselname": "Biling"
+}

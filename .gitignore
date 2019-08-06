@@ -1,0 +1,11 @@
+build/
+Build/
+Debug/
+debug/
+Release/
+release/
+BUILD/
+*.csv
+*.db
+*.mat
+*.o

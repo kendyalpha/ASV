@@ -1,0 +1,34 @@
+2019-06-28 13:26:58,482 INFO [default] The program has started!
+2019-06-28 13:26:58,497 INFO [gui-serial]  serial port open successful!
+2019-06-28 13:26:59,592 INFO [GPS] initialation successful!
+2019-06-28 13:26:59,693 INFO [estimator] Too much time!
+2019-06-28 13:27:54,902 INFO [PLC] Servo and PLC initialation successful!
+2019-06-28 13:27:55,104 INFO [controller] Too much time!
+2019-06-28 13:30:06,535 ERROR [sql] SQL logic error
+2019-06-28 13:30:06,726 ERROR [sql] SQL logic error
+2019-06-28 13:30:06,931 ERROR [sql] SQL logic error
+2019-06-28 13:31:48,329 ERROR [sql] SQL logic error
+2019-06-28 13:31:59,733 ERROR [sql] SQL logic error
+2019-06-28 13:32:02,824 ERROR [sql] SQL logic error
+2019-06-28 13:32:08,146 ERROR [sql] SQL logic error
+2019-06-28 13:32:09,337 ERROR [sql] SQL logic error
+2019-06-28 13:32:09,537 ERROR [sql] SQL logic error
+2019-06-28 13:32:09,729 ERROR [sql] SQL logic error
+2019-06-28 13:32:10,527 ERROR [sql] SQL logic error
+2019-06-28 13:32:13,735 ERROR [sql] SQL logic error
+2019-06-28 13:32:20,925 ERROR [sql] SQL logic error
+2019-06-28 13:32:23,137 ERROR [sql] SQL logic error
+2019-06-28 13:33:19,237 FATAL [default] CRASH HANDLED; Application has crashed due to [SIGINT] signal
+    ======= Backtrace: =========
+    [1] ./testbiling(+0x25ad8) [0x564641c51ad8] 
+    [2] ./testbiling(+0x25cb9) [0x564641c51cb9] 
+    [3]  0x41100) [0x7f26850ee100]:_64-linux-gnu/libc.so.6(+0x41100) [0x7f26850ee100]
+    [4]  0x42) [0x7f26851b6f62]:_64-linux-gnu/libc.so.6(__read+0x42) [0x7f26851b6f62]
+    [5]  0x148) [0x7f2685139c88]:_64-linux-gnu/libc.so.6(_IO_file_underflow+0x148) [0x7f2685139c88]
+    [6]  0x32) [0x7f268513af92]:_64-linux-gnu/libc.so.6(_IO_default_uflow+0x32) [0x7f268513af92]
+    [7]  0x105) [0x7f2685134de5]:_64-linux-gnu/libc.so.6(getchar+0x105) [0x7f2685134de5]
+    [8] ./testbiling(+0x55a51) [0x564641c81a51] 
+    [9]  0xeb) [0x7f26850d109b]:_64-linux-gnu/libc.so.6(__libc_start_main+0xeb) [0x7f26850d109b]
+    [10] ./testbiling(+0x13c8a) [0x564641c3fc8a] 
+
+2019-06-28 13:33:19,237 WARNING [default] Aborting application. Reason: Fatal log at [/home/skloe/Coding/ASV/logging/src/easylogging++.cc:2876]
