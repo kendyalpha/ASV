@@ -202,17 +202,29 @@ class trajectorygenerator {
       _currentstatus.c_speed = _best_path.s_d(1);
       _currentstatus.c_d = _best_path.d(1);
       _currentstatus.c_d_d = _best_path.d_d(1);
-      _currentstatus.c_d_dd = _best_path.d_ddd(1);
+      _currentstatus.c_d_dd = _best_path.d_dd(1);
       _currentstatus.s0 = _best_path.s(1);
+
+      if ((std::pow(_best_path.x(1) - rx(rx.size() - 1), 2) +
+           std::pow(_best_path.y(1) - ry(ry.size() - 1), 2)) <= 1.0) {
+        std::cout << "goal\n";
+        break;
+      }
     }
   }
 
-  virtual ~trajectorygenerator() = default;
+  Eigen::VectorXd getrx() const noexcept { return rx; }
+  Eigen::VectorXd getry() const noexcept { return ry; }
+  Eigen::VectorXd getryaw() const noexcept { return ryaw; }
+  Eigen::VectorXd getrk() const noexcept { return rk; }
 
-  Eigen::VectorXd getrx() const { return rx; }
-  Eigen::VectorXd getry() const { return ry; }
-  Eigen::VectorXd getryaw() const { return ryaw; }
-  Eigen::VectorXd getrk() const { return rk; }
+  void setobstacle(const Eigen::VectorXd &_obstacle_x,
+                   const Eigen::VectorXd &_obstacle_y) noexcept {
+    obstacle_x = _obstacle_x;
+    obstacle_y = _obstacle_y;
+  }
+
+  virtual ~trajectorygenerator() = default;
 
  private:
   std::vector<Frenet_path> frenet_paths;
@@ -226,9 +238,10 @@ class trajectorygenerator {
 
   Eigen::VectorXd waypoints_x;
   Eigen::VectorXd waypoints_y;
+  Eigen::VectorXd obstacle_x;
+  Eigen::VectorXd obstacle_y;
 
   Spline2D _Spline2D;
-  Eigen::Matrix<double, Eigen::Dynamic, 2> obstacle;
   Eigen::VectorXd rx;    // reference x (m)
   Eigen::VectorXd ry;    // reference y (m)
   Eigen::VectorXd ryaw;  // reference yaw (rad)
@@ -261,7 +274,8 @@ class trajectorygenerator {
   void frenet_optimal_planning(double _c_speed, double _c_d, double _c_d_d,
                                double _c_d_dd, double _s0) {
     calc_frenet_paths(_c_speed, _c_d, _c_d_d, _c_d_dd, _s0);
-    std::vector<Frenet_path> t_frenet_paths = check_paths();
+
+    auto t_frenet_paths = check_paths();
 
     // find minimum cost path
     double mincost = t_frenet_paths[0].cf;
@@ -276,28 +290,49 @@ class trajectorygenerator {
 
   std::vector<Frenet_path> check_paths() {
     std::vector<Frenet_path> t_frenet_paths;
+
+    int count_max_speed = 0;
+    int count_max_accel = 0;
+    int count_max_curvature = 0;
+    int count_collsion = 0;
     for (std::size_t i = 0; i != frenet_paths.size(); i++) {
-      if (frenet_paths[i].s_d.maxCoeff() > _para.MAX_SPEED)
+      // std::cout << frenet_paths[i].c.transpose() << std::endl;
+
+      if (frenet_paths[i].s_d.maxCoeff() > _para.MAX_SPEED) {
+        count_max_speed++;
         continue;  // max speed check
-      if (frenet_paths[i].s_dd.maxCoeff() > _para.MAX_ACCEL)
+      }
+      if ((frenet_paths[i].s_dd.maxCoeff() > _para.MAX_ACCEL) ||
+          (frenet_paths[i].s_dd.minCoeff() < -_para.MAX_ACCEL)) {
+        count_max_accel++;
         continue;  // Max accel check
-      if (frenet_paths[i].s_dd.minCoeff() < -_para.MAX_ACCEL)
-        continue;  // Max accel check
-      if (frenet_paths[i].c.maxCoeff() > _para.MAX_CURVATURE)
+      }
+      if ((frenet_paths[i].c.maxCoeff() > _para.MAX_CURVATURE) ||
+          (frenet_paths[i].c.minCoeff() < -_para.MAX_CURVATURE)) {
+        count_max_curvature++;
         continue;  // Max curvature check
-      if (frenet_paths[i].c.minCoeff() < -_para.MAX_CURVATURE)
-        continue;                                       // Max curvature check
-      if (!check_collision(frenet_paths[i])) continue;  // collision occurs
+      }
+
+      if (!check_collision(frenet_paths[i])) {
+        count_collsion++;
+        continue;  // collision occurs
+      }
       t_frenet_paths.push_back(frenet_paths[i]);
     }
+
+    // std::cout << "Max speed: " << count_max_speed << std::endl;
+    // std::cout << "Max accel: " << count_max_accel << std::endl;
+    // std::cout << "Max cuvature: " << count_max_curvature << std::endl;
+    // std::cout << "collision: " << count_collsion << std::endl;
+
     return t_frenet_paths;
   }
 
   bool check_collision(const Frenet_path &_Frenet_path) {
-    for (int i = 0; i != obstacle.rows(); i++) {
+    for (int i = 0; i != obstacle_x.size(); i++) {
       for (int j = 0; j != _Frenet_path.x.size(); j++) {
-        double d = std::pow(_Frenet_path.x(j) - obstacle(i, 0), 2) +
-                   std::pow(_Frenet_path.y(j) - obstacle(i, 1), 2);
+        double d = std::pow(_Frenet_path.x(j) - obstacle_x(i), 2) +
+                   std::pow(_Frenet_path.y(j) - obstacle_y(i), 2);
         if (d <= std::pow(_para.ROBOT_RADIUS, 2))  // collision occurs
           return false;
       }

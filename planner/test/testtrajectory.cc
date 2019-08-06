@@ -12,13 +12,16 @@
 #include "utilityio.h"
 
 int main() {
-  Eigen::VectorXd X(7);
-  Eigen::VectorXd Y(7);
-  X << -2.5, 0.0, 2.5, 5.0, 7.5, 3.0, -1.0;
-  Y << 0.7, -6.0, 5.0, 6.5, 0.0, 5.0, -2.0;
-
+  Eigen::VectorXd X(5);
+  Eigen::VectorXd Y(5);
+  Eigen::VectorXd ob_x(5);
+  Eigen::VectorXd ob_y(5);
+  X << 0.0, 10.0, 20.5, 35.0, 70.5;
+  Y << 0.0, -6.0, 5.0, 6.5, 0.0;
+  ob_x << 20.0, 30.0, 30.0, 35.0, 50.0;
+  ob_y << 10.0, 6.0, 8.0, 8.0, 3.0;
   trajectorygenerator _trajectorygenerator(X, Y);
-
+  _trajectorygenerator.setobstacle(ob_x, ob_y);
   _trajectorygenerator.test();
 
   // utilityio _utilityio;
