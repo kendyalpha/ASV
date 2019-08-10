@@ -15,6 +15,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # data = unicode(data, errors='ignore')
         doubles_sequence = array.array('d', data)
         # stringdata = data.decode(encoding='utf-8')
-        print('Received', doubles_sequence)
+        print('Received', doubles_sequence[1])
         # stringdata = data.decode()
         # print('Received', b)

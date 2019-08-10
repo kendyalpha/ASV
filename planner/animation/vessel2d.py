@@ -11,6 +11,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import socket
+import array
 from matplotlib.patches import Circle, Wedge, Polygon
 from matplotlib.collections import PatchCollection
 
@@ -45,26 +47,42 @@ class vessel2d:
 fig, ax = plt.subplots()
 _vessel2d = vessel2d()
 N = 5
+HOST = '127.0.0.1'
+PORT = 9340                # 设置端口号
 
 
-for i in range(10):
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    while True:
+        s.sendall(b'socket')
+        data = s.recv(104)
+        doubles_sequence = array.array('d', data)
+        print('Received', doubles_sequence[1])
 
-    # circles
-    x = np.random.rand(N)
-    y = np.random.rand(N)
-    radii = 0.1*np.random.rand(N)
-    for x1, y1, r in zip(x, y, radii):
-        circle = Circle((x1, y1), r, color='red', alpha=0.4)
-        ax.add_patch(circle)
+        # vessel profile
+        vessel2dnew = _vessel2d.perform_tran(
+            doubles_sequence[0],  # x
+            doubles_sequence[1],  # y
+            doubles_sequence[2]  # heading
+        )
+        polygon = Polygon(vessel2dnew, True, alpha=0.4)
+        ax.add_patch(polygon)
 
-    # vessel profile
-    angle = i*np.pi/4
-    vessel2dnew = _vessel2d.perform_tran(1, 0, angle)
-    polygon = Polygon(vessel2dnew, True, alpha=0.4)
-    ax.add_patch(polygon)
-    plt.axis('equal')
-    plt.axis([-10, 10, -10, 10])
-    plt.pause(0.05)
-    ax.clear()
+        # circles
+        x = np.zeros(N)
+        y = np.zeros(N)
+        for i in range(N):
+            x[i] = doubles_sequence[3+2*i]
+            y[i] = doubles_sequence[4+2*i]
 
-plt.show()
+        radii = 0.1*np.random.rand(N)
+        for x1, y1, r in zip(x, y, radii):
+            circle = Circle((x1, y1), r, color='red', alpha=0.4)
+            ax.add_patch(circle)
+
+        plt.axis('equal')
+        plt.axis([-12, 12, -10, 10])
+        plt.pause(0.05)
+        ax.clear()
+
+    plt.show()
