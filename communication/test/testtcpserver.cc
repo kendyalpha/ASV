@@ -16,14 +16,6 @@ union lidarmsg {
   char char_msg[40];
 };
 
-void testmultipersonchat() {
-  tcpserver _tcpserver("9340");
-  std::cout << "results: " << _tcpserver.getsocketresults() << std::endl;
-  while (1) {
-    _tcpserver.selectserver();
-  }
-}
-
 void test() {
   tcpserver _tcpserver("9340");
   const int recv_size = 10;

@@ -33,8 +33,3 @@ target_include_directories(testtcpserver PRIVATE ${HEADER_DIRECTORY})
 
 add_executable (testtcpclient testtcpclient.cc)
 target_include_directories(testtcpclient PRIVATE ${HEADER_DIRECTORY})
-
-add_executable (testUAV testUAV.cc)
-target_include_directories(testUAV PRIVATE ${HEADER_DIRECTORY})
-find_library(SERIAL_LIBRARY serial ${LIBRARY_DIRECTORY})
-target_link_libraries(testUAV PUBLIC ${SERIAL_LIBRARY})

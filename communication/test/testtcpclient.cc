@@ -16,7 +16,7 @@ union lidarmsg {
 };
 
 void test() {
-  tcpclient _tcpclient("127.0.0.1", "9341");
+  tcpclient _tcpclient("127.0.0.1", "9340");
   const int recv_size = 40;
   const int send_size = 10;
   lidarmsg _recvmsg;
