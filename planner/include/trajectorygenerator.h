@@ -193,30 +193,20 @@ class trajectorygenerator {
     initialize_frenet_paths();
   }
 
-  void test() {
-    for (int i = 0; i != 500; i++) {
-      frenet_optimal_planning(_currentstatus.c_speed, _currentstatus.c_d,
-                              _currentstatus.c_d_d, _currentstatus.c_d_dd,
-                              _currentstatus.s0);
-
-      _currentstatus.c_speed = _best_path.s_d(1);
-      _currentstatus.c_d = _best_path.d(1);
-      _currentstatus.c_d_d = _best_path.d_d(1);
-      _currentstatus.c_d_dd = _best_path.d_dd(1);
-      _currentstatus.s0 = _best_path.s(1);
-
-      if ((std::pow(_best_path.x(1) - rx(rx.size() - 1), 2) +
-           std::pow(_best_path.y(1) - ry(ry.size() - 1), 2)) <= 1.0) {
-        std::cout << "goal\n";
-        break;
-      }
-    }
+  void trajectoryonestep() {
+    frenet_optimal_planning(_currentstatus.c_speed, _currentstatus.c_d,
+                            _currentstatus.c_d_d, _currentstatus.c_d_dd,
+                            _currentstatus.s0);
+    updatecurrentstatus();
   }
 
   Eigen::VectorXd getrx() const noexcept { return rx; }
   Eigen::VectorXd getry() const noexcept { return ry; }
   Eigen::VectorXd getryaw() const noexcept { return ryaw; }
   Eigen::VectorXd getrk() const noexcept { return rk; }
+  double getcx() const noexcept { return _best_path.x(1); }
+  double getcy() const noexcept { return _best_path.y(1); }
+  double getcyaw() const noexcept { return _best_path.yaw(1); }
 
   void setobstacle(const Eigen::VectorXd &_obstacle_x,
                    const Eigen::VectorXd &_obstacle_y) noexcept {
@@ -286,6 +276,14 @@ class trajectorygenerator {
         _best_path = t_frenet_paths[i];
       }
     }
+  }
+
+  void updatecurrentstatus() {
+    _currentstatus.c_speed = _best_path.s_d(1);
+    _currentstatus.c_d = _best_path.d(1);
+    _currentstatus.c_d_d = _best_path.d_d(1);
+    _currentstatus.c_d_dd = _best_path.d_dd(1);
+    _currentstatus.s0 = _best_path.s(1);
   }
 
   std::vector<Frenet_path> check_paths() {

@@ -22,13 +22,13 @@ class vessel2d:
     def __init__(self):
 
         # calc coefficient of quintic polynomial
-        self.vesselprofile = np.array([[0, 5],
-                                       [0.7, 3.8],
-                                       [0.7, 0.6],
-                                       [0.5, 0],
-                                       [-0.5, 0],
-                                       [-0.7, 0.6],
-                                       [-0.7, 3.8]])
+        self.vesselprofile = np.array([[5, 0],
+                                       [3.8, -0.7],
+                                       [0.6, -0.7],
+                                       [0, -0.5],
+                                       [0, 0.5],
+                                       [0.6, 0.7],
+                                       [3.8, 0.7]])
 
     def perform_tran(self, x_cog, y_cog, heading):
         trans = self.calc_transform(heading)
@@ -81,8 +81,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             ax.add_patch(circle)
 
         plt.axis('equal')
-        plt.axis([-12, 12, -10, 10])
-        plt.pause(0.05)
+        plt.axis([-52, 52, -50, 50])
+        plt.pause(0.1)
         ax.clear()
 
     plt.show()
