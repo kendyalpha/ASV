@@ -40,10 +40,10 @@ int main() {
   Eigen::Matrix<double, 5, 1> a;
   a << 7, 1, 23, 12, 4;
   polynomialvalue<4> _quintic_polynomial(a);
-  std::cout << _quintic_polynomial.compute_order_derivative(0, 1) << std::endl;
-  std::cout << _quintic_polynomial.compute_order_derivative(1, 2) << std::endl;
-  std::cout << _quintic_polynomial.compute_order_derivative(2, 3) << std::endl;
-  std::cout << _quintic_polynomial.compute_order_derivative(3, 4) << std::endl;
+  std::cout << _quintic_polynomial.compute_order_derivative<0>(1) << std::endl;
+  std::cout << _quintic_polynomial.compute_order_derivative<1>(2) << std::endl;
+  std::cout << _quintic_polynomial.compute_order_derivative<2>(3) << std::endl;
+  std::cout << _quintic_polynomial.compute_order_derivative<3>(4) << std::endl;
 
   return EXIT_SUCCESS;
 }

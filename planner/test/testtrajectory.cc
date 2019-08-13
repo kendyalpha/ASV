@@ -13,8 +13,8 @@
 #include "utilityio.h"
 
 union trajectorymsg {
-  double double_msg[13];
-  char char_msg[104];
+  double double_msg[100];
+  char char_msg[800];
 };
 
 int main() {
@@ -33,7 +33,7 @@ int main() {
   // socket
   tcpserver _tcpserver("9340");
   const int recv_size = 10;
-  const int send_size = 104;
+  const int send_size = 800;
   char recv_buffer[recv_size];
   trajectorymsg _sendmsg = {0.0, 0.0, 0.0, 0.0, 0.0};
 
@@ -42,8 +42,10 @@ int main() {
 
     auto _rx = _trajectorygenerator.getrx();
     auto _ry = _trajectorygenerator.getry();
-    auto _cx = _trajectorygenerator.getcx();
-    auto _cy = _trajectorygenerator.getcy();
+    auto _bestX = _trajectorygenerator.getbestX();
+    auto _bestY = _trajectorygenerator.getbestY();
+    auto _cx = _bestX(1);
+    auto _cy = _bestY(1);
     auto _cyaw = _trajectorygenerator.getcyaw();
 
     _sendmsg.double_msg[0] = _cx;    // vessel x
@@ -51,8 +53,14 @@ int main() {
     _sendmsg.double_msg[2] = _cyaw;  // vessel heading
 
     for (int j = 0; j != 5; j++) {
-      _sendmsg.double_msg[j + 3] = ob_x(j);  // obstacle x
-      _sendmsg.double_msg[j + 4] = ob_y(j);  // obstacle y
+      _sendmsg.double_msg[2 * j + 3] = ob_x(j);  // obstacle x
+      _sendmsg.double_msg[2 * j + 4] = ob_y(j);  // obstacle y
+    }
+
+    _sendmsg.double_msg[13] = _bestX.size();  // the length of vector
+    for (int j = 0; j != _bestX.size(); j++) {
+      _sendmsg.double_msg[2 * j + 14] = _bestX(j);  // best X
+      _sendmsg.double_msg[2 * j + 15] = _bestY(j);  // best Y
     }
 
     _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,

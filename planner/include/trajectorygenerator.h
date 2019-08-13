@@ -44,8 +44,8 @@ struct parameters {
   double MAX_ROAD_WIDTH = 7.0;       // maximum road width [m]
   double D_ROAD_W = 1.0;             // road width sampling length [m]
   double DT = 0.2;                   // time tick [s]
-  double MAXT = 5.0;                 // max prediction time [m]
-  double MINT = 4.0;                 // min prediction time [m]
+  double MAXT = 5.0;                 // max prediction time [s]
+  double MINT = 4.0;                 // min prediction time [s]
   double TARGET_SPEED = 30.0 / 3.6;  // target speed [m/s]
   double D_T_S = 5.0 / 3.6;          // target speed sampling length[m / s]
   double N_S_SAMPLE = 1;             // sampling number of target speed
@@ -204,8 +204,9 @@ class trajectorygenerator {
   Eigen::VectorXd getry() const noexcept { return ry; }
   Eigen::VectorXd getryaw() const noexcept { return ryaw; }
   Eigen::VectorXd getrk() const noexcept { return rk; }
-  double getcx() const noexcept { return _best_path.x(1); }
-  double getcy() const noexcept { return _best_path.y(1); }
+  Eigen::VectorXd getbestX() const noexcept { return _best_path.x; }
+  Eigen::VectorXd getbestY() const noexcept { return _best_path.y; }
+
   double getcyaw() const noexcept { return _best_path.yaw(1); }
 
   void setobstacle(const Eigen::VectorXd &_obstacle_x,
@@ -365,7 +366,8 @@ class trajectorygenerator {
       for (std::size_t j = 0; j != n_Tj; j++) {
         _quintic_polynomial.update_startendposition(_c_d, _c_d_d, _c_d_dd,
                                                     di(i), 0.0, 0.0, Tj(j));
-        std::size_t n_zero_Tj = static_cast<std::size_t>(Tj(j) / _para.DT + 1);
+        std::size_t n_zero_Tj =
+            static_cast<std::size_t>(std::ceil(Tj(j) / _para.DT + 1));
         Eigen::VectorXd _t = Eigen::VectorXd::LinSpaced(n_zero_Tj, 0.0, Tj(j));
         Eigen::VectorXd _d(n_zero_Tj);
         Eigen::VectorXd _d_d(n_zero_Tj);
@@ -373,13 +375,13 @@ class trajectorygenerator {
         Eigen::VectorXd _d_ddd(n_zero_Tj);
 
         for (std::size_t ji = 0; ji != n_zero_Tj; ji++) {
-          _d(ji) = _quintic_polynomial.compute_order_derivative(0, _t(ji));
-          _d_d(ji) = _quintic_polynomial.compute_order_derivative(1, _t(ji));
-          _d_dd(ji) = _quintic_polynomial.compute_order_derivative(2, _t(ji));
-          _d_ddd(ji) = _quintic_polynomial.compute_order_derivative(3, _t(ji));
+          _d(ji) = _quintic_polynomial.compute_order_derivative<0>(_t(ji));
+          _d_d(ji) = _quintic_polynomial.compute_order_derivative<1>(_t(ji));
+          _d_dd(ji) = _quintic_polynomial.compute_order_derivative<2>(_t(ji));
+          _d_ddd(ji) = _quintic_polynomial.compute_order_derivative<3>(_t(ji));
         }
 
-        // Loongitudinal motion planning (Velocity keeping)
+        // Longitudinal motion planning (Velocity keeping)
         for (std::size_t k = 0; k != n_tvk; k++) {
           _quartic_polynomial.update_startendposition(_s0, _c_speed, 0.0,
                                                       tvk(k), 0.0, Tj(j));
@@ -388,11 +390,11 @@ class trajectorygenerator {
           Eigen::VectorXd _s_dd(n_zero_Tj);
           Eigen::VectorXd _s_ddd(n_zero_Tj);
           for (std::size_t ki = 0; ki != n_zero_Tj; ki++) {
-            _s(ki) = _quartic_polynomial.compute_order_derivative(0, _t(ki));
-            _s_d(ki) = _quartic_polynomial.compute_order_derivative(1, _t(ki));
-            _s_dd(ki) = _quartic_polynomial.compute_order_derivative(2, _t(ki));
+            _s(ki) = _quartic_polynomial.compute_order_derivative<0>(_t(ki));
+            _s_d(ki) = _quartic_polynomial.compute_order_derivative<1>(_t(ki));
+            _s_dd(ki) = _quartic_polynomial.compute_order_derivative<2>(_t(ki));
             _s_ddd(ki) =
-                _quartic_polynomial.compute_order_derivative(3, _t(ki));
+                _quartic_polynomial.compute_order_derivative<3>(_t(ki));
           }
 
           double Jp = _d_ddd.squaredNorm();  // square of jerk

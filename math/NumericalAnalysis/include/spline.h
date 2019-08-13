@@ -324,9 +324,10 @@ class polynomialvalue {
   virtual ~polynomialvalue() = default;
 
   // calculate the derivtive of polynomial
-  double compute_order_derivative(std::size_t _order, double _x) const {
+  template <std::size_t _order = 0>
+  double compute_order_derivative(double _x) const {
     double results = 0.0;
-    if (_order <= order) {
+    if constexpr (_order <= order) {
       for (std::size_t i = 0; i != (order + 1 - _order); i++) {
         std::size_t t_order = 1;
         for (std::size_t j = 0; j != _order; j++) t_order *= (order - i - j);
