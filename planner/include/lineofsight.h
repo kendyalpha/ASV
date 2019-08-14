@@ -48,9 +48,9 @@ class lineofsight {
     if (_distance < capture_radius)
       CLOG(ERROR, "LOS") << "waypoints too close!";
     else {
-      double thetaK = std::atan(delta_pos(1) / delta_pos(0));
-      if (delta_pos(0) < 0) thetaK += M_PI;  // TODO: atan2
-
+      // double thetaK = std::atan(delta_pos(1) / delta_pos(0));
+      // if (delta_pos(0) < 0) thetaK += M_PI;
+      double thetaK = std::atan2(delta_pos(1), delta_pos(0));
       // rotation matrix
       computeR(thetaK);
 
