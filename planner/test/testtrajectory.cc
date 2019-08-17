@@ -9,6 +9,7 @@
 */
 #include <cstdlib>
 #include "tcpserver.h"
+#include "timecounter.h"
 #include "trajectorygenerator.h"
 #include "utilityio.h"
 
@@ -36,6 +37,9 @@ int main() {
   const int send_size = 800;
   char recv_buffer[recv_size];
   trajectorymsg _sendmsg = {0.0, 0.0, 0.0, 0.0, 0.0};
+
+  // timer
+  timecounter _timer;
 
   for (int i = 0; i != 500; ++i) {
     _trajectorygenerator.trajectoryonestep();
@@ -71,6 +75,9 @@ int main() {
       std::cout << "goal\n";
       break;
     }
+
+    long int et = _timer.timeelapsed();
+    std::cout << et << std::endl;
   }
 
   // utilityio _utilityio;

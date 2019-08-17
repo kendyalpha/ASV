@@ -5,7 +5,7 @@
  *
  * ---------------------------------------------------------------------
  * Copyright (C) 2011, 2014 Tino Kluge (ttk448 at gmail.com)
- * by Hu.ZH(CrossOcean.ai)
+ * modified by Hu.ZH(CrossOcean.ai)
  * ---------------------------------------------------------------------
  *
  */
@@ -62,7 +62,7 @@ class spline {
       }
     }
     return idx;
-  }
+  }  // find_closestindex
 
  public:
   // set default boundary condition to be zero curvature at both ends
@@ -253,8 +253,9 @@ class spline {
     }
     return interpol;
   }  // deriv()
-};
+};   // class spline
 
+// two-dimensional spline with analytic form
 class Spline2D {
  public:
   Spline2D(const Eigen::VectorXd& _x, const Eigen::VectorXd& _y)
@@ -268,7 +269,7 @@ class Spline2D {
   // calculate the x,y based on the arclength
   Eigen::Vector2d compute_position(double _arclength) const {
     return (Eigen::Vector2d() << _SX(_arclength), _SY(_arclength)).finished();
-  }
+  }  // compute_position
   // calculate the curvature based on the arclength
   double compute_curvature(double _arclength) const {
     double kappa = 0.0;
@@ -279,13 +280,13 @@ class Spline2D {
     kappa = (ddy * dx - ddx * dy) /
             std::pow(std::pow(dx, 2) + std::pow(dy, 2), 1.5);
     return kappa;
-  }
+  }  // compute_curvature
   // calculate the orientation based on the arclength
   double compute_yaw(double _arclength) const {
     double dx = _SX.deriv(1, _arclength);
     double dy = _SY.deriv(1, _arclength);
     return std::atan2(dy, dx);
-  }
+  }  // compute_yaw
   Eigen::VectorXd getarclength() const { return arclength; }
 
  private:
@@ -310,8 +311,8 @@ class Spline2D {
       arclength(i + 1) =
           arclength(i) + std::sqrt(std::pow(dx, 2) + std::pow(dy, 2));
     }
-  }
-};
+  }  // compute_arclength
+};   // class spline2d
 
 // g(x)= a5 x^5 + a4 x^4 + a3 x^3 + a2 x^2 + a1 x + a0
 template <std::size_t order = 5>
@@ -335,13 +336,13 @@ class polynomialvalue {
       }
     }
     return results;
-  }
+  }  // compute_order_derivative
 
   void setcofficient(const polyvector& _a) { a = _a; }
   polyvector getcofficient() const { return a; }
 
  protected:
   polyvector a;  // coefficent; a={a5, a4, a3, a2, a1, a0}
-};
+};               // class polynomialvalue
 
 #endif /* TK_SPLINE_H */

@@ -35,6 +35,7 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 	"${PROJECT_SOURCE_DIR}/../../math/eigen"
 	"${PROJECT_SOURCE_DIR}/../../math/NumericalAnalysis/include"
 	"${PROJECT_SOURCE_DIR}/../../communication/include"
+	"${PROJECT_SOURCE_DIR}/../../timer/include"
 	)
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
