@@ -22,7 +22,7 @@
 #include "nmea.h"
 #include "serial/serial.h"
 
-class gpsimu : public nmea {
+class gpsimu final : public nmea {
   friend std::ostream& operator<<(std::ostream&, const gpsimu&);
 
  public:
@@ -43,7 +43,7 @@ class gpsimu : public nmea {
   gpsimu() = delete;
   ~gpsimu() {}
   // read serial data and transform to UTM
-  gpsimu& gpsonestep() {
+  void gpsonestep(gpsRTdata& gps_data) {
     std::string t_serial_buffer("gps error");
     t_serial_buffer = GPS_serial.readline(200);
 
@@ -74,23 +74,36 @@ class gpsimu : public nmea {
               gps_data.UTM_y);
     } else
       serial_buffer = t_serial_buffer;
-
-    return *this;
   }
 
   // read serial data and transform to UTM
   gpsimu& gpsonesteptest() {
     // std::string t_serial_buffer("gps error");
-    serial_buffer = GPS_serial.readline(200);
+    serial_buffer = GPS_serial.readline(150);
 
-    // Forward(gps_data.latitude, gps_data.longitude, gps_data.UTM_x,
-    //         gps_data.UTM_y);
+    if (serial_buffer.find("$GPGGA") != std::string::npos) {
+      nmea_parse(serial_buffer, _GPGGA);
+    } else if (serial_buffer.find("$HEROT") != std::string::npos) {
+      nmea_parse(serial_buffer, _HEROT);
+    } else if (serial_buffer.find("$GPVTG") != std::string::npos) {
+      nmea_parse(serial_buffer, _GPVTG);
+    } else if (serial_buffer.find("$PSAT") != std::string::npos) {
+      nmea_parse(serial_buffer, _PSAT);
+    } else
 
-    return *this;
+      // Forward(gps_data.latitude, gps_data.longitude, gps_data.UTM_x,
+      //         gps_data.UTM_y);
+
+      return *this;
   }
 
-  gpsRTdata getgpsRTdata() const { return gps_data; }
   std::string getserialbuffer() const { return serial_buffer; }
+
+  void updateUTMzone(int zone,  // the UTM zone + hemisphere
+                     bool northp) {
+    _lon0 = 6 * zone - 183;
+    _falsenorthing = (northp ? 0 : 100e5);  // true = N, false = S
+  }
 
  private:
   // serial data
@@ -102,8 +115,11 @@ class gpsimu : public nmea {
   double _lon0;                           // Central longitude
   double _falseeasting, _falsenorthing;
 
-  // real time GPS data
-  gpsRTdata gps_data;
+  // real time NMEA data
+  HEROT _HEROT;
+  PSAT _PSAT;
+  GPVTG _GPVTG;
+  GPGGA _GPGGA;
 
   void enumerate_ports() {
     std::vector<serial::PortInfo> devices_found = serial::list_ports();
@@ -128,69 +144,72 @@ class gpsimu : public nmea {
   }
 };
 
-std::ostream& operator<<(std::ostream& os, const gpsimu& _gps) {
-  // buffer = _gpsimu.getserialbuffer();
-  os << "buffer=    " << _gps.serial_buffer;
-  os << "date:      " << _gps.gps_data.date << std::endl;
-  os << "time:      " << std::fixed << std::setprecision(4)
-     << _gps.gps_data.time << std::endl;
-  os << "heading:   " << std::fixed << std::setprecision(3)
-     << _gps.gps_data.heading << std::endl;
-  os << "pitch:     " << std::fixed << std::setprecision(3)
-     << _gps.gps_data.pitch << std::endl;
-  os << "roll:      " << std::fixed << std::setprecision(3)
-     << _gps.gps_data.roll << std::endl;
-  os << "latitud:   " << std::fixed << std::setprecision(7)
-     << _gps.gps_data.latitude << std::endl;
-  os << "longitude: " << std::fixed << std::setprecision(7)
-     << _gps.gps_data.longitude << std::endl;
-  os << "UTM_x:     " << std::fixed << std::setprecision(7)
-     << _gps.gps_data.UTM_x << std::endl;
-  os << "UTM_y:     " << std::fixed << std::setprecision(7)
-     << _gps.gps_data.UTM_y << std::endl;
-  os << "altitude:  " << std::fixed << std::setprecision(2)
-     << _gps.gps_data.altitude << std::endl;
-  os << "speed_v:   " << std::fixed << std::setprecision(3) << _gps.gps_data.Ve
-     << std::endl;
-  os << "speed_u:   " << std::fixed << std::setprecision(3) << _gps.gps_data.Vn
-     << std::endl;
-  os << "speed_n:   " << std::fixed << std::setprecision(3) << _gps.gps_data.Vu
-     << std::endl;
-  os << "basinLine  " << std::fixed << std::setprecision(3)
-     << _gps.gps_data.base_line << std::endl;
-  os << "NSV1:      " << _gps.gps_data.NSV1 << std::endl;
-  os << "NSV2:      " << _gps.gps_data.NSV2 << std::endl;
-  printf("status: %c\n", _gps.gps_data.status);
-  printf("check: %s\n", _gps.gps_data.check);
+// std::ostream& operator<<(std::ostream& os, const gpsimu& _gps) {
+//   // buffer = _gpsimu.getserialbuffer();
+//   os << "buffer=    " << _gps.serial_buffer;
+//   os << "date:      " << _gps.gps_data.date << std::endl;
+//   os << "time:      " << std::fixed << std::setprecision(4)
+//      << _gps.gps_data.time << std::endl;
+//   os << "heading:   " << std::fixed << std::setprecision(3)
+//      << _gps.gps_data.heading << std::endl;
+//   os << "pitch:     " << std::fixed << std::setprecision(3)
+//      << _gps.gps_data.pitch << std::endl;
+//   os << "roll:      " << std::fixed << std::setprecision(3)
+//      << _gps.gps_data.roll << std::endl;
+//   os << "latitud:   " << std::fixed << std::setprecision(7)
+//      << _gps.gps_data.latitude << std::endl;
+//   os << "longitude: " << std::fixed << std::setprecision(7)
+//      << _gps.gps_data.longitude << std::endl;
+//   os << "UTM_x:     " << std::fixed << std::setprecision(7)
+//      << _gps.gps_data.UTM_x << std::endl;
+//   os << "UTM_y:     " << std::fixed << std::setprecision(7)
+//      << _gps.gps_data.UTM_y << std::endl;
+//   os << "altitude:  " << std::fixed << std::setprecision(2)
+//      << _gps.gps_data.altitude << std::endl;
+//   os << "speed_v:   " << std::fixed << std::setprecision(3) <<
+//   _gps.gps_data.Ve
+//      << std::endl;
+//   os << "speed_u:   " << std::fixed << std::setprecision(3) <<
+//   _gps.gps_data.Vn
+//      << std::endl;
+//   os << "speed_n:   " << std::fixed << std::setprecision(3) <<
+//   _gps.gps_data.Vu
+//      << std::endl;
+//   os << "basinLine  " << std::fixed << std::setprecision(3)
+//      << _gps.gps_data.base_line << std::endl;
+//   os << "NSV1:      " << _gps.gps_data.NSV1 << std::endl;
+//   os << "NSV2:      " << _gps.gps_data.NSV2 << std::endl;
+//   printf("status: %c\n", _gps.gps_data.status);
+//   printf("check: %s\n", _gps.gps_data.check);
 
-  switch (_gps.gps_data.status) {
-    case '0':
-      os << "Satus:     GPS初始化" << std::endl;
-      break;
-    case '1':
-      os << "Satus:     粗对准" << std::endl;
-      break;
-    case '2':
-      os << "Satus:     精对准" << std::endl;
-      break;
-    case '3':
-      os << "Satus:     GPS定位" << std::endl;
-      break;
-    case '4':
-      os << "Satus:     GPS定向" << std::endl;
-      break;
-    case '5':
-      os << "Satus:     GPS RTK" << std::endl;
-      break;
-    case 'B':
-      os << "Satus:     差分定向" << std::endl;
-      break;
-    default:
-      os << "Satus:     状态未知" << std::endl;
-  }
-  os << std::endl;
+//   switch (_gps.gps_data.status) {
+//     case '0':
+//       os << "Satus:     GPS初始化" << std::endl;
+//       break;
+//     case '1':
+//       os << "Satus:     粗对准" << std::endl;
+//       break;
+//     case '2':
+//       os << "Satus:     精对准" << std::endl;
+//       break;
+//     case '3':
+//       os << "Satus:     GPS定位" << std::endl;
+//       break;
+//     case '4':
+//       os << "Satus:     GPS定向" << std::endl;
+//       break;
+//     case '5':
+//       os << "Satus:     GPS RTK" << std::endl;
+//       break;
+//     case 'B':
+//       os << "Satus:     差分定向" << std::endl;
+//       break;
+//     default:
+//       os << "Satus:     状态未知" << std::endl;
+//   }
+//   os << std::endl;
 
-  return os;
-}
+//   return os;
+// }
 
 #endif

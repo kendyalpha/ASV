@@ -1,9 +1,9 @@
 // Example of using the GeographicLib::TransverseMercatorExact class
 
-#include <iostream>
-#include <iomanip>
-#include <exception>
 #include <GeographicLib/TransverseMercatorExact.hpp>
+#include <exception>
+#include <iomanip>
+#include <iostream>
 
 using namespace std;
 using namespace GeographicLib;
@@ -14,10 +14,10 @@ int main() {
                                  Constants::UTM_k0());
     // Alternatively:
     // const TransverseMercatorExact& proj = TransverseMercatorExact::UTM();
-    double lon0 = -75;          // Central meridian for UTM zone 18
+    double lon0 = -75;  // Central meridian for UTM zone 18
     {
       // Sample forward calculation
-      double lat = 40.3, lon = -74.7; // Princeton, NJ
+      double lat = 40.3, lon = -74.7;  // Princeton, NJ
       double x, y;
       proj.Forward(lon0, lat, lon, x, y);
       cout << x << " " << y << "\n";
@@ -29,8 +29,7 @@ int main() {
       proj.Reverse(lon0, x, y, lat, lon);
       cout << lat << " " << lon << "\n";
     }
-  }
-  catch (const exception& e) {
+  } catch (const exception& e) {
     cerr << "Caught exception: " << e.what() << "\n";
     return 1;
   }

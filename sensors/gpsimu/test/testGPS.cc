@@ -39,7 +39,7 @@ int main() {
   };
   try {
     timecounter _timer;
-    gpsimu _gpsimu(51, true, 115200);  // zone 30n
+    gpsimu _gpsimu(51, true, 115200);  // zone 51 N
     long int totaltime = 0;
     while (1) {
       // gps_data = _gpsimu.gpsonesteptest().getgpsRTdata();
