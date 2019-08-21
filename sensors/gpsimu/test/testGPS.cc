@@ -12,6 +12,8 @@
 #include <cstdio>
 #include <thread>
 #include "gps.h"
+#include "timecounter.h"
+
 using std::setprecision;
 int main() {
   // real time GPS/IMU data
@@ -36,11 +38,16 @@ int main() {
       0                 // UTM_y
   };
   try {
+    timecounter _timer;
     gpsimu _gpsimu(51, true, 115200);  // zone 30n
-
+    long int totaltime = 0;
     while (1) {
-      gps_data = _gpsimu.gpsonestep().getgpsRTdata();
-      std::cout << _gpsimu;
+      // gps_data = _gpsimu.gpsonesteptest().getgpsRTdata();
+      std::string gps_buffer = _gpsimu.gpsonesteptest().getserialbuffer();
+      long int et = _timer.timeelapsed();
+      totaltime += et;
+      std::cout << "[" << totaltime << "]" << gps_buffer;
+      // std::cout << _gpsimu;
     }
 
   } catch (std::exception& e) {

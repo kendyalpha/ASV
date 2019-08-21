@@ -15,16 +15,6 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-// enum gpsstatus {
-//   initialization = 0,       // 初始化
-//   coarse_calibration = 1,   // 粗对准
-//   precise_calibration = 2,  // 精对准
-//   GPS_position = 3,         // GPS定位
-//   GPS_heading = 4,          // GPS定向
-//   RTK = 5,                  // RTK
-//   DMI
-// };
-
 // real-time data from the gps/imu sensors
 struct gpsRTdata {
   /**** GPFPD *****/

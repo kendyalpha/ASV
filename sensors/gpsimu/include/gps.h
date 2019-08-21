@@ -6,7 +6,7 @@
  *using GeographicLib to transfer to UTM
  *the header file can be read by C++ compilers
  *
- *by Zhenqiu Fu (SJTU)
+ *by ZH.Hu (CrossOcean.ai)
  *************************************************
  */
 
@@ -17,12 +17,12 @@
 #include <GeographicLib/TransverseMercator.hpp>
 #include <cstdio>
 #include <exception>
-#include <iomanip>
 #include <iostream>
 #include "gpsdata.h"
+#include "nmea.h"
 #include "serial/serial.h"
 
-class gpsimu {
+class gpsimu : public nmea {
   friend std::ostream& operator<<(std::ostream&, const gpsimu&);
 
  public:
@@ -78,6 +78,17 @@ class gpsimu {
     return *this;
   }
 
+  // read serial data and transform to UTM
+  gpsimu& gpsonesteptest() {
+    // std::string t_serial_buffer("gps error");
+    serial_buffer = GPS_serial.readline(200);
+
+    // Forward(gps_data.latitude, gps_data.longitude, gps_data.UTM_x,
+    //         gps_data.UTM_y);
+
+    return *this;
+  }
+
   gpsRTdata getgpsRTdata() const { return gps_data; }
   std::string getserialbuffer() const { return serial_buffer; }
 
@@ -91,7 +102,7 @@ class gpsimu {
   double _lon0;                           // Central longitude
   double _falseeasting, _falsenorthing;
 
-  //
+  // real time GPS data
   gpsRTdata gps_data;
 
   void enumerate_ports() {

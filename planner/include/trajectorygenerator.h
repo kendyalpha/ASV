@@ -526,7 +526,7 @@ class trajectorygenerator {
           double Js = _s_ddd.squaredNorm();  // square of jerk
 
           // square of diff from target speed
-          double _cd = _para.KJ * Jp + _para.KT * (_s(n_zero_Tj - 1) - s0) +
+          double _cd = _para.KJ * Jp + _para.KT * (_s(n_zero_Tj - 1) - _s0) +
                        _para.KD * std::pow(_d(n_zero_Tj - 1), 2);
           double _cv =
               _para.KJ * Js + _para.KT * Tj(j) +

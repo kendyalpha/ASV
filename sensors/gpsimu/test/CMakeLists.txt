@@ -12,6 +12,7 @@ find_package (GeographicLib 1.49 REQUIRED)
 # 添加 include 子目录
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
 	"${PROJECT_SOURCE_DIR}/../../../math/eigen"
+	"${PROJECT_SOURCE_DIR}/../../../timer/include"
 	"${PROJECT_SOURCE_DIR}/../../../third_party/serial/include"
     "../include/")
 
@@ -26,3 +27,9 @@ target_include_directories(testGPS PRIVATE ${HEADER_DIRECTORY})
 find_library(SERIAL_LIBRARY serial ${LIBRARY_DIRECTORY})
 target_link_libraries(testGPS ${SERIAL_LIBRARY})
 target_link_libraries(testGPS ${GeographicLib_LIBRARIES})
+
+
+
+# 指定生成目标
+add_executable (testNMEA testNMEA.cc)
+target_include_directories(testNMEA PRIVATE ${HEADER_DIRECTORY})

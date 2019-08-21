@@ -663,6 +663,83 @@ size_t Serial::SerialImpl::read(uint8_t *buf, size_t size) {
   return bytes_read;
 }
 
+size_t Serial::SerialImpl::read(char *buf, size_t size) {
+  // If the port is not open, throw
+  if (!is_open_) {
+    throw PortNotOpenedException("Serial::read");
+  }
+  size_t bytes_read = 0;
+
+  // Calculate total timeout in milliseconds t_c + (t_m * N)
+  long total_timeout_ms = timeout_.read_timeout_constant;
+  total_timeout_ms +=
+      timeout_.read_timeout_multiplier * static_cast<long>(size);
+  MillisecondTimer total_timeout(total_timeout_ms);
+
+  // Pre-fill buffer with available bytes
+  {
+    ssize_t bytes_read_now = ::read(fd_, buf, size);
+    if (bytes_read_now > 0) {
+      bytes_read = bytes_read_now;
+    }
+  }
+
+  while (bytes_read < size) {
+    int64_t timeout_remaining_ms = total_timeout.remaining();
+    if (timeout_remaining_ms <= 0) {
+      // Timed out
+      break;
+    }
+    // Timeout for the next select is whichever is less of the remaining
+    // total read timeout and the inter-byte timeout.
+    uint32_t timeout = std::min(static_cast<uint32_t>(timeout_remaining_ms),
+                                timeout_.inter_byte_timeout);
+    // Wait for the device to be readable, and then attempt to read.
+    if (waitReadable(timeout)) {
+      // If it's a fixed-length multi-byte read, insert a wait here so that
+      // we can attempt to grab the whole thing in a single IO call. Skip
+      // this wait if a non-max inter_byte_timeout is specified.
+      if (size > 1 && timeout_.inter_byte_timeout == Timeout::max()) {
+        size_t bytes_available = available();
+        if (bytes_available + bytes_read < size) {
+          waitByteTimes(size - (bytes_available + bytes_read));
+        }
+      }
+      // This should be non-blocking returning only what is available now
+      //  Then returning so that select can block again.
+      ssize_t bytes_read_now = ::read(fd_, buf + bytes_read, size - bytes_read);
+      // read should always return some data as select reported it was
+      // ready to read when we get to this point.
+      if (bytes_read_now < 1) {
+        // Disconnected devices, at least on Linux, show the
+        // behavior that they are always ready to read immediately
+        // but reading returns nothing.
+        throw SerialException(
+            "device reports readiness to read but "
+            "returned no data (device disconnected?)");
+      }
+      // Update bytes_read
+      bytes_read += static_cast<size_t>(bytes_read_now);
+      // If bytes_read == size then we have read everything we need
+      if (bytes_read == size) {
+        break;
+      }
+      // If bytes_read < size then we have more to read
+      if (bytes_read < size) {
+        continue;
+      }
+      // If bytes_read > size then we have over read, which shouldn't happen
+      if (bytes_read > size) {
+        throw SerialException(
+            "read over read, too many bytes where "
+            "read, this shouldn't happen, might be "
+            "a logical error!");
+      }
+    }
+  }
+  return bytes_read;
+}
+
 size_t Serial::SerialImpl::write(const uint8_t *data, size_t length) {
   if (is_open_ == false) {
     throw PortNotOpenedException("Serial::write");
