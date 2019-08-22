@@ -43,14 +43,10 @@ class gpsimu final : public nmea {
   ~gpsimu() {}
 
   // read serial data and transform to UTM
-  gpsimu& gpsonestep(gpsRTdata& _gpsdata) {
+  void gpsonestep(gpsRTdata& _gpsdata) {
     serial_buffer = GPS_serial.readline(150);
 
     hemisphereV102(serial_buffer, _gpsdata);
-    Forward(_gpsdata.latitude, _gpsdata.longitude, _gpsdata.UTM_x,
-            _gpsdata.UTM_y);
-
-    return *this;
   }
 
   std::string getserialbuffer() const { return serial_buffer; }
@@ -85,6 +81,8 @@ class gpsimu final : public nmea {
       _gpsdata.longitude = convertlongitudeunit(gpgga.longitude, gpgga.EW);
       _gpsdata.altitude = gpgga.altitude;
       _gpsdata.status = gpgga.gps_Q;
+      Forward(_gpsdata.latitude, _gpsdata.longitude, _gpsdata.UTM_x,
+              _gpsdata.UTM_y);
 
     } else if (_serial_buffer.find("$HEROT") != std::string::npos) {
       nmea_parse(_serial_buffer, herot);

@@ -268,13 +268,13 @@ class nmea {
                "PSAT,HPR,"
                "%lf,"  // UTC
                "%lf,"  // heading
-               "%lf,"  // roll
                "%lf,"  // pitch
+               "%lf,"  // roll
                ,
                &(gps_data.UTC),      // double
                &(gps_data.heading),  // double
-               &(gps_data.roll),     // double
-               &(gps_data.pitch)     // double
+               &(gps_data.pitch),    // double
+               &(gps_data.roll)      // double
 
         );
 

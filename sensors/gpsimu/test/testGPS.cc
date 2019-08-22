@@ -37,14 +37,16 @@ int main() {
     timecounter _timer;
     gpsimu _gpsimu(51, true, 115200);  // zone 51 N
     long int totaltime = 0;
+    int count = 0;
     while (1) {
       _gpsimu.gpsonestep(gps_data);
       std::string gps_buffer = _gpsimu.getserialbuffer();
       long int et = _timer.timeelapsed();
       totaltime += et;
       std::cout << "[" << totaltime << "]" << gps_buffer;
-
-      {
+      ++count;
+      if (count == 4) {
+        count = 0;
         std::cout << "UTC:      " << gps_data.UTC << std::endl;
         std::cout << "latitude:   " << std::fixed << std::setprecision(7)
                   << gps_data.latitude << std::endl;
