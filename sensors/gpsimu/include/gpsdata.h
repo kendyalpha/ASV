@@ -12,31 +12,28 @@
 #ifndef _GPSDATA_H_
 #define _GPSDATA_H_
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
-
 // real-time data from the gps/imu sensors
 struct gpsRTdata {
-  /**** GPFPD *****/
-  int date;          // GPS week
-  double time;       // GPS time (second)
-  double heading;    // 航向角 0 ~ 359.99, 以真北为参考基准
-  double pitch;      // 俯仰角 -90 ~ 90
-  double roll;       // 横滚角 -180 ~ 180
-  double latitude;   // 纬度 -90 ~ 90
-  double longitude;  // 经度 -180 ~ 180
-  double altitude;   // 高度 (m)
-  double Ve;         // 东向速度 (m/s)
-  double Vn;         // 北向速度 (m/s)
-  double Vu;         // 天向速度 (m/s)
-  double base_line;  // 基线长度 (m)
-  int NSV1;          // # of satellites from antenna 1
-  int NSV2;          // # of satellites from antenna 2
-  char status;       // status
-  char check[3];     // check
+  double UTC;       // hhmmss.ss  UTC时间
+  double latitude;  // 纬度 dd.dddd格式, -90 ~ 90 (正为北向，负为南向)
+  double longitude;  // 经度 ddd.dddd格式，-180 ~ 180 (正为东向，负为西向)
+  double heading;   // 航向角 0 ~ 359.99, 以真北为参考基准
+  double pitch;     // 俯仰角 -90 ~ 90
+  double roll;      // 横滚角 -180 ~ 180
+  double altitude;  // 高度 (m)
+  double Ve;        // 东向速度 (m/s)
+  double Vn;        // 北向速度 (m/s)
+  double roti;      // 转向速率 (degree/min)
+  int status;       // status
+
   /**** UTM projection   ****/
   double UTM_x;  // 投影的 x (m)
   double UTM_y;  // 投影的 y (m)
+
+  /**** vessel speed   ****/
+  double u;  // 前进速度 m/s
+  double v;  // 侧向速度 m/s
 };
+
 
 #endif /* _GPSDATA_H_ */

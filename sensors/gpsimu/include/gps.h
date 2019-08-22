@@ -23,103 +23,84 @@
 #include "serial/serial.h"
 
 class gpsimu final : public nmea {
-  friend std::ostream& operator<<(std::ostream&, const gpsimu&);
-
  public:
   explicit gpsimu(int _zone,            // the UTM zone
                   bool _northp,         // hemisphere,
                   unsigned long _baud,  // baudrate
                   const std::string& _port = "/dev/ttyUSB0")
       : GPS_serial(_port, _baud, serial::Timeout::simpleTimeout(2000)),
-        _tm(6378388,    // equatorial radius
-            1 / 297.0,  // flattening
-            GeographicLib::Constants::UTM_k0()),
-        _lon0(6 * _zone - 183),
-        _falseeasting(5e5),
-        _falsenorthing(_northp ? 0 : 100e5) {
+        serial_buffer(""),
+        tmercator(6378388,    // equatorial radius
+                  1 / 297.0,  // flattening
+                  GeographicLib::Constants::UTM_k0()),
+        centrallong(6 * _zone - 183),
+        falseeasting(5e5),
+        falsenorthing(_northp ? 0 : 100e5) {
     if (!(_zone >= 1 && _zone <= 60))
       throw GeographicLib::GeographicErr("zone not in [1,60]");
   }
   gpsimu() = delete;
   ~gpsimu() {}
-  // read serial data and transform to UTM
-  void gpsonestep(gpsRTdata& gps_data) {
-    std::string t_serial_buffer("gps error");
-    t_serial_buffer = GPS_serial.readline(200);
-
-    std::size_t pos = t_serial_buffer.find("$GPFPD");
-    if (pos != std::string::npos) {
-      serial_buffer = t_serial_buffer.substr(pos);
-      sscanf(
-          serial_buffer.c_str(),
-          "$GPFPD,%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%d,%d,0%s%s",
-          &(gps_data.date),       // date
-          &(gps_data.time),       // time
-          &(gps_data.heading),    // heading
-          &(gps_data.pitch),      // pitch
-          &(gps_data.roll),       // roll
-          &(gps_data.latitude),   // latitude
-          &(gps_data.longitude),  // longitude
-          &(gps_data.altitude),   // altitude
-          &(gps_data.Ve),         // speed_of_east
-          &(gps_data.Vn),         // speed_of_north
-          &(gps_data.Vu),         // speed_of_sky
-          &(gps_data.base_line),  // basin_line
-          &(gps_data.NSV1),       // the_satellite_number_of_first
-          &(gps_data.NSV2),       // the_satellite_number_of_second
-          &(gps_data.status),     // GPS_status
-          gps_data.check          // check
-      );
-      Forward(gps_data.latitude, gps_data.longitude, gps_data.UTM_x,
-              gps_data.UTM_y);
-    } else
-      serial_buffer = t_serial_buffer;
-  }
 
   // read serial data and transform to UTM
-  gpsimu& gpsonesteptest() {
-    // std::string t_serial_buffer("gps error");
+  gpsimu& gpsonestep(gpsRTdata& _gpsdata) {
     serial_buffer = GPS_serial.readline(150);
 
-    if (serial_buffer.find("$GPGGA") != std::string::npos) {
-      nmea_parse(serial_buffer, _GPGGA);
-    } else if (serial_buffer.find("$HEROT") != std::string::npos) {
-      nmea_parse(serial_buffer, _HEROT);
-    } else if (serial_buffer.find("$GPVTG") != std::string::npos) {
-      nmea_parse(serial_buffer, _GPVTG);
-    } else if (serial_buffer.find("$PSAT") != std::string::npos) {
-      nmea_parse(serial_buffer, _PSAT);
-    } else
+    hemisphereV102(serial_buffer, _gpsdata);
+    Forward(_gpsdata.latitude, _gpsdata.longitude, _gpsdata.UTM_x,
+            _gpsdata.UTM_y);
 
-      // Forward(gps_data.latitude, gps_data.longitude, gps_data.UTM_x,
-      //         gps_data.UTM_y);
-
-      return *this;
+    return *this;
   }
 
   std::string getserialbuffer() const { return serial_buffer; }
 
   void updateUTMzone(int zone,  // the UTM zone + hemisphere
                      bool northp) {
-    _lon0 = 6 * zone - 183;
-    _falsenorthing = (northp ? 0 : 100e5);  // true = N, false = S
+    centrallong = 6 * zone - 183;
+    falsenorthing = (northp ? 0 : 100e5);  // true = N, false = S
   }
 
  private:
-  // serial data
+  /** serial data **/
   serial::Serial GPS_serial;
   std::string serial_buffer;
-  // GeographicLib data
-  // Define a UTM projection for an arbitrary ellipsoid
-  GeographicLib::TransverseMercator _tm;  // The projection
-  double _lon0;                           // Central longitude
-  double _falseeasting, _falsenorthing;
+  /** Define a UTM projection for an arbitrary ellipsoid **/
+  GeographicLib::TransverseMercator tmercator;  // The projection
+  double centrallong;                           // Central longitude
+  double falseeasting;
+  double falsenorthing;
 
-  // real time NMEA data
-  HEROT _HEROT;
-  PSAT _PSAT;
-  GPVTG _GPVTG;
-  GPGGA _GPGGA;
+  /** real time NMEA data **/
+  HEROT herot;
+  PSAT psat;
+  GPVTG gpvtg;
+  GPGGA gpgga;
+
+  void hemisphereV102(const std::string& _serial_buffer, gpsRTdata& _gpsdata) {
+    if (_serial_buffer.find("$GPGGA") != std::string::npos) {
+      nmea_parse(_serial_buffer, gpgga);
+      _gpsdata.UTC = gpgga.UTC;
+      _gpsdata.latitude = convertlatitudeunit(gpgga.latitude, gpgga.NS);
+      _gpsdata.longitude = convertlongitudeunit(gpgga.longitude, gpgga.EW);
+      _gpsdata.altitude = gpgga.altitude;
+      _gpsdata.status = gpgga.gps_Q;
+
+    } else if (_serial_buffer.find("$HEROT") != std::string::npos) {
+      nmea_parse(_serial_buffer, herot);
+      _gpsdata.roti = herot.rateofturning;
+    } else if (_serial_buffer.find("$GPVTG") != std::string::npos) {
+      nmea_parse(_serial_buffer, gpvtg);
+      decomposespeed(gpvtg.K_speed, gpvtg.TMG, _gpsdata.Ve, _gpsdata.Vn);
+    } else if (_serial_buffer.find("$PSAT") != std::string::npos) {
+      nmea_parse(_serial_buffer, psat);
+      _gpsdata.heading = psat.heading;
+      _gpsdata.pitch = psat.pitch;
+      _gpsdata.roll = psat.roll;
+    } else {
+      printf("No NMEA Data!\n");
+    }
+  }
 
   void enumerate_ports() {
     std::vector<serial::PortInfo> devices_found = serial::list_ports();
@@ -132,84 +113,47 @@ class gpsimu final : public nmea {
   }
   // convert longitude and latitude to UTM
   void Forward(double lat, double lon, double& x, double& y) {
-    _tm.Forward(_lon0, lat, lon, x, y);
-    x += _falseeasting;
-    y += _falsenorthing;
+    tmercator.Forward(centrallong, lat, lon, x, y);
+    x += falseeasting;
+    y += falsenorthing;
   }
   // convert UTM to longitude and latitude
   void Reverse(double x, double y, double& lat, double& lon) {
-    x -= _falseeasting;
-    y -= _falsenorthing;
-    _tm.Reverse(_lon0, x, y, lat, lon);
+    x -= falseeasting;
+    y -= falsenorthing;
+    tmercator.Reverse(centrallong, x, y, lat, lon);
+  }
+
+  // convert the unit of latitude (ddmm.mmm -> dd.dddddd)
+  double convertlatitudeunit(double _latitude, char _NS) {
+    double latitude = convertddmm2dd(_latitude);
+    if (_NS == 'S') latitude *= (-1);
+    return latitude;
+  }  // convertlatitudeunit
+
+  // convert the unit of longitude (dddmm.mmm -> dd.dddddd)
+  double convertlongitudeunit(double _longitude, char _EW) {
+    double longitude = convertddmm2dd(_longitude);
+    if (_EW == 'W') longitude *= (-1);
+    return longitude;
+  }  // convertlongitudeunit
+
+  // convert ddmm.mmmm to dd.dddddd
+  double convertddmm2dd(double _ddmm) {
+    double dd = std::floor(0.01 * _ddmm);
+    double mm = (_ddmm - dd * 100) / 60.0;
+    return dd + mm;
+  }  // convertddmm2dd
+
+  // generate the Ve and Vn
+  void decomposespeed(double _speed, double _TMG, double& _Ve, double& _Vn) {
+    _speed /= 3.6;         // km/h -> m/s
+    _TMG *= (M_PI / 180);  // degree -> rad
+    double cvalue = std::cos(_TMG);
+    double svalue = std::sin(_TMG);
+    _Ve = _speed * svalue;
+    _Vn = _speed * cvalue;
   }
 };
-
-// std::ostream& operator<<(std::ostream& os, const gpsimu& _gps) {
-//   // buffer = _gpsimu.getserialbuffer();
-//   os << "buffer=    " << _gps.serial_buffer;
-//   os << "date:      " << _gps.gps_data.date << std::endl;
-//   os << "time:      " << std::fixed << std::setprecision(4)
-//      << _gps.gps_data.time << std::endl;
-//   os << "heading:   " << std::fixed << std::setprecision(3)
-//      << _gps.gps_data.heading << std::endl;
-//   os << "pitch:     " << std::fixed << std::setprecision(3)
-//      << _gps.gps_data.pitch << std::endl;
-//   os << "roll:      " << std::fixed << std::setprecision(3)
-//      << _gps.gps_data.roll << std::endl;
-//   os << "latitud:   " << std::fixed << std::setprecision(7)
-//      << _gps.gps_data.latitude << std::endl;
-//   os << "longitude: " << std::fixed << std::setprecision(7)
-//      << _gps.gps_data.longitude << std::endl;
-//   os << "UTM_x:     " << std::fixed << std::setprecision(7)
-//      << _gps.gps_data.UTM_x << std::endl;
-//   os << "UTM_y:     " << std::fixed << std::setprecision(7)
-//      << _gps.gps_data.UTM_y << std::endl;
-//   os << "altitude:  " << std::fixed << std::setprecision(2)
-//      << _gps.gps_data.altitude << std::endl;
-//   os << "speed_v:   " << std::fixed << std::setprecision(3) <<
-//   _gps.gps_data.Ve
-//      << std::endl;
-//   os << "speed_u:   " << std::fixed << std::setprecision(3) <<
-//   _gps.gps_data.Vn
-//      << std::endl;
-//   os << "speed_n:   " << std::fixed << std::setprecision(3) <<
-//   _gps.gps_data.Vu
-//      << std::endl;
-//   os << "basinLine  " << std::fixed << std::setprecision(3)
-//      << _gps.gps_data.base_line << std::endl;
-//   os << "NSV1:      " << _gps.gps_data.NSV1 << std::endl;
-//   os << "NSV2:      " << _gps.gps_data.NSV2 << std::endl;
-//   printf("status: %c\n", _gps.gps_data.status);
-//   printf("check: %s\n", _gps.gps_data.check);
-
-//   switch (_gps.gps_data.status) {
-//     case '0':
-//       os << "Satus:     GPS初始化" << std::endl;
-//       break;
-//     case '1':
-//       os << "Satus:     粗对准" << std::endl;
-//       break;
-//     case '2':
-//       os << "Satus:     精对准" << std::endl;
-//       break;
-//     case '3':
-//       os << "Satus:     GPS定位" << std::endl;
-//       break;
-//     case '4':
-//       os << "Satus:     GPS定向" << std::endl;
-//       break;
-//     case '5':
-//       os << "Satus:     GPS RTK" << std::endl;
-//       break;
-//     case 'B':
-//       os << "Satus:     差分定向" << std::endl;
-//       break;
-//     default:
-//       os << "Satus:     状态未知" << std::endl;
-//   }
-//   os << std::endl;
-
-//   return os;
-// }
 
 #endif
