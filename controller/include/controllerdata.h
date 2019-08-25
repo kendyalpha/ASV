@@ -15,7 +15,7 @@
 #include <Eigen/Dense>
 #include <vector>
 
-enum CONTROLMODE {
+enum class CONTROLMODE {
   MANUAL = 0,      // manual controller
   HEADINGONLY,     // heading only controller (autopilot)
   MANEUVERING,     // maneuvering model
@@ -103,6 +103,20 @@ struct ruddermaindata {
   double max_delta_varphi;    // deg(rudder angle: no less than 1)
   double max_varphi;          // deg(rudder)
   double min_varphi;          // deg(rudder)
+};
+
+// constant data of twin fixed thruster, index = 4
+struct twinfixedthrusterdata {
+  double lx;                   // m
+  double ly;                   // m
+  double K_positive;           // positive value
+  double K_negative;           // positive value
+  double pndelaytime;          // delay time of positive->negative (vesra)
+  int max_delta_rotation;      // rpm(no less than 1)
+  int max_delta_rotation_p2n;  // rpm(no less than 1)
+  int max_rotation;            // rpm
+  double max_thrust_positive;  // positive value
+  double max_thrust_negative;  // positive value
 };
 
 // quasi-static data of pid controller

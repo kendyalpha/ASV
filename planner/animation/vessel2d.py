@@ -1,8 +1,7 @@
 # /*
 # ***********************************************************************
 # * vessel2d.py:
-# * generate
-# * This header file can be read by C++ compilers
+# * real time illustration of 2d vessel, static/dynamic obstacle
 # *
 # * by Hu.ZH(CrossOcean.ai)
 # ***********************************************************************

@@ -10,6 +10,8 @@
  *************************************************
  */
 
+// TODO: adjust the central longitude and attitude for UTM
+
 #ifndef _GPS_H_
 #define _GPS_H_
 

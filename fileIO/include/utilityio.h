@@ -53,13 +53,13 @@ class utilityio {
   // write Eigen matrix into csv file (double)
   void write2csvfile(const std::string &name, const Eigen::MatrixXd &_matrix) {
     const static Eigen::IOFormat CSVFormat(Eigen::StreamPrecision,
-                                           Eigen::DontAlignCols, ", ", "\n");
+                                           Eigen::DontAlignCols, ",", "\n");
     std::ofstream file(name.c_str());
     if (file.is_open()) {
       // header in csv
       int num_cols = _matrix.cols();
       for (int i = 0; i != (num_cols - 1); ++i)
-        file << "column " << i + 1 << ", ";
+        file << "column " << i + 1 << ",";
       file << "column " << num_cols << std::endl;
       // data
       file << _matrix.format(CSVFormat);
@@ -68,7 +68,7 @@ class utilityio {
   // write Eigen vector into csv file (double)
   void write2csvfile(const std::string &name, const Eigen::VectorXd &_vector) {
     const static Eigen::IOFormat CSVFormat(Eigen::StreamPrecision,
-                                           Eigen::DontAlignCols, ", ", "\n");
+                                           Eigen::DontAlignCols, ",", "\n");
     std::ofstream file(name.c_str());
     if (file.is_open()) {
       // header in csv
@@ -80,13 +80,13 @@ class utilityio {
   // write Eigen matrix into csv file (int)
   void write2csvfile(const std::string &name, const Eigen::MatrixXi &_matrix) {
     const static Eigen::IOFormat CSVFormat(Eigen::StreamPrecision,
-                                           Eigen::DontAlignCols, ", ", "\n");
+                                           Eigen::DontAlignCols, ",", "\n");
     std::ofstream file(name.c_str());
     if (file.is_open()) {
       // header in csv
       int num_cols = _matrix.cols();
       for (int i = 0; i != (num_cols - 1); ++i)
-        file << "column " << i + 1 << ", ";
+        file << "column " << i + 1 << ",";
       file << "column " << num_cols << std::endl;
       // data
       file << _matrix.format(CSVFormat);

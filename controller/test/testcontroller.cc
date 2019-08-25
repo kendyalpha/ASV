@@ -97,9 +97,9 @@ void test_multiplecontroller() {
   };
 
   controllerdata _controllerdata{
-      0.1,              // sample_time
-      DYNAMICPOSITION,  // controlmode
-      index_actuation   // index_actuation
+      0.1,                           // sample_time
+      CONTROLMODE::DYNAMICPOSITION,  // controlmode
+      index_actuation                // index_actuation
   };
 
   std::vector<pidcontrollerdata> v_pidcontrollerdata;

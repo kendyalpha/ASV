@@ -107,16 +107,16 @@ class controller {
   void setcontrolmode(int _controlmode) {
     switch (_controlmode) {  // controller mode
       case 0:
-        controlmode = MANUAL;
+        controlmode = CONTROLMODE::MANUAL;
         break;
       case 1:
-        controlmode = HEADINGONLY;
+        controlmode = CONTROLMODE::HEADINGONLY;
         break;
       case 2:
-        controlmode = MANEUVERING;
+        controlmode = CONTROLMODE::MANEUVERING;
         break;
       case 3:
-        controlmode = DYNAMICPOSITION;
+        controlmode = CONTROLMODE::DYNAMICPOSITION;
         break;
       default:
         break;
@@ -160,15 +160,15 @@ class controller {
     // position control
     vectornd position_error_integral = updatepositionIntegralMatrix(_error);
     switch (controlmode) {  // controller mode
-      case MANUAL:
+      case CONTROLMODE::MANUAL:
         break;
-      case MANEUVERING:
+      case CONTROLMODE::MANEUVERING:
         _tau(2) += position_pids(0, 2) * _error(2)  // proportional term
                    + position_pids(1, 2) *
                          position_error_integral(2);  // integral term
         break;
-      case DYNAMICPOSITION:
-      case HEADINGONLY:
+      case CONTROLMODE::DYNAMICPOSITION:
+      case CONTROLMODE::HEADINGONLY:
         if (!comparepositionerror(_error)) {
           for (int i = 0; i != n; ++i)
             _tau(i) += position_pids(0, i) * _error(i)  // proportional term
@@ -187,9 +187,9 @@ class controller {
     vectornd velocity_error_integral = updatevelocityIntegralMatrix(_derror);
 
     switch (controlmode) {  // controller mode
-      case MANUAL:
+      case CONTROLMODE::MANUAL:
         break;
-      case MANEUVERING:
+      case CONTROLMODE::MANEUVERING:
         _tau(0) += velocity_pids(0, 0) * _derror(0)  // proportional term
                    + velocity_pids(1, 0) *
                          velocity_error_integral(0);  // integral term
@@ -197,8 +197,8 @@ class controller {
                    + velocity_pids(1, 2) *
                          velocity_error_integral(2);  // integral term
         break;
-      case DYNAMICPOSITION:
-      case HEADINGONLY:
+      case CONTROLMODE::DYNAMICPOSITION:
+      case CONTROLMODE::HEADINGONLY:
         if (!comparevelocityerror(_derror)) {
           for (int i = 0; i != n; ++i)
             _tau(i) += velocity_pids(0, i) * _derror(i)  // proportional term
@@ -261,15 +261,15 @@ class controller {
   // command from joystick
   void commandfromjoystick(vectornd &_tau, const vectornd &_command) {
     switch (controlmode) {  // controller mode
-      case MANUAL:
+      case CONTROLMODE::MANUAL:
         _tau = _command;
         break;
-      case HEADINGONLY:
+      case CONTROLMODE::HEADINGONLY:
         _tau.head(n - 1) = _command.head(n - 1);
         break;
-      case MANEUVERING:
+      case CONTROLMODE::MANEUVERING:
         break;
-      case DYNAMICPOSITION:
+      case CONTROLMODE::DYNAMICPOSITION:
         break;
       default:
         break;

@@ -121,22 +121,22 @@ class thrustallocation {
   void setQ(CONTROLMODE _cm) {
     if constexpr (index_actuation == FULLYACTUATED) {
       switch (_cm) {
-        case MANUAL:
+        case CONTROLMODE::MANUAL:
           Q(0, 0) = 600;
           Q(1, 1) = 600;
           Q(2, 2) = 1000;
           break;
-        case HEADINGONLY:
+        case CONTROLMODE::HEADINGONLY:
           Q(0, 0) = 100;
           Q(1, 1) = 100;
           Q(2, 2) = 2000;
           break;
-        case MANEUVERING:
+        case CONTROLMODE::MANEUVERING:
           Q(0, 0) = 1000;
           // Q(1, 1) = 0;  The penalty for sway error is zero
           Q(2, 2) = 100;
           break;
-        case DYNAMICPOSITION:
+        case CONTROLMODE::DYNAMICPOSITION:
           for (int i = 0; i != n; ++i) Q(i, i) = 1000;
           break;
         default:
@@ -144,17 +144,17 @@ class thrustallocation {
       }
     } else {  // underactuated
       switch (_cm) {
-        case MANUAL:
+        case CONTROLMODE::MANUAL:
           Q(0, 0) = 100;
           // Q(1, 1) = 0;  The penalty for sway error is zero
           Q(2, 2) = 1000;
           break;
-        case HEADINGONLY:
+        case CONTROLMODE::HEADINGONLY:
           Q(0, 0) = 100;
           // Q(1, 1) = 0;  The penalty for sway error is zero
           Q(2, 2) = 2000;
           break;
-        case MANEUVERING:
+        case CONTROLMODE::MANEUVERING:
           Q(0, 0) = 1000;
           // Q(1, 1) = 0;  The penalty for sway error is zero
           Q(2, 2) = 100;
@@ -303,7 +303,7 @@ class thrustallocation {
           (1 - 0.02 * Cy * std::pow(v_ruddermaindata[i].min_varphi, 2)));
     }
     // quadratic penality matrix for error
-    setQ(MANUAL);
+    setQ(CONTROLMODE::MANUAL);
 
     initializemosekvariables();
 
@@ -383,6 +383,73 @@ class thrustallocation {
   // depend on the desired force in the Y direction or Mz direction
   void calculateconstraints_tunnel(const controllerRTdata<m, n> &_RTdata,
                                    double _desired_Mz) {
+    for (int i = 0; i != num_tunnel; ++i) {
+      int _maxdeltar = v_tunnelthrusterdata[i].max_delta_rotation;
+      double _Kp = v_tunnelthrusterdata[i].K_positive;
+      double _Kn = v_tunnelthrusterdata[i].K_negative;
+      if (0 < _RTdata.rotation(i) && _RTdata.rotation(i) <= _maxdeltar) {
+        // specify the first case
+        if (_desired_Mz > 0) {
+          upper_delta_alpha(i) = 0;
+          lower_delta_alpha(i) = 0;
+          lower_delta_u(i) = -_RTdata.u(i);
+          upper_delta_u(i) =
+              _Kp * std::pow(_RTdata.rotation(i) + _maxdeltar, 2) -
+              _RTdata.u(i);
+        } else {
+          upper_delta_alpha(i) = -M_PI;
+          lower_delta_alpha(i) = -M_PI;
+          lower_delta_u(i) = -_RTdata.u(i);
+          upper_delta_u(i) =
+              _Kn * std::pow(_RTdata.rotation(i) - _maxdeltar, 2) -
+              _RTdata.u(i);
+        }
+
+      } else if (-_maxdeltar <= _RTdata.rotation(i) &&
+                 _RTdata.rotation(i) < 0) {
+        if (_desired_Mz > 0) {
+          // specify the second case
+          upper_delta_alpha(i) = M_PI;
+          lower_delta_alpha(i) = M_PI;
+          lower_delta_u(i) = -_RTdata.u(i);
+          upper_delta_u(i) =
+              _Kp * std::pow(_RTdata.rotation(i) + _maxdeltar, 2) -
+              _RTdata.u(i);
+        } else {
+          // specify the first case
+          upper_delta_alpha(i) = 0;
+          lower_delta_alpha(i) = 0;
+          lower_delta_u(i) = -_RTdata.u(i);
+          upper_delta_u(i) =
+              _Kn * std::pow(_RTdata.rotation(i) - _maxdeltar, 2) -
+              _RTdata.u(i);
+        }
+
+      } else if (_RTdata.rotation(i) > _maxdeltar) {
+        lower_delta_alpha(i) = 0;
+        upper_delta_alpha(i) = 0;
+        upper_delta_u(i) = std::min(
+            v_tunnelthrusterdata[i].max_thrust_positive - _RTdata.u(i),
+            _Kp * std::pow(_RTdata.rotation(i) + _maxdeltar, 2) - _RTdata.u(i));
+        lower_delta_u(i) =
+            _Kp * std::pow(_RTdata.rotation(i) - _maxdeltar, 2) - _RTdata.u(i);
+
+      } else {
+        lower_delta_alpha(i) = 0;
+        upper_delta_alpha(i) = 0;
+        upper_delta_u(i) = std::min(
+            _Kn * std::pow(_RTdata.rotation(i) - _maxdeltar, 2) - _RTdata.u(i),
+            v_tunnelthrusterdata[i].max_thrust_negative - _RTdata.u(i));
+        lower_delta_u(i) =
+            _Kn * std::pow(_RTdata.rotation(i) + _maxdeltar, 2) - _RTdata.u(i);
+      }
+    }
+  }
+
+  // calculate the contraints of twin fixed thruster
+  // depend on the desired force in the X direction and Mz direction
+  void calculateconstraints_twinfixed(const controllerRTdata<m, n> &_RTdata,
+                                      double _desired_Fx, double _desired_Mz) {
     for (int i = 0; i != num_tunnel; ++i) {
       int _maxdeltar = v_tunnelthrusterdata[i].max_delta_rotation;
       double _Kp = v_tunnelthrusterdata[i].K_positive;
