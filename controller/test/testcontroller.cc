@@ -18,7 +18,7 @@ void test_multiplecontroller() {
   const int L = 30;
   const int m = 3;
   const int n = 3;
-  constexpr ACTUATION index_actuation = FULLYACTUATED;
+  constexpr ACTUATION index_actuation = ACTUATION::FULLYACTUATED;
 
   std::vector<int> index_thrusters{1, 2, 2};
 
@@ -31,8 +31,11 @@ void test_multiplecontroller() {
   int num_mainrudder =
       std::count(index_thrusters.begin(), index_thrusters.end(), 3);
 
-  thrustallocationdata _thrustallocationdata{num_tunnel, num_azimuth,
-                                             num_mainrudder, index_thrusters};
+  int num_twinfixed =
+      std::count(index_thrusters.begin(), index_thrusters.end(), 4);
+
+  thrustallocationdata _thrustallocationdata{
+      num_tunnel, num_azimuth, num_mainrudder, num_twinfixed, index_thrusters};
 
   std::vector<tunnelthrusterdata> v_tunnelthrusterdata;
   v_tunnelthrusterdata.reserve(num_tunnel);
@@ -68,6 +71,7 @@ void test_multiplecontroller() {
       0.05                // min_thrust
   });
   std::vector<ruddermaindata> v_ruddermaindata;
+  std::vector<twinfixedthrusterdata> v_twinfixeddata;
 
   controllerRTdata<m, n> _controllerRTdata{
       (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),         // tau
@@ -110,7 +114,8 @@ void test_multiplecontroller() {
 
   controller<L, m, index_actuation, n> _controller(
       _controllerdata, _vessel, v_pidcontrollerdata, _thrustallocationdata,
-      v_tunnelthrusterdata, v_azimuththrusterdata, v_ruddermaindata);
+      v_tunnelthrusterdata, v_azimuththrusterdata, v_ruddermaindata,
+      v_twinfixeddata);
   _controller.initializecontroller(_controllerRTdata);
   Eigen::Matrix<double, n, 1> error;
   Eigen::Matrix<double, n, 1> derror;

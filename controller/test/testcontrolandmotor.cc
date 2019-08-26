@@ -17,7 +17,7 @@ void test() {
   // set the parameters in the thrust allocation
   const int m = 6;
   const int n = 3;
-  constexpr ACTUATION index_actuation = FULLYACTUATED;
+  constexpr ACTUATION index_actuation = ACTUATION::FULLYACTUATED;
 
   std::vector<int> index_thrusters{2, 2, 2, 2, 2, 2};
 
@@ -30,8 +30,11 @@ void test() {
   int num_mainrudder =
       std::count(index_thrusters.begin(), index_thrusters.end(), 3);
 
-  thrustallocationdata _thrustallocationdata{num_tunnel, num_azimuth,
-                                             num_mainrudder, index_thrusters};
+  int num_twinfixed =
+      std::count(index_thrusters.begin(), index_thrusters.end(), 4);
+
+  thrustallocationdata _thrustallocationdata{
+      num_tunnel, num_azimuth, num_mainrudder, num_twinfixed, index_thrusters};
 
   std::vector<tunnelthrusterdata> v_tunnelthrusterdata;
   v_tunnelthrusterdata.reserve(num_tunnel);
@@ -117,6 +120,7 @@ void test() {
       0.05          // min_thrust
   });
   std::vector<ruddermaindata> v_ruddermaindata;
+  std::vector<twinfixedthrusterdata> v_twinfixeddata;
 
   controllerRTdata<m, n> _controllerRTdata{
       Eigen::Matrix<double, n, 1>::Zero(),  // tau
@@ -133,7 +137,7 @@ void test() {
   _motorclient.startup_socket_client(testmotorRTdata);
   thrustallocation<m, index_actuation, n> _thrustallocation(
       _thrustallocationdata, v_tunnelthrusterdata, v_azimuththrusterdata,
-      v_ruddermaindata);
+      v_ruddermaindata, v_twinfixeddata);
   _thrustallocation.initializapropeller(_controllerRTdata);
 
   sleep(10);

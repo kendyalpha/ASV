@@ -136,12 +136,13 @@ class jsonparse {
       0,  // num_tunnel
       0,  // num_azimuth
       0,  // num_mainrudder
+      0,  // num_twinfixed
       {}  // index_thrusters
   };
   std::vector<tunnelthrusterdata> tunnelthrusterdata_input;
   std::vector<azimuththrusterdata> azimuththrusterdata_input;
   std::vector<ruddermaindata> ruddermaindata_input;
-
+  std::vector<twinfixedthrusterdata> twinfixeddata_input;
   std::vector<pidcontrollerdata> pidcontrollerdata_input;
 
   // estimatordata
@@ -348,6 +349,44 @@ class jsonparse {
 
         //
         ruddermaindata_input.push_back(_thrusterdata_input);
+
+      } else if (str_type == "twinfixed") {
+        ++thrustallocationdata_input.num_twinfixed;
+        thrustallocationdata_input.index_thrusters.push_back(4);
+
+        twinfixedthrusterdata _thrusterdata_input;
+
+        // position
+        std::vector<double> _position = file[str_thruster]["position"];
+        _thrusterdata_input.lx = _position[0] - vesseldata_input.cog(0);
+        _thrusterdata_input.ly = _position[1] - vesseldata_input.cog(1);
+        // thrust_constant
+        std::vector<double> _thrustconstant =
+            file[str_thruster]["thrust_constant"];
+        _thrusterdata_input.K_positive = _thrustconstant[0];
+        _thrusterdata_input.K_negative = _thrustconstant[1];
+
+        // rotation
+        _thrusterdata_input.max_delta_rotation = static_cast<int>(
+            std::round(controllerdata_input.sample_time *
+                       file[str_thruster]["max_delta_rotation"].get<double>()));
+        // delay time of positive->negative (vesra)
+        double pndelaytime = file[str_thruster]["p2n_delay_time"].get<double>();
+        _thrusterdata_input.max_delta_rotation_p2n = static_cast<int>(
+            std::round(2 * controllerdata_input.sample_time *
+                       _thrusterdata_input.max_delta_rotation / pndelaytime));
+        _thrusterdata_input.max_rotation =
+            file[str_thruster]["max_rotation"].get<int>();
+        // thrust
+        _thrusterdata_input.max_thrust_positive =
+            _thrusterdata_input.K_positive *
+            std::pow(_thrusterdata_input.max_rotation, 2);
+        _thrusterdata_input.max_thrust_negative =
+            _thrusterdata_input.K_negative *
+            std::pow(_thrusterdata_input.max_rotation, 2);
+
+        //
+        twinfixeddata_input.push_back(_thrusterdata_input);
 
       } else {
         std::cout << "unknow thruster type!\n";

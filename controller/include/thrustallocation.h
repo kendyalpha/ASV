@@ -15,6 +15,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -43,16 +44,19 @@ class thrustallocation {
       const thrustallocationdata &_thrustallocationdata,
       const std::vector<tunnelthrusterdata> &_v_tunnelthrusterdata,
       const std::vector<azimuththrusterdata> &_v_azimuththrusterdata,
-      const std::vector<ruddermaindata> &_v_ruddermaindata)
+      const std::vector<ruddermaindata> &_v_ruddermaindata,
+      const std::vector<twinfixedthrusterdata> &_v_twinfixeddata)
       : num_tunnel(_thrustallocationdata.num_tunnel),
         num_azimuth(_thrustallocationdata.num_azimuth),
         num_mainrudder(_thrustallocationdata.num_mainrudder),
+        num_twinfixed(_thrustallocationdata.num_twinfixed),
         numvar(2 * m + n),
         num_constraints(n),
         index_thrusters(_thrustallocationdata.index_thrusters),
         v_tunnelthrusterdata(_v_tunnelthrusterdata),
         v_azimuththrusterdata(_v_azimuththrusterdata),
         v_ruddermaindata(_v_ruddermaindata),
+        v_twinfixeddata(_v_twinfixeddata),
         lx(vectormd::Zero()),
         ly(vectormd::Zero()),
         upper_delta_alpha(vectormd::Zero()),
@@ -114,12 +118,19 @@ class thrustallocation {
       _RTdata.alpha(a_index) = 0;
       _RTdata.alpha_deg(a_index) = 0;
     }
+    for (int l = 0; l != num_twinfixed; ++l) {
+      int a_index = l + num_tunnel + num_azimuth + num_mainrudder;
+      _RTdata.rotation(a_index) = 1;
+      _RTdata.u(a_index) = v_twinfixeddata[l].K_positive;
+      _RTdata.alpha(a_index) = 0;
+      _RTdata.alpha_deg(a_index) = 0;
+    }
     // update BalphaU
     _RTdata.BalphaU = calculateBalphau(_RTdata.alpha, _RTdata.u);
   }
   // modify penality for each error (heading-only controller)
   void setQ(CONTROLMODE _cm) {
-    if constexpr (index_actuation == FULLYACTUATED) {
+    if constexpr (index_actuation == ACTUATION::FULLYACTUATED) {
       switch (_cm) {
         case CONTROLMODE::MANUAL:
           Q(0, 0) = 600;
@@ -145,7 +156,7 @@ class thrustallocation {
     } else {  // underactuated
       switch (_cm) {
         case CONTROLMODE::MANUAL:
-          Q(0, 0) = 100;
+          Q(0, 0) = 1000;
           // Q(1, 1) = 0;  The penalty for sway error is zero
           Q(2, 2) = 1000;
           break;
@@ -192,6 +203,7 @@ class thrustallocation {
   const int num_tunnel;
   const int num_azimuth;
   const int num_mainrudder;
+  const int num_twinfixed;
   const int numvar;
   const int num_constraints;
 
@@ -203,6 +215,8 @@ class thrustallocation {
   std::vector<azimuththrusterdata> v_azimuththrusterdata;
   // constant value of all tunnel thrusters
   std::vector<ruddermaindata> v_ruddermaindata;
+  // constant value of all twin fixed thrusters
+  std::vector<twinfixedthrusterdata> v_twinfixeddata;
   // location of each thruster
   vectormd lx;
   vectormd ly;
@@ -259,6 +273,9 @@ class thrustallocation {
   MSKrescodee r;
 
   void initializethrusterallocation() {
+    assert(num_tunnel + num_azimuth + num_mainrudder + num_twinfixed == m);
+    if (num_twinfixed > 0) assert(num_twinfixed == 2);
+
     for (int i = 0; i != num_tunnel; ++i) {
       lx(i) = v_tunnelthrusterdata[i].lx;
       ly(i) = v_tunnelthrusterdata[i].ly;
@@ -301,6 +318,20 @@ class thrustallocation {
       v_ruddermaindata[i].min_alpha = std::atan(
           Cy * v_ruddermaindata[i].min_varphi /
           (1 - 0.02 * Cy * std::pow(v_ruddermaindata[i].min_varphi, 2)));
+    }
+
+    for (int i = 0; i != num_twinfixed; ++i) {
+      int index_twinfixed = num_tunnel + num_azimuth + num_mainrudder + i;
+      lx(index_twinfixed) = v_twinfixeddata[i].lx;
+      ly(index_twinfixed) = v_twinfixeddata[i].ly;
+      Omega(index_twinfixed, index_twinfixed) = 50;
+      // re-calculate the max thrust of twin fixed thruster
+      v_twinfixeddata[i].max_thrust_positive =
+          v_twinfixeddata[i].K_positive *
+          std::pow(v_twinfixeddata[i].max_rotation, 2);
+      v_twinfixeddata[i].max_thrust_negative =
+          v_twinfixeddata[i].K_negative *
+          std::pow(v_twinfixeddata[i].max_rotation, 2);
     }
     // quadratic penality matrix for error
     setQ(CONTROLMODE::MANUAL);
@@ -444,74 +475,7 @@ class thrustallocation {
             _Kn * std::pow(_RTdata.rotation(i) + _maxdeltar, 2) - _RTdata.u(i);
       }
     }
-  }
-
-  // calculate the contraints of twin fixed thruster
-  // depend on the desired force in the X direction and Mz direction
-  void calculateconstraints_twinfixed(const controllerRTdata<m, n> &_RTdata,
-                                      double _desired_Fx, double _desired_Mz) {
-    for (int i = 0; i != num_tunnel; ++i) {
-      int _maxdeltar = v_tunnelthrusterdata[i].max_delta_rotation;
-      double _Kp = v_tunnelthrusterdata[i].K_positive;
-      double _Kn = v_tunnelthrusterdata[i].K_negative;
-      if (0 < _RTdata.rotation(i) && _RTdata.rotation(i) <= _maxdeltar) {
-        // specify the first case
-        if (_desired_Mz > 0) {
-          upper_delta_alpha(i) = 0;
-          lower_delta_alpha(i) = 0;
-          lower_delta_u(i) = -_RTdata.u(i);
-          upper_delta_u(i) =
-              _Kp * std::pow(_RTdata.rotation(i) + _maxdeltar, 2) -
-              _RTdata.u(i);
-        } else {
-          upper_delta_alpha(i) = -M_PI;
-          lower_delta_alpha(i) = -M_PI;
-          lower_delta_u(i) = -_RTdata.u(i);
-          upper_delta_u(i) =
-              _Kn * std::pow(_RTdata.rotation(i) - _maxdeltar, 2) -
-              _RTdata.u(i);
-        }
-
-      } else if (-_maxdeltar <= _RTdata.rotation(i) &&
-                 _RTdata.rotation(i) < 0) {
-        if (_desired_Mz > 0) {
-          // specify the second case
-          upper_delta_alpha(i) = M_PI;
-          lower_delta_alpha(i) = M_PI;
-          lower_delta_u(i) = -_RTdata.u(i);
-          upper_delta_u(i) =
-              _Kp * std::pow(_RTdata.rotation(i) + _maxdeltar, 2) -
-              _RTdata.u(i);
-        } else {
-          // specify the first case
-          upper_delta_alpha(i) = 0;
-          lower_delta_alpha(i) = 0;
-          lower_delta_u(i) = -_RTdata.u(i);
-          upper_delta_u(i) =
-              _Kn * std::pow(_RTdata.rotation(i) - _maxdeltar, 2) -
-              _RTdata.u(i);
-        }
-
-      } else if (_RTdata.rotation(i) > _maxdeltar) {
-        lower_delta_alpha(i) = 0;
-        upper_delta_alpha(i) = 0;
-        upper_delta_u(i) = std::min(
-            v_tunnelthrusterdata[i].max_thrust_positive - _RTdata.u(i),
-            _Kp * std::pow(_RTdata.rotation(i) + _maxdeltar, 2) - _RTdata.u(i));
-        lower_delta_u(i) =
-            _Kp * std::pow(_RTdata.rotation(i) - _maxdeltar, 2) - _RTdata.u(i);
-
-      } else {
-        lower_delta_alpha(i) = 0;
-        upper_delta_alpha(i) = 0;
-        upper_delta_u(i) = std::min(
-            _Kn * std::pow(_RTdata.rotation(i) - _maxdeltar, 2) - _RTdata.u(i),
-            v_tunnelthrusterdata[i].max_thrust_negative - _RTdata.u(i));
-        lower_delta_u(i) =
-            _Kn * std::pow(_RTdata.rotation(i) + _maxdeltar, 2) - _RTdata.u(i);
-      }
-    }
-  }
+  }  // calculateconstraints_tunnel
 
   // calculate the consraints of azimuth thruster
   void calculateconstraints_azimuth(const controllerRTdata<m, n> &_RTdata) {
@@ -631,6 +595,85 @@ class thrustallocation {
     }
   }  // calculateconstraints_rudder
 
+  // calculate the contraints of twin fixed thruster
+  // depend on the desired force in the X direction and Mz direction
+  void calculateconstraints_twinfixed(const controllerRTdata<m, n> &_RTdata,
+                                      double _desired_Fx, double _desired_Mz) {
+    // compute the desired thrust of each thruster
+    Eigen::Vector2d _desired_tau = Eigen::Vector2d::Zero();
+
+    double delta_l = 1.0 / (v_twinfixeddata[1].ly - v_twinfixeddata[0].ly);
+    _desired_tau(0) =
+        (_desired_Mz + _desired_Fx * v_twinfixeddata[1].ly) * delta_l;
+    _desired_tau(1) =
+        -(_desired_Mz + _desired_Fx * v_twinfixeddata[0].ly) * delta_l;
+
+    for (int i = 0; i != num_twinfixed; ++i) {
+      int index_tf = i + num_tunnel + num_azimuth + num_mainrudder;
+      int _maxdn = v_twinfixeddata[i].max_delta_rotation;
+      int _maxdnp2n = v_twinfixeddata[i].max_delta_rotation_p2n;
+      double _Kp = v_twinfixeddata[i].K_positive;
+      double _Kn = v_twinfixeddata[i].K_negative;
+      int _n0 = _RTdata.rotation(index_tf);
+      double _u0 = _RTdata.u(index_tf);
+
+      if (_n0 >= _maxdn) {
+        upper_delta_alpha(index_tf) = 0;
+        lower_delta_alpha(index_tf) = 0;
+        upper_delta_u(index_tf) =
+            std::min(v_twinfixeddata[i].max_thrust_positive - _u0,
+                     _Kp * std::pow(_n0 + _maxdn, 2) - _u0);
+        lower_delta_u(index_tf) = _Kp * std::pow(_n0 - _maxdn, 2) - _u0;
+      } else if (_maxdnp2n <= _n0 && _n0 < _maxdn) {
+        upper_delta_alpha(index_tf) = 0;
+        lower_delta_alpha(index_tf) = 0;
+        upper_delta_u(index_tf) = _Kp * std::pow(_n0 + _maxdnp2n, 2) - _u0;
+        lower_delta_u(index_tf) = _Kp * std::pow(_n0 - _maxdnp2n, 2) - _u0;
+      } else if (0 < _n0 && _n0 < _maxdnp2n) {
+        if (_desired_tau(i) < 0) {
+          // change the direction
+          upper_delta_alpha(index_tf) = M_PI;
+          lower_delta_alpha(index_tf) = M_PI;
+          lower_delta_u(index_tf) = _Kn * std::pow(_n0 - _maxdnp2n, 2) - _u0;
+          upper_delta_u(index_tf) = lower_delta_u(index_tf);
+        } else {
+          upper_delta_alpha(index_tf) = 0;
+          lower_delta_alpha(index_tf) = 0;
+          lower_delta_u(index_tf) = _Kp * std::pow(_n0 + _maxdnp2n, 2) - _u0;
+          upper_delta_u(index_tf) = lower_delta_u(index_tf);
+        }
+
+      } else if (-_maxdnp2n < _n0 && _n0 < 0) {
+        if (_desired_tau(i) < 0) {
+          upper_delta_alpha(index_tf) = 0;
+          lower_delta_alpha(index_tf) = 0;
+          lower_delta_u(index_tf) = _Kn * std::pow(_n0 - _maxdnp2n, 2) - _u0;
+          upper_delta_u(index_tf) = lower_delta_u(index_tf);
+        } else {
+          // change the direction
+          upper_delta_alpha(index_tf) = -M_PI;
+          lower_delta_alpha(index_tf) = -M_PI;
+          lower_delta_u(index_tf) = _Kp * std::pow(_n0 + _maxdnp2n, 2) - _u0;
+          upper_delta_u(index_tf) = lower_delta_u(index_tf);
+        }
+
+      } else if (-_maxdn < _n0 && _n0 <= -_maxdnp2n) {
+        upper_delta_alpha(index_tf) = 0;
+        lower_delta_alpha(index_tf) = 0;
+        upper_delta_u(index_tf) = _Kn * std::pow(_n0 - _maxdnp2n, 2) - _u0;
+        lower_delta_u(index_tf) = _Kn * std::pow(_n0 + _maxdnp2n, 2) - _u0;
+      } else {
+        upper_delta_alpha(index_tf) = 0;
+        lower_delta_alpha(index_tf) = 0;
+        upper_delta_u(index_tf) =
+            std::min(v_twinfixeddata[i].max_thrust_negative - _u0,
+                     _Kn * std::pow(_n0 - _maxdn, 2) - _u0);
+        lower_delta_u(index_tf) = _Kn * std::pow(_n0 + _maxdn, 2) - _u0;
+      }
+    }
+
+  }  // calculateconstraints_twinfixed
+
   // calculate vessel parameters at the next time step
   void updateNextstep(controllerRTdata<m, n> &_RTdata) {
     // calculate delta variable using Mosek results
@@ -676,11 +719,17 @@ class thrustallocation {
         varphi = 25 * (-sqrtterm - cytan) / v_ruddermaindata[k].Cy;
       _alpha_deg(r_index) = static_cast<int>(std::round(varphi));
     }
-  }
+
+    // round to int (deg) for twin fixed thruster
+    for (int l = 0; l != num_twinfixed; ++l) {
+      int t_index = num_tunnel + num_azimuth + num_mainrudder + l;
+      _alpha_deg(t_index) = static_cast<int>(_alpha(t_index) * 180 / M_PI);
+    }
+  }  // convertalpharadian2int
 
   // calcuate rotation speed of each thruster based on thrust
   void calculaterotation(controllerRTdata<m, n> &_RTdata) {
-    // bow thruster
+    // tunnel thruster
     for (int i = 0; i != num_tunnel; ++i) {
       int t_rotation = 0;
       if (_RTdata.alpha(i) < 0) {
@@ -737,7 +786,33 @@ class thrustallocation {
       } else
         _RTdata.rotation(index_rudder) = t_rotation;
     }
-  }
+
+    // twin fixed thruster
+    for (int l = 0; l != num_twinfixed; ++l) {
+      int index_tk = l + num_tunnel + num_azimuth + num_mainrudder;
+      int t_rotation = 0;
+      if (_RTdata.alpha(index_tk) > 0.5 * M_PI) {
+        t_rotation = static_cast<int>(std::sqrt(abs(_RTdata.u(index_tk)) /
+                                                v_twinfixeddata[l].K_negative));
+
+        if (t_rotation == 0) {
+          _RTdata.rotation(index_tk) = -1;  // prevent zero
+          _RTdata.u(index_tk) = v_twinfixeddata[l].K_negative;
+        } else
+          _RTdata.rotation(index_tk) = -t_rotation;
+
+      } else {
+        t_rotation = static_cast<int>(std::sqrt(abs(_RTdata.u(index_tk)) /
+                                                v_twinfixeddata[l].K_positive));
+
+        if (t_rotation == 0) {
+          _RTdata.rotation(index_tk) = 1;  // prevent zero
+          _RTdata.u(index_tk) = v_twinfixeddata[l].K_positive;
+        } else
+          _RTdata.rotation(index_tk) = t_rotation;
+      }
+    }
+  }  // calculaterotation
 
   // calculate Balpha as function of alpha
   matrixnmd calculateBalpha(const vectormd &t_alpha) {
@@ -754,14 +829,16 @@ class thrustallocation {
       _B_alpha(2, i) = -ly(i) * t_cos + lx(i) * t_sin;
     }
     return _B_alpha;
-  }
+  }  // calculateBalpha
+
   // calculate the rho term in thruster allocation
   double calculateRhoTerm(const vectormd &t_alpha, double epsilon = 0.1,
                           double rho = 10) {
     auto _B_alpha = calculateBalpha(t_alpha);
     matrixnnd BBT = _B_alpha * _B_alpha.transpose();
     return rho / (epsilon + BBT.determinant());
-  }
+  }  // calculateRhoTerm
+
   // calculate Jacobian using central difference
   void calculateJocobianRhoTerm(const vectormd &t_alpha) {
     for (int i = 0; i != m; ++i) {
@@ -773,11 +850,13 @@ class thrustallocation {
           (calculateRhoTerm(alpha_plus) - calculateRhoTerm(alpha_minus)) /
           (2 * derivative_dx);
     }
-  }
+  }  // calculateJocobianRhoTerm
+
   // calculate the Balpha u term
   vectornd calculateBalphau(const vectormd &t_alpha, const vectormd &t_u) {
     return calculateBalpha(t_alpha) * t_u;
-  }
+  }  // calculateBalphau
+
   // calculate derivative of Balpha times u
   void calculateJocobianBalphaU(const vectormd &t_alpha, const vectormd &t_u) {
     for (int i = 0; i != m; ++i) {
@@ -789,7 +868,8 @@ class thrustallocation {
                            calculateBalphau(alpha_minus, t_u)) /
                           (2 * derivative_dx);
     }
-  }
+  }  // calculateJocobianBalphaU
+
   // calculate g_deltau and Q_deltau
   void calculateDeltauQ(const vectormd &t_u) {
     vectormd d_utemp = vectormd::Zero();
@@ -799,7 +879,8 @@ class thrustallocation {
     // Q_temp = 0.75 * d_utemp.cwiseInverse();
     Q_temp = 7.5 * d_utemp.cwiseInverse();
     Q_deltau = Q_temp.asDiagonal();
-  }
+  }  // calculateDeltauQ
+
   // calculate the BalphaU and b
   void calculateb(const vectornd &_tau, const vectornd &_BalphaU) {
     b = _tau - _BalphaU;
@@ -808,7 +889,7 @@ class thrustallocation {
   // update parameters in thruster allocation for each time step
   void updateTAparameters(const controllerRTdata<m, n> &_RTdata) {
     B_alpha = calculateBalpha(_RTdata.alpha);
-    if constexpr (index_actuation == FULLYACTUATED)
+    if constexpr (index_actuation == ACTUATION::FULLYACTUATED)
       calculateJocobianRhoTerm(_RTdata.alpha);
     calculateJocobianBalphaU(_RTdata.alpha, _RTdata.u);
     calculateDeltauQ(_RTdata.u);
@@ -816,6 +897,8 @@ class thrustallocation {
     calculateconstraints_tunnel(_RTdata, _RTdata.tau(2));
     calculateconstraints_azimuth(_RTdata);
     calculateconstraints_rudder(_RTdata);
+    if (num_twinfixed > 0)
+      calculateconstraints_twinfixed(_RTdata, _RTdata.tau(0), _RTdata.tau(2));
   }
   // update parameters in QP for each time step
   void updateMosekparameters() {

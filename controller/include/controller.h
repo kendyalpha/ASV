@@ -36,7 +36,8 @@ class controller {
       const thrustallocationdata &_thrustallocationdata,
       const std::vector<tunnelthrusterdata> &_v_tunnelthrusterdata,
       const std::vector<azimuththrusterdata> &_v_azimuththrusterdata,
-      const std::vector<ruddermaindata> &_v_ruddermaindata)
+      const std::vector<ruddermaindata> &_v_ruddermaindata,
+      const std::vector<twinfixedthrusterdata> &_v_twinfixeddata)
       : position_pids(matrixpid::Zero()),
         velocity_pids(matrixpid::Zero()),
         position_allowed_error(vectornd::Zero()),
@@ -49,7 +50,8 @@ class controller {
         sample_time(_controllerdata.sample_time),
         controlmode(_controllerdata.controlmode),
         _thrustallocation(_thrustallocationdata, _v_tunnelthrusterdata,
-                          _v_azimuththrusterdata, _v_ruddermaindata) {
+                          _v_azimuththrusterdata, _v_ruddermaindata,
+                          _v_twinfixeddata) {
     setuppidcontroller(_piddata);
   }
   controller() = delete;

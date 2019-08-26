@@ -23,7 +23,7 @@ enum class CONTROLMODE {
                    // vessel)
 };
 
-enum ACTUATION {
+enum class ACTUATION {
   UNDERACTUATED = 0,  // underactuated usv
   FULLYACTUATED       // fully actuated usv
 };
@@ -56,6 +56,7 @@ struct thrustallocationdata {
   int num_tunnel;      // # of tunnel thruster
   int num_azimuth;     // # of azimuth thruster
   int num_mainrudder;  // # of main thruster with rudder
+  int num_twinfixed;   // # of twin fixed thruster
   std::vector<int> index_thrusters;
 };
 
@@ -111,7 +112,6 @@ struct twinfixedthrusterdata {
   double ly;                   // m
   double K_positive;           // positive value
   double K_negative;           // positive value
-  double pndelaytime;          // delay time of positive->negative (vesra)
   int max_delta_rotation;      // rpm(no less than 1)
   int max_delta_rotation_p2n;  // rpm(no less than 1)
   int max_rotation;            // rpm
