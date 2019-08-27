@@ -84,7 +84,8 @@ void test_multiplecontroller() {
   };
 
   vessel _vessel{
-      (Eigen::Matrix3d() << 100, 0, 1, 0, 100, 1, 0, 1000).finished(),  // Mass
+      (Eigen::Matrix3d() << 100, 0, 1, 0, 100, 0, 1, 0, 1000)
+          .finished(),          // Mass
       Eigen::Matrix3d::Zero(),  // AddedMass
       (Eigen::Matrix3d() << 100, 0, 0, 0, 200, 0, 0, 0, 300)
           .finished(),          // Damping
@@ -113,10 +114,10 @@ void test_multiplecontroller() {
   v_pidcontrollerdata.push_back({1, 2, 10, 1, 0.1, 0.1, -2, 4});
 
   controller<L, m, index_actuation, n> _controller(
-      _controllerdata, _vessel, v_pidcontrollerdata, _thrustallocationdata,
-      v_tunnelthrusterdata, v_azimuththrusterdata, v_ruddermaindata,
-      v_twinfixeddata);
-  _controller.initializecontroller(_controllerRTdata);
+      _controllerRTdata, _controllerdata, _vessel, v_pidcontrollerdata,
+      _thrustallocationdata, v_tunnelthrusterdata, v_azimuththrusterdata,
+      v_ruddermaindata, v_twinfixeddata);
+  _controllerRTdata = _controller.initializecontroller().getcontrollerRTdata();
   Eigen::Matrix<double, n, 1> error;
   Eigen::Matrix<double, n, 1> derror;
   Eigen::Matrix<double, n, 1> command;
@@ -138,8 +139,10 @@ void test_multiplecontroller() {
   Eigen::MatrixXi save_rotation = Eigen::MatrixXi::Zero(n, totalstep);
 
   for (int i = 0; i != 10; ++i) {
-    _controller.controlleronestep(_controllerRTdata, windload, error, derror,
-                                  command, v_setpoint);
+    _controllerRTdata =
+        _controller
+            .controlleronestep(windload, error, derror, command, v_setpoint)
+            .getcontrollerRTdata();
 
     std::cout << "step " << i << std::endl;
     std::cout << _controllerRTdata.tau << std::endl;

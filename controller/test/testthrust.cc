@@ -339,11 +339,11 @@ void test_twinfixed() {
   double angle = 0;
   for (int i = 0; i != 120; ++i) {
     angle = (i + 1) * M_PI / 60;
-    save_tau(2, i + 1) = 5 * sin(angle) + 0.5 * std::rand() / RAND_MAX;
+    save_tau(2, i + 1) = 0 * sin(angle) + 0.5 * std::rand() / RAND_MAX;
   }
-  save_tau.block(0, 0, 1, 100) = Eigen::MatrixXd::Constant(1, 100, -0.1) +
+  save_tau.block(0, 0, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 5) +
                                  0.0 * Eigen::MatrixXd::Random(1, 100);
-  save_tau.block(0, 100, 1, 100) = Eigen::MatrixXd::Constant(1, 100, -2) +
+  save_tau.block(0, 100, 1, 100) = Eigen::MatrixXd::Constant(1, 100, -4) +
                                    0.0 * Eigen::MatrixXd::Random(1, 100);
   save_tau.row(1) = 0.01 * Eigen::MatrixXd::Random(1, totalstep);
   for (int i = 0; i != totalstep; ++i) {

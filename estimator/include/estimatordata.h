@@ -15,12 +15,12 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-enum USEKALMAN {
+enum class USEKALMAN {
   KALMANOFF = 0,  // turn off kalman filtering
   KALMANON        // turn on kalman filtering
 };
 
-enum WINDCOMPENSATION {
+enum class WINDCOMPENSATION {
   WINDOFF = 0,  // turn off the wind compenstation
   WINDON        // turn on the wind compenstation
 };

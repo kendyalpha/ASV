@@ -206,7 +206,8 @@ class threadloop {
   database<num_thruster, dim_controlspace> _sqlite;
 
   void intializethreadloop() {
-    _controller.initializecontroller(_controllerRTdata);
+    _controllerRTdata =
+        _controller.initializecontroller().getcontrollerRTdata();
     _sqlite.initializetables();
   }
 

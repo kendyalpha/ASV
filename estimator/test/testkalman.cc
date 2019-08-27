@@ -1,16 +1,7 @@
 
 #include "eigenmvnd.hpp"
 #include "kalmanfilter.h"
-
-// write Eigen matrix into csv file
-void write2csvfile(const std::string &name, const Eigen::MatrixXd &matrix) {
-  const static Eigen::IOFormat CSVFormat(Eigen::StreamPrecision,
-                                         Eigen::DontAlignCols, ", ", "\n");
-  std::ofstream file(name.c_str());
-  if (file.is_open()) {
-    file << matrix.format(CSVFormat);
-  }
-}
+#include "utilityio.h"
 
 void test1d() { /* Set Matrix and Vector for Kalman Filter: */
   Eigen::MatrixXd A(1, 1);
@@ -96,10 +87,18 @@ void test2d() {
         filter2.kalmanonestep(u.col(i), z.col(i + 1)).getState();
     PEigen(0, i + 1) = filter2.getMaxEigenP();
   }
-  write2csvfile("../data/truex.csv", x_noise);
-  write2csvfile("../data/observed.csv", z);
-  write2csvfile("../data/kalman.csv", save_x);
-  write2csvfile("../data/EigenP.csv", PEigen);
+
+  x_noise = x_noise.transpose().eval();
+  z = z.transpose().eval();
+  save_x = save_x.transpose().eval();
+  PEigen = PEigen.transpose().eval();
+
+  utilityio _utilityio;
+
+  _utilityio.write2csvfile("../data/truex.csv", x_noise);
+  _utilityio.write2csvfile("../data/observed.csv", z);
+  _utilityio.write2csvfile("../data/kalman.csv", save_x);
+  _utilityio.write2csvfile("../data/EigenP.csv", PEigen);
 }
 
 void test3d() {

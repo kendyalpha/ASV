@@ -37,6 +37,9 @@ class lineofsight {
     return false;
   }
 
+  // real time waypoint-varying LOS
+  void wpvaryingLOS(double _curvature) {}
+
   // compute the orientation of LOS vector and cross-track error
   lineofsight &computelospoint(const Eigen::Vector2d &_vesselposition,
                                const Eigen::Vector2d &_wp0,

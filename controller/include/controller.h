@@ -29,8 +29,8 @@ class controller {
   using matrixpid = Eigen::Matrix<double, 2, n>;
 
  public:
-  // fully actuated
   explicit controller(
+      const controllerRTdata<m, n> &_controllerRTdata,
       const controllerdata &_controllerdata, const vessel &_vessel,
       const std::vector<pidcontrollerdata> &_piddata,
       const thrustallocationdata &_thrustallocationdata,
@@ -38,7 +38,8 @@ class controller {
       const std::vector<azimuththrusterdata> &_v_azimuththrusterdata,
       const std::vector<ruddermaindata> &_v_ruddermaindata,
       const std::vector<twinfixedthrusterdata> &_v_twinfixeddata)
-      : position_pids(matrixpid::Zero()),
+      : controlRTdata(_controllerRTdata),
+        position_pids(matrixpid::Zero()),
         velocity_pids(matrixpid::Zero()),
         position_allowed_error(vectornd::Zero()),
         velocity_allowed_error(vectornd::Zero()),
@@ -46,26 +47,27 @@ class controller {
         v_min_output(vectornd::Zero()),
         positionerror_integralmatrix(matrixnld::Zero()),
         velocityerror_integralmatrix(matrixnld::Zero()),
-        damping(_vessel.Damping),
+        lineardamping(_vessel.Damping),
+        quadraticdamping(_vessel.Damping),
         sample_time(_controllerdata.sample_time),
         controlmode(_controllerdata.controlmode),
-        _thrustallocation(_thrustallocationdata, _v_tunnelthrusterdata,
-                          _v_azimuththrusterdata, _v_ruddermaindata,
-                          _v_twinfixeddata) {
+        TA(_thrustallocationdata, _v_tunnelthrusterdata, _v_azimuththrusterdata,
+           _v_ruddermaindata, _v_twinfixeddata) {
     setuppidcontroller(_piddata);
   }
   controller() = delete;
   ~controller() {}
 
-  void initializecontroller(controllerRTdata<m, n> &_RTdata) {
-    _thrustallocation.initializapropeller(_RTdata);
+  controller &initializecontroller() {
+    TA.initializapropeller(controlRTdata);
+    return *this;
   }
 
   // automatic control using pid controller and QP-based thrust allocation
-  void controlleronestep(controllerRTdata<m, n> &_controllerdata,
-                         const vectornd &_windload, const vectornd &_error,
-                         const vectornd &_derror, const vectornd &_command,
-                         const vectornd &_desired_speed) {
+  controller &controlleronestep(const vectornd &_windload,
+                                const vectornd &_error, const vectornd &_derror,
+                                const vectornd &_command,
+                                const vectornd &_desired_speed) {
     vectornd d_tau = vectornd::Zero();
 
     // position control
@@ -86,8 +88,10 @@ class controller {
     restrictdesiredforce(d_tau);
 
     // thrust allocation
-    _controllerdata.tau = d_tau;
-    _thrustallocation.onestepthrustallocation(_controllerdata);
+    controlRTdata.tau = d_tau;
+    TA.onestepthrustallocation(controlRTdata);
+
+    return *this;
   }
 
   // assign value to pid controller (from GUI)
@@ -103,7 +107,7 @@ class controller {
 
   void setcontrolmode(CONTROLMODE _controlmode) {
     controlmode = _controlmode;
-    _thrustallocation.setQ(_controlmode);
+    TA.setQ(_controlmode);
   }
 
   void setcontrolmode(int _controlmode) {
@@ -127,8 +131,11 @@ class controller {
   }
 
   double getsampletime() const noexcept { return sample_time; }
+  auto getcontrollerRTdata() const noexcept { return controlRTdata; }
 
  private:
+  controllerRTdata<m, n> controlRTdata;
+
   matrixpid position_pids;  // pid matrix for position control
   matrixpid velocity_pids;  // pid matrix for velocity control
 
@@ -141,11 +148,13 @@ class controller {
   matrixnld positionerror_integralmatrix;  // I for position control
   matrixnld velocityerror_integralmatrix;  // I for velocity control
 
-  Eigen::Matrix3d damping;  //
+  Eigen::Matrix3d lineardamping;     // linear damping
+  Eigen::Matrix3d quadraticdamping;  // quadratic damping
+
   double sample_time;
   CONTROLMODE controlmode;
 
-  thrustallocation<m, index_actuation, n> _thrustallocation;
+  thrustallocation<m, index_actuation, n> TA;
 
   void setuppidcontroller(
       const std::vector<pidcontrollerdata> &_vcontrollerdata) {
@@ -211,20 +220,22 @@ class controller {
       default:
         break;
     }
-  }
+  }  // velocityloop
+
   // restrict the desired force to some value
   double restrictdesiredforce(double _input, double _min, double _max) {
     double t_input = _input;
     if (_input > _max) t_input = _max;
     if (_input < _min) t_input = _min;
     return t_input;
-  }
+  }  // restrictdesiredforce
 
   void restrictdesiredforce(vectornd &_desiredforce) {
     for (int i = 0; i != n; ++i)
       _desiredforce(i) = restrictdesiredforce(_desiredforce(i), v_min_output(i),
                                               v_max_output(i));
-  }
+  }  // restrictdesiredforce
+
   // calculate the Integral error with moving window
   vectornd updatepositionIntegralMatrix(const vectornd &_error) {
     matrixnld t_integralmatrix = matrixnld::Zero();
@@ -235,7 +246,7 @@ class controller {
     t_integralmatrix.col(index) = _error;
     positionerror_integralmatrix = t_integralmatrix;
     return positionerror_integralmatrix.rowwise().mean();
-  }
+  }  // updatepositionIntegralMatrix
 
   // calculate the Integral error with moving window
   vectornd updatevelocityIntegralMatrix(const vectornd &_derror) {
@@ -246,7 +257,7 @@ class controller {
     t_integralmatrix.col(index) = _derror;
     velocityerror_integralmatrix = t_integralmatrix;
     return velocityerror_integralmatrix.rowwise().mean();
-  }
+  }  // updatevelocityIntegralMatrix
 
   // compare the real time position error with the allowed error
   bool comparepositionerror(const vectornd &_error) {
@@ -285,7 +296,14 @@ class controller {
 
   // linear damping
   void compensatelineardamping(vectornd &_tau, const vectornd &_desired_speed) {
-    for (int i = 0; i != n; ++i) _tau(i) += damping(i, i) * _desired_speed(i);
+    for (int i = 0; i != n; ++i)
+      _tau(i) += lineardamping(i, i) * _desired_speed(i);
+  }
+  // TODO: quadratic damping
+  void compensatequadricdamping(vectornd &_tau,
+                                const vectornd &_desired_speed) {
+    for (int i = 0; i != n; ++i)
+      _tau(i) += quadraticdamping(i, i) * std::pow(_desired_speed(i), 2);
   }
 };
 

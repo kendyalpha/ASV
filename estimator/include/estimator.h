@@ -94,7 +94,7 @@ class estimator {
     compute6dof(_RTdata, gps_z, gps_roll, gps_pitch);
 
     // kalman filtering
-    if constexpr (indicator_kalman == KALMANON)
+    if constexpr (indicator_kalman == USEKALMAN::KALMANON)
       _RTdata.State =
           _kalmanfilterv.kalmanonestep(_RTdata).getState();  // kalman filtering
     else

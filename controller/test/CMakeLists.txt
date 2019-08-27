@@ -72,3 +72,7 @@ add_executable (testmotor testcontrolandmotor.cc ${SOURCE_FILES})
 target_include_directories(testmotor PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testmotor PUBLIC ${MOSEK8_LIBRARY})
 target_link_libraries(testmotor PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+
+
+add_executable (testlos testlos.cc ${SOURCE_FILES} )
+target_include_directories(testlos PRIVATE ${HEADER_DIRECTORY})

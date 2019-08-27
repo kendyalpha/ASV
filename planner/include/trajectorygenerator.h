@@ -46,7 +46,7 @@ struct parameters {
   double DT = 0.2;                   // time tick [s]
   double MAXT = 5.0;                 // max prediction time [s]
   double MINT = 4.0;                 // min prediction time [s]
-  double DS = 0.2;                   //  [m]
+  double DS = 0.2;                   // [m]
   double MAXS = 5.0;                 // max arclength [m]
   double MINS = 4.0;                 // min arclength [m]
   double TARGET_SPEED = 30.0 / 3.6;  // target speed [m/s]

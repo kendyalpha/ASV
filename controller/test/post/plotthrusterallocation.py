@@ -24,7 +24,7 @@ m = len(alpha.columns)
 
 
 plt.figure(1, figsize=(8, 8))
-
+plt.suptitle("Desired thrust and estimated force", fontsize=14)
 plt.subplot(3, 1, 1)
 plt.plot(Balpha['column 1'], '-r', lw=2)
 plt.plot(dtau['column 1'], '--k', lw=2)
@@ -42,10 +42,9 @@ plt.plot(Balpha['column 3'], '-r', lw=2)
 plt.plot(dtau['column 3'], '--k', lw=2)
 plt.ylabel('taun (N*m)')
 plt.legend(('estimated force', 'desired force'), loc='upper right')
-plt.title('generalized thrust')
 
 plt.figure(2, figsize=(8, 8))
-plt.title('thrust of each propeller')
+plt.suptitle("thrust of each propeller", fontsize=14)
 for i in range(m):
     plt.subplot(m, 1, i+1)
     plt.plot(u['column '+str(i+1)], lw=2)
@@ -53,6 +52,7 @@ for i in range(m):
 
 
 plt.figure(3, figsize=(8, 8))
+plt.suptitle("azimuth of each propeller", fontsize=14)
 for i in range(m):
     plt.subplot(m, 1, i+1)
     plt.plot(alpha['column '+str(i+1)]*180/math.pi, '-r', lw=2)
@@ -62,6 +62,7 @@ for i in range(m):
 
 
 plt.figure(4, figsize=(8, 8))
+plt.suptitle("rotation of each propeller", fontsize=14)
 for i in range(m):
     plt.subplot(m, 1, i+1)
     plt.plot(rotation['column '+str(i+1)], lw=2)
