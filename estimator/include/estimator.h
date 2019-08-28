@@ -144,7 +144,7 @@ class estimator {
   // variable for outlier removal
   outlierremove roll_outlierremove;
 
-  kalmanfilterv<> _kalmanfilterv;
+  kalmanfilterv<> kalmanfilter;
 
   double former_heading;  // heading rate estimation
   double sample_time;

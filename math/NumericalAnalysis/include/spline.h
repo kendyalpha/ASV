@@ -25,7 +25,7 @@
 // spline interpolation
 class spline {
  public:
-  enum bd_type { first_deriv = 1, second_deriv = 2 };
+  enum class bd_type { first_deriv = 1, second_deriv = 2 };
 
  private:
   Eigen::VectorXd m_x, m_y;  // x,y coordinates of points
@@ -70,8 +70,8 @@ class spline {
       : n(0),
         m_b0(0.0),
         m_c0(0.0),
-        m_left(second_deriv),
-        m_right(second_deriv),
+        m_left(bd_type::second_deriv),
+        m_right(bd_type::second_deriv),
         m_left_value(0.0),
         m_right_value(0.0),
         m_force_linear_extrapolation(false) {}
@@ -111,12 +111,12 @@ class spline {
                  (m_y(i) - m_y(i - 1)) / (m_x(i) - m_x(i - 1));
       }
       // boundary conditions
-      if (m_left == spline::second_deriv) {
+      if (m_left == bd_type::second_deriv) {
         // 2*b[0] = f''
         A(0, 0) = 2.0;
         A(0, 1) = 0.0;
         rhs(0) = m_left_value;
-      } else if (m_left == spline::first_deriv) {
+      } else if (m_left == bd_type::first_deriv) {
         // c[0] = f', needs to be re-expressed in terms of b:
         // (2b[0]+b[1])(x[1]-x[0]) = 3 ((y[1]-y[0])/(x[1]-x[0]) - f')
         A(0, 0) = 2.0 * (m_x(1) - m_x(0));
@@ -125,12 +125,12 @@ class spline {
       } else {
         assert(false);
       }
-      if (m_right == spline::second_deriv) {
+      if (m_right == bd_type::second_deriv) {
         // 2*b[n-1] = f''
         A(n - 1, n - 1) = 2.0;
         A(n - 1, n - 2) = 0.0;
         rhs(n - 1) = m_right_value;
-      } else if (m_right == spline::first_deriv) {
+      } else if (m_right == bd_type::first_deriv) {
         // c[n-1] = f', needs to be re-expressed in terms of b:
         // (b[n-2]+2b[n-1])(x[n-1]-x[n-2])
         // = 3 (f' - (y[n-1]-y[n-2])/(x[n-1]-x[n-2]))

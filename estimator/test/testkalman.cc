@@ -27,20 +27,20 @@ void test1d() { /* Set Matrix and Vector for Kalman Filter: */
   Eigen::VectorXd U(1);
   U << 0;
   /* Create The Filter */
-  kalmanfilter filter1(A, B, H, Q, R);
+  kalmanfilter<1, 1, 1> filter1(A, B, H, Q, R);
   filter1.setInitial(X0, P0);
   /* This loop simulate the measure/prediction process */
   for (int i = 0; i < 10; ++i) {
     Z << mesaure[i];
-    std::cout << "X" << i << ": "
-              << filter1.kalmanonestep(A, B, U, Z).getState() << std::endl;
+    filter1.linearkalman(A, B, U, Z);
+    std::cout << "X" << i << ": " << filter1.getState() << std::endl;
   }
 }
 
 void test2d() {
-  const int n = 4;
-  const int m = 2;
-  const int l = 1;
+  constexpr int n = 4;
+  constexpr int m = 2;
+  constexpr int l = 1;
   Eigen::Matrix<double, n, n> A;
   A << 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1;
   Eigen::Matrix<double, n, l> B;
@@ -78,13 +78,13 @@ void test2d() {
   Eigen::MatrixXd save_x = Eigen::MatrixXd::Zero(n, _TotalT);
   save_x.col(0) = initx;
   /* Create The Filter */
-  kalmanfilter filter2(A, B, H, Q, R);
+  kalmanfilter<l, m, n> filter2(A, B, H, Q, R);
   filter2.setInitial(initx, initP);
   PEigen(0) = filter2.getMaxEigenP();
 
   for (int i = 0; i != (_TotalT - 1); ++i) {
-    save_x.col(i + 1) =
-        filter2.kalmanonestep(u.col(i), z.col(i + 1)).getState();
+    filter2.linearkalman(u.col(i), z.col(i + 1));
+    save_x.col(i + 1) = filter2.getState();
     PEigen(0, i + 1) = filter2.getMaxEigenP();
   }
 
