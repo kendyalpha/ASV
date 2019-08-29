@@ -52,6 +52,12 @@ struct controllerRTdata {
   Eigen::Matrix<int, m, 1> alpha_deg;
 };
 
+// real-time data in the trajecotry tracking
+struct trackerRTdata {
+  Eigen::Vector3d setpoint;    // x, y, theta in the global coordinate
+  Eigen::Vector3d v_setpoint;  // u, v, r in the body coordinate
+};
+
 struct thrustallocationdata {
   int num_tunnel;      // # of tunnel thruster
   int num_azimuth;     // # of azimuth thruster

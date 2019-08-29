@@ -8,7 +8,7 @@
 *******************************************************************************
 */
 
-#include "lineofsight.h"
+#include "trajectorytracking.h"
 
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
@@ -24,8 +24,9 @@ int main() {
 
   Eigen::Vector2d vp = Eigen::Vector2d::Zero();
   vp << 3433894.584, 351058.1;
-  std::cout << _lineofsight.computelospoint(vp, wp1, wp2).getdesired_theta()
-            << std::endl;
-  std::cout << _lineofsight.computelospoint(vp, wp2, wp3).getdesired_theta()
-            << std::endl;
+
+  _lineofsight.computelospoint(vp, wp1, wp2);
+  std::cout << _lineofsight.getdesired_theta() << std::endl;
+  _lineofsight.computelospoint(vp, wp2, wp3);
+  std::cout << _lineofsight.getdesired_theta() << std::endl;
 }

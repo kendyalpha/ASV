@@ -51,26 +51,26 @@ set(SOURCE_FILES ${SOURCE_FILES}
 
 add_executable (testmosek qo1.cc)
 target_include_directories(testmosek PRIVATE ${HEADER_DIRECTORY})
-find_library(MOSEK8_LIBRARY mosek64 HINTS ${LIBRARY_DIRECTORY})
-target_link_libraries(testmosek PUBLIC ${MOSEK8_LIBRARY})
+find_library(MOSEK_LIBRARY mosek64 HINTS ${LIBRARY_DIRECTORY})
+target_link_libraries(testmosek PUBLIC ${MOSEK_LIBRARY})
 
 
 add_executable (testthrust testthrust.cc ${SOURCE_FILES})
 target_include_directories(testthrust PRIVATE ${HEADER_DIRECTORY})
-find_library(MOSEK8_LIBRARY mosek64 HINTS ${LIBRARY_DIRECTORY})
-target_link_libraries(testthrust PUBLIC ${MOSEK8_LIBRARY})
+find_library(MOSEK_LIBRARY mosek64 HINTS ${LIBRARY_DIRECTORY})
+target_link_libraries(testthrust PUBLIC ${MOSEK_LIBRARY})
 target_link_libraries(testthrust PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 
 
 add_executable (testcontroller testcontroller.cc  ${SOURCE_FILES})
 target_include_directories(testcontroller PRIVATE ${HEADER_DIRECTORY})
-target_link_libraries(testcontroller PUBLIC ${MOSEK8_LIBRARY})
+target_link_libraries(testcontroller PUBLIC ${MOSEK_LIBRARY})
 target_link_libraries(testcontroller PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 
 
 add_executable (testmotor testcontrolandmotor.cc ${SOURCE_FILES})
 target_include_directories(testmotor PRIVATE ${HEADER_DIRECTORY})
-target_link_libraries(testmotor PUBLIC ${MOSEK8_LIBRARY})
+target_link_libraries(testmotor PUBLIC ${MOSEK_LIBRARY})
 target_link_libraries(testmotor PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 
 

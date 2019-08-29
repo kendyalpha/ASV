@@ -48,15 +48,9 @@ set(SOURCE_FILES ${SOURCE_FILES}
 
 # 指定生成目标
 
-add_executable (testlos testlos.cc ${SOURCE_FILES} )
-target_include_directories(testlos PRIVATE ${HEADER_DIRECTORY})
-
-add_executable (testplanner testplanner.cc ${SOURCE_FILES} )
-target_include_directories(testplanner PRIVATE ${HEADER_DIRECTORY})
+# add_executable (testplanner testplanner.cc ${SOURCE_FILES} )
+# target_include_directories(testplanner PRIVATE ${HEADER_DIRECTORY})
 
 add_executable (testtrajectory testtrajectory.cc )
 target_include_directories(testtrajectory PRIVATE ${HEADER_DIRECTORY})
 
-
-add_executable (testeigen testeigen.cc )
-target_include_directories(testeigen PRIVATE ${HEADER_DIRECTORY})

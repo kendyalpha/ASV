@@ -75,20 +75,19 @@ class kalmanfilter {
     updatesystem(_A, _B);
     predict(former_U);
     correct(_Z);
-  }
+  }  // linearkalman
 
   void linearkalman(const matrixnnd &_A, const vectorld &former_U,
                     const vectormd &_Z) {
     updatesystem(_A);
     predict(former_U);
     correct(_Z);
-  }
+  }  // linearkalman
+
   void linearkalman(const vectorld &former_U, const vectormd &_Z) {
     predict(former_U);
     correct(_Z);
-  }
-
-  vectornd getState() const noexcept { return X; }
+  }  // linearkalman
 
   // calculate the max eigenvalue of P
   double getMaxEigenP() const {
@@ -97,7 +96,13 @@ class kalmanfilter {
       return 100;
     else
       return eigensolver.eigenvalues().maxCoeff();
-  }
+  }  // getMaxEigenP
+
+  vectornd getState() const noexcept { return X; }
+  void setState(const vectornd &_state) { X = _state; }
+  // After intialization of sensors, we can specify value to state
+  void setQ(const matrixnnd &_Q) { Q = _Q; }
+  void setR(const matrixmmd &_R) { R = _R; }
 
  protected:
   /* Fixed Matrix */
@@ -117,7 +122,7 @@ class kalmanfilter {
   void predict(void) {
     X = A * X;
     P = A * P * A.transpose() + Q;
-  }
+  }  // predict
 
   /* Do prediction based of physical system (with external input)
    * U: Control vector
@@ -125,23 +130,23 @@ class kalmanfilter {
   void predict(const vectorld &_U) {
     X = A * X + B * _U;
     P = A * P * A.transpose() + Q;
-  }
+  }  // predict
 
   /* Correct the prediction, using mesaurement
-   *  Z: mesaure vector
-   */
+   *  Z: mesaure vector */
   void correct(const vectormd &_Z) {
     K = (P * H.transpose()) * (H * P * H.transpose() + R).inverse();
     // K = (P * H.transpose()) * (H * P * H.transpose() + R).llt().solve(Im);
     X = X + K * (_Z - H * X);
     P = (matrixnnd::Identity() - K * H) * P;
-  }
+  }  // correct
 
   /*Set Fixed Matrix(NO INPUT) */
   void updatesystem(const matrixnnd &_A, const matrixnld &_B) {
     A = _A;
     B = _B;
   }
+
   /*Set Fixed Matrix(NO INPUT) */
   void updatesystem(const matrixnnd &_A) { A = _A; }
 };
@@ -165,12 +170,6 @@ class USV_kalmanfilter : public kalmanfilter<3, 6, 6> {
     kalmanfilter::linearkalman(_RTdata.BalphaU, _RTdata.Measurement);
     return *this;
   }
-
-  // After intialization of sensors, we can specify value to state
-  void setState(const vectornd &_state) { X = _state; }
-  void setQ(const matrixnnd &_Q) { Q = _Q; }
-  void setR(const matrixmmd &_R) { R = _R; }
-  // vectornd getState() const noexcept { return X; }
 
  private:
   const double sample_time;

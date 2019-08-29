@@ -105,6 +105,7 @@ class estimator {
     else
       EstimatorRTData.State =
           EstimatorRTData.Measurement;  // use low-pass filtering only
+
     return *this;
 
   }  // estimatestate
