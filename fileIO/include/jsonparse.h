@@ -147,9 +147,9 @@ class jsonparse {
 
   // estimatordata
   estimatordata estimatordata_input{
-      0.1,                      // sample_time
-      Eigen::Vector2d::Zero(),  // cog2anntena_position
-      WINDOFF,                  // windstatus
+      0.1,                        // sample_time
+      Eigen::Vector2d::Zero(),    // cog2anntena_position
+      WINDCOMPENSATION::WINDOFF,  // windstatus
   };
 
   void parsejson() {

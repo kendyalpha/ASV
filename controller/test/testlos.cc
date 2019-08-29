@@ -10,8 +10,6 @@
 
 #include "lineofsight.h"
 
-INITIALIZE_EASYLOGGINGPP
-
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
 

@@ -11,8 +11,6 @@
 #include "thrustallocation.h"
 #include "utilityio.h"
 
-INITIALIZE_EASYLOGGINGPP
-
 // test thrust allocation for 4 propellers (fully actuated)
 void testonestepthrustallocation() {
   const int m = 4;

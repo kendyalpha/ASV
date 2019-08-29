@@ -36,3 +36,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} "/usr/lib")
 
 add_executable (testkalman testkalman.cc)
 target_include_directories(testkalman PRIVATE ${HEADER_DIRECTORY})
+
+
+add_executable (testestimator testestimator.cc)
+target_include_directories(testestimator PRIVATE ${HEADER_DIRECTORY})

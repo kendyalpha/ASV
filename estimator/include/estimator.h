@@ -16,10 +16,12 @@
 template <USEKALMAN indicator_kalman>
 class estimator {
  public:
-  explicit estimator(const vessel& _vessel, const estimatordata& _estimatordata)
-      : roll_outlierremove(_vessel.roll_v(1), _vessel.roll_v(0),
+  explicit estimator(const estimatorRTdata& _estimatorRTdata,
+                     const vessel& _vessel, const estimatordata& _estimatordata)
+      : EstimatorRTData(_estimatorRTdata),
+        roll_outlierremove(_vessel.roll_v(1), _vessel.roll_v(0),
                            _estimatordata.sample_time),
-        _kalmanfilterv(_vessel, _estimatordata.sample_time),
+        KalmanFilter(_vessel, _estimatordata.sample_time),
         former_heading(0),
         sample_time(_estimatordata.sample_time),
         cog2anntena_position(_estimatordata.cog2anntena_position) {}
@@ -27,9 +29,9 @@ class estimator {
   ~estimator() {}
 
   // setvalue after the initialization
-  void setvalue(estimatorRTdata& _RTdata, double gps_x, double gps_y,
-                double gps_z, double gps_roll, double gps_pitch,
-                double gps_heading, double gps_Ve, double gps_Vn) {
+  estimator& setvalue(double gps_x, double gps_y, double gps_z, double gps_roll,
+                      double gps_pitch, double gps_heading, double gps_Ve,
+                      double gps_Vn) {
     // change directions
     changedirections(gps_x, gps_y, gps_z, gps_roll, gps_pitch, gps_heading,
                      gps_Ve, gps_Vn);
@@ -37,7 +39,8 @@ class estimator {
     // heading rate
     former_heading = restrictheadingangle(gps_heading * M_PI / 180);
     heading_lowpass.setaveragevector(former_heading);
-    calculateCoordinateTransform(_RTdata.CTG2B, _RTdata.CTB2G, former_heading);
+    calculateCoordinateTransform(EstimatorRTData.CTG2B, EstimatorRTData.CTB2G,
+                                 former_heading);
 
     // low pass for position of GPS back anntena
     x_lowpass.setaveragevector(gps_x);
@@ -45,7 +48,7 @@ class estimator {
     z_lowpass.setaveragevector(gps_z);
     //
     Eigen::Vector2d velocity_body =
-        _RTdata.CTG2B.block<2, 2>(0, 0) *
+        EstimatorRTData.CTG2B.block<2, 2>(0, 0) *
         (Eigen::Vector2d() << gps_Vn, gps_Ve).finished();
     surgev_lowpass.setaveragevector(velocity_body(0));
     swayv_lowpass.setaveragevector(velocity_body(1));
@@ -56,73 +59,87 @@ class estimator {
     roll_outlierremove.setlastvalue(gps_roll * M_PI / 180);
 
     //
-    _RTdata.Measurement.head(2) =
-        _RTdata.CTB2G.block<2, 2>(0, 0) * cog2anntena_position +
+    EstimatorRTData.Measurement.head(2) =
+        EstimatorRTData.CTB2G.block<2, 2>(0, 0) * cog2anntena_position +
         (Eigen::Vector2d() << gps_x, gps_y).finished();
-    _RTdata.Measurement(2) = former_heading;
-    _RTdata.Measurement.segment(3, 2) = velocity_body;
-    _RTdata.Measurement(5) = 0;
+    EstimatorRTData.Measurement(2) = former_heading;
+    EstimatorRTData.Measurement.segment(3, 2) = velocity_body;
+    EstimatorRTData.Measurement(5) = 0;
 
-    _RTdata.State = _RTdata.Measurement;
+    EstimatorRTData.State = EstimatorRTData.Measurement;
     // Kalman filtering
-    _kalmanfilterv.setState(_RTdata.State);
+    KalmanFilter.setState(EstimatorRTData.State);
+
+    return *this;
   }
   // update the estimated force acting on the vessel
-  void updateestimatedforce(estimatorRTdata& _RTdata,
-                            const Eigen::Vector3d& _thrust,
-                            const Eigen::Vector3d& _wind) {
-    _RTdata.BalphaU = _thrust + _wind;
+  estimator& updateestimatedforce(const Eigen::Vector3d& _thrust,
+                                  const Eigen::Vector3d& _wind) {
+    EstimatorRTData.BalphaU = _thrust + _wind;
+    return *this;
   }
   // read sensor data and perform state estimation
-  void estimatestate(estimatorRTdata& _RTdata, double gps_x, double gps_y,
-                     double gps_z, double gps_roll, double gps_pitch,
-                     double gps_heading, double gps_Ve, double gps_Vn,
-                     double _desiredheading) {
+  estimator& estimatestate(double gps_x, double gps_y, double gps_z,
+                           double gps_roll, double gps_pitch,
+                           double gps_heading, double gps_Ve, double gps_Vn,
+                           double _dheading) {
     // change directions
     changedirections(gps_x, gps_y, gps_z, gps_roll, gps_pitch, gps_heading,
                      gps_Ve, gps_Vn);
     //
-    _RTdata.Measurement(2) = preprocessheading(gps_heading);
+    EstimatorRTData.Measurement(2) = preprocessheading(gps_heading);
     // calculate the coordinate transform matrix
-    calculateCoordinateTransform(_RTdata.CTG2B, _RTdata.CTB2G,
-                                 _RTdata.Measurement(2), _desiredheading);
+    calculateCoordinateTransform(EstimatorRTData.CTG2B, EstimatorRTData.CTB2G,
+                                 EstimatorRTData.Measurement(2), _dheading);
 
-    computevesselposition(_RTdata, gps_x, gps_y);
+    computevesselposition(EstimatorRTData, gps_x, gps_y);
 
-    computevelocity(_RTdata, gps_Ve, gps_Vn);
+    computevelocity(EstimatorRTData, gps_Ve, gps_Vn);
     //
-    compute6dof(_RTdata, gps_z, gps_roll, gps_pitch);
+    compute6dof(EstimatorRTData, gps_z, gps_roll, gps_pitch);
 
     // kalman filtering
     if constexpr (indicator_kalman == USEKALMAN::KALMANON)
-      _RTdata.State =
-          _kalmanfilterv.kalmanonestep(_RTdata).getState();  // kalman filtering
+      EstimatorRTData.State = KalmanFilter.linearkalman(EstimatorRTData)
+                                  .getState();  // kalman filtering
     else
-      _RTdata.State = _RTdata.Measurement;  // use low-pass filtering only
-  }
+      EstimatorRTData.State =
+          EstimatorRTData.Measurement;  // use low-pass filtering only
+    return *this;
+
+  }  // estimatestate
+
   // read sensor data and perform state estimation (simulation)
-  void estimatestate(estimatorRTdata& _RTdata, double _desiredheading) {
+  estimator& estimatestate(double _dheading) {
     // calculate the coordinate transform matrix
-    _RTdata.Measurement = _RTdata.State;
-    calculateCoordinateTransform(_RTdata.CTG2B, _RTdata.CTB2G,
-                                 _RTdata.Measurement(2), _desiredheading);
-    _RTdata.State =
-        _kalmanfilterv.kalmanonestep(_RTdata).getState();  // kalman filtering
+    EstimatorRTData.Measurement = EstimatorRTData.State;
+    calculateCoordinateTransform(EstimatorRTData.CTG2B, EstimatorRTData.CTB2G,
+                                 EstimatorRTData.Measurement(2), _dheading);
+    EstimatorRTData.State = KalmanFilter.linearkalman(EstimatorRTData)
+                                .getState();  // kalman filtering
+
+    return *this;
   }
+
   // realtime calculation of position and velocity errors
-  void estimateerror(estimatorRTdata& _RTdata,
-                     const Eigen::Vector3d& _setpoints,
-                     const Eigen::Vector3d& _vsetpoints) {
+  estimator& estimateerror(const Eigen::Vector3d& _setpoints,
+                           const Eigen::Vector3d& _vsetpoints) {
     Eigen::Vector3d _perror = Eigen::Vector3d::Zero();
-    for (int i = 0; i != 2; ++i) _perror(i) = _setpoints(i) - _RTdata.State(i);
-    _perror(2) = restrictheadingangle(_setpoints(2) - _RTdata.State(2));
-    _RTdata.p_error = _RTdata.CTG2B * _perror;
-    _RTdata.v_error = _vsetpoints - _RTdata.State.tail(3);
+    for (int i = 0; i != 2; ++i)
+      _perror(i) = _setpoints(i) - EstimatorRTData.State(i);
+    _perror(2) = restrictheadingangle(_setpoints(2) - EstimatorRTData.State(2));
+    EstimatorRTData.p_error = EstimatorRTData.CTG2B * _perror;
+    EstimatorRTData.v_error = _vsetpoints - EstimatorRTData.State.tail(3);
+    return *this;
   }
+
+  auto getEstimatorRTData() const noexcept { return EstimatorRTData; }
 
   double getsampletime() const noexcept { return sample_time; }
 
  private:
+  estimatorRTdata EstimatorRTData;
+
   // variable for low passing
   // lowpass<5> x_lowpass;
   // lowpass<5> y_lowpass;
@@ -144,7 +161,7 @@ class estimator {
   // variable for outlier removal
   outlierremove roll_outlierremove;
 
-  kalmanfilterv<> kalmanfilter;
+  USV_kalmanfilter KalmanFilter;
 
   double former_heading;  // heading rate estimation
   double sample_time;

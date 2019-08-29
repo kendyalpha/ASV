@@ -11,8 +11,6 @@
 #include "motorclient.h"
 #include "thrustallocation.h"
 
-INITIALIZE_EASYLOGGINGPP
-
 void test() {
   // set the parameters in the thrust allocation
   const int m = 6;

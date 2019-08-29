@@ -7,8 +7,6 @@
 #include <thread>
 #include "easylogging++.h"
 
-INITIALIZE_EASYLOGGINGPP
-
 class testlog {
  public:
   testlog() {}

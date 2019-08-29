@@ -48,15 +48,19 @@ struct estimatorRTdata {
   Eigen::Matrix<double, 3, 1> BalphaU;
 
   Eigen::Matrix<double, 6, 1> motiondata_6dof;
+};
 
+struct sealoadRTdata {
   // wind load for wind compensation
   Eigen::Vector3d windload;
 };
 
 /********************* constant ***********************************/
 struct estimatordata {
-  double sample_time;  // sample time of estimator((unit: second)),
-  Eigen::Vector2d cog2anntena_position;  // location of CoG relative to anntena
+  double sample_time;  // sample time of estimator((unit: second))
+
+  // location of CoG relative to primary anntena
+  Eigen::Vector2d cog2anntena_position;
   WINDCOMPENSATION windstatus;
 };
 

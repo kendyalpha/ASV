@@ -170,7 +170,7 @@ class USV_kalmanfilter : public kalmanfilter<3, 6, 6> {
   void setState(const vectornd &_state) { X = _state; }
   void setQ(const matrixnnd &_Q) { Q = _Q; }
   void setR(const matrixmmd &_R) { R = _R; }
-  vectornd getState() const noexcept { return X; }
+  // vectornd getState() const noexcept { return X; }
 
  private:
   const double sample_time;

@@ -11,8 +11,6 @@
 #include "controller.h"
 #include "utilityio.h"
 
-INITIALIZE_EASYLOGGINGPP
-
 void test_multiplecontroller() {
   // set the parameters in the thrust allocation
   const int L = 30;
