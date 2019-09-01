@@ -30,9 +30,6 @@ struct gpsRTdata {
   double UTM_x;  // 投影的 x (m)
   double UTM_y;  // 投影的 y (m)
 
-  /**** vessel speed   ****/
-  double u;  // 前进速度 m/s
-  double v;  // 侧向速度 m/s
 };
 
 

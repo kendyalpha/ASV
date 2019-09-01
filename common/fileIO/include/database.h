@@ -48,9 +48,9 @@ class database {
     try {
       std::string str =
           "INSERT INTO GPS"
-          "(DATETIME, gps_week, gps_time, heading, pitch, roll, latitude,"
-          "longitude, altitude, Ve, Vn, Vu, base_line, NSV1, NSV2,"
-          "gpsstatus, UTM_x, UTM_y) VALUES(julianday('now')";
+          "(DATETIME, UTC, latitude,longitude,heading, pitch, roll, "
+          " altitude, Ve, Vn, roti, status,UTM_x, UTM_y) "
+          " VALUES(julianday('now')";
       convert2string(_gpsRTdata, str);
       str += ");";
 
@@ -99,8 +99,8 @@ class database {
           "INSERT INTO estimator"
           "(DATETIME, meas_x, meas_y, meas_theta, meas_u, meas_v, meas_r,"
           "state_x, state_y, state_theta, state_u, state_v, state_r, "
-          "perror_x, perror_y, perror_mz, verror_x, verror_y, verror_mz, "
-          "wind_Fx, wind_Fy, wind_Mz ) VALUES(julianday('now')";
+          "perror_x, perror_y, perror_mz, verror_x, verror_y, verror_mz) "
+          "VALUES(julianday('now')";
       convert2string(_RTdata, str);
       str += ");";
       db << str;
@@ -211,21 +211,17 @@ class database {
           "CREATE TABLE GPS"
           "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
           " DATETIME    TEXT       NOT NULL,"
-          " gps_week    INT, "
-          " gps_time    DOUBLE, "
+          " UTC         DOUBLE, "
+          " latitude    DOUBLE, "
+          " longitude   DOUBLE, "
           " heading     DOUBLE, "
           " pitch       DOUBLE, "
           " roll        DOUBLE, "
-          " latitude    DOUBLE, "
-          " longitude   DOUBLE, "
           " altitude    DOUBLE, "
           " Ve          DOUBLE, "
           " Vn          DOUBLE, "
-          " Vu          DOUBLE, "
-          " base_line   DOUBLE, "
-          " NSV1        INT, "
-          " NSV2        INT, "
-          " gpsstatus   TEXT, "
+          " roti        DOUBLE, "
+          " status      INT,    "
           " UTM_x       DOUBLE, "
           " UTM_y       DOUBLE);";
       db << str;
@@ -292,10 +288,7 @@ class database {
           " perror_mz   DOUBLE, " /* perror */
           " verror_x    DOUBLE, "
           " verror_y    DOUBLE, "
-          " verror_mz   DOUBLE, " /* verror */
-          " wind_Fx     DOUBLE, "
-          " wind_Fy     DOUBLE, "
-          " wind_Mz     DOUBLE); "; /* wind */
+          " verror_mz   DOUBLE); "; /* verror */
 
       db << str;
 
@@ -369,9 +362,11 @@ class database {
   // convert real time GPS data to sql string
   void convert2string(const gpsRTdata &_gpsRTdata, std::string &_str) {
     _str += ", ";
-    _str += std::to_string(_gpsRTdata.date);
+    _str += std::to_string(_gpsRTdata.UTC);
     _str += ", ";
-    _str += std::to_string(_gpsRTdata.time);
+    _str += std::to_string(_gpsRTdata.latitude);
+    _str += ", ";
+    _str += std::to_string(_gpsRTdata.longitude);
     _str += ", ";
     _str += std::to_string(_gpsRTdata.heading);
     _str += ", ";
@@ -379,26 +374,16 @@ class database {
     _str += ", ";
     _str += std::to_string(_gpsRTdata.roll);
     _str += ", ";
-    _str += std::to_string(_gpsRTdata.latitude);
-    _str += ", ";
-    _str += std::to_string(_gpsRTdata.longitude);
-    _str += ", ";
     _str += std::to_string(_gpsRTdata.altitude);
     _str += ", ";
     _str += std::to_string(_gpsRTdata.Ve);
     _str += ", ";
     _str += std::to_string(_gpsRTdata.Vn);
     _str += ", ";
-    _str += std::to_string(_gpsRTdata.Vu);
+    _str += std::to_string(_gpsRTdata.roti);
     _str += ", ";
-    _str += std::to_string(_gpsRTdata.base_line);
+    _str += std::to_string(_gpsRTdata.status);
     _str += ", ";
-    _str += std::to_string(_gpsRTdata.NSV1);
-    _str += ", ";
-    _str += std::to_string(_gpsRTdata.NSV2);
-    _str += ", '";
-    _str += std::string(1, _gpsRTdata.status);
-    _str += "' , ";
     _str += to_string_with_precision<double>(_gpsRTdata.UTM_x, 3);
     _str += ", ";
     _str += to_string_with_precision<double>(_gpsRTdata.UTM_y, 3);
@@ -446,11 +431,6 @@ class database {
     for (int i = 0; i != 3; ++i) {
       _str += ", ";
       _str += std::to_string(_RTdata.v_error(i));
-    }
-    // wind
-    for (int i = 0; i != 3; ++i) {
-      _str += ", ";
-      _str += std::to_string(_RTdata.windload(i));
     }
   }
 

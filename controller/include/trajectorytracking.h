@@ -141,9 +141,6 @@ class trajectroytracking final : public lineofsight {
   //   return waypoints;
   // }
 
-  // follow a spline using LOS
-  trajectroytracking &splineLOS() { return *this; }
-
   // follow a circular arc using LOS
   trajectroytracking &CircularArcLOS(double _curvature, double _desired_u,
                                      const Eigen::Vector2d &_vesselposition,
@@ -165,7 +162,7 @@ class trajectroytracking final : public lineofsight {
 
  private:
   trackerRTdata TrackerRTdata;
-  const double sample_time;
+  const double sample_time;  // sample time of controller
 };
 
 #endif /* _TRAJECTORYTRACKING_H_ */

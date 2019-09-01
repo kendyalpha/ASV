@@ -24,8 +24,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
 	"${PROJECT_SOURCE_DIR}/../include"
-	"${PROJECT_SOURCE_DIR}/../../../fileIO/include"
-	"${PROJECT_SOURCE_DIR}/../../../timer/include"
+	"${PROJECT_SOURCE_DIR}/../../../common/fileIO/include"
+	"${PROJECT_SOURCE_DIR}/../../../common/timer/include"
 	"${PROJECT_SOURCE_DIR}/../../eigen/"
 	"/usr/include" )
 

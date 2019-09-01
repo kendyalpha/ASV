@@ -16,7 +16,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
     "../include/"
    	"${PROJECT_SOURCE_DIR}/../../third_party/serial/include"
-   	"${PROJECT_SOURCE_DIR}/../../timer/include"
+   	"${PROJECT_SOURCE_DIR}/../../common/timer/include"
     )
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 

@@ -33,9 +33,9 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	"/usr/include" 
 	"${PROJECT_SOURCE_DIR}/../../controller/motor/include"
-	"${PROJECT_SOURCE_DIR}/../../fileIO/include"
-	"${PROJECT_SOURCE_DIR}/../../logging/include"
-	"${PROJECT_SOURCE_DIR}/../../property/include"
+	"${PROJECT_SOURCE_DIR}/../../common/fileIO/include"
+	"${PROJECT_SOURCE_DIR}/../../common/logging/include"
+	"${PROJECT_SOURCE_DIR}/../../common/property/include"
 	"${PROJECT_SOURCE_DIR}/../../math/eigen"
 	"/opt/mosek/9.0/tools/platform/linux64x86/h")
 
@@ -44,7 +44,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
     "/opt/mosek/9.0/tools/platform/linux64x86/bin")
 
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../logging/src/easylogging++.cc" )
+	"${PROJECT_SOURCE_DIR}/../../common/logging/src/easylogging++.cc" )
 
 
 # 指定生成目标

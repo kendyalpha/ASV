@@ -25,8 +25,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
 	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	"/usr/include" 
-	"${PROJECT_SOURCE_DIR}/../../fileIO/include"
-	"${PROJECT_SOURCE_DIR}/../../property/include"
+	"${PROJECT_SOURCE_DIR}/../../common/fileIO/include"
+	"${PROJECT_SOURCE_DIR}/../../common/property/include"
 	"${PROJECT_SOURCE_DIR}/../../math/eigen"
 	"/opt/mosek/8/tools/platform/linux64x86/h")
 

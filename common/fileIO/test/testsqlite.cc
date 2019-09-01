@@ -8,8 +8,7 @@
 */
 
 #include "database.h"
-
-INITIALIZE_EASYLOGGINGPP
+#include "timecounter.h"
 
 int main() {
   const int m = 3;
@@ -22,24 +21,19 @@ int main() {
   _sqlitetest.initializetables();
   // real time GPS/IMU data
   gpsRTdata gps_data{
-      0,                // date
-      0,                // time
-      0,                // heading
-      0,                // pitch
-      0,                // roll
-      0,                // latitude
-      0,                // longitude
-      0,                // altitude
-      0,                // Ve
-      0,                // Vn
-      0,                // Vu
-      0,                // base_line
-      0,                // NSV1
-      0,                // NSV2
-      '0',              // status
-      {'a', 'b', '0'},  // check
-      234000.11232,     // UTM_x
-      0                 // UTM_y
+      0,  // UTC
+      0,  // latitude
+      0,  // longitude
+      0,  // heading
+      0,  // pitch
+      0,  // roll
+      0,  // altitude
+      0,  // Ve
+      0,  // Vn
+      0,  // roti
+      0,  // status
+      0,  // UTM_x
+      0   // UTM_y
   };
   // realtime parameters of the estimators
   estimatorRTdata _estimatorRTdata{
@@ -51,7 +45,6 @@ int main() {
       Eigen::Vector3d::Zero(),              // v_error
       Eigen::Vector3d::Zero(),              // BalphaU
       Eigen::Matrix<double, 6, 1>::Zero(),  // motiondata_6dof
-      Eigen::Vector3d::Zero()               // wind
   };
   controllerRTdata<m, n> _controllerRTdata{
       (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),    // tau
@@ -85,6 +78,8 @@ int main() {
       1   // orientation
   };
 
+  timecounter _timer;
+
   for (int i = 0; i != 3; ++i) {
     _sqlitetest.update_gps_table(gps_data);
     _sqlitetest.update_estimator_table(_estimatorRTdata);
@@ -93,6 +88,8 @@ int main() {
     _sqlitetest.update_indicators_table(_indicators);
     _sqlitetest.update_wind_table(_windRTdata);
   }
+  long int et = _timer.timeelapsed();
+  std::cout << "time:" << et << std::endl;
 
   LOG(INFO) << "Shutting down.";
   return 0;

@@ -11,6 +11,7 @@
 #ifndef JSONPARSE_H
 #define JSONPARSE_H
 #include <cmath>
+#include <ctime>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -22,6 +23,7 @@
 #include "plannerdata.h"
 #include "utilityio.h"
 #include "vesseldata.h"
+
 /*
 global coordinate (GLOBAL), which is an inertial reference frame;
 body-fixed coordinate (BODY); whose origin located at the stern
@@ -121,9 +123,9 @@ class jsonparse {
 
   // controllerdata
   controllerdata controllerdata_input{
-      0.1,           // sample_time
-      MANUAL,        // controlmode
-      FULLYACTUATED  // index_actuation
+      0.1,                      // sample_time
+      CONTROLMODE::MANUAL,      // controlmode
+      ACTUATION::FULLYACTUATED  // index_actuation
   };
   // plannerdata
   plannerdata plannerdata_input{
@@ -459,8 +461,11 @@ class jsonparse {
   }  // parsevesselpropertydata
 
   void parsesqlitedata() {
+    std::time_t result = std::time(nullptr);
+    std::string utctime = std::asctime(std::localtime(&result));
+    utctime.pop_back();
     dbpath = file["project_directory"].get<std::string>() +
-             file["dbpath"].get<std::string>();
+             file["dbpath"].get<std::string>() + utctime + ".db";
 
   }  // parsesqlitedata
 
@@ -563,6 +568,9 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
   os << _jp.gui_port << " " << _jp.gui_baudrate << std::endl;
   os << _jp.rc_port << " " << _jp.rc_baudrate << std::endl;
   os << _jp.wind_port << " " << _jp.wind_baudrate << std::endl;
+
+  os << "dbpath:\n";
+  os << _jp.dbpath << std::endl;
   return os;
 }
 

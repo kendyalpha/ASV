@@ -28,16 +28,16 @@ find_package(Threads REQUIRED)
 
 # 添加 include 子目录
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../../sensors/wind/include"
-	"${PROJECT_SOURCE_DIR}/../../sensors/gpsimu/include"
-	"${PROJECT_SOURCE_DIR}/../../controller/include"
-	"${PROJECT_SOURCE_DIR}/../../estimator/include"
-	"${PROJECT_SOURCE_DIR}/../../planner/include"
+	"${PROJECT_SOURCE_DIR}/../../../sensors/wind/include"
+	"${PROJECT_SOURCE_DIR}/../../../sensors/gpsimu/include"
+	"${PROJECT_SOURCE_DIR}/../../../controller/include"
+	"${PROJECT_SOURCE_DIR}/../../../estimator/include"
+	"${PROJECT_SOURCE_DIR}/../../../planner/include"
 	"${PROJECT_SOURCE_DIR}/../../timer/include"
 	"${PROJECT_SOURCE_DIR}/../../fileIO/include"
 	"${PROJECT_SOURCE_DIR}/../../property/include"
 	"${PROJECT_SOURCE_DIR}/../../logging/include"
-	"${PROJECT_SOURCE_DIR}/../../math/eigen"
+	"${PROJECT_SOURCE_DIR}/../../../math/eigen"
 	"/usr/include" )
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} "/usr/lib")

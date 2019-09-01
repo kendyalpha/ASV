@@ -1,7 +1,7 @@
 {
   "vesselname": "Biling",
   "project_directory":"/home/scar1et/Coding/ASV",
-  "dbpath": "data/dbsave.db",
+  "dbpath": "data/",
   "property": {
     "L":3,
     "B":1,

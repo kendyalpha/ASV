@@ -77,7 +77,7 @@ class gpsimu final : public nmea {
 
   void hemisphereV102(const std::string& _serial_buffer, gpsRTdata& _gpsdata) {
     if (_serial_buffer.find("$GPGGA") != std::string::npos) {
-      nmea_parse(_serial_buffer, gpgga);
+      nmea::nmea_parse(_serial_buffer, gpgga);
       _gpsdata.UTC = gpgga.UTC;
       _gpsdata.latitude = convertlatitudeunit(gpgga.latitude, gpgga.NS);
       _gpsdata.longitude = convertlongitudeunit(gpgga.longitude, gpgga.EW);
@@ -87,13 +87,13 @@ class gpsimu final : public nmea {
               _gpsdata.UTM_y);
 
     } else if (_serial_buffer.find("$HEROT") != std::string::npos) {
-      nmea_parse(_serial_buffer, herot);
+      nmea::nmea_parse(_serial_buffer, herot);
       _gpsdata.roti = herot.rateofturning;
     } else if (_serial_buffer.find("$GPVTG") != std::string::npos) {
-      nmea_parse(_serial_buffer, gpvtg);
+      nmea::nmea_parse(_serial_buffer, gpvtg);
       decomposespeed(gpvtg.K_speed, gpvtg.TMG, _gpsdata.Ve, _gpsdata.Vn);
     } else if (_serial_buffer.find("$PSAT") != std::string::npos) {
-      nmea_parse(_serial_buffer, psat);
+      nmea::nmea_parse(_serial_buffer, psat);
       _gpsdata.heading = psat.heading;
       _gpsdata.pitch = psat.pitch;
       _gpsdata.roll = psat.roll;

@@ -30,12 +30,12 @@ find_package(Threads MODULE REQUIRED)
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
 	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	"/usr/include" 
-	"${PROJECT_SOURCE_DIR}/../../fileIO/include"
-	"${PROJECT_SOURCE_DIR}/../../logging/include"
+	"${PROJECT_SOURCE_DIR}/../../common/fileIO/include"
+	"${PROJECT_SOURCE_DIR}/../../common/logging/include"
 	"${PROJECT_SOURCE_DIR}/../../math/eigen"
 	"${PROJECT_SOURCE_DIR}/../../math/NumericalAnalysis/include"
 	"${PROJECT_SOURCE_DIR}/../../communication/include"
-	"${PROJECT_SOURCE_DIR}/../../timer/include"
+	"${PROJECT_SOURCE_DIR}/../../common/timer/include"
 	)
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 

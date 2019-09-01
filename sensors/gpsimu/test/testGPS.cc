@@ -27,11 +27,10 @@ int main() {
       0,  // altitude
       0,  // Ve
       0,  // Vn
+      0,  // roti
       0,  // status
       0,  // UTM_x
-      0,  // UTM_y
-      0,  // u
-      0   // v
+      0   // UTM_y
   };
   try {
     timecounter _timer;

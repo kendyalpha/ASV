@@ -1,9 +1,9 @@
 # CMake 最低版本号要求
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 3.8)
 
 # 项目信息
 project (testlogging)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 
 # UNIX, WIN32, WINRT, CYGWIN, APPLE are environment 
@@ -28,7 +28,7 @@ find_package(Threads REQUIRED)
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
 	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	"/usr/include" 
-	 "${PROJECT_SOURCE_DIR}/../../math/eigen")
+	 "${PROJECT_SOURCE_DIR}/../../../math/eigen")
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} "/usr/lib")
 set(SOURCE_FILES ${SOURCE_FILES} 
