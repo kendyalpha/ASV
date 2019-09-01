@@ -23,24 +23,26 @@
 #include "planner.h"
 #include "priority.h"
 #include "timecounter.h"
-#include "windcompensation.h"
 
-constexpr int num_thruster = 6;
+constexpr int num_thruster = 2;
 constexpr int dim_controlspace = 3;
-constexpr USEKALMAN indicator_kalman = KALMANON;
-constexpr ACTUATION indicator_actuation = FULLYACTUATED;
+constexpr USEKALMAN indicator_kalman = USEKALMAN::KALMANON;
+constexpr ACTUATION indicator_actuation = ACTUATION::UNDERACTUATED;
 
 class threadloop {
  public:
   threadloop()
       : _jsonparse("./../../properties/property.json"),
         _planner(_jsonparse.getplannerdata()),
-        _estimator(_jsonparse.getvessel(), _jsonparse.getestimatordata()),
-        _controller(_jsonparse.getcontrollerdata(), _jsonparse.getvessel(),
-                    _jsonparse.getpiddata(),
+        _estimator(_estimatorRTdata, _jsonparse.getvessel(),
+                   _jsonparse.getestimatordata()),
+        _trajectroytracking(_jsonparse.getcontrollerdata(), _trackerRTdata),
+        _controller(_controllerRTdata, _jsonparse.getcontrollerdata(),
+                    _jsonparse.getvessel(), _jsonparse.getpiddata(),
                     _jsonparse.getthrustallocationdata(),
                     _jsonparse.gettunneldata(), _jsonparse.getazimuthdata(),
-                    _jsonparse.getmainrudderdata()),
+                    _jsonparse.getmainrudderdata(),
+                    _jsonparse.gettwinfixeddata()),
         _sqlite(_jsonparse.getsqlitedata()) {
     intializethreadloop();
   }
@@ -81,11 +83,14 @@ class threadloop {
   jsonparse<num_thruster, dim_controlspace> _jsonparse;
 
   plannerRTdata _plannerRTdata{
-      Eigen::Vector3d::Zero(),  // setpoint
-      Eigen::Vector3d::Zero(),  // v_setpoint
       Eigen::Vector2d::Zero(),  // waypoint0
       Eigen::Vector2d::Zero(),  // waypoint1
       Eigen::Vector3d::Zero()   // command
+  };
+
+  trackerRTdata _trackerRTdata{
+      Eigen::Vector3d::Zero(),  // setpoint
+      Eigen::Vector3d::Zero()   // v_setpoint
   };
 
   controllerRTdata<num_thruster, dim_controlspace> _controllerRTdata{
@@ -118,61 +123,19 @@ class threadloop {
 
   planner _planner;
   estimator<indicator_kalman> _estimator;
+
+  trajectroytracking _trajectroytracking;
   controller<10, num_thruster, indicator_actuation, dim_controlspace>
       _controller;
-
-  // sensors
-  windcompensation _windcompensation;
-
   database<num_thruster, dim_controlspace> _sqlite;
 
   void intializethreadloop() {
-    _controller.initializecontroller(_controllerRTdata);
+    _controllerRTdata =
+        _controller.initializecontroller().getcontrollerRTdata();
     _sqlite.initializetables();
   }
 
   void plannerloop() {
-    // timecounter timer_planner;
-    // long int outerloop_elapsed_time = 0;
-    // long int innerloop_elapsed_time = 0;
-    // long int sample_time =
-    //     static_cast<long int>(1000 * _planner.getsampletime());
-
-    // double radius = 5;
-    // double _desired_speed = 1;
-    // Eigen::Vector2d startposition = (Eigen::Vector2d() << 2, 0.1).finished();
-    // Eigen::Vector2d endposition = (Eigen::Vector2d() << 10, 2).finished();
-    // _planner.setconstantspeed(_plannerRTdata, _desired_speed, 0);
-
-    // auto waypoints = _planner.followcircle(startposition, endposition,
-    // radius,
-    //                                        _estimatorRTdata.State(2),
-    //                                        _plannerRTdata.v_setpoint(0));
-    // _planner.initializewaypoint(_plannerRTdata, waypoints);
-
-    // int index_wpt = 2;
-    // while (1) {
-    //   outerloop_elapsed_time = timer_planner.timeelapsed();
-    //   if (_planner.switchwaypoint(_plannerRTdata,
-    //                               _estimatorRTdata.State.head(2),
-    //                               waypoints.col(index_wpt))) {
-    //     std::cout << index_wpt << std::endl;
-    //     ++index_wpt;
-    //   }
-    //   if (index_wpt == waypoints.cols()) {
-    //     CLOG(INFO, "waypoints") << "reach the last waypoint!";
-    //     break;
-    //   }
-    //   _planner.pathfollowLOS(_plannerRTdata, _estimatorRTdata.State.head(2));
-
-    //   innerloop_elapsed_time = timer_planner.timeelapsed();
-    //   std::this_thread::sleep_for(
-    //       std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
-
-    //   if (outerloop_elapsed_time > 1.1 * sample_time)
-    //     CLOG(INFO, "planner") << "Too much time!";
-    // }
-
     timecounter timer_planner;
     long int outerloop_elapsed_time = 0;
     long int innerloop_elapsed_time = 0;
@@ -233,11 +196,17 @@ class threadloop {
 
     while (1) {
       outerloop_elapsed_time = timer_controler.timeelapsed();
-      _controller.setcontrolmode(MANEUVERING);
-      _controller.controlleronestep(
-          _controllerRTdata, _windcompensation.getwindload(),
-          _estimatorRTdata.p_error, _estimatorRTdata.v_error,
-          _plannerRTdata.command, _plannerRTdata.v_setpoint);
+      _controller.setcontrolmode(CONTROLMODE::MANEUVERING);
+      // trajectory tracking
+
+      //
+      _controllerRTdata = _controller
+                              .controlleronestep(Eigen::Vector3d::Zero(),
+                                                 _estimatorRTdata.p_error,
+                                                 _estimatorRTdata.v_error,
+                                                 _plannerRTdata.command,
+                                                 _trackerRTdata.v_setpoint)
+                              .getcontrollerRTdata();
       // std::cout << elapsed_time << std::endl;
       innerloop_elapsed_time = timer_controler.timeelapsed();
       std::this_thread::sleep_for(

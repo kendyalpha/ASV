@@ -58,6 +58,9 @@ class jsonparse {
   std::vector<ruddermaindata> getmainrudderdata() const noexcept {
     return ruddermaindata_input;
   }
+  std::vector<ruddermaindata> gettwinfixeddata() const noexcept {
+    return twinfixeddata_input;
+  }
   std::vector<pidcontrollerdata> getpiddata() const noexcept {
     return pidcontrollerdata_input;
   }
@@ -124,14 +127,15 @@ class jsonparse {
   // controllerdata
   controllerdata controllerdata_input{
       0.1,                      // sample_time
+      0,                        // los_radius
+      0,                        // los_capture_radius
       CONTROLMODE::MANUAL,      // controlmode
       ACTUATION::FULLYACTUATED  // index_actuation
   };
   // plannerdata
   plannerdata plannerdata_input{
       0.1,  // sample_time
-      0,    // los_radius
-      0,    // los_capture_radius
+
   };
   // thrustallocationdata
   thrustallocationdata thrustallocationdata_input{
@@ -164,6 +168,14 @@ class jsonparse {
     // controller
     controllerdata_input.sample_time =
         file["controller"]["sample_time"].get<double>();
+
+    controllerdata_input.los_radius =
+        vesseldata_input.L *
+        file["controller"]["LOS"]["los_radius_co"].get<double>();
+    controllerdata_input.los_capture_radius =
+        vesseldata_input.L *
+        file["controller"]["LOS"]["capture_radius_co"].get<double>();
+
     pidcontrollerdata _pidcontrollerdata_input;
     // surge-- controller
     _pidcontrollerdata_input.position_P =
@@ -375,8 +387,8 @@ class jsonparse {
         // delay time of positive->negative (vesra)
         double pndelaytime = file[str_thruster]["p2n_delay_time"].get<double>();
         _thrusterdata_input.max_delta_rotation_p2n = static_cast<int>(
-            std::round(2 * controllerdata_input.sample_time *
-                       _thrusterdata_input.max_delta_rotation / pndelaytime));
+            std::ceil(2 * controllerdata_input.sample_time *
+                      _thrusterdata_input.max_delta_rotation / pndelaytime));
         _thrusterdata_input.max_rotation =
             file[str_thruster]["max_rotation"].get<int>();
         // thrust
@@ -411,16 +423,12 @@ class jsonparse {
     // else
     //   estimatordata_input.kalman_use = KALMANOFF;
   }  // parseestimatordata
+
   void parseplannerdata() {
     plannerdata_input.sample_time =
         file["planner"]["sample_time"].get<double>();
-    plannerdata_input.los_radius =
-        vesseldata_input.L *
-        file["planner"]["LOS"]["los_radius_co"].get<double>();
-    plannerdata_input.los_capture_radius =
-        vesseldata_input.L *
-        file["planner"]["LOS"]["capture_radius_co"].get<double>();
   }  // parseplannerdata
+
   void parsevesselpropertydata() {
     vesseldata_input.Mass = _utilityio.convertstdvector2EigenMat<double, 3, 3>(
         file["property"]["Mass"].get<std::vector<double>>());
@@ -532,6 +540,23 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
     os << _jp.ruddermaindata_input[i].min_varphi << std::endl;
   }
 
+  os << "info of each twin fixed thruster:\n";
+  for (unsigned int i = 0; i != _jp.twinfixeddata_input.size(); ++i) {
+    os << _jp.twinfixeddata_input[i].lx << std::endl;
+    os << _jp.twinfixeddata_input[i].ly << std::endl;
+    os << _jp.twinfixeddata_input[i].K_positive << std::endl;
+    os << _jp.twinfixeddata_input[i].K_negative << std::endl;
+    os << _jp.twinfixeddata_input[i].max_delta_rotation << std::endl;
+    os << _jp.twinfixeddata_input[i].max_delta_rotation_p2n << std::endl;
+    os << _jp.twinfixeddata_input[i].max_rotation << std::endl;
+    os << _jp.twinfixeddata_input[i].max_thrust_positive << std::endl;
+    os << _jp.twinfixeddata_input[i].max_thrust_negative << std::endl;
+  }
+
+  os << "controller:\n";
+  os << _jp.controllerdata_input.sample_time << std::endl;
+  os << _jp.controllerdata_input.los_radius << std::endl;
+  os << _jp.controllerdata_input.los_capture_radius << std::endl;
   os << "pid controller:\n";
   for (unsigned int i = 0; i != _jp.pidcontrollerdata_input.size(); ++i) {
     os << _jp.pidcontrollerdata_input[i].position_P << std::endl;
@@ -547,8 +572,6 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
   os << _jp.estimatordata_input.sample_time << std::endl;
   os << "planner:\n";
   os << _jp.plannerdata_input.sample_time << std::endl;
-  os << _jp.plannerdata_input.los_radius << std::endl;
-  os << _jp.plannerdata_input.los_capture_radius << std::endl;
 
   os << "Mass property:\n";
   os << _jp.vesseldata_input.Mass << std::endl;

@@ -48,7 +48,7 @@ class database {
     try {
       std::string str =
           "INSERT INTO GPS"
-          "(DATETIME, UTC, latitude,longitude,heading, pitch, roll, "
+          "(DATETIME, UTC, latitude, longitude, heading, pitch, roll, "
           " altitude, Ve, Vn, roti, status,UTM_x, UTM_y) "
           " VALUES(julianday('now')";
       convert2string(_gpsRTdata, str);
@@ -60,12 +60,12 @@ class database {
     }
   }
   // insert a bow into controller table
-  void update_controller_table(const controllerRTdata<m, n> &_RTdata) {
+  void update_controller_table(const controllerRTdata<m, n> &_RTdata,
+                               const trackerRTdata &_trackRTdata) {
     try {
       std::string str =
           "INSERT INTO controller"
-          "(DATETIME ";
-
+          "(DATETIME, set_x, set_y, set_theta, set_u, set_v, set_r";
       // tau: desired force
       for (int i = 0; i != n; ++i) {
         str += ", tau" + std::to_string(i + 1);
@@ -84,7 +84,7 @@ class database {
       }
 
       str += ") VALUES(julianday('now')";
-      convert2string(_RTdata, str);
+      convert2string(_RTdata, _trackRTdata, str);
       str += ");";
 
       db << str;
@@ -113,9 +113,8 @@ class database {
     try {
       std::string str =
           "INSERT INTO planner"
-          "(DATETIME, set_x, set_y, set_theta, set_u, set_v, set_r,"
-          "command_x, command_y, command_theta, wp0_x, wp0_y, wp1_x, wp1_y) "
-          "VALUES(julianday('now')";
+          "(DATETIME, command_x, command_y, command_theta, wp0_x, wp0_y, "
+          "wp1_x, wp1_y) VALUES(julianday('now')";
       convert2string(_RTdata, str);
       str += ");";
       db << str;
@@ -235,10 +234,15 @@ class database {
     try {
       // real-time data in the controller
       std::string str =
-          "CREATE TABLE controller"
-          "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
-          " DATETIME    TEXT       NOT NULL";
-
+          "CREATE TABLE controller ("
+          "  ID          INTEGER PRIMARY KEY AUTOINCREMENT"
+          ", DATETIME    TEXT       NOT NULL "
+          ", set_x         DOUBLE "
+          ", set_y         DOUBLE "
+          ", set_theta     DOUBLE " /* setpoint */
+          ", set_u         DOUBLE "
+          ", set_v         DOUBLE "
+          ", set_r         DOUBLE "; /* v_setpoint */
       // tau: desired force
       for (int i = 0; i != n; ++i) {
         str += " ,tau" + std::to_string(i + 1) + " DOUBLE";
@@ -256,6 +260,7 @@ class database {
         str += " ,est" + std::to_string(i + 1) + " DOUBLE";
       }
       str += ");";
+
       db << str;
 
     } catch (sqlite::sqlite_exception &e) {
@@ -305,12 +310,6 @@ class database {
           "CREATE TABLE planner"
           "(ID            INTEGER PRIMARY KEY AUTOINCREMENT,"
           " DATETIME      TEXT       NOT NULL,"
-          " set_x         DOUBLE, "
-          " set_y         DOUBLE, "
-          " set_theta     DOUBLE, " /* setpoint */
-          " set_u         DOUBLE, "
-          " set_v         DOUBLE, "
-          " set_r         DOUBLE, " /* v_setpoint */
           " command_x     DOUBLE, "
           " command_y     DOUBLE, "
           " command_theta DOUBLE, " /* command */
@@ -388,8 +387,19 @@ class database {
     _str += ", ";
     _str += to_string_with_precision<double>(_gpsRTdata.UTM_y, 3);
   }
+
   void convert2string(const controllerRTdata<m, n> &_RTdata,
-                      std::string &_str) {
+                      const trackerRTdata &_trackRTdata, std::string &_str) {
+    // setpoint
+    for (int i = 0; i != 3; ++i) {
+      _str += ", ";
+      _str += to_string_with_precision<double>(_trackRTdata.setpoint(i), 3);
+    }
+    // v_setpoint
+    for (int i = 0; i != 3; ++i) {
+      _str += ", ";
+      _str += std::to_string(_trackRTdata.v_setpoint(i));
+    }
     // tau: desired force
     for (int i = 0; i != n; ++i) {
       _str += ", ";
@@ -435,16 +445,6 @@ class database {
   }
 
   void convert2string(const plannerRTdata &_RTdata, std::string &_str) {
-    // setpoint
-    for (int i = 0; i != 3; ++i) {
-      _str += ", ";
-      _str += to_string_with_precision<double>(_RTdata.setpoint(i), 3);
-    }
-    // v_setpoint
-    for (int i = 0; i != 3; ++i) {
-      _str += ", ";
-      _str += std::to_string(_RTdata.v_setpoint(i));
-    }
     // command
     for (int i = 0; i != 3; ++i) {
       _str += ", ";

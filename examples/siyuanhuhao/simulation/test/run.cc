@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* testbiling.cc:
+* run.cc:
 * This header file can be read by C++ compilers
 *
 * by Hu.ZH(CrossOcean.ai)
@@ -9,7 +9,6 @@
 
 #include <cstdio>
 #include "threadloop.h"
-INITIALIZE_EASYLOGGINGPP
 
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
@@ -38,5 +37,4 @@ int main() {
   return 0;
 }
 
-//碧凌: 上古神兽名。碧凌的徒弟便是上古四大神兽：青龙、白虎、朱雀、玄武。
-//相传碧凌是身穿紧身碧衣，满头青丝且瞳目为碧绿之色的太极神兽，由此而生。
+// 思源湖号，饮水思源，爱国荣校，蛤蛤蛤 +1

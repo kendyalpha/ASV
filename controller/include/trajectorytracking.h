@@ -92,11 +92,12 @@ class lineofsight {
 
 class trajectroytracking final : public lineofsight {
  public:
-  trajectroytracking(double _los_radius, double _capture_radius,
-                     const trackerRTdata &_TrackerRTdata, double _sampletime)
-      : lineofsight(_los_radius, _capture_radius),
+  trajectroytracking(const controllerdata &_controllerdata,
+                     const trackerRTdata &_TrackerRTdata)
+      : lineofsight(_controllerdata.los_radius,
+                    _controllerdata.los_capture_radius),
         TrackerRTdata(_TrackerRTdata),
-        sample_time(_sampletime) {}
+        sample_time(_controllerdata.sample_time) {}
 
   ~trajectroytracking() = default;
 

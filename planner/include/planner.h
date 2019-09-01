@@ -12,99 +12,32 @@
 #define _PLANNER_H_
 
 #include <cmath>
-#include "lineofsight.h"
+#include "easylogging++.h"
 #include "plannerdata.h"
 
 class planner {
  public:
   explicit planner(const plannerdata &_plannerdata)
-      : sample_time(_plannerdata.sample_time),
-        _lineofsight(_plannerdata.los_radius, _plannerdata.los_capture_radius) {
-  }
+      : sample_time(_plannerdata.sample_time) {}
   planner() = delete;
   ~planner() {}
 
-  Eigen::MatrixXd followcircle(const Eigen::Vector2d &_startposition,
-                               const Eigen::Vector2d &_endposition,
-                               double _radius, double _vesselheading,
-                               double _desiredspeed) {
-    Eigen::Vector2d delta_pos = _endposition - _startposition;
-    double length = computevectorlength(delta_pos(1), delta_pos(0));
-    double thetaK = computevectororientation(delta_pos(1), delta_pos(0));
-    Eigen::MatrixXd waypoints(2, 2);
-    if (length > 2 * _radius) {
-      waypoints.col(0) = _startposition;
-      waypoints.col(1) = _endposition;
-    } else {
-      double gamma = std::acos(length / (2 * _radius));
-      int n = static_cast<int>(std::floor((M_PI - 2 * gamma) * 6));
-      waypoints.resize(Eigen::NoChange, n);
-
-      double _clockwise_angle = thetaK + gamma;
-      double _anticlockwise_angle = thetaK - gamma;
-
-      double delta_clockwise_angle = std::abs(
-          restrictheadingangle(_vesselheading - _clockwise_angle + 0.5 * M_PI));
-      double delta_anticlockwise_angle = std::abs(restrictheadingangle(
-          _vesselheading - _anticlockwise_angle - 0.5 * M_PI));
-      if (delta_clockwise_angle < delta_anticlockwise_angle) {
-        // follow the clockwise circle
-        waypoints = generatecirclepoints(
-            _startposition + _radius * computevectorlocation(_clockwise_angle),
-            _radius, n, _clockwise_angle - M_PI, _anticlockwise_angle);
-      } else {
-        // follow the anti-clockwise circle
-        waypoints = generatecirclepoints(
-            _startposition +
-                _radius * computevectorlocation(_anticlockwise_angle),
-            _radius, n, _clockwise_angle, _anticlockwise_angle + M_PI);
-      }
-    }
-    return waypoints;
-  }
-
-  planner &initializewaypoint(plannerRTdata &_plannerRTdata,
-                              const Eigen::MatrixXd &_wpset) {
-    _plannerRTdata.waypoint0 = _wpset.col(0);
-    _plannerRTdata.waypoint1 = _wpset.col(1);
+  planner &initializewaypoint(const Eigen::MatrixXd &_wpset) {
+    PlannerRTdata.waypoint0 = _wpset.col(0);
+    PlannerRTdata.waypoint1 = _wpset.col(1);
     return *this;
   }
 
-  bool switchwaypoint(plannerRTdata &_plannerRTdata,
-                      const Eigen::Vector2d &_vesselposition,
-                      const Eigen::Vector2d &newwaypoint) {
-    if (_lineofsight.judgewaypoint(_vesselposition, _plannerRTdata.waypoint1)) {
-      _plannerRTdata.waypoint0 = _plannerRTdata.waypoint1;
-      _plannerRTdata.waypoint1 = newwaypoint;
-      return true;
-    }
-    return false;
+  void setcommandfromjoystick(double tau_x, double tau_y, double tau_theta) {
+    PlannerRTdata.command << tau_x, tau_y, tau_theta;
   }
 
-  // path following using LOS
-  planner &pathfollowLOS(plannerRTdata &_RTdata, const Eigen::Vector2d &_vp) {
-    _RTdata.setpoint(2) = restrictheadingangle(
-        _lineofsight.computelospoint(_vp, _RTdata.waypoint0, _RTdata.waypoint1)
-            .getdesired_theta());
-    return *this;
-  }
-  planner &setconstantspeed(plannerRTdata &_plannerRTdata, double _forwardspeed,
-                            double _headingrate, double _swayspeed = 0.0) {
-    _plannerRTdata.v_setpoint(0) = _forwardspeed;
-    _plannerRTdata.v_setpoint(1) = _swayspeed;
-    _plannerRTdata.v_setpoint(2) = _headingrate;
-    return *this;
-  }
-
-  void setcommandfromjoystick(plannerRTdata &_plannerRTdata, double tau_x,
-                              double tau_y, double tau_theta) {
-    _plannerRTdata.command << tau_x, tau_y, tau_theta;
-  }
+  auto getPlannerRTdata() const noexcept { return PlannerRTdata; }
   double getsampletime() const noexcept { return sample_time; }
 
  private:
   double sample_time;
-  lineofsight _lineofsight;  // path following using LOS
+  plannerRTdata PlannerRTdata;
 
   // restrict heading angle (0-2PI) to (-PI ~ PI)
   double restrictheadingangle(double _heading) noexcept {
@@ -144,12 +77,7 @@ class planner {
     }
     return waypoints_set;
   }
-  // orientation of vector points from starting to the ending
-  double computevectororientation(double _vy, double _vx) {
-    double thetaK = std::atan(_vy / _vx);
-    if (_vx < 0) thetaK += M_PI;
-    return thetaK;
-  }
+
   // compute the vector length
   double computevectorlength(double _vy, double _vx) noexcept {
     return std::sqrt(std::pow(_vy, 2) + std::pow(_vx, 2));

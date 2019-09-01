@@ -31,6 +31,8 @@ enum class ACTUATION {
 // indicator in the controller
 struct controllerdata {
   double sample_time;  // sample time of controller((unit: second)),
+  double los_radius;
+  double los_capture_radius;
   CONTROLMODE controlmode;
   ACTUATION index_actuation;
 };

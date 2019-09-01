@@ -25,7 +25,7 @@ class windcompensation {
         AFW(0.96),
         ALW(2.16),
         load(Eigen::Vector3d::Zero()),
-        windstatus(WINDOFF) {}
+        windstatus(WINDCOMPENSATION::WINDOFF) {}
 
   windcompensation &computewindload(double raw_windspeed,
                                     double raw_windorientation) {
@@ -33,7 +33,7 @@ class windcompensation {
         convertwinddirection(raw_windorientation));
     double a_windspeed = speed_lowpass.movingaverage(raw_windspeed);
 
-    if (windstatus == WINDON)
+    if (windstatus == WINDCOMPENSATION::WINDON)
       computewindforce(a_windspeed, a_windorientation, load(0), load(1),
                        load(2));
     else
@@ -53,10 +53,10 @@ class windcompensation {
   void setwindstatus(int _windstatus) {
     switch (_windstatus) {
       case 0:
-        windstatus = WINDOFF;
+        windstatus = WINDCOMPENSATION::WINDOFF;
         break;
       case 1:
-        windstatus = WINDON;
+        windstatus = WINDCOMPENSATION::WINDON;
         break;
       default:
         break;

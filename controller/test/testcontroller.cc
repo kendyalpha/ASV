@@ -101,6 +101,8 @@ void test_multiplecontroller() {
 
   controllerdata _controllerdata{
       0.1,                           // sample_time
+      1,                             // los_radius
+      0.3,                           // los_capture_radius
       CONTROLMODE::DYNAMICPOSITION,  // controlmode
       index_actuation                // index_actuation
   };

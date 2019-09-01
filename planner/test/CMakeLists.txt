@@ -43,13 +43,13 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
     )
 
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../logging/src/easylogging++.cc" )
+	"${PROJECT_SOURCE_DIR}/../../common/logging/src/easylogging++.cc" )
 
 
 # 指定生成目标
 
-# add_executable (testplanner testplanner.cc ${SOURCE_FILES} )
-# target_include_directories(testplanner PRIVATE ${HEADER_DIRECTORY})
+add_executable (testplanner testplanner.cc ${SOURCE_FILES} )
+target_include_directories(testplanner PRIVATE ${HEADER_DIRECTORY})
 
 add_executable (testtrajectory testtrajectory.cc )
 target_include_directories(testtrajectory PRIVATE ${HEADER_DIRECTORY})

@@ -58,12 +58,14 @@ int main() {
 
   };
 
-  plannerRTdata _plannerRTdata{
+  trackerRTdata _trackRTdata{
       (Eigen::Vector3d() << 0, 0, 1).finished(),  // setpoint
-      Eigen::Matrix<double, 3, 1>::Zero(),        // v_setpoint
-      Eigen::Vector2d::Zero(),                    // waypoint0
-      Eigen::Vector2d::Zero(),                    // waypoint1
-      Eigen::Vector3d::Zero()                     // command
+      Eigen::Matrix<double, 3, 1>::Zero()         // v_setpoint
+  };
+  plannerRTdata _plannerRTdata{
+      Eigen::Vector2d::Zero(),  // waypoint0
+      Eigen::Vector2d::Zero(),  // waypoint1
+      Eigen::Vector3d::Zero()   // command
   };
 
   indicators _indicators{
@@ -83,7 +85,7 @@ int main() {
   for (int i = 0; i != 3; ++i) {
     _sqlitetest.update_gps_table(gps_data);
     _sqlitetest.update_estimator_table(_estimatorRTdata);
-    _sqlitetest.update_controller_table(_controllerRTdata);
+    _sqlitetest.update_controller_table(_controllerRTdata, _trackRTdata);
     _sqlitetest.update_planner_table(_plannerRTdata);
     _sqlitetest.update_indicators_table(_indicators);
     _sqlitetest.update_wind_table(_windRTdata);

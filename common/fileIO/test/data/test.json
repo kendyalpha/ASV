@@ -18,6 +18,10 @@
   },
   "controller": {
     "sample_time": 0.1,
+     "LOS": {
+      "los_radius_co": 1,
+      "capture_radius_co":0.7
+    },
     "surge": {
       "position_P": 10,
       "position_I": 2,
@@ -50,15 +54,12 @@
     }
   },
   "thruster1": {
-    "type": "azimuth",
+    "type": "tunnel",
     "position": [3.6, 0],
-    "thrust_constant": 2.8E-6,
+    "thrust_constant": [3E-4, 1E-4],
     "max_delta_rotation": 100,
     "max_rotation": 1500,
-    "min_rotation": 5,
-    "max_delta_alpha": 7,
-    "max_alpha": 280,
-    "min_alpha": 80
+    "min_rotation": 5
   },
   "thruster2": {
     "type": "azimuth",
@@ -94,15 +95,12 @@
     "min_alpha": -10
   },
   "thruster5": {
-    "type": "azimuth",
+    "type": "twinfixed",
     "position": [0.96, 0.83],
-    "thrust_constant": 2.8E-6,
-    "max_delta_rotation": 100,
-    "max_rotation": 1500,
-    "min_rotation": 5,
-    "max_delta_alpha": 7,
-    "max_alpha": 10,
-    "min_alpha": -190
+    "thrust_constant": [3E-4, 1E-4],
+    "max_delta_rotation": 500,
+    "p2n_delay_time": 1.5,
+    "max_rotation": 1500
   },
   "thruster6": {
     "type": "azimuth",
@@ -120,11 +118,7 @@
     "KALMANON": true
   },
   "planner": {
-    "sample_time": 0.1,
-    "LOS": {
-      "los_radius_co":1,
-      "capture_radius_co":0.7
-    }
+    "sample_time": 0.1
   },
   "sensors":{
     "GPS":{
