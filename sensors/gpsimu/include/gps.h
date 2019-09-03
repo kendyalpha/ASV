@@ -112,7 +112,11 @@ class gpsimu final : public nmea {
     }
   }
   // convert longitude and latitude to UTM
-  void Forward(double lat, double lon, double& x, double& y) {
+  void Forward(double lat,  // latitude of point (degrees)
+               double lon,  //  longitude of point (degrees)
+               double& x,   // easting of point (meters)
+               double& y    // northing of point (meters)
+  ) {
     tmercator.Forward(centrallong, lat, lon, x, y);
     x += falseeasting;
     y += falsenorthing;

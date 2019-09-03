@@ -1,4 +1,15 @@
+/*
+***********************************************************************
+* testestimator.cc:
+* Utility test for the state estimation and wind compenstation
+* This header file can be read by C++ compilers
+*
+* by Hu.ZH(CrossOcean.ai)
+***********************************************************************
+*/
+
 #include "estimator.h"
+#include "windcompensation.h"
 
 int main() {
   vessel _vessel{
@@ -24,22 +35,22 @@ int main() {
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
+      Eigen::Matrix<double, 6, 1>::Zero(),  // motiondata_6dof
       Eigen::Matrix<double, 6, 1>::Zero(),  // State
       Eigen::Vector3d::Zero(),              // p_error
       Eigen::Vector3d::Zero(),              // v_error
-      Eigen::Vector3d::Zero(),              // BalphaU
-      Eigen::Matrix<double, 6, 1>::Zero()   // motiondata_6dof
+      Eigen::Vector3d::Zero()               // BalphaU
   };
 
   sealoadRTdata _sealoadRTdata{
-      Eigen::Vector3d::Zero()  // windload
+      Eigen::Vector3d::Zero(),   // windload
+      WINDCOMPENSATION::WINDOFF  // windstatus
   };
 
   // estimatordata
   estimatordata estimatordata_input{
-      0.1,                        // sample_time
-      Eigen::Vector2d::Zero(),    // cog2anntena_position
-      WINDCOMPENSATION::WINDOFF,  // windstatus
+      0.1,                     // sample_time
+      Eigen::Vector3d::Zero()  // cog2anntena_position
   };
 
   double gps_x = 1;
@@ -53,6 +64,11 @@ int main() {
 
   estimator<USEKALMAN::KALMANON> _estimator(_estimatorRTdata, _vessel,
                                             estimatordata_input);
+
+  windcompensation _windcompensation(_sealoadRTdata);
+
+  _sealoadRTdata = _windcompensation.computewindload(0, 0);
+
   _estimatorRTdata =
       _estimator.setvalue(gps_x, gps_y, altitude, roll, pitch, heading, Ve, Vn)
           .getEstimatorRTData();

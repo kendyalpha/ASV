@@ -1,6 +1,6 @@
 /*
 ***********************************************************************
-* testjson.cpp:
+* testjson.cc:
 * Utility test for the JSON
 * This header file can be read by C++ compilers
 *

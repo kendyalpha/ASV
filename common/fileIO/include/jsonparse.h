@@ -112,7 +112,7 @@ class jsonparse {
       Eigen::Matrix3d::Zero(),  // Mass
       Eigen::Matrix3d::Zero(),  // AddedMass
       Eigen::Matrix3d::Zero(),  // Damping
-      Eigen::Vector2d::Zero(),  // cog
+      Eigen::Vector3d::Zero(),  // cog
       Eigen::Vector2d::Zero(),  // x_thrust
       Eigen::Vector2d::Zero(),  // y_thrust
       Eigen::Vector2d::Zero(),  // mz_thrust
@@ -134,8 +134,7 @@ class jsonparse {
   };
   // plannerdata
   plannerdata plannerdata_input{
-      0.1,  // sample_time
-
+      0.1  // sample_time
   };
   // thrustallocationdata
   thrustallocationdata thrustallocationdata_input{
@@ -153,9 +152,8 @@ class jsonparse {
 
   // estimatordata
   estimatordata estimatordata_input{
-      0.1,                        // sample_time
-      Eigen::Vector2d::Zero(),    // cog2anntena_position
-      WINDCOMPENSATION::WINDOFF,  // windstatus
+      0.1,                     // sample_time
+      Eigen::Vector3d::Zero()  // antenna2cog
   };
 
   void parsejson() {
@@ -413,10 +411,11 @@ class jsonparse {
     estimatordata_input.sample_time =
         file["estimator"]["sample_time"].get<double>();
 
-    estimatordata_input.cog2anntena_position =
+    estimatordata_input.antenna2cog =
         vesseldata_input.cog -
-        _utilityio.convertstdvector2EigenMat<double, 2, 1>(
-            file["sensors"]["GPS"]["Back_anntena"].get<std::vector<double>>());
+        _utilityio.convertstdvector2EigenMat<double, 3, 1>(
+            file["sensors"]["GPS"]["primary_antenna"]
+                .get<std::vector<double>>());
     // bool kalman_on = file["estimator"]["KALMANON"];
     // if (kalman_on)
     //   estimatordata_input.kalman_use = KALMANON;
@@ -438,7 +437,7 @@ class jsonparse {
     vesseldata_input.Damping =
         _utilityio.convertstdvector2EigenMat<double, 3, 3>(
             file["property"]["Damping"].get<std::vector<double>>());
-    vesseldata_input.cog = _utilityio.convertstdvector2EigenMat<double, 2, 1>(
+    vesseldata_input.cog = _utilityio.convertstdvector2EigenMat<double, 3, 1>(
         file["property"]["CoG"].get<std::vector<double>>());
 
     vesseldata_input.x_thrust

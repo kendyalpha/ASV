@@ -16,7 +16,7 @@
 
 class windcompensation {
  public:
-  windcompensation()
+  windcompensation(const sealoadRTdata &_sealoadRTdata)
       : air_rho(1.184),
         cx(0.7),
         cy(0.825),
@@ -24,8 +24,9 @@ class windcompensation {
         H(0.8),
         AFW(0.96),
         ALW(2.16),
-        load(Eigen::Vector3d::Zero()),
-        windstatus(WINDCOMPENSATION::WINDOFF) {}
+        SealoadRTdata(_sealoadRTdata) {}
+
+  ~windcompensation() {}
 
   windcompensation &computewindload(double raw_windspeed,
                                     double raw_windorientation) {
@@ -33,11 +34,12 @@ class windcompensation {
         convertwinddirection(raw_windorientation));
     double a_windspeed = speed_lowpass.movingaverage(raw_windspeed);
 
-    if (windstatus == WINDCOMPENSATION::WINDON)
-      computewindforce(a_windspeed, a_windorientation, load(0), load(1),
-                       load(2));
+    if (SealoadRTdata.windstatus == WINDCOMPENSATION::WINDON)
+      computewindforce(a_windspeed, a_windorientation,
+                       SealoadRTdata.windload(0), SealoadRTdata.windload(1),
+                       SealoadRTdata.windload(2));
     else
-      load.setZero();
+      SealoadRTdata.windload.setZero();
     return *this;
   }
 
@@ -49,22 +51,23 @@ class windcompensation {
         convertwinddirection(raw_windorientation));
   }
 
-  WINDCOMPENSATION getwindstatus() const { return windstatus; }
   void setwindstatus(int _windstatus) {
     switch (_windstatus) {
       case 0:
-        windstatus = WINDCOMPENSATION::WINDOFF;
+        SealoadRTdata.windstatus = WINDCOMPENSATION::WINDOFF;
         break;
       case 1:
-        windstatus = WINDCOMPENSATION::WINDON;
+        SealoadRTdata.windstatus = WINDCOMPENSATION::WINDON;
         break;
       default:
         break;
     }
   }
-  void setwindstatus(WINDCOMPENSATION _windstatus) { windstatus = _windstatus; }
+  void setwindstatus(WINDCOMPENSATION _windstatus) {
+    SealoadRTdata.windstatus = _windstatus;
+  }
 
-  Eigen::Vector3d getwindload() const { return load; }
+  auto getsealoadRTdata() const noexcept { return SealoadRTdata; }
 
  private:
   const double air_rho;  // air density
@@ -75,9 +78,7 @@ class windcompensation {
   const double AFW;      // 船舶横向投影面积
   const double ALW;      // 船舶纵向投影面积
   // Fx, Fy, Mz (wind force) in the body coordinate
-  Eigen::Vector3d load;
-  WINDCOMPENSATION windstatus;
-
+  sealoadRTdata SealoadRTdata;
   // low pass filter for speed and orientation
   lowpass<1> speed_lowpass;
   lowpass<1> orientation_lowpass;

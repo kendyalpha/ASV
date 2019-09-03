@@ -40,11 +40,11 @@ int main() {
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
+      Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement_6dof
       Eigen::Matrix<double, 6, 1>::Zero(),  // State
       Eigen::Vector3d::Zero(),              // p_error
       Eigen::Vector3d::Zero(),              // v_error
-      Eigen::Vector3d::Zero(),              // BalphaU
-      Eigen::Matrix<double, 6, 1>::Zero(),  // motiondata_6dof
+      Eigen::Vector3d::Zero()               // BalphaU
   };
   controllerRTdata<m, n> _controllerRTdata{
       (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),    // tau

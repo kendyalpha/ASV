@@ -25,15 +25,25 @@ enum class WINDCOMPENSATION {
   WINDON        // turn on the wind compenstation
 };
 
+/********************* constant ***********************************/
+struct estimatordata {
+  double sample_time;  // sample time of estimator((unit: second))
+
+  // location of CoG relative to primary anntena
+  Eigen::Vector3d antenna2cog;
+};
+
 // real-time data in the state estimators
 struct estimatorRTdata {
+  /********************* transformation matrix  *********************/
   Eigen::Matrix3d CTB2G;  // body  --> global
   Eigen::Matrix3d CTG2B;  // global  --> body
 
   /********************* measured data  *********************/
-  // x(m), y(m), orientation(theta: rad), u, v, r (next time stamp)
-  // data wroten by sensors
+  // x(m), y(m), orientation(theta: rad), u, v, r (next time stamp) of CoG
   Eigen::Matrix<double, 6, 1> Measurement;
+  // x(m), y(m), z(m), roll(rad), pitch(rad), yaw(rad) of CoG
+  Eigen::Matrix<double, 6, 1> Measurement_6dof;
 
   /********************* state *********************************************/
   // x(surge: m), y(sway: m), yaw(theta: rad), u, v, r
@@ -46,21 +56,25 @@ struct estimatorRTdata {
 
   // estimated force in body, including thrust, wind force, etc
   Eigen::Matrix<double, 3, 1> BalphaU;
+};
 
-  Eigen::Matrix<double, 6, 1> motiondata_6dof;
+// real-time motion data from sensors
+struct motionrawdata {
+  /********************* GPS  *********************/
+  double gps_x;
+  double gps_y;
+  double gps_z;
+  double gps_roll;
+  double gps_pitch;
+  double gps_heading;
+  double gps_Ve;
+  double gps_Vn;
+  double gps_roti;
 };
 
 struct sealoadRTdata {
   // wind load for wind compensation
   Eigen::Vector3d windload;
-};
-
-/********************* constant ***********************************/
-struct estimatordata {
-  double sample_time;  // sample time of estimator((unit: second))
-
-  // location of CoG relative to primary anntena
-  Eigen::Vector2d cog2anntena_position;
   WINDCOMPENSATION windstatus;
 };
 
