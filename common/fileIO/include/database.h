@@ -361,7 +361,7 @@ class database {
   // convert real time GPS data to sql string
   void convert2string(const gpsRTdata &_gpsRTdata, std::string &_str) {
     _str += ", ";
-    _str += std::to_string(_gpsRTdata.UTC);
+    _str += to_string_with_precision<double>(_gpsRTdata.UTC, 2);
     _str += ", ";
     _str += std::to_string(_gpsRTdata.latitude);
     _str += ", ";
