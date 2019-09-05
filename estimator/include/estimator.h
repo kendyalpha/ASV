@@ -80,19 +80,11 @@ class estimator {
     // primary antenna revision
     compensateantennadeviation(EstimatorRTData, Motionrawdata);
 
-    computevesselposition(EstimatorRTData, gps_x, gps_y);
-
-    computevelocity(EstimatorRTData, gps_Ve, gps_Vn);
-    //
-    compute6dof(EstimatorRTData, gps_z, gps_roll, gps_pitch);
-
-    // kalman filtering
     if constexpr (indicator_kalman == USEKALMAN::KALMANON)
       EstimatorRTData.State = KalmanFilter.linearkalman(EstimatorRTData)
                                   .getState();  // kalman filtering
     else
-      EstimatorRTData.State =
-          EstimatorRTData.Measurement;  // use low-pass filtering only
+      performlowpass(EstimatorRTData);  // use low-pass filtering only
 
     return *this;
 
@@ -152,8 +144,8 @@ class estimator {
   lowpass<1> roll_lowpass;
   lowpass<1> pitch_lowpass;
   lowpass<1> u_lowpass;
-  lowpass<2> v_lowpass;
-  lowpass<2> roti_lowpass;
+  lowpass<1> v_lowpass;
+  lowpass<1> roti_lowpass;
   // variable for outlier removal
   outlierremove roll_outlierremove;
 
@@ -210,45 +202,6 @@ class estimator {
     _CTB2G(1, 0) = svalue;
   }
 
-  // low pass for heading
-  double preprocessheading(double gps_heading) {
-    double _gps_heading = restrictheadingangle(gps_heading * M_PI / 180);
-    return heading_lowpass.movingaverage(_gps_heading);
-  }
-
-  // estimate u, v, r
-  void computevelocity(estimatorRTdata& _RTdata, double gps_Ve, double gps_Vn) {
-    Eigen::Vector2d velocity_body =
-        _RTdata.CTG2B.block<2, 2>(0, 0) *
-        (Eigen::Vector2d() << gps_Vn, gps_Ve).finished();
-
-    _RTdata.Measurement(3) = u_lowpass.movingaverage(velocity_body(0));
-    _RTdata.Measurement(4) = v_lowpass.movingaverage(velocity_body(1));
-    _RTdata.Measurement(5) = roti_lowpass.movingaverage(calheadingrate(
-        _RTdata.Measurement(2)));  // we have to estimate the heading rate
-  }
-  // outlier removal, unit converstion, low pass filtering
-  void compute6dof(estimatorRTdata& _RTdata, double gps_z, double gps_roll,
-                   double gps_pitch) {
-    // change direction, convert rad to deg, outlier removal or ....
-    double _gps_roll = roll_outlierremove.removeoutlier(gps_roll * M_PI / 180);
-    double _gps_pitch = gps_pitch * M_PI / 180;
-
-    // update raw measured data from GPS/IMU sensors
-    _RTdata.motiondata_6dof(0) = _RTdata.Measurement(0);
-    _RTdata.motiondata_6dof(1) = _RTdata.Measurement(1);
-    _RTdata.motiondata_6dof(2) = z_lowpass.movingaverage(gps_z);
-    _RTdata.motiondata_6dof(3) = roll_lowpass.movingaverage(_gps_roll);
-    _RTdata.motiondata_6dof(4) = pitch_lowpass.movingaverage(_gps_pitch);
-    _RTdata.motiondata_6dof(5) = _RTdata.Measurement(2);
-  }
-
-  // calculate the heading rate
-  double calheadingrate(double _newvalue) {
-    double delta_yaw = restrictheadingangle(_newvalue - former_heading);
-    former_heading = _newvalue;
-    return delta_yaw / sample_time;
-  }
   // restrict heading angle or delta heading to (-PI ~ PI)
   // compute the delta heading to find the shortest way to rotate
   double restrictheadingangle(double _heading) noexcept {
@@ -260,19 +213,6 @@ class estimator {
     else
       heading = _heading;
     return heading;
-  }
-
-  // convert the location of back anntena of GPS into CoG
-  void computevesselposition(estimatorRTdata& _RTdata, double gps_x,
-                             double gps_y) {
-    _RTdata.Measurement(0) = x_lowpass.movingaverage(gps_x);
-    _RTdata.Measurement(1) = y_lowpass.movingaverage(gps_y);
-
-    // _RTdata.Measurement.head(2) =
-    //     _RTdata.CTB2G.block<2, 2>(0, 0) * cog2anntena_position +
-    //     _RTdata.Measurement.head(2);
-    _RTdata.Measurement.head(2) +=
-        _RTdata.CTB2G.block<2, 2>(0, 0) * cog2anntena_position;
   }
 
   // GPS primary antenna is different from CoG, such deviation should be
@@ -300,7 +240,7 @@ class estimator {
     _RTdata.Measurement_6dof(2) = antenna2cog(2) + _motionrawdata.gps_z;
     _RTdata.Measurement_6dof(3) = _motionrawdata.gps_roll;
     _RTdata.Measurement_6dof(4) = _motionrawdata.gps_pitch;
-    _RTdata.Measurement_6dof(5) = _RTdata.Measurement(2)
+    _RTdata.Measurement_6dof(5) = _RTdata.Measurement(2);
   }
 
   void convert2standardunit(motionrawdata& _motionrawdata) noexcept {
@@ -320,19 +260,31 @@ class estimator {
 
   void initializeLowpass(const estimatorRTdata& _RTdata) {
     // low pass for position of CoG
-    x_lowpass.setaveragevector(EstimatorRTData.Measurement_6dof(0));
-    y_lowpass.setaveragevector(EstimatorRTData.Measurement_6dof(1));
-    z_lowpass.setaveragevector(EstimatorRTData.Measurement_6dof(2));
-    roll_lowpass.setaveragevector(EstimatorRTData.Measurement_6dof(3));
-    pitch_lowpass.setaveragevector(EstimatorRTData.Measurement_6dof(4));
-    heading_lowpass.setaveragevector(EstimatorRTData.Measurement_6dof(5));
+    x_lowpass.setaveragevector(_RTdata.Measurement_6dof(0));
+    y_lowpass.setaveragevector(_RTdata.Measurement_6dof(1));
+    z_lowpass.setaveragevector(_RTdata.Measurement_6dof(2));
+    roll_lowpass.setaveragevector(_RTdata.Measurement_6dof(3));
+    pitch_lowpass.setaveragevector(_RTdata.Measurement_6dof(4));
+    heading_lowpass.setaveragevector(_RTdata.Measurement_6dof(5));
 
-    u_lowpass.setaveragevector(EstimatorRTData.Measurement(3));
-    v_lowpass.setaveragevector(EstimatorRTData.Measurement(4));
-    roti_lowpass.setaveragevector(EstimatorRTData.Measurement(5));
+    u_lowpass.setaveragevector(_RTdata.Measurement(3));
+    v_lowpass.setaveragevector(_RTdata.Measurement(4));
+    roti_lowpass.setaveragevector(_RTdata.Measurement(5));
   }
 
-  void performlowpass() {}
+  void performlowpass(estimatorRTdata& _RTdata) {
+    // low pass for position of CoG
+    _RTdata.State(0) = x_lowpass.movingaverage(_RTdata.Measurement(0));
+    _RTdata.State(1) = y_lowpass.movingaverage(_RTdata.Measurement(1));
+    _RTdata.State(2) = heading_lowpass.movingaverage(_RTdata.Measurement(2));
+    _RTdata.State(3) = u_lowpass.movingaverage(_RTdata.Measurement(3));
+    _RTdata.State(4) = v_lowpass.movingaverage(_RTdata.Measurement(4));
+    _RTdata.State(5) = roti_lowpass.movingaverage(_RTdata.Measurement(5));
+
+    // z_lowpass.movingaverage(_RTdata.Measurement_6dof(2));
+    // roll_lowpass.movingaverage(_RTdata.Measurement_6dof(3));
+    // pitch_lowpass.movingaverage(_RTdata.Measurement_6dof(4));
+  }
 
   double rad2degree(double _rad) const noexcept { return _rad * 180.0 / M_PI; }
   double degree2rad(double _degree) const noexcept {

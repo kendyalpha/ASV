@@ -131,6 +131,7 @@ class nmea {
                  &(gps_data.ds_ID)       // int
           );
         } else {
+          printf("GPGGA checksum not OK!\n");
         }
       }
     }
@@ -176,7 +177,7 @@ class nmea {
                  &(gps_data.mvd)         // double
           );
         } else {
-          printf("checksum not OK!\n");
+          printf("GPRMC checksum not OK!\n");
         }
       }
     }
@@ -196,29 +197,31 @@ class nmea {
         // remove string after "*"
         gpvtg_buffer = gpvtg_buffer.substr(0, rpos);
 
-        sscanf(gpvtg_buffer.c_str(),
-               "GPVTG,"
-               "%lf,"  // TMG
-               "%c,"   // T
-               "%lf,"  // MTMG
-               "%c,"   // M
-               "%lf,"  // N_speed
-               "%c,"   // N
-               "%lf,"  // K_speed
-               "%c"    // K
-               ,
-               &(gps_data.TMG),      // double
-               &(gps_data.T),        // char
-               &(gps_data.MTMG),     // double
-               &(gps_data.M),        // char
-               &(gps_data.N_speed),  // double
-               &(gps_data.N),        // char
-               &(gps_data.K_speed),  // double
-               &(gps_data.K)         // char
+        if (xor_checksum(gpvtg_buffer) == expected_chk) {
+          sscanf(gpvtg_buffer.c_str(),
+                 "GPVTG,"
+                 "%lf,"  // TMG
+                 "%c,"   // T
+                 "%lf,"  // MTMG
+                 "%c,"   // M
+                 "%lf,"  // N_speed
+                 "%c,"   // N
+                 "%lf,"  // K_speed
+                 "%c"    // K
+                 ,
+                 &(gps_data.TMG),      // double
+                 &(gps_data.T),        // char
+                 &(gps_data.MTMG),     // double
+                 &(gps_data.M),        // char
+                 &(gps_data.N_speed),  // double
+                 &(gps_data.N),        // char
+                 &(gps_data.K_speed),  // double
+                 &(gps_data.K)         // char
 
-        );
-      } else {
-        printf("checksum not OK!\n");
+          );
+        } else {
+          printf("GPVTG checksum not OK!\n");
+        }
       }
     }
   }
@@ -237,15 +240,17 @@ class nmea {
         // remove string after "*"
         herot_buffer = herot_buffer.substr(0, rpos);
 
-        sscanf(herot_buffer.c_str(),
-               "HEROT,"
-               "%lf"  // rateofturning
-               ,
-               &(gps_data.rateofturning)  // double
+        if (xor_checksum(herot_buffer) == expected_chk) {
+          sscanf(herot_buffer.c_str(),
+                 "HEROT,"
+                 "%lf"  // rateofturning
+                 ,
+                 &(gps_data.rateofturning)  // double
 
-        );
-      } else {
-        printf("checksum not OK!\n");
+          );
+        } else {
+          printf("HEROT checksum not OK!\n");
+        }
       }
     }
   }
@@ -264,22 +269,23 @@ class nmea {
         // remove string after "*"
         psat_buffer = psat_buffer.substr(0, rpos);
 
-        sscanf(psat_buffer.c_str(),
-               "PSAT,HPR,"
-               "%lf,"  // UTC
-               "%lf,"  // heading
-               "%lf,"  // pitch
-               "%lf,"  // roll
-               ,
-               &(gps_data.UTC),      // double
-               &(gps_data.heading),  // double
-               &(gps_data.pitch),    // double
-               &(gps_data.roll)      // double
+        if (xor_checksum(psat_buffer) == expected_chk) {
+          sscanf(psat_buffer.c_str(),
+                 "PSAT,HPR,"
+                 "%lf,"  // UTC
+                 "%lf,"  // heading
+                 "%lf,"  // pitch
+                 "%lf,"  // roll
+                 ,
+                 &(gps_data.UTC),      // double
+                 &(gps_data.heading),  // double
+                 &(gps_data.pitch),    // double
+                 &(gps_data.roll)      // double
 
-        );
-
-      } else {
-        printf("checksum not OK!\n");
+          );
+        } else {
+          printf("PSAT checksum not OK!\n");
+        }
       }
     }
   }

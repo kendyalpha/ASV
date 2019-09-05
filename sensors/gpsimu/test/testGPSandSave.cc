@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* testGPS.cc:
+* testGPSandSave.cc:
 * unit test for serial communication and UTM projection for GPS/IMU
 * This header file can be read by C++ compilers
 *
@@ -8,6 +8,7 @@
 *******************************************************************************
 */
 
+#include "database.h"
 #include "gps.h"
 #include "timecounter.h"
 
@@ -31,19 +32,21 @@ int main() {
       0   // UTM_y
   };
   try {
+    database<3, 3> _sqlitetest("dbtest.db");
+    _sqlitetest.initializetables();
     timecounter _timer;
     gpsimu _gpsimu(gps_data, 51, true, 115200);  // zone 51 N
-    long int totaltime = 0;
     int count = 0;
     while (1) {
       std::string gps_buffer = _gpsimu.gpsonestep().getserialbuffer();
       gps_data = _gpsimu.getgpsRTdata();
       long int et = _timer.timeelapsed();
-      totaltime += et;
-      std::cout << "[" << totaltime << "]" << gps_buffer;
+
       ++count;
       if (count == 4) {
         count = 0;
+        _sqlitetest.update_gps_table(gps_data);
+
         std::cout << "UTC:      " << gps_data.UTC << std::endl;
         std::cout << "latitude:   " << std::fixed << setprecision(7)
                   << gps_data.latitude << std::endl;

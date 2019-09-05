@@ -18,7 +18,7 @@ int main() {
       Eigen::Matrix3d::Zero(),  // AddedMass
       (Eigen::Matrix3d() << 100, 0, 0, 0, 200, 0, 0, 0, 300)
           .finished(),          // Damping
-      Eigen::Vector2d::Zero(),  // cog
+      Eigen::Vector3d::Zero(),  // cog
       Eigen::Vector2d::Zero(),  // x_thrust
       Eigen::Vector2d::Zero(),  // y_thrust
       Eigen::Vector2d::Zero(),  // mz_thrust
@@ -35,7 +35,7 @@ int main() {
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
-      Eigen::Matrix<double, 6, 1>::Zero(),  // motiondata_6dof
+      Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement_6dof
       Eigen::Matrix<double, 6, 1>::Zero(),  // State
       Eigen::Vector3d::Zero(),              // p_error
       Eigen::Vector3d::Zero(),              // v_error
@@ -61,21 +61,23 @@ int main() {
   double heading = 0;
   double Ve = 0;
   double Vn = 0;
+  double roti = 0;
 
   estimator<USEKALMAN::KALMANON> _estimator(_estimatorRTdata, _vessel,
                                             estimatordata_input);
 
   windcompensation _windcompensation(_sealoadRTdata);
 
-  _sealoadRTdata = _windcompensation.computewindload(0, 0);
+  _sealoadRTdata = _windcompensation.computewindload(0, 0).getsealoadRTdata();
 
   _estimatorRTdata =
-      _estimator.setvalue(gps_x, gps_y, altitude, roll, pitch, heading, Ve, Vn)
+      _estimator
+          .setvalue(gps_x, gps_y, altitude, roll, pitch, heading, Ve, Vn, roti)
           .getEstimatorRTData();
 
   _estimator.updateestimatedforce(Eigen::Vector3d::Zero(),
                                   _sealoadRTdata.windload);
   _estimator.estimatestate(gps_x, gps_y, altitude, roll, pitch, heading, Ve, Vn,
-                           0);
+                           roti, 0);
   _estimator.estimateerror(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
 }

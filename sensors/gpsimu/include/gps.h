@@ -26,11 +26,13 @@
 
 class gpsimu final : public nmea {
  public:
-  explicit gpsimu(int _zone,            // the UTM zone
-                  bool _northp,         // hemisphere,
-                  unsigned long _baud,  // baudrate
+  explicit gpsimu(const gpsRTdata& _gpsRTdata,  //
+                  int _zone,                    // the UTM zone
+                  bool _northp,                 // hemisphere,
+                  unsigned long _baud,          // baudrate
                   const std::string& _port = "/dev/ttyUSB0")
-      : GPS_serial(_port, _baud, serial::Timeout::simpleTimeout(2000)),
+      : GPSdata(_gpsRTdata),
+        GPS_serial(_port, _baud, serial::Timeout::simpleTimeout(2000)),
         serial_buffer(""),
         tmercator(6378388,    // equatorial radius
                   1 / 297.0,  // flattening
@@ -45,13 +47,15 @@ class gpsimu final : public nmea {
   ~gpsimu() {}
 
   // read serial data and transform to UTM
-  void gpsonestep(gpsRTdata& _gpsdata) {
+  gpsimu& gpsonestep() {
     serial_buffer = GPS_serial.readline(150);
 
-    hemisphereV102(serial_buffer, _gpsdata);
+    hemisphereV102(serial_buffer, GPSdata);
+    return *this;
   }
 
-  std::string getserialbuffer() const { return serial_buffer; }
+  auto getgpsRTdata() const noexcept { return GPSdata; }
+  std::string getserialbuffer() const noexcept { return serial_buffer; }
 
   void updateUTMzone(int zone,  // the UTM zone + hemisphere
                      bool northp) {
@@ -60,6 +64,7 @@ class gpsimu final : public nmea {
   }
 
  private:
+  gpsRTdata GPSdata;
   /** serial data **/
   serial::Serial GPS_serial;
   std::string serial_buffer;

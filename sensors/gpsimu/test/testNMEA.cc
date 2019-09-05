@@ -152,9 +152,9 @@ void testPSAT() {
 }
 
 int main() {
-  testGPGGA();
-  testHEROT();
-  testGPVTG();
-  testGPRMC();
+  // testGPGGA();
+  // testHEROT();
+  // testGPVTG();
+  // testGPRMC();
   testPSAT();
 }

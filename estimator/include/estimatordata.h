@@ -40,7 +40,12 @@ struct estimatorRTdata {
   Eigen::Matrix3d CTG2B;  // global  --> body
 
   /********************* measured data  *********************/
-  // x(m), y(m), orientation(theta: rad), u, v, r (next time stamp) of CoG
+  /** Measurement: sensor data of CoG
+   * +------+------+---------------+--------+--------+-------------+
+   * |  0   |  1   |       2       |   3    |   4    |     5       |
+   * | x(m) | y(m) | heading (rad) | u(m/s) | v(m/s) | roti(rad/s) |
+   * +------+------+---------------+--------+--------+-------------+
+   */
   Eigen::Matrix<double, 6, 1> Measurement;
   // x(m), y(m), z(m), roll(rad), pitch(rad), yaw(rad) of CoG
   Eigen::Matrix<double, 6, 1> Measurement_6dof;
