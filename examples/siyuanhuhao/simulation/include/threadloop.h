@@ -22,7 +22,9 @@
 #include "jsonparse.h"
 #include "planner.h"
 #include "priority.h"
+#include "spline.h"
 #include "timecounter.h"
+#include "trajectorytracking.h"
 
 constexpr int num_thruster = 2;
 constexpr int dim_controlspace = 3;
@@ -36,7 +38,7 @@ class threadloop {
         _planner(_jsonparse.getplannerdata()),
         _estimator(_estimatorRTdata, _jsonparse.getvessel(),
                    _jsonparse.getestimatordata()),
-        _trajectroytracking(_jsonparse.getcontrollerdata(), _trackerRTdata),
+        _trajectorytracking(_jsonparse.getcontrollerdata(), _trackerRTdata),
         _controller(_controllerRTdata, _jsonparse.getcontrollerdata(),
                     _jsonparse.getvessel(), _jsonparse.getpiddata(),
                     _jsonparse.getthrustallocationdata(),
@@ -83,6 +85,8 @@ class threadloop {
   jsonparse<num_thruster, dim_controlspace> _jsonparse;
 
   plannerRTdata _plannerRTdata{
+      0,                        // curvature
+      0,                        // speed
       Eigen::Vector2d::Zero(),  // waypoint0
       Eigen::Vector2d::Zero(),  // waypoint1
       Eigen::Vector3d::Zero()   // command
@@ -107,11 +111,11 @@ class threadloop {
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
+      Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement_6dof
       Eigen::Matrix<double, 6, 1>::Zero(),  // State
       Eigen::Vector3d::Zero(),              // p_error
       Eigen::Vector3d::Zero(),              // v_error
-      Eigen::Vector3d::Zero(),              // BalphaU
-      Eigen::Matrix<double, 6, 1>::Zero()   // motiondata_6dof
+      Eigen::Vector3d::Zero()               // BalphaU
   };
 
   indicators _indicators{
@@ -124,7 +128,7 @@ class threadloop {
   planner _planner;
   estimator<indicator_kalman> _estimator;
 
-  trajectroytracking _trajectroytracking;
+  trajectorytracking _trajectorytracking;
   controller<10, num_thruster, indicator_actuation, dim_controlspace>
       _controller;
   database<num_thruster, dim_controlspace> _sqlite;
@@ -141,40 +145,34 @@ class threadloop {
     long int innerloop_elapsed_time = 0;
     long int sample_time =
         static_cast<long int>(1000 * _planner.getsampletime());
-    Eigen::MatrixXd waypoints = Eigen::MatrixXd::Zero(2, 4);
-    waypoints.col(0) << 3433875, 351046;
-    waypoints.col(1) << 3433899, 351060;
-    waypoints.col(2) << 3433899, 351075;
-    waypoints.col(3) << 3433875, 351075;
-    _plannerRTdata.waypoint0 = waypoints.col(0);
-    _plannerRTdata.waypoint1 = waypoints.col(1);
-    int index_wpt = 2;
+
+    // trajectory generator
+    Eigen::VectorXd X(5);
+    Eigen::VectorXd Y(5);
+
+    X << 0.0, 10.0, 20.5, 35.0, 70.5;
+    Y << 0.0, -6.0, 5.0, 6.5, 0.0;
+    Spline2D target_Spline2D(X, Y);
+
+    Eigen::VectorXd s = target_Spline2D.getarclength();
+    double s_max = s.maxCoeff();
+
+    _plannerRTdata.speed = 1;  // desired speed
+    _plannerRTdata.waypoint0 << X(0), Y(0);
+    _plannerRTdata.waypoint1 << X(0), Y(0);
+
+    double is = 0.0;
     while (1) {
       outerloop_elapsed_time = timer_planner.timeelapsed();
-      switch (_indicators.indicator_controlmode) {  // controller mode
-        case 2:
-          _plannerRTdata.v_setpoint << 1, 0, 0;
 
-          if (_planner.switchwaypoint(_plannerRTdata,
-                                      _estimatorRTdata.State.head(2),
-                                      waypoints.col(index_wpt))) {
-            std::cout << index_wpt << std::endl;
-            ++index_wpt;
-          }
-          if (index_wpt == waypoints.cols()) {
-            CLOG(INFO, "waypoints") << "reach the last waypoint!";
-            break;
-          }
-          _planner.pathfollowLOS(_plannerRTdata,
-                                 _estimatorRTdata.State.head(2));
-
-          break;
-        case 3:
-          _plannerRTdata.setpoint << 3433877.3, 351034, M_PI / 4;
-          _plannerRTdata.v_setpoint << 0, 0, 0;
-          break;
-        default:
-          break;
+      is += sample_time * _plannerRTdata.speed / 1000.0;
+      if (is <= s_max) {
+        _plannerRTdata.waypoint0 = _plannerRTdata.waypoint1;
+        _plannerRTdata.waypoint1 = target_Spline2D.compute_position(is);
+        _plannerRTdata.curvature = target_Spline2D.compute_curvature(is);
+      } else {
+        CLOG(INFO, "planner") << "Planner reach the last waypoint";
+        break;
       }
 
       innerloop_elapsed_time = timer_planner.timeelapsed();
@@ -198,8 +196,14 @@ class threadloop {
       outerloop_elapsed_time = timer_controler.timeelapsed();
       _controller.setcontrolmode(CONTROLMODE::MANEUVERING);
       // trajectory tracking
-
-      //
+      _trackerRTdata =
+          _trajectorytracking
+              .CircularArcLOS(_plannerRTdata.curvature, _plannerRTdata.speed,
+                              _estimatorRTdata.State.head(2),
+                              _plannerRTdata.waypoint0,
+                              _plannerRTdata.waypoint1)
+              .gettrackerRTdata();
+      // controller
       _controllerRTdata = _controller
                               .controlleronestep(Eigen::Vector3d::Zero(),
                                                  _estimatorRTdata.p_error,
@@ -225,19 +229,21 @@ class threadloop {
     long int sample_time =
         static_cast<long int>(1000 * _estimator.getsampletime());
 
-    _estimator.setvalue(_estimatorRTdata, 351045.7, 3433883.219, 0, 0, 0, 57, 0,
-                        0);
+    _estimator.setvalue(0, 0, 0, 0, 0, 57, 0, 0, 0);
     CLOG(INFO, "GPS") << "initialation successful!";
 
     while (1) {
       outerloop_elapsed_time = timer_estimator.timeelapsed();
 
-      _estimator.updateestimatedforce(
-          _estimatorRTdata, _controllerRTdata.BalphaU,
-          _windcompensation.computewindload(0, 0).getwindload());
-      _estimator.estimatestate(_estimatorRTdata, _plannerRTdata.setpoint(2));
-      _estimator.estimateerror(_estimatorRTdata, _plannerRTdata.setpoint,
-                               _plannerRTdata.v_setpoint);
+      _estimator
+          .updateestimatedforce(_controllerRTdata.BalphaU,
+                                Eigen::Vector3d::Zero())
+          .estimatestate(_trackerRTdata.setpoint(2));
+
+      _estimatorRTdata =
+          _estimator
+              .estimateerror(_trackerRTdata.setpoint, _trackerRTdata.v_setpoint)
+              .getEstimatorRTData();
 
       innerloop_elapsed_time = timer_estimator.timeelapsed();
       std::this_thread::sleep_for(
@@ -254,7 +260,7 @@ class threadloop {
     while (1) {
       _sqlite.update_planner_table(_plannerRTdata);
       _sqlite.update_estimator_table(_estimatorRTdata);
-      _sqlite.update_controller_table(_controllerRTdata);
+      _sqlite.update_controller_table(_controllerRTdata, _trackerRTdata);
     }
   }  // sqlloop()
 };

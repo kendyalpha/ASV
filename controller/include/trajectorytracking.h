@@ -90,16 +90,16 @@ class lineofsight {
   }  // computeR
 };
 
-class trajectroytracking final : public lineofsight {
+class trajectorytracking final : public lineofsight {
  public:
-  trajectroytracking(const controllerdata &_controllerdata,
+  trajectorytracking(const controllerdata &_controllerdata,
                      const trackerRTdata &_TrackerRTdata)
       : lineofsight(_controllerdata.los_radius,
                     _controllerdata.los_capture_radius),
         TrackerRTdata(_TrackerRTdata),
         sample_time(_controllerdata.sample_time) {}
 
-  ~trajectroytracking() = default;
+  ~trajectorytracking() = default;
 
   // Eigen::MatrixXd followcircle(const Eigen::Vector2d &_startposition,
   //                              const Eigen::Vector2d &_endposition,
@@ -143,7 +143,7 @@ class trajectroytracking final : public lineofsight {
   // }
 
   // follow a circular arc using LOS
-  trajectroytracking &CircularArcLOS(double _curvature, double _desired_u,
+  trajectorytracking &CircularArcLOS(double _curvature, double _desired_u,
                                      const Eigen::Vector2d &_vesselposition,
                                      const Eigen::Vector2d &_rp0,
                                      const Eigen::Vector2d &_rp1) {

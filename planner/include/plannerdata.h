@@ -17,6 +17,8 @@
 
 // real time data in planner
 struct plannerRTdata {
+  double curvature;           // desired curvature of path
+  double speed;               // desired speed forward
   Eigen::Vector2d waypoint0;  // x, y in the global coordinate
   Eigen::Vector2d waypoint1;  // x, y in the global coordinate
   Eigen::Vector3d command;    // command from joystick (human)

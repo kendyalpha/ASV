@@ -13,7 +13,9 @@
 #include "lowpass.h"
 #include "outlierremove.h"
 
-template <USEKALMAN indicator_kalman>
+template <USEKALMAN indicator_kalman, int nlp_x = 1, int nlp_y = 1,
+          int nlp_z = 1, int nlp_heading = 1, int nlp_roll = 1,
+          int nlp_pitch = 1, int nlp_u = 3, int nlp_v = 3, int nlp_roti = 1>
 class estimator {
  public:
   explicit estimator(const estimatorRTdata& _estimatorRTdata,
@@ -133,26 +135,27 @@ class estimator {
   double getsampletime() const noexcept { return sample_time; }
 
  private:
+  // real time data
   estimatorRTdata EstimatorRTData;
   motionrawdata Motionrawdata;
 
   // variable for low passing
-  lowpass<1> x_lowpass;
-  lowpass<1> y_lowpass;
-  lowpass<1> z_lowpass;
-  lowpass<1> heading_lowpass;
-  lowpass<1> roll_lowpass;
-  lowpass<1> pitch_lowpass;
-  lowpass<1> u_lowpass;
-  lowpass<1> v_lowpass;
-  lowpass<1> roti_lowpass;
+  lowpass<nlp_x> x_lowpass;
+  lowpass<nlp_y> y_lowpass;
+  lowpass<nlp_z> z_lowpass;
+  lowpass<nlp_heading> heading_lowpass;
+  lowpass<nlp_roll> roll_lowpass;
+  lowpass<nlp_pitch> pitch_lowpass;
+  lowpass<nlp_u> u_lowpass;
+  lowpass<nlp_v> v_lowpass;
+  lowpass<nlp_roti> roti_lowpass;
   // variable for outlier removal
   outlierremove roll_outlierremove;
-
+  // Kalman filtering
   USV_kalmanfilter KalmanFilter;
 
-  double sample_time;
-  Eigen::Vector3d antenna2cog;  // Xcog - Xantenna
+  const double sample_time;
+  const Eigen::Vector3d antenna2cog;  // Xcog - Xantenna
 
   // calculate the real time coordinate transform matrix
   void calculateCoordinateTransform(Eigen::Matrix3d& _CTG2B,
@@ -163,7 +166,8 @@ class estimator {
     double cvalue = 0.0;
     double svalue = 0.0;
 
-    if (abs(restrictheadingangle(_rtheading - desired_heading)) < M_PI / 36) {
+    if (std::abs(restrictheadingangle(_rtheading - desired_heading)) <
+        M_PI / 36) {
       // use the fixed setpoint orientation to prevent measurement noise
       cvalue = std::cos(desired_heading);
       svalue = std::sin(desired_heading);

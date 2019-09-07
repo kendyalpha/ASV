@@ -49,25 +49,13 @@ class jsonparse {
   thrustallocationdata getthrustallocationdata() const noexcept {
     return thrustallocationdata_input;
   }
-  std::vector<tunnelthrusterdata> gettunneldata() const noexcept {
-    return tunnelthrusterdata_input;
-  }
-  std::vector<azimuththrusterdata> getazimuthdata() const noexcept {
-    return azimuththrusterdata_input;
-  }
-  std::vector<ruddermaindata> getmainrudderdata() const noexcept {
-    return ruddermaindata_input;
-  }
-  std::vector<ruddermaindata> gettwinfixeddata() const noexcept {
-    return twinfixeddata_input;
-  }
-  std::vector<pidcontrollerdata> getpiddata() const noexcept {
-    return pidcontrollerdata_input;
-  }
-  estimatordata getestimatordata() const noexcept {
-    return estimatordata_input;
-  }
-  plannerdata getplannerdata() const noexcept { return plannerdata_input; }
+  auto gettunneldata() const noexcept { return tunnelthrusterdata_input; }
+  auto getazimuthdata() const noexcept { return azimuththrusterdata_input; }
+  auto getmainrudderdata() const noexcept { return ruddermaindata_input; }
+  auto gettwinfixeddata() const noexcept { return twinfixeddata_input; }
+  auto getpiddata() const noexcept { return pidcontrollerdata_input; }
+  auto getestimatordata() const noexcept { return estimatordata_input; }
+  auto getplannerdata() const noexcept { return plannerdata_input; }
 
   std::string getsqlitedata() const noexcept { return dbpath; }
   std::string getgpsport() const noexcept { return gps_port; }

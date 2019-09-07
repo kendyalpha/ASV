@@ -11,6 +11,7 @@ import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
 import math
+import numpy as np
 
 # connect to sqlite database
 db_conn = sqlite3.connect('dbtest.db')
@@ -43,6 +44,17 @@ gpsdata.columns = ['ID', 'DATETIME', 'UTC',
                    'roti', 'status', 'UTM_x', 'UTM_y']
 gpsdata['DATETIME'] = gpsdata['DATETIME'].astype(float)
 
+
+gps_u = []
+gps_v = []
+for index, row in gpsdata.iterrows():
+    heading = row['heading']*math.pi/180
+    cvalue = math.cos(heading)
+    svalue = math.sin(heading)
+    gps_u.append(row['Vn']*cvalue+row['Ve']*svalue)
+    gps_v.append(-row['Vn']*svalue+row['Ve']*cvalue)
+
+
 estimatordata = pd.DataFrame(estimator_rows)
 estimatordata.columns = ['ID', 'DATETIME',
                          'meas_x', 'meas_y', 'meas_theta',
@@ -70,7 +82,7 @@ plt.legend(('GPS_UTM', 'COG'), loc='upper right')
 
 
 plt.figure(1, figsize=(15, 10))
-plt.suptitle("time series of motion", fontsize=12)
+plt.suptitle("time series of position and orientation", fontsize=12)
 plt.subplot(3, 1, 1)
 plt.plot(gpsdata['DATETIME'], gpsdata['UTM_y'], '-r', lw=2)
 plt.plot(estimatordata['DATETIME'], estimatordata['meas_x'], '--k', lw=2)
@@ -89,6 +101,51 @@ plt.plot(estimatordata['DATETIME'], (180/math.pi)
          * estimatordata['meas_theta'], '--k', lw=2)
 plt.ylabel('theta (deg)')
 plt.legend(('GPS Antenna', 'CoG'), loc='upper right')
+
+
+plt.figure(2, figsize=(15, 10))
+plt.suptitle("time series of CoG velocity", fontsize=12)
+plt.subplot(3, 1, 1)
+plt.plot(estimatordata['DATETIME'], estimatordata['meas_u'], '-r', lw=2)
+plt.plot(estimatordata['DATETIME'], estimatordata['state_u'], '--k', lw=2)
+plt.plot(gpsdata['DATETIME'], gps_u, color='tab:gray', lineStyle=':', lw=2)
+plt.ylabel('u (m/s)')
+plt.legend(('Measurement', 'State', 'antenna'), loc='upper right')
+
+plt.subplot(3, 1, 2)
+plt.plot(estimatordata['DATETIME'], estimatordata['meas_v'], '-r', lw=2)
+plt.plot(estimatordata['DATETIME'], estimatordata['state_v'], '--k', lw=2)
+plt.plot(gpsdata['DATETIME'], gps_v, color='tab:gray', lineStyle=':', lw=2)
+plt.ylabel('v (m/s)')
+plt.legend(('Measurement', 'State', 'antenna'), loc='upper right')
+
+plt.subplot(3, 1, 3)
+plt.plot(estimatordata['DATETIME'], estimatordata['meas_r'], '-r', lw=2)
+plt.plot(estimatordata['DATETIME'], estimatordata['state_r'], '--k', lw=2)
+plt.ylabel('r (rad/s)')
+plt.legend(('Measurement', 'State'), loc='upper right')
+
+
+plt.figure(3, figsize=(12, 10))
+plt.suptitle("time series of Antenna velocity", fontsize=12)
+plt.subplot(2, 1, 1)
+plt.plot(gpsdata['DATETIME'], gpsdata['Ve'], '-r', lw=2)
+plt.ylabel('Ve (m/s)')
+
+plt.subplot(2, 1, 2)
+plt.plot(gpsdata['DATETIME'], gpsdata['Vn'], '-r', lw=2)
+plt.ylabel('Vn (m/s)')
+
+
+plt.figure(4, figsize=(12, 10))
+plt.suptitle("time series of Antenna velocity", fontsize=12)
+plt.subplot(2, 1, 1)
+plt.plot(gpsdata['DATETIME'], gpsdata['roll'], '-r', lw=2)
+plt.ylabel('Ve (m/s)')
+
+plt.subplot(2, 1, 2)
+plt.plot(gpsdata['DATETIME'], gpsdata['pitch'], '-r', lw=2)
+plt.ylabel('Vn (m/s)')
 
 
 plt.show()

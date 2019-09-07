@@ -19,30 +19,25 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall -march=native -mavx")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-#GeographicLib库
-find_package (GeographicLib 1.49 REQUIRED)
 # thread 库
 find_package(Threads REQUIRED)
 
 # 添加 include 子目录
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../../../sensors/gpsimu/include"
-	"${PROJECT_SOURCE_DIR}/../../../sensors/wind/include"
-	"${PROJECT_SOURCE_DIR}/../../../controller/include"
-	"${PROJECT_SOURCE_DIR}/../../../controller/motor/include"
-	"${PROJECT_SOURCE_DIR}/../../../estimator/include"
-	"${PROJECT_SOURCE_DIR}/../../../planner/include"
-	"${PROJECT_SOURCE_DIR}/../../../timer/include"
-	"${PROJECT_SOURCE_DIR}/../../../fileIO/include"
-	"${PROJECT_SOURCE_DIR}/../../../property/include"
-	"${PROJECT_SOURCE_DIR}/../../../remotecontrol/include"
-	"${PROJECT_SOURCE_DIR}/../../../logging/include"
-	"${PROJECT_SOURCE_DIR}/../../../communication/include"
-	"${PROJECT_SOURCE_DIR}/../../../GUI_communication/include"
-	"${PROJECT_SOURCE_DIR}/../../../math/eigen"
-	"${PROJECT_SOURCE_DIR}/../../../communication/include"
-	"${PROJECT_SOURCE_DIR}/../../../third_party/serial/include"
+	"${PROJECT_SOURCE_DIR}/../../../../sensors/gpsimu/include"
+	"${PROJECT_SOURCE_DIR}/../../../../sensors/wind/include"
+	"${PROJECT_SOURCE_DIR}/../../../../controller/include"
+	"${PROJECT_SOURCE_DIR}/../../../../estimator/include"
+	"${PROJECT_SOURCE_DIR}/../../../../planner/include"
+	"${PROJECT_SOURCE_DIR}/../../../../common/timer/include"
+	"${PROJECT_SOURCE_DIR}/../../../../common/fileIO/include"
+	"${PROJECT_SOURCE_DIR}/../../../../common/property/include"
+	"${PROJECT_SOURCE_DIR}/../../../../common/logging/include"
+	"${PROJECT_SOURCE_DIR}/../../../../communication/include"
+	"${PROJECT_SOURCE_DIR}/../../../../math/eigen"
+	"${PROJECT_SOURCE_DIR}/../../../../math/NumericalAnalysis/include"
+	"${PROJECT_SOURCE_DIR}/../../../../communication/include"
 	"/opt/mosek/9.0/tools/platform/linux64x86/h"
 	"/usr/include" 
     "${CMAKE_CURRENT_SOURCE_DIR}/../include")
@@ -54,15 +49,12 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
     
 # 指定生成目标
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../../logging/src/easylogging++.cc"                            
-	"${CMAKE_CURRENT_SOURCE_DIR}/testbiling.cc")
-add_executable (testbiling ${SOURCE_FILES})
-target_include_directories(testbiling PRIVATE ${HEADER_DIRECTORY})
-find_library(SERIAL_LIBRARY serial HINTS ${LIBRARY_DIRECTORY})
+	"${PROJECT_SOURCE_DIR}/../../../../common/logging/src/easylogging++.cc"                            
+	"${CMAKE_CURRENT_SOURCE_DIR}/run.cc")
+add_executable (testlos ${SOURCE_FILES})
+target_include_directories(testlos PRIVATE ${HEADER_DIRECTORY})
 find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
 find_library(MOSEK8_LIBRARY mosek64 HINTS ${LIBRARY_DIRECTORY})
-target_link_libraries(testbiling PUBLIC ${SQLITE3_LIBRARY})
-target_link_libraries(testbiling PUBLIC ${SERIAL_LIBRARY})
-target_link_libraries(testbiling PUBLIC ${GeographicLib_LIBRARIES})
-target_link_libraries(testbiling PUBLIC ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(testbiling PUBLIC ${MOSEK8_LIBRARY})
+target_link_libraries(testlos PUBLIC ${SQLITE3_LIBRARY})
+target_link_libraries(testlos PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(testlos PUBLIC ${MOSEK8_LIBRARY})
