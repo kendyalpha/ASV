@@ -23,6 +23,7 @@
 #include "planner.h"
 #include "priority.h"
 #include "spline.h"
+#include "tcpserver.h"
 #include "timecounter.h"
 #include "trajectorytracking.h"
 
@@ -51,28 +52,10 @@ class threadloop {
   ~threadloop() {}
 
   void mainloop() {
-    sched_param sch;
-    sch.sched_priority = 99;
-
     std::thread planner_thread(&threadloop::plannerloop, this);
     std::thread estimator_thread(&threadloop::estimatorloop, this);
     std::thread controller_thread(&threadloop::controllerloop, this);
     std::thread sql_thread(&threadloop::sqlloop, this);
-
-    if (pthread_setschedparam(planner_thread.native_handle(), SCHED_RR, &sch)) {
-      std::cout << "Failed to setschedparam: " << std::strerror(errno) << '\n';
-    }
-    if (pthread_setschedparam(estimator_thread.native_handle(), SCHED_RR,
-                              &sch)) {
-      std::cout << "Failed to setschedparam: " << std::strerror(errno) << '\n';
-    }
-    if (pthread_setschedparam(controller_thread.native_handle(), SCHED_RR,
-                              &sch)) {
-      std::cout << "Failed to setschedparam: " << std::strerror(errno) << '\n';
-    }
-    if (pthread_setschedparam(sql_thread.native_handle(), SCHED_RR, &sch)) {
-      std::cout << "Failed to setschedparam: " << std::strerror(errno) << '\n';
-    }
 
     planner_thread.detach();
     controller_thread.detach();
@@ -143,8 +126,9 @@ class threadloop {
     timecounter timer_planner;
     long int outerloop_elapsed_time = 0;
     long int innerloop_elapsed_time = 0;
-    long int sample_time =
+    long int sample_time_ms =
         static_cast<long int>(1000 * _planner.getsampletime());
+    double sample_time_s = _planner.getsampletime();
 
     // trajectory generator
     Eigen::VectorXd X(5);
@@ -154,18 +138,42 @@ class threadloop {
     Y << 0.0, -6.0, 5.0, 6.5, 0.0;
     Spline2D target_Spline2D(X, Y);
 
+    sqlite::database db(
+        "/home/scar1et/Coding/ASV/examples/siyuanhuhao/simulation/data/wp.db");
+    std::string str =
+        "CREATE TABLE WP"
+        "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+        " DATETIME    TEXT       NOT NULL,"
+        " X           DOUBLE, "
+        " Y           DOUBLE); ";
+    db << str;
+
     Eigen::VectorXd s = target_Spline2D.getarclength();
     double s_max = s.maxCoeff();
+    double step = 0.05;
+    int n = 1 + static_cast<int>(s_max / step);
+
+    for (int i = 0; i != n; i++) {
+      Eigen::Vector2d position = target_Spline2D.compute_position(step * i);
+
+      // save to sqlite
+      std::string str =
+          "INSERT INTO WP"
+          "(DATETIME, X, Y) "
+          " VALUES(julianday('now'), " +
+          std::to_string(position(0)) + ", " + std::to_string(position(1)) +
+          ");";
+      db << str;
+    }
 
     _plannerRTdata.speed = 1;  // desired speed
     _plannerRTdata.waypoint0 << X(0), Y(0);
     _plannerRTdata.waypoint1 << X(0), Y(0);
-
     double is = 0.0;
     while (1) {
       outerloop_elapsed_time = timer_planner.timeelapsed();
 
-      is += sample_time * _plannerRTdata.speed / 1000.0;
+      is += sample_time_s * _plannerRTdata.speed;
       if (is <= s_max) {
         _plannerRTdata.waypoint0 = _plannerRTdata.waypoint1;
         _plannerRTdata.waypoint1 = target_Spline2D.compute_position(is);
@@ -177,9 +185,9 @@ class threadloop {
 
       innerloop_elapsed_time = timer_planner.timeelapsed();
       std::this_thread::sleep_for(
-          std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
+          std::chrono::milliseconds(sample_time_ms - innerloop_elapsed_time));
 
-      if (outerloop_elapsed_time > 1.1 * sample_time)
+      if (outerloop_elapsed_time > 1.1 * sample_time_ms)
         CLOG(INFO, "planner") << "Too much time!";
     }
 
@@ -263,6 +271,56 @@ class threadloop {
       _sqlite.update_controller_table(_controllerRTdata, _trackerRTdata);
     }
   }  // sqlloop()
+
+  // socket server
+  void socketloop() {
+    union socketmsg {
+      double double_msg[20];
+      char char_msg[160];
+    };
+
+    tcpserver _tcpserver("9340");
+    const int recv_size = 10;
+    const int send_size = 160;
+    char recv_buffer[recv_size];
+    socketmsg _sendmsg = {0.0, 0.0, 0.0, 0.0, 0.0};
+
+    timecounter timer_socket;
+    long int outerloop_elapsed_time = 0;
+    long int innerloop_elapsed_time = 0;
+    long int sample_time = 100;
+
+    while (1) {
+      outerloop_elapsed_time = timer_socket.timeelapsed();
+
+      for (int i = 0; i != 6; ++i)
+        _sendmsg.double_msg[i] = _estimatorRTdata.State(i);  // State
+
+      _sendmsg.double_msg[6] = _plannerRTdata.curvature;      // curvature
+      _sendmsg.double_msg[7] = _plannerRTdata.speed;          // speed
+      _sendmsg.double_msg[8] = _plannerRTdata.waypoint0(0);   // waypoint0
+      _sendmsg.double_msg[9] = _plannerRTdata.waypoint0(1);   // waypoint0
+      _sendmsg.double_msg[10] = _plannerRTdata.waypoint1(0);  // waypoint1
+      _sendmsg.double_msg[11] = _plannerRTdata.waypoint1(1);  // waypoint1
+
+      for (int i = 0; i != dim_controlspace; ++i) {
+        _sendmsg.double_msg[12 + i] = _controllerRTdata.tau(i);  // tau
+      }
+      for (int i = 0; i != num_thruster; ++i) {
+        _sendmsg.double_msg[12 + dim_controlspace + i] =
+            _controllerRTdata.rotation(i);  // rotation
+      }
+      _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
+                              send_size);
+
+      innerloop_elapsed_time = timer_socket.timeelapsed();
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
+
+      if (outerloop_elapsed_time > 1.1 * sample_time)
+        CLOG(INFO, "socket") << "Too much time!";
+    }
+  }  // socketloop()
 };
 
 #endif /* _THREADLOOP_H_ */

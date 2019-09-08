@@ -1,6 +1,6 @@
 {
   "vesselname": "siyuanhuhao",
-  "project_directory":"/home/scar1et/Coding/ASV/examples/siyuanhuhao/simulation",
+  "project_directory":"/home/scar1et/Coding/ASV/examples/siyuanhuhao/simulation/",
   "dbpath": "data/",
   "property": {
     "L":3.1,
@@ -8,11 +8,11 @@
     "Mass": [425, 0, 0, 0, 425, 180, 0, 180, 920],
     "AddedMass": [74, 0, 0, 0, 136, 144, 0, 144, 198],
     "Damping": [25, 0, 0, 0, 30, 0, 0, 0, 100],
-    "CoG": [1.6, 0],
+    "CoG": [1.6, 0, 0],
     "velocity_limit": {
-      "surge": [-3, 5],
-      "sway": [-2, 2],
-      "yaw": [-1, 1],
+      "surge": [-4, 6],
+      "sway": [-4, 4],
+      "yaw": [-2, 2],
       "roll": [-1, 1]
     }
   },
@@ -56,7 +56,7 @@
   "thruster1": {
     "type": "twinfixed",
     "position": [0, 1],
-    "thrust_constant": [3E-4, 1E-4],
+    "thrust_constant": [5E-5, 3E-5],
     "max_delta_rotation": 500,
     "p2n_delay_time": 1.5,
     "max_rotation": 1500
@@ -64,7 +64,7 @@
   "thruster2": {
     "type": "twinfixed",
     "position": [0, -1],
-    "thrust_constant": [3E-4, 1E-4],
+    "thrust_constant": [5E-5, 3E-5],
     "max_delta_rotation": 500,
     "p2n_delay_time": 1.5,
     "max_rotation": 1500
@@ -79,7 +79,7 @@
   "sensors":{
     "GPS":{
       "number": 1,
-      "Back_anntena":[0.1, 0]
+      "primary_antenna":[1.6, 0, 0]
     },
     "Wind":{
       "number": 2,
@@ -104,6 +104,5 @@
       "port":"/dev/ttyUSB0",
       "baudrate":9600
     }
-  },
-  "nothing": null
+  }
 }

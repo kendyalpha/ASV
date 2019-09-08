@@ -90,6 +90,13 @@ class tcpserver {
   }
 
   int getsocketresults() const noexcept { return results; }
+  int getconnectioncount() const {
+    int clientcount = 0;  // # of clients connected
+    for (int i = 0; i <= fdmax; i++) {
+      if (FD_ISSET(i, &master)) ++clientcount;
+    }
+    return clientcount - 1;  // remove self fd
+  }
 
  private:
   fd_set master;    // master file descriptor list
@@ -102,7 +109,6 @@ class tcpserver {
   char remoteIP[INET6_ADDRSTRLEN];
 
   std::string port;  // port we're listening on
-
   int results;
   // get sockaddr, IPv4 or IPv6:
   void *get_in_addr(struct sockaddr *sa) {
