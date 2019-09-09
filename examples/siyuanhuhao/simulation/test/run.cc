@@ -17,9 +17,7 @@ int main() {
   try {
     threadloop _threadloop;
     _threadloop.mainloop();
-    std::cout << "please input" << std::endl;
-    int input = std::getchar();
-    throw input;
+
   } catch (const std::exception& e) {
     LOG(INFO) << "Shutting down.";
     std::cerr << "ERROR: std::logic_error" << e.what() << std::endl;

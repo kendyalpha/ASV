@@ -9,14 +9,17 @@
 # */
 
 
+import sqlite3
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 import socket
 import array
 from matplotlib.patches import Circle, Wedge, Polygon
 from matplotlib.collections import PatchCollection
 
 
+#
 class vessel2d:
 
     def __init__(self):
@@ -44,20 +47,52 @@ class vessel2d:
         return trans
 
 
-plt.cla()
-fig, ax = plt.subplots()
+class sql:
+    def __init__(self):
+        self.dbpath = '../data/wp.db'
+
+    def read2pandas(self):
+        # connect to sqlite database
+        db_conn = sqlite3.connect(self.dbpath)
+        # create a cursor to execute SQL commands
+        db_cursor = db_conn.cursor()
+
+        #  retrieve GPS data from database
+        db_cursor.execute("SELECT * FROM WP")
+        wp_rows = db_cursor.fetchall()
+        db_conn.commit()
+        db_conn.close()
+        wpdata = pd.DataFrame(wp_rows)
+        wpdata.columns = ['ID', 'X', 'Y']
+
+        return wpdata
+
+
 _vessel2d = vessel2d()
+_sql = sql()
+wpdata = _sql.read2pandas()
+
+
+fig,  ((ax1, ax2), (ax3, ax4)) = plt.subplots(
+    nrows=2, ncols=2, figsize=(12, 12))
+fig.suptitle('Simulation of trajectory tracking algorithm')
+
+ax1.plot(wpdata['Y'], wpdata['X'], color='tab:gray', lineStyle='-', lw=1)
+ax1.axis('equal')
+ax1.set(xlabel='E (m)', ylabel='N (m)')
+
+plt.show()
+
 
 HOST = '127.0.0.1'
 PORT = 9340                # 设置端口号
 
-area = 15.0  # animation area length [m]
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.settimeout(None)
     s.connect((HOST, PORT))
     while True:
         s.sendall(b'socket')
-        data = s.recv(800)
+        data = s.recv(160)
         doubles_sequence = array.array('d', data)
 
         # vessel profile
@@ -67,7 +102,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             doubles_sequence[2]  # heading
         )
         polygon = Polygon(vessel2dnew, True, color='black', alpha=0.4)
-        ax.add_patch(polygon)
+        ax1.add_patch(polygon)
 
         # planner
         x = np.zeros(N_ob)
@@ -92,6 +127,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         plt.plot(bestx[1:], besty[1:], "-oc", markersize=3, alpha=0.4)
 
         plt.axis('equal')
+        area = 15.0  # animation area length [m]
         plt.xlim(doubles_sequence[0] - area, doubles_sequence[0] + area)
         plt.ylim(doubles_sequence[1] - area, doubles_sequence[1] + area)
         # plt.axis([-52, 52, -50, 50])

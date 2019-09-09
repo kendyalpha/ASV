@@ -36,6 +36,8 @@ class threadloop {
  public:
   threadloop()
       : _jsonparse("./../../properties/property.json"),
+        indicator_socket(0),
+        indicator_waypoint(0),
         _planner(_jsonparse.getplannerdata()),
         _estimator(_estimatorRTdata, _jsonparse.getvessel(),
                    _jsonparse.getestimatordata()),
@@ -46,21 +48,28 @@ class threadloop {
                     _jsonparse.gettunneldata(), _jsonparse.getazimuthdata(),
                     _jsonparse.getmainrudderdata(),
                     _jsonparse.gettwinfixeddata()),
-        _sqlite(_jsonparse.getsqlitedata()) {
+        _sqlite(_jsonparse.getsqlitedata()),
+        _tcpserver("9340") {
     intializethreadloop();
   }
   ~threadloop() {}
 
   void mainloop() {
     std::thread planner_thread(&threadloop::plannerloop, this);
-    std::thread estimator_thread(&threadloop::estimatorloop, this);
-    std::thread controller_thread(&threadloop::controllerloop, this);
+    // std::thread estimator_thread(&threadloop::estimatorloop, this);
+    // std::thread controller_thread(&threadloop::controllerloop, this);
     std::thread sql_thread(&threadloop::sqlloop, this);
+    std::thread socket_thread(&threadloop::socketloop, this);
 
-    planner_thread.detach();
-    controller_thread.detach();
-    estimator_thread.detach();
-    sql_thread.detach();
+    // planner_thread.detach();
+    // controller_thread.detach();
+    // estimator_thread.detach();
+    // sql_thread.detach();
+    planner_thread.join();
+    // estimator_thread.join();
+    // controller_thread.join();
+    sql_thread.join();
+    socket_thread.join();
   }
 
  private:
@@ -108,6 +117,9 @@ class threadloop {
       0,  // indicator_windstatus
   };
 
+  int indicator_socket;
+  int indicator_waypoint;
+
   planner _planner;
   estimator<indicator_kalman> _estimator;
 
@@ -115,6 +127,7 @@ class threadloop {
   controller<10, num_thruster, indicator_actuation, dim_controlspace>
       _controller;
   database<num_thruster, dim_controlspace> _sqlite;
+  tcpserver _tcpserver;
 
   void intializethreadloop() {
     _controllerRTdata =
@@ -143,7 +156,6 @@ class threadloop {
     std::string str =
         "CREATE TABLE WP"
         "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
-        " DATETIME    TEXT       NOT NULL,"
         " X           DOUBLE, "
         " Y           DOUBLE); ";
     db << str;
@@ -159,17 +171,22 @@ class threadloop {
       // save to sqlite
       std::string str =
           "INSERT INTO WP"
-          "(DATETIME, X, Y) "
-          " VALUES(julianday('now'), " +
+          "(X, Y) VAlUES(" +
           std::to_string(position(0)) + ", " + std::to_string(position(1)) +
           ");";
       db << str;
     }
+    CLOG(INFO, "waypoints") << "Waypoints have been generated";
+    indicator_waypoint = 1;
 
     _plannerRTdata.speed = 1;  // desired speed
     _plannerRTdata.waypoint0 << X(0), Y(0);
     _plannerRTdata.waypoint1 << X(0), Y(0);
     double is = 0.0;
+
+    while (1) {
+      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
+    }
     while (1) {
       outerloop_elapsed_time = timer_planner.timeelapsed();
 
@@ -200,6 +217,9 @@ class threadloop {
     long int sample_time =
         static_cast<long int>(1000 * _controller.getsampletime());
 
+    while (1) {
+      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
+    }
     while (1) {
       outerloop_elapsed_time = timer_controler.timeelapsed();
       _controller.setcontrolmode(CONTROLMODE::MANEUVERING);
@@ -241,6 +261,9 @@ class threadloop {
     CLOG(INFO, "GPS") << "initialation successful!";
 
     while (1) {
+      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
+    }
+    while (1) {
       outerloop_elapsed_time = timer_estimator.timeelapsed();
 
       _estimator
@@ -266,6 +289,9 @@ class threadloop {
   // loop to save real time data using sqlite3
   void sqlloop() {
     while (1) {
+      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
+    }
+    while (1) {
       _sqlite.update_planner_table(_plannerRTdata);
       _sqlite.update_estimator_table(_estimatorRTdata);
       _sqlite.update_controller_table(_controllerRTdata, _trackerRTdata);
@@ -279,7 +305,6 @@ class threadloop {
       char char_msg[160];
     };
 
-    tcpserver _tcpserver("9340");
     const int recv_size = 10;
     const int send_size = 160;
     char recv_buffer[recv_size];
@@ -312,6 +337,8 @@ class threadloop {
       }
       _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
                               send_size);
+
+      if (_tcpserver.getconnectioncount() > 0) indicator_socket = 1;
 
       innerloop_elapsed_time = timer_socket.timeelapsed();
       std::this_thread::sleep_for(

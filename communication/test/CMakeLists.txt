@@ -17,6 +17,7 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
     "../include/"
    	"${PROJECT_SOURCE_DIR}/../../third_party/serial/include"
    	"${PROJECT_SOURCE_DIR}/../../common/timer/include"
+   	"${PROJECT_SOURCE_DIR}/../../common/logging/include"
     )
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
@@ -24,11 +25,14 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
     "/usr/local/lib"
    )
  
+set(SOURCE_FILES ${SOURCE_FILES} 
+	"${PROJECT_SOURCE_DIR}/../../common/logging/src/easylogging++.cc" )
+
 # 指定生成目标
 add_executable (testcrc testcrc.cc)
 target_include_directories(testcrc PRIVATE ${HEADER_DIRECTORY})
 
-add_executable (testtcpserver testtcpserver.cc)
+add_executable (testtcpserver testtcpserver.cc  ${SOURCE_FILES})
 target_include_directories(testtcpserver PRIVATE ${HEADER_DIRECTORY})
 
 add_executable (testtcpclient testtcpclient.cc)

@@ -17,7 +17,7 @@ union lidarmsg {
   char char_msg[40];
 };
 
-void test() {
+void testtcpserver() {
   tcpserver _tcpserver("9340");
   const int recv_size = 10;
   const int send_size = 40;
@@ -38,4 +38,9 @@ void test() {
     printf("The clients connected: %d\n", _tcpserver.getconnectioncount());
   }
 }
-int main() { test(); }
+int main() {
+  el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
+  LOG(INFO) << "The program has started!";
+  testtcpserver();
+  LOG(INFO) << "Shutting down.";
+}
