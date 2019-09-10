@@ -56,8 +56,8 @@ class threadloop {
 
   void mainloop() {
     std::thread planner_thread(&threadloop::plannerloop, this);
-    // std::thread estimator_thread(&threadloop::estimatorloop, this);
-    // std::thread controller_thread(&threadloop::controllerloop, this);
+    std::thread estimator_thread(&threadloop::estimatorloop, this);
+    std::thread controller_thread(&threadloop::controllerloop, this);
     std::thread sql_thread(&threadloop::sqlloop, this);
     std::thread socket_thread(&threadloop::socketloop, this);
 
@@ -66,8 +66,8 @@ class threadloop {
     // estimator_thread.detach();
     // sql_thread.detach();
     planner_thread.join();
-    // estimator_thread.join();
-    // controller_thread.join();
+    estimator_thread.join();
+    controller_thread.join();
     sql_thread.join();
     socket_thread.join();
   }

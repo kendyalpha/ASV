@@ -81,11 +81,34 @@ ax1.plot(wpdata['Y'], wpdata['X'], color='tab:gray', lineStyle='-', lw=1)
 ax1.axis('equal')
 ax1.set(xlabel='E (m)', ylabel='N (m)')
 
-plt.show()
-
 
 HOST = '127.0.0.1'
 PORT = 9340                # 设置端口号
+N_total = 100
+
+# state
+state_x = np.zeros(N_total)
+state_y = np.zeros(N_total)
+state_theta = np.zeros(N_total)
+state_u = np.zeros(N_total)
+state_v = np.zeros(N_total)
+state_r = np.zeros(N_total)
+
+# planner
+planner_curvature = np.zeros(N_total)
+planner_speed = np.zeros(N_total)
+planner_wpx0 = np.zeros(N_total)
+planner_wpy0 = np.zeros(N_total)
+planner_wpx1 = np.zeros(N_total)
+planner_wpy1 = np.zeros(N_total)
+
+# controller
+controller_taux = np.zeros(N_total)
+controller_tauy = np.zeros(N_total)
+controller_tauz = np.zeros(N_total)
+controller_n1 = np.zeros(N_total)
+controller_n2 = np.zeros(N_total)
+
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.settimeout(None)
@@ -94,6 +117,49 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.sendall(b'socket')
         data = s.recv(160)
         doubles_sequence = array.array('d', data)
+
+        # update state
+        state_x = np.delete(state_x, [0])
+        state_y = np.delete(state_y, [0])
+        state_theta = np.delete(state_theta, [0])
+        state_u = np.delete(state_u, [0])
+        state_v = np.delete(state_v, [0])
+        state_r = np.delete(state_r, [0])
+
+        state_x = np.append(state_x,  doubles_sequence[0])
+        state_y = np.append(state_y,  doubles_sequence[1])
+        state_theta = np.append(state_theta,  doubles_sequence[2])
+        state_u = np.append(state_u,  doubles_sequence[3])
+        state_v = np.append(state_v,  doubles_sequence[4])
+        state_r = np.append(state_r,  doubles_sequence[5])
+
+        # planner
+        planner_curvature = np.delete(planner_curvature, [0])
+        planner_speed = np.delete(planner_speed, [0])
+        planner_wyx0 = np.delete(planner_wyx0, [0])
+        planner_wyy0 = np.delete(planner_wyy0, [0])
+        planner_wyx1 = np.delete(planner_wyx1, [0])
+        planner_wyy1 = np.delete(planner_wyy1, [0])
+
+        planner_curvature = np.append(planner_curvature,  doubles_sequence[6])
+        planner_speed = np.append(planner_speed,  doubles_sequence[7])
+        planner_wyx0 = np.append(planner_wyx0,  doubles_sequence[8])
+        planner_wyy0 = np.append(planner_wyy0,  doubles_sequence[9])
+        planner_wyx1 = np.append(planner_wyx1,  doubles_sequence[10])
+        planner_wyy1 = np.append(planner_wyy1,  doubles_sequence[11])
+
+        # controller
+        controller_taux = np.delete(controller_taux, [0])
+        controller_tauy = np.delete(controller_tauy, [0])
+        controller_tauz = np.delete(controller_tauz, [0])
+        controller_n1 = np.delete(controller_n1, [0])
+        controller_n2 = np.delete(controller_n2, [0])
+
+        controller_taux = np.append(controller_taux,  doubles_sequence[12])
+        controller_tauy = np.append(controller_tauy,  doubles_sequence[13])
+        controller_tauz = np.append(controller_tauz,  doubles_sequence[14])
+        controller_n1 = np.append(controller_n1,  doubles_sequence[15])
+        controller_n2 = np.append(controller_n2,  doubles_sequence[16])
 
         # vessel profile
         vessel2dnew = _vessel2d.perform_tran(
@@ -104,34 +170,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         polygon = Polygon(vessel2dnew, True, color='black', alpha=0.4)
         ax1.add_patch(polygon)
 
-        # planner
-        x = np.zeros(N_ob)
-        y = np.zeros(N_ob)
-        for i in range(N_ob):
-            x[i] = doubles_sequence[3+2*i]
-            y[i] = doubles_sequence[4+2*i]
+        ax1.plot(planner_wyy0, planner_wyx0, "oc", markersize=3, alpha=0.4)
+        ax1.plot(planner_wyy1, planner_wyx1, "oc", markersize=3, alpha=0.4)
 
-        # trajectory tracking
-        radii = 0.2*np.ones(N_ob)
-        for x1, y1, r in zip(x, y, radii):
-            circle = Circle((x1, y1), r, color='red', alpha=0.4)
-            ax.add_patch(circle)
-
-        # controller
-        N_bp = int(doubles_sequence[13])
-        bestx = np.zeros(N_bp)
-        besty = np.zeros(N_bp)
-        for i in range(N_bp):
-            bestx[i] = doubles_sequence[14+2*i]
-            besty[i] = doubles_sequence[15+2*i]
-        plt.plot(bestx[1:], besty[1:], "-oc", markersize=3, alpha=0.4)
-
-        plt.axis('equal')
         area = 15.0  # animation area length [m]
-        plt.xlim(doubles_sequence[0] - area, doubles_sequence[0] + area)
-        plt.ylim(doubles_sequence[1] - area, doubles_sequence[1] + area)
+        # plt.xlim(doubles_sequence[0] - area, doubles_sequence[0] + area)
+        # plt.ylim(doubles_sequence[1] - area, doubles_sequence[1] + area)
         # plt.axis([-52, 52, -50, 50])
         plt.pause(0.1)
-        ax.clear()
+        ax1.clear()
 
     plt.show()

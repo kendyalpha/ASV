@@ -84,10 +84,11 @@ class tcpserver {
               CLOG(ERROR, "tcp-server") << "send: " << strerror(errno);
             }
           }
+
         }  // END handle data from client
       }    // END got new incoming connection
     }      // END looping through file descriptors
-  }
+  }        // selectserver()
 
   int getsocketresults() const noexcept { return results; }
   int getconnectioncount() const {
@@ -144,9 +145,15 @@ class tcpserver {
         continue;
       }
 
-      // lose the pesky "address already in use" error message
-      int yes = 1;  // for setsockopt() SO_REUSEADDR, below
-      setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+      // // lose the pesky "address already in use" error message
+      // int yes = 1;  // for setsockopt() SO_REUSEADDR, below
+      // setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+
+      struct timeval tv;
+      tv.tv_sec = 1;
+      tv.tv_usec = 0;
+      setsockopt(listener, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv,
+                 sizeof tv);
 
       if (bind(listener, p->ai_addr, p->ai_addrlen) < 0) {
         close(listener);

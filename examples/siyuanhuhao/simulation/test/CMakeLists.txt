@@ -34,10 +34,9 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 	"${PROJECT_SOURCE_DIR}/../../../../common/fileIO/include"
 	"${PROJECT_SOURCE_DIR}/../../../../common/property/include"
 	"${PROJECT_SOURCE_DIR}/../../../../common/logging/include"
-	"${PROJECT_SOURCE_DIR}/../../../../communication/include"
+	"${PROJECT_SOURCE_DIR}/../../../../common/communication/include"
 	"${PROJECT_SOURCE_DIR}/../../../../math/eigen"
 	"${PROJECT_SOURCE_DIR}/../../../../math/NumericalAnalysis/include"
-	"${PROJECT_SOURCE_DIR}/../../../../communication/include"
 	"/opt/mosek/9.0/tools/platform/linux64x86/h"
 	"/usr/include" 
     "${CMAKE_CURRENT_SOURCE_DIR}/../include")

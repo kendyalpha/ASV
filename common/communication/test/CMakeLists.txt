@@ -15,9 +15,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
     "../include/"
-   	"${PROJECT_SOURCE_DIR}/../../third_party/serial/include"
-   	"${PROJECT_SOURCE_DIR}/../../common/timer/include"
-   	"${PROJECT_SOURCE_DIR}/../../common/logging/include"
+   	"${PROJECT_SOURCE_DIR}/../../timer/include"
+   	"${PROJECT_SOURCE_DIR}/../../logging/include"
     )
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
@@ -26,7 +25,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
    )
  
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../common/logging/src/easylogging++.cc" )
+	"${PROJECT_SOURCE_DIR}/../../logging/src/easylogging++.cc" )
 
 # 指定生成目标
 add_executable (testcrc testcrc.cc)

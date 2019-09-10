@@ -18,6 +18,7 @@ int main() {
       0.1,  // sample_time
   };
   plannerRTdata _plannerRTdata{
+      0, 0,
       Eigen::Vector2d::Zero(),  // waypoint0
       Eigen::Vector2d::Zero(),  // waypoint1
       Eigen::Vector3d::Zero()   // command
