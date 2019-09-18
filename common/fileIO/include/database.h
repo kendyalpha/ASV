@@ -235,8 +235,8 @@ class database {
       // real-time data in the controller
       std::string str =
           "CREATE TABLE controller ("
-          "  ID          INTEGER PRIMARY KEY AUTOINCREMENT"
-          ", DATETIME    TEXT       NOT NULL "
+          "  ID            INTEGER PRIMARY KEY AUTOINCREMENT"
+          ", DATETIME      TEXT       NOT NULL "
           ", set_x         DOUBLE "
           ", set_y         DOUBLE "
           ", set_theta     DOUBLE " /* setpoint */

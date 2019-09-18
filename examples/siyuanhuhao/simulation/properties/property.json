@@ -5,9 +5,9 @@
   "property": {
     "L":3.1,
     "B":1.6,
-    "Mass": [425, 0, 0, 0, 425, 180, 0, 180, 920],
-    "AddedMass": [74, 0, 0, 0, 136, 144, 0, 144, 198],
-    "Damping": [25, 0, 0, 0, 30, 0, 0, 0, 100],
+    "Mass": [225, 0, 0, 0, 225, 90, 0, 90, 460],
+    "AddedMass": [37, 0, 0, 0, 68, 72, 0, 72, 80],
+    "Damping": [12, 0, 0, 0, 15, 0, 0, 0, 25],
     "CoG": [1.6, 0, 0],
     "velocity_limit": {
       "surge": [-4, 6],
@@ -19,23 +19,23 @@
   "controller": {
     "sample_time": 0.1,
      "LOS": {
-      "los_radius_co": 1,
+      "los_radius_co": 3,
       "capture_radius_co":0.7
     },
     "surge": {
-      "position_P": 5,
+      "position_P": 0,
       "position_I": 0.2,
-      "velocity_P": 2,
-      "velocity_I": 0,
+      "velocity_P": 50,
+      "velocity_I": 10,
       "position_allowed_error": 0.01,
       "velocity_allowed_error": 0.01,
-      "min_output": -24,
-      "max_output": 24
+      "min_output": -80,
+      "max_output": 80
     },
     "sway": {
-      "position_P": 3,
-      "position_I": 0.3,
-      "velocity_P": 1,
+      "position_P": 0,
+      "position_I": 0,
+      "velocity_P": 0,
       "velocity_I": 0,
       "position_allowed_error": 0.01,
       "velocity_allowed_error": 0.01,
@@ -43,14 +43,14 @@
       "max_output": 14
     },
     "yaw": {
-      "position_P": 10,
-      "position_I": 0.5,
-      "velocity_P": 10,
+      "position_P": 30,
+      "position_I": 0,
+      "velocity_P": 100,
       "velocity_I": 0,
       "position_allowed_error": 0.001,
       "velocity_allowed_error": 0.001,
-      "min_output": -15,
-      "max_output": 15
+      "min_output": -50,
+      "max_output": 50
     }
   },
   "thruster1": {

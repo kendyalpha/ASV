@@ -12,7 +12,7 @@ import pandas
 import matplotlib.pyplot as plt
 import math
 
-path = './data/'
+path = '../data/'
 X = pandas.read_csv(path+'x.csv')
 Y = pandas.read_csv(path+'y.csv')
 spline_X = pandas.read_csv(path+'spline_x.csv')

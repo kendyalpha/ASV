@@ -110,18 +110,11 @@ class threadloop {
       Eigen::Vector3d::Zero()               // BalphaU
   };
 
-  indicators _indicators{
-      0,  // gui_connection
-      0,  // joystick_connection
-      2,  // indicator_controlmode
-      0,  // indicator_windstatus
-  };
-
   int indicator_socket;
   int indicator_waypoint;
 
   planner _planner;
-  estimator<indicator_kalman> _estimator;
+  estimator<indicator_kalman, 1, 1, 1, 1, 1, 1> _estimator;
 
   trajectorytracking _trajectorytracking;
   controller<10, num_thruster, indicator_actuation, dim_controlspace>
@@ -148,7 +141,8 @@ class threadloop {
     Eigen::VectorXd Y(5);
 
     X << 0.0, 10.0, 20.5, 35.0, 70.5;
-    Y << 0.0, -6.0, 5.0, 6.5, 0.0;
+    Y << 0.0, 0, 5.0, 6.5, 0.0;
+
     Spline2D target_Spline2D(X, Y);
 
     sqlite::database db(
@@ -194,7 +188,7 @@ class threadloop {
       if (is <= s_max) {
         _plannerRTdata.waypoint0 = _plannerRTdata.waypoint1;
         _plannerRTdata.waypoint1 = target_Spline2D.compute_position(is);
-        _plannerRTdata.curvature = target_Spline2D.compute_curvature(is);
+        _plannerRTdata.curvature = -target_Spline2D.compute_curvature(is);
       } else {
         CLOG(INFO, "planner") << "Planner reach the last waypoint";
         break;
@@ -257,7 +251,7 @@ class threadloop {
     long int sample_time =
         static_cast<long int>(1000 * _estimator.getsampletime());
 
-    _estimator.setvalue(0, 0, 0, 0, 0, 57, 0, 0, 0);
+    _estimator.setvalue(0, 0, 0, 0, 0, 0, 0, 1, 0);
     CLOG(INFO, "GPS") << "initialation successful!";
 
     while (1) {

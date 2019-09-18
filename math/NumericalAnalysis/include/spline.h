@@ -212,7 +212,7 @@ class spline {
           interpol = 2.0 * m_b0 * h + m_c0;
           break;
         case 2:
-          interpol = 2.0 * m_b0 * h;
+          interpol = 2.0 * m_b0;
           break;
         default:
           interpol = 0.0;
@@ -260,12 +260,16 @@ class Spline2D {
  public:
   Spline2D(const Eigen::VectorXd& _x, const Eigen::VectorXd& _y)
       : n(0), X_2d(_x), Y_2d(_y) {
-    compute_arclength();
-    _SX.set_points(arclength, X_2d);
-    _SY.set_points(arclength, Y_2d);
+    setupspline2d();
   }
 
   virtual ~Spline2D() = default;
+  // re-calculate the interpolation
+  void reinterpolation(const Eigen::VectorXd& _x, const Eigen::VectorXd& _y) {
+    X_2d = _x;
+    Y_2d = _y;
+    setupspline2d();
+  }  // reinterpolation
   // calculate the x,y based on the arclength
   Eigen::Vector2d compute_position(double _arclength) const {
     return (Eigen::Vector2d() << _SX(_arclength), _SY(_arclength)).finished();
@@ -280,6 +284,22 @@ class Spline2D {
     kappa = (ddy * dx - ddx * dy) /
             std::pow(std::pow(dx, 2) + std::pow(dy, 2), 1.5);
     return kappa;
+  }  // compute_curvature
+     // calculate the derivative of curvature to arclength
+  double compute_dcurvature(double _arclength) const {
+    double dkappa = 0.0;
+    double dx = _SX.deriv(1, _arclength);
+    double ddx = _SX.deriv(2, _arclength);
+    double dddx = _SX.deriv(3, _arclength);
+    double dy = _SY.deriv(1, _arclength);
+    double ddy = _SY.deriv(2, _arclength);
+    double dddy = _SY.deriv(3, _arclength);
+    double squareterm = std::pow(dx, 2) + std::pow(dy, 2);
+    dkappa = ((dddy * dx - dddx * dy) * squareterm -
+              3 * (ddy * dx - ddx * dy) * (dx * ddx + dy * ddy)) /
+             std::pow(squareterm, 2.5);
+
+    return dkappa;
   }  // compute_curvature
   // calculate the orientation based on the arclength
   double compute_yaw(double _arclength) const {
@@ -296,6 +316,12 @@ class Spline2D {
 
   spline _SX;
   spline _SY;
+
+  void setupspline2d() {
+    compute_arclength();
+    _SX.set_points(arclength, X_2d);
+    _SY.set_points(arclength, Y_2d);
+  }  // setupspline2d
 
   void compute_arclength() {
     assert(X_2d.size() == Y_2d.size());

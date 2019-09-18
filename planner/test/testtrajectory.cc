@@ -44,8 +44,8 @@ int main() {
   for (int i = 0; i != 500; ++i) {
     _trajectorygenerator.trajectoryonestep();
 
-    auto _rx = _trajectorygenerator.getrx();
-    auto _ry = _trajectorygenerator.getry();
+    auto _rx = _trajectorygenerator.getCartRefX();
+    auto _ry = _trajectorygenerator.getCartRefY();
     auto _bestX = _trajectorygenerator.getbestX();
     auto _bestY = _trajectorygenerator.getbestY();
     auto _cx = _bestX(1);
@@ -66,6 +66,13 @@ int main() {
       _sendmsg.double_msg[2 * j + 14] = _bestX(j);  // best X
       _sendmsg.double_msg[2 * j + 15] = _bestY(j);  // best Y
     }
+
+    // _sendmsg.double_msg[13 + 2 * _bestX.size()] =
+    //     _rx.size();  // the length of vector
+    // for (int j = 0; j != _rx.size(); j++) {
+    //   _sendmsg.double_msg[2 * j + 14] = _bestX(j);  // best X
+    //   _sendmsg.double_msg[2 * j + 15] = _bestY(j);  // best Y
+    // }
 
     _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
                             send_size);

@@ -16,6 +16,10 @@
 
 #include "spline.h"
 
+constexpr double TARGET_COURSE_ARC_STEP = 0.05;  //[m]
+constexpr double SAMPLE_TIME = 0.1;              //[s]
+constexpr double MAX_SPEED = 30;                 //[m/s]
+
 struct Frenet_path {
   Eigen::VectorXd t;
   Eigen::VectorXd d;
@@ -66,8 +70,30 @@ struct currentstatus {
   double c_speed = 10.0 / 3.6;  // current speed (m/s)
   double c_d = 2.0;             // current lateral position (m)
   double c_d_d = 0.0;           // current lateral speed (m/s)
-  double c_d_dd = 0.0;          // current latral acceleration (m/s)
+  double c_d_dd = 0.0;          // current lateral acceleration (m/s)
   double s0 = 0.0;              // current course position
+};
+
+// state in the Cartesian coodinate
+struct CartesianState {
+  double x;
+  double y;
+  double theta;
+  double kappa;
+  double speed;
+  double dspeed;
+};
+
+// state in the Frenet coodinate
+struct FrenetState {
+  double s;      // s
+  double ds_t;   // ds/dt
+  double dds_t;  // dds/dt2
+  double d;      // d
+  double dd_t;   // dd/dt
+  double ddd_t;  // ddd/dt2
+  double dd_s;   // dd/ds
+  double ddd_s;  // ddd/ds2
 };
 
 class quintic_polynomial final : public polynomialvalue<5> {
@@ -203,10 +229,19 @@ class trajectorygenerator {
     updatecurrentstatus();
   }  // trajectoryonestep
 
-  Eigen::VectorXd getrx() const noexcept { return rx; }
-  Eigen::VectorXd getry() const noexcept { return ry; }
-  Eigen::VectorXd getryaw() const noexcept { return ryaw; }
-  Eigen::VectorXd getrk() const noexcept { return rk; }
+  void testtransform() {
+    Eigen::VectorXd wpx(5);
+    Eigen::VectorXd wpy(5);
+    WPx << 00.0, 20.0, 30.0, 50.0;
+    WPy << 00.0, 00.5, 04.5, 07.0;
+    generate_target_course(WPx, WPy);
+
+  }  // testtransform()
+
+  Eigen::VectorXd getCartRefX() const noexcept { return cart_RefX; }
+  Eigen::VectorXd getCartRefY() const noexcept { return cart_RefY; }
+  Eigen::VectorXd getRefHeading() const noexcept { return RefHeading; }
+  Eigen::VectorXd getRefKappa() const noexcept { return RefKappa; }
   Eigen::VectorXd getbestX() const noexcept { return _best_path.x; }
   Eigen::VectorXd getbestY() const noexcept { return _best_path.y; }
 
@@ -236,11 +271,13 @@ class trajectorygenerator {
   Eigen::VectorXd obstacle_x;
   Eigen::VectorXd obstacle_y;
 
+  // center line
   Spline2D target_Spline2D;
-  Eigen::VectorXd rx;    // reference x (m)
-  Eigen::VectorXd ry;    // reference y (m)
-  Eigen::VectorXd ryaw;  // reference yaw (rad)
-  Eigen::VectorXd rk;    // reference curvature ()
+  Eigen::VectorXd Frenet_s;    // arclength (m)
+  Eigen::VectorXd cart_RefX;   // reference x (m)
+  Eigen::VectorXd cart_RefY;   // reference y (m)
+  Eigen::VectorXd RefHeading;  // reference yaw (rad)
+  Eigen::VectorXd RefKappa;    // reference curvature
 
   currentstatus _currentstatus;
   parameters _para;
@@ -248,21 +285,21 @@ class trajectorygenerator {
   void generate_target_course() {
     Eigen::VectorXd s = target_Spline2D.getarclength();
 
-    double step = 0.05;
-    int n = 1 + static_cast<int>(s(s.size() - 1) / step);
-    rx.resize(n);
-    ry.resize(n);
-    ryaw.resize(n);
-    rk.resize(n);
+    int n = 1 + static_cast<int>(s(s.size() - 1) / TARGET_COURSE_ARC_STEP);
 
-    double is = 0.0;
+    Frenet_s.resize(n);
+    cart_RefX.resize(n);
+    cart_RefY.resize(n);
+    RefHeading.resize(n);
+    RefKappa.resize(n);
+
     for (int i = 0; i != n; i++) {
-      is = step * i;
-      Eigen::Vector2d position = target_Spline2D.compute_position(is);
-      rx(i) = position(0);
-      ry(i) = position(1);
-      rk(i) = target_Spline2D.compute_curvature(is);
-      ryaw(i) = target_Spline2D.compute_yaw(is);
+      Frenet_s(i) = TARGET_COURSE_ARC_STEP * i;
+      Eigen::Vector2d position = target_Spline2D.compute_position(Frenet_s(i));
+      cart_RefX(i) = position(0);
+      cart_RefY(i) = position(1);
+      RefHeading(i) = target_Spline2D.compute_curvature(Frenet_s(i));
+      RefKappa(i) = target_Spline2D.compute_yaw(Frenet_s(i));
     }
   }  // generate_target_course
 
@@ -563,7 +600,7 @@ class trajectorygenerator {
 
           // add to frenet_paths
           Frenet_path _frenet_path{
-              _t,      //  t
+              _t,      // t
               _d,      // d
               _d_d,    // d_d
               _d_dd,   // d_dd
@@ -586,6 +623,86 @@ class trajectorygenerator {
       }
     }
   }
+  // find the closest point on the reference spline, given a position (x, y)
+  int ClosestRefPoint(double _cart_vx, double _cart_vy,
+                      const Eigen::VectorXd &_cart_rx,
+                      const Eigen::VectorXd &_cart_ry) {
+    static int n_closestrefpoint = 0;
+    int previous_n_closestrefpoint = n_closestrefpoint;
+    double mindistance = std::pow(_cart_vx - _cart_rx(n_closestrefpoint), 2) +
+                         std::pow(_cart_vy - _cart_ry(n_closestrefpoint), 2);
+
+    // TODO: decide iteration number
+    int max_iteration =
+        static_cast<int>(SAMPLE_TIME * MAX_SPEED / TARGET_COURSE_ARC_STEP);
+
+    for (int i = 0; i != max_iteration; ++i) {
+      int n_refpoint = previous_n_closestrefpoint + i;
+      if ((0 <= n_refpoint) && (n_refpoint < _cart_rx.size())) {
+        double t_distance = std::pow(_cart_vx - _cart_rx(n_refpoint), 2) +
+                            std::pow(_cart_vy - _cart_ry(n_refpoint), 2);
+
+        if (t_distance < mindistance) {
+          mindistance = t_distance;
+          n_closestrefpoint = n_refpoint;
+        }
+      } else
+        continue;
+    }
+
+    return n_closestrefpoint;
+  }
+  // assume that we know the nearest arclength
+  void Cart2Frenet(const CartesianState &_cartstate_v,
+                   FrenetState &_frenetstate) {
+    // compute the closest point on the center line
+    int n_closestrefpoint =
+        ClosestRefPoint(_cartstate_v.x, _cartstate_v.y, cart_RefX, cart_RefY);
+    // arclength on center line
+    _frenetstate.s = Frenet_s(n_closestrefpoint);
+    // curvature of center line
+    double ref_kappa = RefKappa(n_closestrefpoint);
+    // dk/ds of center line
+    double ref_dcurvature_s =
+        target_Spline2D.compute_dcurvature(_frenetstate.s);
+    // heading of center line
+    double ref_heading = RefHeading(n_closestrefpoint);
+    // delta theta: (TODO: | delta_theta | < pi/2 )
+    double delta_theta = _cartstate_v.theta - ref_heading;
+    double cos_dtheta = std::cos(delta_theta);
+    double sin_dtheta = std::sin(delta_theta);
+    double tan_dtheta = std::tan(delta_theta);
+    // d
+    _frenetstate.d =
+        std::cos(ref_heading) *
+            (_cartstate_v.y - cart_RefY(n_closestrefpoint)) -
+        std::sin(ref_heading) * (_cartstate_v.x - cart_RefX(n_closestrefpoint));
+    // TODO: larger than zero
+    double curvaturerd = 1 - ref_kappa * _frenetstate.d;
+    // ds/dt
+    static double ds_t = 0;
+    double previous_ds_t = ds_t;
+    ds_t = _cartstate_v.speed * cos_dtheta / curvaturerd;
+    _frenetstate.ds_t = ds_t;
+    // dd/ds
+    _frenetstate.dd_s = curvaturerd * tan_dtheta;
+    // dd/dt
+    _frenetstate.dd_t = _cartstate_v.speed * sin_dtheta;
+    // ddd/ds2
+    _frenetstate.ddd_s =
+        -(ref_dcurvature_s * _frenetstate.d + ref_kappa * _frenetstate.dd_s) *
+            tan_dtheta +
+        (_cartstate_v.kappa * curvaturerd / cos_dtheta - ref_kappa) *
+            curvaturerd / std::pow(cos_dtheta, 2);
+    //
+    _frenetstate.dds_t = (ds_t - previous_ds_t) / SAMPLE_TIME;
+    _frenetstate.ddd_t = _frenetstate.ddd_s * std::pow(_frenetstate.ds_t, 2) +
+                         _frenetstate.dd_s * _frenetstate.dds_t;
+  }
+
+  // Transform from Frenet s,d coordinates to Cartesian x,y
+  void Frenet2Cart(const FrenetState &_frenetstate,
+                   CartesianState &_cartstate_v) {}
 };
 
 #endif /* _TRAJECTORYGENERATOR_H_*/

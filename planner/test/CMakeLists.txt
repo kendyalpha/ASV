@@ -51,6 +51,6 @@ set(SOURCE_FILES ${SOURCE_FILES}
 add_executable (testplanner testplanner.cc ${SOURCE_FILES} )
 target_include_directories(testplanner PRIVATE ${HEADER_DIRECTORY})
 
-add_executable (testtrajectory testtrajectory.cc )
+add_executable (testtrajectory testtrajectory.cc ${SOURCE_FILES} )
 target_include_directories(testtrajectory PRIVATE ${HEADER_DIRECTORY})
 

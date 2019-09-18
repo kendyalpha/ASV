@@ -77,10 +77,10 @@ fig,  ((ax1, ax2), (ax3, ax4)) = plt.subplots(
     nrows=2, ncols=2, figsize=(12, 12))
 fig.suptitle('Simulation of trajectory tracking algorithm')
 
-ax1.plot(wpdata['Y'], wpdata['X'], color='tab:gray', lineStyle='-', lw=1)
 ax1.axis('equal')
 ax1.set(xlabel='E (m)', ylabel='N (m)')
 
+ax1.set(xlabel='Time (s)', ylabel='N (m)')
 
 HOST = '127.0.0.1'
 PORT = 9340                # 设置端口号
@@ -136,17 +136,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # planner
         planner_curvature = np.delete(planner_curvature, [0])
         planner_speed = np.delete(planner_speed, [0])
-        planner_wyx0 = np.delete(planner_wyx0, [0])
-        planner_wyy0 = np.delete(planner_wyy0, [0])
-        planner_wyx1 = np.delete(planner_wyx1, [0])
-        planner_wyy1 = np.delete(planner_wyy1, [0])
+        planner_wpx0 = np.delete(planner_wpx0, [0])
+        planner_wpy0 = np.delete(planner_wpy0, [0])
+        planner_wpx1 = np.delete(planner_wpx1, [0])
+        planner_wpy1 = np.delete(planner_wpy1, [0])
 
         planner_curvature = np.append(planner_curvature,  doubles_sequence[6])
         planner_speed = np.append(planner_speed,  doubles_sequence[7])
-        planner_wyx0 = np.append(planner_wyx0,  doubles_sequence[8])
-        planner_wyy0 = np.append(planner_wyy0,  doubles_sequence[9])
-        planner_wyx1 = np.append(planner_wyx1,  doubles_sequence[10])
-        planner_wyy1 = np.append(planner_wyy1,  doubles_sequence[11])
+        planner_wpx0 = np.append(planner_wpx0,  doubles_sequence[8])
+        planner_wpy0 = np.append(planner_wpy0,  doubles_sequence[9])
+        planner_wpx1 = np.append(planner_wpx1,  doubles_sequence[10])
+        planner_wpy1 = np.append(planner_wpy1,  doubles_sequence[11])
 
         # controller
         controller_taux = np.delete(controller_taux, [0])
@@ -163,15 +163,25 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         # vessel profile
         vessel2dnew = _vessel2d.perform_tran(
-            doubles_sequence[0],  # x
-            doubles_sequence[1],  # y
+            doubles_sequence[1],  # x
+            doubles_sequence[0],  # y
             doubles_sequence[2]  # heading
         )
         polygon = Polygon(vessel2dnew, True, color='black', alpha=0.4)
         ax1.add_patch(polygon)
+        ax1.plot(wpdata['Y'], wpdata['X'],
+                 color='tab:gray', lineStyle='-', lw=1)
+        ax1.plot(doubles_sequence[9], doubles_sequence[8],
+                 "oc", markersize=3, alpha=0.4)
+        ax1.plot(doubles_sequence[11], doubles_sequence[10],
+                 "oc", markersize=3, alpha=0.4)
 
-        ax1.plot(planner_wyy0, planner_wyx0, "oc", markersize=3, alpha=0.4)
-        ax1.plot(planner_wyy1, planner_wyx1, "oc", markersize=3, alpha=0.4)
+        ax2.plot(controller_n1, color='tab:gray',
+                 lineStyle='-', lw=2, label='n1')
+        ax2.plot(controller_n2, color='tab:blue',
+                 lineStyle='--', lw=2, label='n2')
+        ax2.legend()
+        ax2.grid(True)
 
         area = 15.0  # animation area length [m]
         # plt.xlim(doubles_sequence[0] - area, doubles_sequence[0] + area)
@@ -179,5 +189,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # plt.axis([-52, 52, -50, 50])
         plt.pause(0.1)
         ax1.clear()
+        ax2.clear()
+        ax3.clear()
 
     plt.show()

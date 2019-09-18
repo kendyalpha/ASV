@@ -75,7 +75,7 @@ int main() {
       (Eigen::Vector3d() << 2, 0, 0).finished()  // cog2anntena_position
   };
 
-  database<3, 3> _sqlitetest("dbtest.db");
+  database<3, 3> _sqlitetest("../data/dbtest.db");
   _sqlitetest.initializetables();
   timecounter _timer;
   gpsimu _gpsimu(gps_data, 51, true, 115200);  // zone 51 N
