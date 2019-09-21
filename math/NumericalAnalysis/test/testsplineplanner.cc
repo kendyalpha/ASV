@@ -11,6 +11,8 @@
 #include "spline.h"
 #include "utilityio.h"
 
+using namespace ASV;
+
 int main() {
   Eigen::VectorXd X(7);
   Eigen::VectorXd Y(7);

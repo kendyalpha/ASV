@@ -22,6 +22,8 @@
 #include <iostream>
 #include <vector>
 
+namespace ASV {
+
 // spline interpolation
 class spline {
  public:
@@ -253,7 +255,7 @@ class spline {
     }
     return interpol;
   }  // deriv()
-};   // class spline
+};   // end class spline
 
 // two-dimensional spline with analytic form
 class Spline2D {
@@ -370,5 +372,7 @@ class polynomialvalue {
  protected:
   polyvector a;  // coefficent; a={a5, a4, a3, a2, a1, a0}
 };               // class polynomialvalue
+
+}  // end namespace ASV
 
 #endif /* TK_SPLINE_H */

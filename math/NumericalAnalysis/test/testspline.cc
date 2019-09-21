@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include "spline.h"
 #include "utilityio.h"
-
+using namespace ASV;
 int main() {
   Eigen::VectorXd X(5);
   Eigen::VectorXd Y(5);
