@@ -12,6 +12,9 @@
 #include <iostream>
 #include <thread>
 #include "wind.h"
+
+using namespace ASV;
+
 // real time wind sensor
 windRTdata _windRTdata{
     0,  // speed

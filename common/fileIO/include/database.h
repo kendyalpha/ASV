@@ -24,6 +24,8 @@
 #include "priority.h"
 #include "winddata.h"
 
+namespace ASV {
+
 template <int m, int n = 3>
 class database {
  public:
@@ -487,5 +489,7 @@ class database {
     out << std::fixed << _value;
     return out.str();
   }
-};
+};  // end class database
+}  // end namespace ASV
+
 #endif /* _DATABASE_H_ */

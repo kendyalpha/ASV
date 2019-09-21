@@ -11,6 +11,8 @@
 #include "thrustallocation.h"
 #include "utilityio.h"
 
+using namespace ASV;
+
 // test thrust allocation for 4 propellers (fully actuated)
 void testonestepthrustallocation() {
   const int m = 4;

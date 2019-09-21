@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <iostream>
 
+namespace ASV {
+
 template <typename TYPE>
 class CRC {
  public:
@@ -506,5 +508,7 @@ class CRC32 : public CRC<uint32_t> {
     crcInit();
   }
 };
+
+}  // namespace ASV
 
 #endif // CRCCOMPUTE_H

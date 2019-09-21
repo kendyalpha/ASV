@@ -11,7 +11,7 @@
 #include "utilityio.h"
 
 int main() {
-  utilityio _utilityio;
+  ASV::utilityio _utilityio;
 
   Eigen::MatrixXd mat(3, 4);
   mat << 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12;

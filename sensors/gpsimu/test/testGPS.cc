@@ -12,7 +12,7 @@
 #include "timecounter.h"
 
 using std::setprecision;
-
+using namespace ASV;
 int main() {
   // real time GPS/IMU data
   gpsRTdata gps_data{
@@ -32,7 +32,7 @@ int main() {
   };
   try {
     timecounter _timer;
-    gpsimu _gpsimu(gps_data, 51, true, 115200);  // zone 51 N
+    GPS _gpsimu(gps_data, 51, true, 115200);  // zone 51 N
     long int totaltime = 0;
     int count = 0;
     while (1) {

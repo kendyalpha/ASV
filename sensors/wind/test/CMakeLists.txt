@@ -12,7 +12,8 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 	"${PROJECT_SOURCE_DIR}/../../../math/eigen"
 	"${PROJECT_SOURCE_DIR}/../../../third_party/serial/include"
 	"${PROJECT_SOURCE_DIR}/../../serial_port/inc"
-	"${PROJECT_SOURCE_DIR}/../../../communication/include"
+	"${PROJECT_SOURCE_DIR}/../../../common/communication/include"
+	"${PROJECT_SOURCE_DIR}/../../../common/logging/include"
     "../include/")
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
@@ -22,6 +23,8 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 # thread 库
 find_package(Threads REQUIRED)
 
+set(SOURCE_FILES ${SOURCE_FILES} 
+	"${PROJECT_SOURCE_DIR}/../../../common/logging/src/easylogging++.cc")  
 
 # 指定生成目标
 add_executable (testwind testwind.cc)
@@ -31,7 +34,7 @@ target_link_libraries(testwind PUBLIC ${SERIAL_LIBRARY})
 target_link_libraries(testwind PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 
 
-add_executable (testwindsocket testwindsocket.cc)
+add_executable (testwindsocket testwindsocket.cc ${SOURCE_FILES} )
 target_include_directories(testwindsocket PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testwindsocket PUBLIC ${SERIAL_LIBRARY})
 target_link_libraries(testwindsocket PUBLIC ${SERIAL_LIBRARY})

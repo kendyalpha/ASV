@@ -25,9 +25,7 @@
 #include "easylogging++.h"
 #include "mosek.h"
 
-// # of thread used by mosek
-#define QP_THREADS_USED 1
-
+namespace ASV {
 // m: # of all thrusters on the vessel
 // n: # of dimension of control space
 template <int m, ACTUATION index_actuation, int n = 3>
@@ -401,6 +399,7 @@ class thrustallocation {
     /* Create the optimization task. */
     r = MSK_maketask(env, num_constraints, numvar, &task);
     // set up the threads used by mosek
+    const int QP_THREADS_USED = 1;  // # of thread used by mosek
     r = MSK_putintparam(task, MSK_IPAR_NUM_THREADS, QP_THREADS_USED);
     // r = MSK_linkfunctotaskstream(task, MSK_STREAM_LOG, NULL, printstr);
     r = MSK_linkfunctotaskstream(task, MSK_STREAM_LOG, NULL, NULL);
@@ -927,7 +926,7 @@ class thrustallocation {
       g[i + m] = d_rho(i);
       qval[i] = Q_deltau(i, i);
     }
-  }
+  }  // updateMosekparameters
 
   // 一元二次方程
   double computeabcvalue(double a, double b, double c, double x) {
@@ -1022,7 +1021,8 @@ class thrustallocation {
             << " - " << std::string(desc);
       }
     }
-  }
-};
+  }  // onestepmosek
+};   // end class thrustallocation
+}  // end namespace ASV
 
 #endif /* _THRUSTALLOCATION_H_*/

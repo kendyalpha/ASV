@@ -24,6 +24,8 @@
 
 #include "easylogging++.h"
 
+namespace ASV {
+
 class tcpserver {
  public:
   explicit tcpserver(const std::string &_port)
@@ -183,5 +185,7 @@ class tcpserver {
     fdmax = listener;  // so far, it's this one
   }
 };
+
+}  // end namespace ASV
 
 #endif /*_TCPSERVER_H_*/

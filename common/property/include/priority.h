@@ -17,6 +17,8 @@
 // #include "motorclientdata.h"
 // #include "plannerdata.h"
 
+namespace ASV {
+
 struct indicators {
   // indicator for gui connection: 0 --> disconnect, 1 -->connect
   int gui_connection;
@@ -25,5 +27,7 @@ struct indicators {
   int indicator_controlmode;
   int indicator_windstatus;
 };
+
+}  // end namespace ASV
 
 #endif /* _PRIORITY_H_ */

@@ -15,6 +15,8 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
+namespace ASV {
+
 enum class USEKALMAN {
   KALMANOFF = 0,  // turn off kalman filtering
   KALMANON        // turn on kalman filtering
@@ -82,5 +84,7 @@ struct sealoadRTdata {
   Eigen::Vector3d windload;
   WINDCOMPENSATION windstatus;
 };
+
+}  // end namespace ASV
 
 #endif /*_ESTIMATORDATA_H_*/

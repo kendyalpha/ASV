@@ -15,6 +15,8 @@
 #include <Eigen/Dense>
 #include <vector>
 
+namespace ASV {
+
 enum class CONTROLMODE {
   MANUAL = 0,      // manual controller
   HEADINGONLY,     // heading only controller (autopilot)
@@ -138,5 +140,7 @@ struct pidcontrollerdata {
   double min_output;
   double max_output;
 };
+
+}  // end namespace ASV
 
 #endif /* _CONTROLLERDATA_H_ */

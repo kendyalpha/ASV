@@ -2,7 +2,7 @@
 #include "eigenmvnd.hpp"
 #include "kalmanfilter.h"
 #include "utilityio.h"
-
+using namespace ASV;
 void test1d() { /* Set Matrix and Vector for Kalman Filter: */
   Eigen::MatrixXd A(1, 1);
   A << 1;

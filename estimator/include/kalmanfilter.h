@@ -34,6 +34,8 @@
 #include "estimatordata.h"
 #include "vesseldata.h"
 
+namespace ASV {
+
 // Kalman filtering for linear system
 template <int l = 1, int m = 1, int n = 1>
 class kalmanfilter {
@@ -149,7 +151,7 @@ class kalmanfilter {
 
   /*Set Fixed Matrix(NO INPUT) */
   void updatesystem(const matrixnnd &_A) { A = _A; }
-};
+};  //  // end class kalmanfilter
 
 // Kalman filtering for surface vessel
 class USV_kalmanfilter : public kalmanfilter<3, 6, 6> {
@@ -196,7 +198,10 @@ class USV_kalmanfilter : public kalmanfilter<3, 6, 6> {
   // real time update the Kalman filter matrix using orientation
   void updateKalmanA(const Eigen::Matrix3d &_CTB2G) {
     A.topRightCorner(3, 3) = sample_time * _CTB2G;
-  }
-};
+  }  // updateKalmanA
+
+};  // end class USV_kalmanfilter
+
+}  // end namespace ASV
 
 #endif /* _KALMANFILTER_H_ */

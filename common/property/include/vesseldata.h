@@ -15,6 +15,8 @@
 #include <Eigen/Dense>
 #include <vector>
 
+namespace ASV {
+
 // 船体的参数
 struct vessel {
   // mass property
@@ -38,5 +40,7 @@ struct vessel {
   double L;  // total length of vessel
   double B;  // total width of vessel
 };
+
+}  // end namespace ASV
 
 #endif /* _VESSELDATA_H_ */

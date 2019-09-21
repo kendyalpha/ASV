@@ -10,6 +10,8 @@
 #include "database.h"
 #include "timecounter.h"
 
+using namespace ASV;
+
 int main() {
   const int m = 3;
   const int n = 3;
@@ -62,10 +64,11 @@ int main() {
       (Eigen::Vector3d() << 0, 0, 1).finished(),  // setpoint
       Eigen::Matrix<double, 3, 1>::Zero()         // v_setpoint
   };
+
   plannerRTdata _plannerRTdata{
-      Eigen::Vector2d::Zero(),  // waypoint0
-      Eigen::Vector2d::Zero(),  // waypoint1
-      Eigen::Vector3d::Zero()   // command
+      0, 0, Eigen::Vector2d::Zero(),  // waypoint0
+      Eigen::Vector2d::Zero(),        // waypoint1
+      Eigen::Vector3d::Zero()         // command
   };
 
   indicators _indicators{

@@ -15,6 +15,7 @@
 #include <Eigen/Dense>
 #include <vector>
 
+namespace ASV {
 union windsocketmsg {
   double double_msg[2];
   char char_msg[16];
@@ -24,5 +25,7 @@ struct windRTdata {
   double speed;        // m/s
   double orientation;  // rad
 };
+
+}  //  end namespace ASV
 
 #endif /* _WINDDATA_H_ */

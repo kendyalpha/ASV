@@ -14,6 +14,8 @@
 #include "serial/serial.h"
 #include "winddata.h"
 
+namespace ASV {
+
 class wind {
  public:
   explicit wind(unsigned long _baud,  // baudrate
@@ -51,6 +53,8 @@ class wind {
     if ((_wspeed < 0) || (_wspeed > 300)) _wspeed = 0;
     if ((_orientation < 0) || (_orientation >= 360)) _orientation = 0;
   }
-};
+};  // end class wind
+
+}  // end namespace ASV
 
 #endif /*_WIND_H_*/

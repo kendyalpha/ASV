@@ -12,7 +12,7 @@
 
 int main() {
   // read a JSON file
-  jsonparse<6, 3> _jsonparse("../data/test.json");
+  ASV::jsonparse<6, 3> _jsonparse("../data/test.json");
   _jsonparse.readjson();
   std::cout << _jsonparse << std::endl;
 }

@@ -13,6 +13,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/timer.hpp>
 
+namespace ASV {
+
 class timecounter {
   using T_BOOST_CLOCK =
       boost::date_time::microsec_clock<boost::posix_time::ptime>;
@@ -31,6 +33,8 @@ class timecounter {
 
  private:
   boost::posix_time::ptime t_start;
-};
+};  // end class timecounter
+
+}  // end namespace ASV
 
 #endif /*_TIMECOUNTER_H_*/

@@ -19,6 +19,7 @@
 #include "thrustallocation.h"
 #include "vesseldata.h"
 
+namespace ASV {
 // n: # of dimension of control space
 // m: # of all thrusters on the vessel
 // L: # of integral length of PID controller
@@ -305,6 +306,8 @@ class controller {
     for (int i = 0; i != n; ++i)
       _tau(i) += quadraticdamping(i, i) * std::pow(_desired_speed(i), 2);
   }
-};
+};  // end class controller
+
+}  // end namespace ASV
 
 #endif /*_CONTROLLER_H_*/

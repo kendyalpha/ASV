@@ -17,6 +17,8 @@
 #include <iostream>
 #include <vector>
 
+namespace ASV {
+
 class utilityio {
  public:
   utilityio() {}
@@ -48,7 +50,7 @@ class utilityio {
   std::vector<double> convertEigenVec2stdvector(const Eigen::VectorXd &_vec) {
     std::vector<double> vec(_vec.data(), _vec.data() + _vec.size());
     return vec;
-  }
+  }  // convertEigenVec2stdvector
 
   // write Eigen matrix into csv file (double)
   void write2csvfile(const std::string &name, const Eigen::MatrixXd &_matrix) {
@@ -76,7 +78,7 @@ class utilityio {
       // data
       file << _vector.format(CSVFormat);
     }
-  }
+  }  // write2csvfile
   // write Eigen matrix into csv file (int)
   void write2csvfile(const std::string &name, const Eigen::MatrixXi &_matrix) {
     const static Eigen::IOFormat CSVFormat(Eigen::StreamPrecision,
@@ -91,7 +93,9 @@ class utilityio {
       // data
       file << _matrix.format(CSVFormat);
     }
-  }
-};
+  }  // write2csvfile
+
+};  // end class utilityio
+}  // end  namespace ASV
 
 #endif /*UTILITYIO_H*/

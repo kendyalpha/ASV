@@ -12,6 +12,7 @@
 #ifndef _GPSDATA_H_
 #define _GPSDATA_H_
 
+namespace ASV {
 // real-time data from the gps/imu sensors
 struct gpsRTdata {
   double UTC;       // hhmmss.ss  UTC时间
@@ -31,6 +32,8 @@ struct gpsRTdata {
   double UTM_y;  // 投影的 y (m)
 
 };
+
+}  // end namespace ASV
 
 
 #endif /* _GPSDATA_H_ */

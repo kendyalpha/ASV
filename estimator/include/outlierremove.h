@@ -14,6 +14,7 @@
 #include <Eigen/Dense>
 #include <cmath>
 
+namespace ASV {
 class outlierremove {
  public:
   explicit outlierremove(double vmax, double vmin, double sample_time,
@@ -37,6 +38,7 @@ class outlierremove {
   const double delta_max;
   const double delta_min;
   double last_value;
-};
+};  // end class outlierremove
+}  // end namespace ASV
 
 #endif /* OUTLIERREMOVE_H */

@@ -2,7 +2,7 @@
 #include "crc.h"
 
 using namespace std;
-
+using namespace ASV;
 int main(int argc, char* argv[]) {
   CRC16 crc16(CRC16::eCCITT_FALSE);
   string str = "123456780";

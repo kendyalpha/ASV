@@ -18,7 +18,7 @@ union lidarmsg {
 };
 
 void testtcpserver() {
-  tcpserver _tcpserver("9340");
+  ASV::tcpserver _tcpserver("9340");
   const int recv_size = 10;
   const int send_size = 40;
   static int count = 0;

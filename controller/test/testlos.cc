@@ -20,7 +20,7 @@ int main() {
   wp1 << 3433875, 351046;
   wp2 << 3433895, 351058;
   wp3 << 3433890, 351050;
-  lineofsight _lineofsight(L, 0);
+  ASV::lineofsight _lineofsight(L, 0);
 
   Eigen::Vector2d vp = Eigen::Vector2d::Zero();
   vp << 3433894.584, 351058.1;

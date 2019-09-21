@@ -24,13 +24,14 @@
 #include "nmea.h"
 #include "serial/serial.h"
 
-class gpsimu final : public nmea {
+namespace ASV {
+class GPS final : public nmea {
  public:
-  explicit gpsimu(const gpsRTdata& _gpsRTdata,  //
-                  int _zone,                    // the UTM zone
-                  bool _northp,                 // hemisphere,
-                  unsigned long _baud,          // baudrate
-                  const std::string& _port = "/dev/ttyUSB0")
+  explicit GPS(const gpsRTdata& _gpsRTdata,  //
+               int _zone,                    // the UTM zone
+               bool _northp,                 // hemisphere,
+               unsigned long _baud,          // baudrate
+               const std::string& _port = "/dev/ttyUSB0")
       : GPSdata(_gpsRTdata),
         GPS_serial(_port, _baud, serial::Timeout::simpleTimeout(2000)),
         serial_buffer(""),
@@ -43,11 +44,11 @@ class gpsimu final : public nmea {
     if (!(_zone >= 1 && _zone <= 60))
       throw GeographicLib::GeographicErr("zone not in [1,60]");
   }
-  gpsimu() = delete;
-  ~gpsimu() {}
+  GPS() = delete;
+  ~GPS() {}
 
   // read serial data and transform to UTM
-  gpsimu& gpsonestep() {
+  GPS& gpsonestep() {
     serial_buffer = GPS_serial.readline(150);
 
     hemisphereV102(serial_buffer, GPSdata);
@@ -163,6 +164,7 @@ class gpsimu final : public nmea {
     _Ve = _speed * svalue;
     _Vn = _speed * cvalue;
   }
-};
+};  // end class GPS
+}  // end namespace ASV
 
 #endif

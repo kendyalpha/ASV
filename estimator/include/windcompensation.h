@@ -14,6 +14,8 @@
 #include "estimatordata.h"
 #include "lowpass.h"
 
+namespace ASV {
+
 class windcompensation {
  public:
   windcompensation(const sealoadRTdata &_sealoadRTdata)
@@ -97,8 +99,10 @@ class windcompensation {
     Fy = temp_force * Cy * ALW;  // Fy
     Mz = 0;
 
-  } //computewindload
-};
+  }  // computewindload
+}; // end windcompensation
+}  // end namespace ASV
+
 
 #endif /*_WINDCOMPENSATION_H_*/
 

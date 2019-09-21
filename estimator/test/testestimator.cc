@@ -11,6 +11,8 @@
 #include "estimator.h"
 #include "windcompensation.h"
 
+using namespace ASV;
+
 int main() {
   vessel _vessel{
       (Eigen::Matrix3d() << 100, 0, 1, 0, 100, 0, 1, 0, 1000)

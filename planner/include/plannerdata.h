@@ -28,4 +28,26 @@ struct plannerdata {
   double sample_time;
 };
 
+// state in the Cartesian coodinate
+struct CartesianState {
+  double x;
+  double y;
+  double theta;
+  double kappa;
+  double speed;
+  double dspeed;
+};
+
+// state in the Frenet coodinate
+struct FrenetState {
+  double s;      // s
+  double ds_t;   // ds/dt
+  double dds_t;  // dds/dt2
+  double d;      // d
+  double dd_t;   // dd/dt
+  double ddd_t;  // ddd/dt2
+  double dd_s;   // dd/ds
+  double ddd_s;  // ddd/ds2
+};
+
 #endif /*_PLANNERDATA_H_*/

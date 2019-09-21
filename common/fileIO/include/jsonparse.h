@@ -30,6 +30,7 @@ body-fixed coordinate (BODY); whose origin located at the stern
 body-fixed coordinate (BODY-G), whose origin located at the center of gravity
 */
 
+namespace ASV {
 template <int m, int n = 3>
 class jsonparse {
   template <int _m, int _n>
@@ -478,7 +479,7 @@ class jsonparse {
   }
 
   void parsegps() {}
-};
+};  // end class jsonparse
 
 template <int _m, int _n>
 std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
@@ -582,6 +583,7 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
   os << "dbpath:\n";
   os << _jp.dbpath << std::endl;
   return os;
-}
+}  // friend operator<<
+}  // end namespace ASV
 
 #endif /* JSONPARSE_H */

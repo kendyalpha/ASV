@@ -15,6 +15,7 @@
 #include "windcompensation.h"
 
 using std::setprecision;
+using namespace ASV;
 
 int main() {
   // real time GPS/IMU data
@@ -78,7 +79,7 @@ int main() {
   database<3, 3> _sqlitetest("../data/dbtest.db");
   _sqlitetest.initializetables();
   timecounter _timer;
-  gpsimu _gpsimu(gps_data, 51, true, 115200);  // zone 51 N
+  GPS _gpsimu(gps_data, 51, true, 115200);  // zone 51 N
   estimator<USEKALMAN::KALMANOFF> _estimator(_estimatorRTdata, _vessel,
                                              estimatordata_input);
   _estimator.setvalue(gps_data.UTM_x, gps_data.UTM_y, gps_data.altitude,

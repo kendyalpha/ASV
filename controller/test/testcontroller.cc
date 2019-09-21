@@ -11,6 +11,8 @@
 #include "controller.h"
 #include "utilityio.h"
 
+using namespace ASV;
+
 void test_multiplecontroller() {
   // set the parameters in the thrust allocation
   const int L = 30;
@@ -87,7 +89,7 @@ void test_multiplecontroller() {
       Eigen::Matrix3d::Zero(),  // AddedMass
       (Eigen::Matrix3d() << 100, 0, 0, 0, 200, 0, 0, 0, 300)
           .finished(),          // Damping
-      Eigen::Vector2d::Zero(),  // cog
+      Eigen::Vector3d::Zero(),  // cog
       Eigen::Vector2d::Zero(),  // x_thrust
       Eigen::Vector2d::Zero(),  // y_thrust
       Eigen::Vector2d::Zero(),  // mz_thrust

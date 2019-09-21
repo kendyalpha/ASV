@@ -14,6 +14,8 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
+namespace ASV {
+
 template <int num_lowpass>
 class lowpass {
   using vectorlp = Eigen::Matrix<double, num_lowpass, 1>;
@@ -40,6 +42,8 @@ class lowpass {
 
  private:
   vectorlp averagevector;
-};
+};  // end class lowpass
+
+}  // end namespace ASV
 
 #endif /* _LOWPASS_H_ */

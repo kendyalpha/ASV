@@ -13,6 +13,8 @@
 #include "lowpass.h"
 #include "outlierremove.h"
 
+namespace ASV {
+
 template <USEKALMAN indicator_kalman, int nlp_x = 1, int nlp_y = 1,
           int nlp_z = 1, int nlp_heading = 1, int nlp_roll = 1,
           int nlp_pitch = 1, int nlp_u = 3, int nlp_v = 3, int nlp_roti = 1>
@@ -110,7 +112,8 @@ class estimator {
     Eigen::Vector3d _perror = Eigen::Vector3d::Zero();
     for (int i = 0; i != 2; ++i)
       _perror(i) = _setpoints(i) - EstimatorRTData.State(i);
-    _perror(2) = restrictheadingangle(_setpoints(2) - EstimatorRTData.State(2));
+    _perror(2) =
+        Normalizeheadingangle(_setpoints(2) - EstimatorRTData.State(2));
 
     EstimatorRTData.p_error = EstimatorRTData.CTG2B * _perror;
     EstimatorRTData.v_error = _vsetpoints - EstimatorRTData.State.tail(3);
@@ -166,7 +169,7 @@ class estimator {
     double cvalue = 0.0;
     double svalue = 0.0;
 
-    if (std::abs(restrictheadingangle(_rtheading - desired_heading)) <
+    if (std::abs(Normalizeheadingangle(_rtheading - desired_heading)) <
         M_PI / 36) {
       // use the fixed setpoint orientation to prevent measurement noise
       cvalue = std::cos(desired_heading);
@@ -208,16 +211,13 @@ class estimator {
 
   // restrict heading angle or delta heading to (-PI ~ PI)
   // compute the delta heading to find the shortest way to rotate
-  double restrictheadingangle(double _heading) noexcept {
-    double heading = 0;
-    if (_heading > M_PI)
-      heading = _heading - 2 * M_PI;
-    else if (_heading < -M_PI)
-      heading = _heading + 2 * M_PI;
-    else
-      heading = _heading;
-    return heading;
-  }
+  double Normalizeheadingangle(double _heading) noexcept {
+    double a = std::fmod(_heading + M_PI, 2.0 * M_PI);
+    if (a < 0.0) {
+      a += (2.0 * M_PI);
+    }
+    return a - M_PI;
+  }  // Normalizeheadingangle
 
   // GPS primary antenna is different from CoG, such deviation should be
   // considered.
@@ -257,10 +257,11 @@ class estimator {
     _motionrawdata.gps_pitch = degree2rad(_motionrawdata.gps_pitch);
     // convert degree to rad and -pi ~ pi
     _motionrawdata.gps_heading =
-        restrictheadingangle(degree2rad(_motionrawdata.gps_heading));
+        Normalizeheadingangle(degree2rad(_motionrawdata.gps_heading));
     _motionrawdata.gps_roti =
         degree2rad(_motionrawdata.gps_roti) / 60.0;  // degree/min -> rad/s
-  }
+
+  }  // convert2standardunit
 
   void initializeLowpass(const estimatorRTdata& _RTdata) {
     // low pass for position of CoG
@@ -274,7 +275,7 @@ class estimator {
     u_lowpass.setaveragevector(_RTdata.Measurement(3));
     v_lowpass.setaveragevector(_RTdata.Measurement(4));
     roti_lowpass.setaveragevector(_RTdata.Measurement(5));
-  }
+  }  // initializeLowpass
 
   void performlowpass(estimatorRTdata& _RTdata) {
     // low pass for position of CoG
@@ -290,10 +291,15 @@ class estimator {
     // pitch_lowpass.movingaverage(_RTdata.Measurement_6dof(4));
   }
 
-  double rad2degree(double _rad) const noexcept { return _rad * 180.0 / M_PI; }
+  double rad2degree(double _rad) const noexcept {
+    return _rad * 180.0 / M_PI;
+  }  // rad2degree
+
   double degree2rad(double _degree) const noexcept {
     return _degree * M_PI / 180.0;
-  }
-};
+  }  // degree2rad
+
+};  // end class estimator
+}  // end namespace ASV
 
 #endif /* _ESTIMATOR_H_ */

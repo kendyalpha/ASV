@@ -39,16 +39,12 @@ class planner {
   double sample_time;
   plannerRTdata PlannerRTdata;
 
-  // restrict heading angle (0-2PI) to (-PI ~ PI)
-  double restrictheadingangle(double _heading) noexcept {
-    double heading = 0.0;
-    if (_heading > M_PI)
-      heading = _heading - 2 * M_PI;
-    else if (_heading < -M_PI)
-      heading = _heading + 2 * M_PI;
-    else
-      heading = _heading;
-    return heading;
+  double Normalizeheadingangle(double _heading) noexcept {
+    double a = std::fmod(_heading + M_PI, 2.0 * M_PI);
+    if (a < 0.0) {
+      a += (2.0 * M_PI);
+    }
+    return a - M_PI;
   }
 
   //

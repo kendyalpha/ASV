@@ -19,6 +19,8 @@
 #include "controllerdata.h"
 #include "easylogging++.h"
 
+namespace ASV {
+
 class lineofsight {
  public:
   explicit lineofsight(double _los_radius, double _capture_radius = 0)
@@ -88,7 +90,7 @@ class lineofsight {
     R(1, 0) = svalue;
     R(1, 1) = cvalue;
   }  // computeR
-};
+};   // end class lineofsight
 
 class trajectorytracking final : public lineofsight {
  public:
@@ -164,6 +166,9 @@ class trajectorytracking final : public lineofsight {
  private:
   trackerRTdata TrackerRTdata;
   const double sample_time;  // sample time of controller
-};
+
+};  // end class trajectorytracking
+
+}  // end namespace ASV
 
 #endif /* _TRAJECTORYTRACKING_H_ */
