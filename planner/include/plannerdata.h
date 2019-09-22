@@ -35,8 +35,8 @@ struct CartesianState {
   double y;
   double theta;
   double kappa;
-  double speed;
-  double dspeed;
+  double speed;   // vx
+  double dspeed;  // ax
 };
 
 // state in the Frenet coodinate

@@ -1,5 +1,5 @@
 # CMake 最低版本号要求
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 3.8)
 
 # 项目信息
 project (testtimer)
@@ -23,19 +23,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../include"
-	"${PROJECT_SOURCE_DIR}/../../../fileIO/include"
-	"${PROJECT_SOURCE_DIR}/../../../timer/include"
-	"${PROJECT_SOURCE_DIR}/../../eigen/"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	"/usr/include" )
 
 
-set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} "/usr/lib")
 # 指定生成目标
 
-add_executable (testspline testspline.cc)
-target_include_directories(testspline PRIVATE ${HEADER_DIRECTORY})
-
-add_executable (testsplineplanner testsplineplanner.cc)
-target_include_directories(testsplineplanner PRIVATE ${HEADER_DIRECTORY})
-
+add_executable (testmath testmathutils.cc)
+target_include_directories(testmath PRIVATE ${HEADER_DIRECTORY})

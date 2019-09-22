@@ -86,7 +86,7 @@ int main() {
     }
 
     long int et = _timer.timeelapsed();
-    // std::cout << et << std::endl;
+    std::cout << et << std::endl;
   }
 
   // utilityio _utilityio;

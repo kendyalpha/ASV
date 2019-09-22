@@ -14,6 +14,7 @@
 #ifndef _TRAJECTORYGENERATOR_H_
 #define _TRAJECTORYGENERATOR_H_
 
+#include "easylogging++.h"
 #include "planner_util.h"
 #include "plannerdata.h"
 
@@ -26,42 +27,42 @@ constexpr double MAX_SPEED = 30;                 //[m/s]
 struct Frenet_path {
   Eigen::VectorXd t;
   Eigen::VectorXd d;
-  Eigen::VectorXd d_d;
-  Eigen::VectorXd d_dd;
-  Eigen::VectorXd d_ddd;
+  Eigen::VectorXd d_dot;
+  Eigen::VectorXd d_ddot;
+  Eigen::VectorXd d_dddot;
   Eigen::VectorXd s;
-  Eigen::VectorXd s_d;
-  Eigen::VectorXd s_dd;
-  Eigen::VectorXd s_ddd;
-  Eigen::VectorXd dd_s;
-  Eigen::VectorXd ddd_s;
-  double cd;
-  double cv;
-  double cf;
-
+  Eigen::VectorXd s_dot;
+  Eigen::VectorXd s_ddot;
+  Eigen::VectorXd s_dddot;
+  Eigen::VectorXd d_prime;
+  Eigen::VectorXd d_pprime;
   Eigen::VectorXd x;
   Eigen::VectorXd y;
   Eigen::VectorXd yaw;
-  Eigen::VectorXd ds;
-  Eigen::VectorXd c;
+  Eigen::VectorXd kappa;
+  Eigen::VectorXd speed;
+  Eigen::VectorXd dspeed;
+  double cd;
+  double cv;
+  double cf;
 };
 
 struct parameters {
-  double MAX_SPEED = 50.0 / 3.6;    // maximum speed [m/s]
-  double MAX_ACCEL = 2.0;           // maximum acceleration [m/ss]
-  double MAX_CURVATURE = 1.0;       // maximum curvature [1/m]
-  double MAX_ROAD_WIDTH = 7.0;      // maximum road width [m]
-  double D_ROAD_W = 1.0;            // road width sampling length [m]
-  double DT = 0.2;                  // time tick [s]
-  double MAXT = 5.0;                // max prediction time [s]
-  double MINT = 4.0;                // min prediction time [s]
-  double DS = 0.2;                  // [m]
-  double MAXS = 5.0;                // max arclength [m]
-  double MINS = 4.0;                // min arclength [m]
-  double TARGET_SPEED = 5.0 / 3.6;  // target speed [m/s]
-  double D_T_S = 0.50 / 3.6;        // target speed sampling length[m / s]
-  double N_S_SAMPLE = 1;            // sampling number of target speed
-  double ROBOT_RADIUS = 2.0;        // robot radius[m]
+  double MAX_SPEED = 50.0 / 3.6;     // maximum speed [m/s]
+  double MAX_ACCEL = 2.0;            // maximum acceleration [m/ss]
+  double MAX_CURVATURE = 1.0;        // maximum curvature [1/m]
+  double MAX_ROAD_WIDTH = 7.0;       // maximum road width [m]
+  double D_ROAD_W = 1.0;             // road width sampling length [m]
+  double DT = 0.2;                   // time tick [s]
+  double MAXT = 5.0;                 // max prediction time [s]
+  double MINT = 4.0;                 // min prediction time [s]
+  double DS = 0.2;                   // [m]
+  double MAXS = 5.0;                 // max arclength [m]
+  double MINS = 4.0;                 // min arclength [m]
+  double TARGET_SPEED = 30.0 / 3.6;  // target speed [m/s]
+  double D_T_S = 5.0 / 3.6;          // target speed sampling length[m / s]
+  double N_S_SAMPLE = 1;             // sampling number of target speed
+  double ROBOT_RADIUS = 2.0;         // robot radius[m]
 
   // cost weights
   double KJ = 0.1;
@@ -71,17 +72,11 @@ struct parameters {
   double KLON = 1.0;
 };
 
-struct currentstatus {
-  double c_speed = 10.0 / 3.6;  // current speed (m/s)
-  double c_d = 2.0;             // current lateral position (m)
-  double c_dd_t = 0.0;          // current lateral speed (m/s)
-  double c_ddd_t = 0.0;         // current lateral acceleration (m/s)
-  double s0 = 0.0;              // current course position
-};
-
 class trajectorygenerator {
-  friend void transformf2c(trajectorygenerator &, FrenetState &,
+  friend void transformf2c(trajectorygenerator &, const FrenetState &,
                            CartesianState &);
+  friend void transformc2f(trajectorygenerator &, FrenetState &,
+                           const CartesianState &);
 
  public:
   trajectorygenerator(const Eigen::VectorXd &_wx, const Eigen::VectorXd &_wy)
@@ -91,9 +86,9 @@ class trajectorygenerator {
   }
 
   void trajectoryonestep() {
-    frenet_optimal_planning(_currentstatus.c_speed, _currentstatus.c_d,
-                            _currentstatus.c_d_d, _currentstatus.c_d_dd,
-                            _currentstatus.s0);
+    frenet_optimal_planning(cartesianstate.speed, frenetstate.d,
+                            frenetstate.d_dot, frenetstate.d_ddot,
+                            frenetstate.s);
     updatecurrentstatus();
   }  // trajectoryonestep
 
@@ -137,13 +132,32 @@ class trajectorygenerator {
 
   // center line
   Spline2D target_Spline2D;
-  Eigen::VectorXd Frenet_s;    // arclength (m)
-  Eigen::VectorXd cart_RefX;   // reference x (m)
-  Eigen::VectorXd cart_RefY;   // reference y (m)
-  Eigen::VectorXd RefHeading;  // reference yaw (rad)
-  Eigen::VectorXd RefKappa;    // reference curvature
+  Eigen::VectorXd Frenet_s;        // arclength (m)
+  Eigen::VectorXd cart_RefX;       // reference x (m)
+  Eigen::VectorXd cart_RefY;       // reference y (m)
+  Eigen::VectorXd RefHeading;      // reference yaw (rad)
+  Eigen::VectorXd RefKappa;        // reference curvature
+  Eigen::VectorXd RefKappa_prime;  // reference dk/ds
 
-  currentstatus _currentstatus;
+  CartesianState cartesianstate{
+      0,  // x
+      0,  // y
+      0,  // theta
+      0,  // kappa
+      3,  // speed
+      0,  // dspeed
+  };
+  FrenetState frenetstate{
+      0,  // s
+      0,  // s_dot
+      0,  // s_ddot
+      2,  // d
+      0,  // d_dot
+      0,  // d_ddot
+      0,  // d_prime
+      0   // d_pprime
+  };
+
   parameters _para;
 
   void frenet_optimal_planning(double _c_speed, double _c_d, double _c_d_d,
@@ -165,11 +179,13 @@ class trajectorygenerator {
 
   void updatecurrentstatus() {
     // TODO: cart2frenet
-    _currentstatus.c_speed = _best_path.s_d(1);
-    _currentstatus.c_d = _best_path.d(1);
-    _currentstatus.c_d_d = _best_path.d_d(1);
-    _currentstatus.c_d_dd = _best_path.d_dd(1);
-    _currentstatus.s0 = _best_path.s(1);
+
+    cartesianstate.speed = _best_path.s_dot(1);
+    frenetstate.d = _best_path.d(1);
+    frenetstate.d_dot = _best_path.d_dot(1);
+    frenetstate.d_ddot = _best_path.d_ddot(1);
+    frenetstate.s = _best_path.s(1);
+
   }  // updatecurrentstatus
 
   std::vector<Frenet_path> check_paths() {
@@ -179,20 +195,21 @@ class trajectorygenerator {
     int count_max_accel = 0;
     int count_max_curvature = 0;
     int count_collsion = 0;
+
     for (std::size_t i = 0; i != frenet_paths.size(); i++) {
       // std::cout << frenet_paths[i].c.transpose() << std::endl;
 
-      if (frenet_paths[i].s_d.maxCoeff() > _para.MAX_SPEED) {
+      if (frenet_paths[i].speed.maxCoeff() > _para.MAX_SPEED) {
         count_max_speed++;
         continue;  // max speed check
       }
-      if ((frenet_paths[i].s_dd.maxCoeff() > _para.MAX_ACCEL) ||
-          (frenet_paths[i].s_dd.minCoeff() < -_para.MAX_ACCEL)) {
+      if ((frenet_paths[i].dspeed.maxCoeff() > _para.MAX_ACCEL) ||
+          (frenet_paths[i].dspeed.minCoeff() < -_para.MAX_ACCEL)) {
         count_max_accel++;
         continue;  // Max accel check
       }
-      if ((frenet_paths[i].c.maxCoeff() > _para.MAX_CURVATURE) ||
-          (frenet_paths[i].c.minCoeff() < -_para.MAX_CURVATURE)) {
+      if ((frenet_paths[i].kappa.maxCoeff() > _para.MAX_CURVATURE) ||
+          (frenet_paths[i].kappa.minCoeff() < -_para.MAX_CURVATURE)) {
         count_max_curvature++;
         continue;  // Max curvature check
       }
@@ -203,7 +220,7 @@ class trajectorygenerator {
       }
       t_frenet_paths.push_back(frenet_paths[i]);
     }
-
+    // std::cout << frenet_paths.size() << std::endl;
     // std::cout << "Max speed: " << count_max_speed << std::endl;
     // std::cout << "Max accel: " << count_max_accel << std::endl;
     // std::cout << "Max cuvature: " << count_max_curvature << std::endl;
@@ -215,9 +232,9 @@ class trajectorygenerator {
   bool check_collision(const Frenet_path &_Frenet_path) {
     for (int i = 0; i != obstacle_x.size(); i++) {
       for (int j = 0; j != _Frenet_path.x.size(); j++) {
-        double d = std::pow(_Frenet_path.x(j) - obstacle_x(i), 2) +
-                   std::pow(_Frenet_path.y(j) - obstacle_y(i), 2);
-        if (d <= std::pow(_para.ROBOT_RADIUS, 2))  // collision occurs
+        double _dis = std::pow(_Frenet_path.x(j) - obstacle_x(i), 2) +
+                      std::pow(_Frenet_path.y(j) - obstacle_y(i), 2);
+        if (_dis <= std::pow(_para.ROBOT_RADIUS, 2))  // collision occurs
           return false;
       }
     }
@@ -235,14 +252,16 @@ class trajectorygenerator {
     cart_RefY.resize(n);
     RefHeading.resize(n);
     RefKappa.resize(n);
+    RefKappa_prime.resize(n);
 
     for (int i = 0; i != n; i++) {
       Frenet_s(i) = TARGET_COURSE_ARC_STEP * i;
       Eigen::Vector2d position = target_Spline2D.compute_position(Frenet_s(i));
       cart_RefX(i) = position(0);
       cart_RefY(i) = position(1);
-      RefHeading(i) = target_Spline2D.compute_curvature(Frenet_s(i));
-      RefKappa(i) = target_Spline2D.compute_yaw(Frenet_s(i));
+      RefKappa(i) = target_Spline2D.compute_curvature(Frenet_s(i));
+      RefHeading(i) = target_Spline2D.compute_yaw(Frenet_s(i));
+      RefKappa_prime(i) = target_Spline2D.compute_dcurvature(Frenet_s(i));
     }
   }  // setup_target_course
 
@@ -260,11 +279,11 @@ class trajectorygenerator {
         _para.TARGET_SPEED + _para.D_T_S * _para.N_S_SAMPLE);
   }  // initialize_frenet_paths
 
-  void calc_frenet_paths(double _c_speed,  // current speed
-                         double _c_d,      // current d(t)
-                         double _c_d_d,    // current d(d(t))/dt
-                         double _c_d_dd,   // current
-                         double _s0        // current arclength
+  void calc_frenet_paths(double _speed,   // current speed
+                         double _d,       // current d(t)
+                         double _d_dot,   // current d(d(t))/dt
+                         double _d_ddot,  // current
+                         double _s        // current arclength
   ) {
     quintic_polynomial _quintic_polynomial;
     quartic_polynomial _quartic_polynomial;
@@ -276,220 +295,128 @@ class trajectorygenerator {
     for (std::size_t i = 0; i != n_di; i++) {
       // Lateral motion planning
       for (std::size_t j = 0; j != n_Tj; j++) {
-        _quintic_polynomial.update_startendposition(_c_d, _c_d_d, _c_d_dd,
-                                                    di(i), 0.0, 0.0, Tj(j));
+        _quintic_polynomial.update_startendposition(_d, _d_dot, _d_ddot, di(i),
+                                                    0.0, 0.0, Tj(j));
         std::size_t n_zero_Tj =
             static_cast<std::size_t>(std::ceil(Tj(j) / _para.DT + 1));
         Eigen::VectorXd _t = Eigen::VectorXd::LinSpaced(n_zero_Tj, 0.0, Tj(j));
-        Eigen::VectorXd _d(n_zero_Tj);
-        Eigen::VectorXd _d_d(n_zero_Tj);
-        Eigen::VectorXd _d_dd(n_zero_Tj);
-        Eigen::VectorXd _d_ddd(n_zero_Tj);
+        Eigen::VectorXd t_d(n_zero_Tj);
+        Eigen::VectorXd t_d_dot(n_zero_Tj);
+        Eigen::VectorXd t_d_ddot(n_zero_Tj);
+        Eigen::VectorXd t_d_dddot(n_zero_Tj);
 
         for (std::size_t ji = 0; ji != n_zero_Tj; ji++) {
-          _d(ji) = _quintic_polynomial.compute_order_derivative<0>(_t(ji));
-          _d_d(ji) = _quintic_polynomial.compute_order_derivative<1>(_t(ji));
-          _d_dd(ji) = _quintic_polynomial.compute_order_derivative<2>(_t(ji));
-          _d_ddd(ji) = _quintic_polynomial.compute_order_derivative<3>(_t(ji));
+          t_d(ji) = _quintic_polynomial.compute_order_derivative<0>(_t(ji));
+          t_d_dot(ji) = _quintic_polynomial.compute_order_derivative<1>(_t(ji));
+          t_d_ddot(ji) =
+              _quintic_polynomial.compute_order_derivative<2>(_t(ji));
+          t_d_dddot(ji) =
+              _quintic_polynomial.compute_order_derivative<3>(_t(ji));
         }
 
         // Longitudinal motion planning (Velocity keeping)
         for (std::size_t k = 0; k != n_tvk; k++) {
-          _quartic_polynomial.update_startendposition(_s0, _c_speed, 0.0,
-                                                      tvk(k), 0.0, Tj(j));
-          Eigen::VectorXd _s(n_zero_Tj);
-          Eigen::VectorXd _s_d(n_zero_Tj);
-          Eigen::VectorXd _s_dd(n_zero_Tj);
-          Eigen::VectorXd _s_ddd(n_zero_Tj);
+          _quartic_polynomial.update_startendposition(_s, _speed, 0.0, tvk(k),
+                                                      0.0, Tj(j));
+          Eigen::VectorXd t_s(n_zero_Tj);
+          Eigen::VectorXd t_s_dot(n_zero_Tj);
+          Eigen::VectorXd t_s_ddot(n_zero_Tj);
+          Eigen::VectorXd t_s_dddot(n_zero_Tj);
+          Eigen::VectorXd t_d_prime(n_zero_Tj);
+          Eigen::VectorXd t_d_pprime(n_zero_Tj);
+
           for (std::size_t ki = 0; ki != n_zero_Tj; ki++) {
-            _s(ki) = _quartic_polynomial.compute_order_derivative<0>(_t(ki));
-            _s_d(ki) = _quartic_polynomial.compute_order_derivative<1>(_t(ki));
-            _s_dd(ki) = _quartic_polynomial.compute_order_derivative<2>(_t(ki));
-            _s_ddd(ki) =
+            t_s(ki) = _quartic_polynomial.compute_order_derivative<0>(_t(ki));
+            t_s_dot(ki) =
+                _quartic_polynomial.compute_order_derivative<1>(_t(ki));
+            t_s_ddot(ki) =
+                _quartic_polynomial.compute_order_derivative<2>(_t(ki));
+            t_s_dddot(ki) =
                 _quartic_polynomial.compute_order_derivative<3>(_t(ki));
+            t_d_prime(ki) = t_d_dot(ki) / t_s_dot(ki);
+            t_d_pprime(ki) =
+                (t_d_ddot(ki) * t_s_dot(ki) - t_s_ddot(ki) * t_d_dot(ki)) /
+                std::pow(t_s_dot(ki), 3);
           }
 
-          double Jp = _d_ddd.squaredNorm();  // square of jerk
-          double Js = _s_ddd.squaredNorm();  // square of jerk
+          double Jp = t_d_dddot.squaredNorm();  // square of jerk
+          double Js = t_s_dddot.squaredNorm();  // square of jerk
 
           // square of diff from target speed
           double _cd = _para.KJ * Jp + _para.KT * Tj(j) +
-                       _para.KD * std::pow(_d(n_zero_Tj - 1), 2);
+                       _para.KD * std::pow(t_d(n_zero_Tj - 1), 2);
           double _cv =
               _para.KJ * Js + _para.KT * Tj(j) +
               _para.KD *
-                  std::pow((_para.TARGET_SPEED - _s_d(n_zero_Tj - 1)), 2);
+                  std::pow((_para.TARGET_SPEED - t_s_dot(n_zero_Tj - 1)), 2);
           double _cf = _para.KLAT * _cd + _para.KLON * _cv;
 
           // calc global positions;
-          Eigen::VectorXd _x(n_zero_Tj);      // global x
-          Eigen::VectorXd _y(n_zero_Tj);      // global y
-          Eigen::VectorXd _yaw(n_zero_Tj);    // heading
-          Eigen::VectorXd _ds(n_zero_Tj);     // arc length
-          Eigen::VectorXd _c(n_zero_Tj - 1);  // curvature
+          Eigen::VectorXd t_x(n_zero_Tj);       // global x
+          Eigen::VectorXd t_y(n_zero_Tj);       // global y
+          Eigen::VectorXd t_yaw(n_zero_Tj);     // heading
+          Eigen::VectorXd t_kappa(n_zero_Tj);   // curvature
+          Eigen::VectorXd t_speed(n_zero_Tj);   // speed
+          Eigen::VectorXd t_dspeed(n_zero_Tj);  // dspeed
+
           for (std::size_t ki = 0; ki != n_zero_Tj; ki++) {
-            Eigen::Vector2d ref_position =
-                target_Spline2D.compute_position(_s(ki));
-            double ref_yaw = target_Spline2D.compute_yaw(_s(ki));
-            _x(ki) = ref_position(0) + _d(ki) * std::cos(ref_yaw + 0.5 * M_PI);
-            _y(ki) = ref_position(1) + _d(ki) * std::sin(ref_yaw + 0.5 * M_PI);
-          }
-          // calc yaw and ds
-          for (std::size_t ki = 0; ki != (n_zero_Tj - 1); ki++) {
-            double dx = _x(ki + 1) - _x(ki);
-            double dy = _y(ki + 1) - _y(ki);
-            _yaw(ki) = std::atan2(dy, dx);
-            _ds(ki) = std::sqrt(std::pow(dx, 2) + std::pow(dy, 2));
-          }
-          _yaw(n_zero_Tj - 1) = _yaw(n_zero_Tj - 2);
-          _ds(n_zero_Tj - 1) = _ds(n_zero_Tj - 2);
-          // calc curvature (Attention !!!!)
-          for (std::size_t ki = 0; ki != (n_zero_Tj - 1); ki++) {
-            _c(ki) = (_yaw(ki + 1) - _yaw(ki)) / _ds(ki);
+            CartesianState _cartesianstate{
+                0,  // x
+                0,  // y
+                0,  // theta
+                0,  // kappa
+                0,  // speed
+                0   // dspeed
+            };
+            // add to frenet_paths
+            FrenetState _frenetstate{
+                t_s(ki),        // s
+                t_s_dot(ki),    // s_dot
+                t_s_ddot(ki),   // s_ddot
+                t_d(ki),        // d
+                t_d_dot(ki),    // d_dot
+                t_d_ddot(ki),   // d_ddot
+                t_d_prime(ki),  // d_prime
+                t_d_pprime(ki)  // d_pprime
+            };
+            Frenet2Cart(_frenetstate, _cartesianstate);
+
+            t_x(ki) = _cartesianstate.x;
+            t_y(ki) = _cartesianstate.y;
+            t_yaw(ki) = _cartesianstate.theta;
+            t_kappa(ki) = _cartesianstate.kappa;
+            t_speed(ki) = _cartesianstate.speed;
+            t_dspeed(ki) = _cartesianstate.dspeed;
           }
 
           // add to frenet_paths
           Frenet_path _frenet_path{
-              _t,      // t
-              _d,      // d
-              _d_d,    // d_d
-              _d_dd,   // d_dd
-              _d_ddd,  // d_ddd
-              _s,      // s
-              _s_d,    // s_d
-              _s_dd,   // s_dd
-              _s_ddd,  // s_ddd
-              _cd,     // cd
-              _cv,     // cv
-              _cf,     // cf
-              _x,      // x;
-              _y,      // y
-              _yaw,    // yaw
-              _ds,     // ds
-              _c       // c
+              _t,          // vector of t
+              t_d,         // vector of d
+              t_d_dot,     // vector of dd/dt
+              t_d_ddot,    // vector of d(d_dot)/dt
+              t_d_dddot,   // vector of d(d_ddot)/dt
+              t_s,         // vector of s
+              t_s_dot,     // vector of ds/dt
+              t_s_ddot,    // vector of d(s_dot)/dt
+              t_s_dddot,   // vector of d(s_ddot)/dt
+              t_d_prime,   // vector of dd/ds
+              t_d_pprime,  // vector of d(d_prime)/ds
+              t_x,         // vector of x;
+              t_y,         // vector of y
+              t_yaw,       // vector of yaw
+              t_kappa,     // vector of kappa
+              t_speed,     // vector of speed
+              t_dspeed,    // vector of dspeed
+              _cd,         // cd
+              _cv,         // cv
+              _cf          // cf
           };
           frenet_paths.push_back(_frenet_path);
         }
       }
     }
   }  // calc_frenet_paths
-
-  void calc_frenet_paths_lowspeed(
-      double _c_speed,  // current speed
-      double _c_d,      // current d(s)
-      double _c_d_d,    // current d(s) (1st derivative)
-      double _c_d_dd,   // current d(s) (2nd derivative)
-      double _s0        //
-  ) {
-    quintic_polynomial _quintic_polynomial;
-    quartic_polynomial _quartic_polynomial;
-
-    frenet_paths.clear();
-    frenet_paths.reserve(n_di * n_Tj * n_tvk);
-
-    // generate path to each offset goal
-    for (std::size_t i = 0; i != n_di; i++) {
-      // Lateral motion planning
-      for (std::size_t j = 0; j != n_Tj; j++) {
-        std::size_t n_zero_Tj =
-            static_cast<std::size_t>(std::ceil(Tj(j) / _para.DT + 1));
-        Eigen::VectorXd _t = Eigen::VectorXd::LinSpaced(n_zero_Tj, 0.0, Tj(j));
-
-        // Longitudinal motion planning (Velocity keeping)
-        for (std::size_t k = 0; k != n_tvk; k++) {
-          _quartic_polynomial.update_startendposition(_s0, _c_speed, 0.0,
-                                                      tvk(k), 0.0, Tj(j));
-          Eigen::VectorXd _s(n_zero_Tj);
-          Eigen::VectorXd _s_d(n_zero_Tj);
-          Eigen::VectorXd _s_dd(n_zero_Tj);
-          Eigen::VectorXd _s_ddd(n_zero_Tj);
-          for (std::size_t ki = 0; ki != n_zero_Tj; ki++) {
-            _s(ki) = _quartic_polynomial.compute_order_derivative<0>(_t(ki));
-            _s_d(ki) = _quartic_polynomial.compute_order_derivative<1>(_t(ki));
-            _s_dd(ki) = _quartic_polynomial.compute_order_derivative<2>(_t(ki));
-            _s_ddd(ki) =
-                _quartic_polynomial.compute_order_derivative<3>(_t(ki));
-          }
-          // lateral movement (Low speed trajectories)
-          Eigen::VectorXd _d(n_zero_Tj);
-          Eigen::VectorXd _d_d(n_zero_Tj);
-          Eigen::VectorXd _d_dd(n_zero_Tj);
-          Eigen::VectorXd _d_ddd(n_zero_Tj);
-
-          _quintic_polynomial.update_startendposition(_c_d, _c_d_d, _c_d_dd,
-                                                      di(i), 0.0, 0.0, Tj(j));
-          for (std::size_t ji = 0; ji != n_zero_Tj; ji++) {
-            _d(ji) = _quintic_polynomial.compute_order_derivative<0>(_s(ji));
-            _d_d(ji) = _quintic_polynomial.compute_order_derivative<1>(_s(ji));
-            _d_dd(ji) = _quintic_polynomial.compute_order_derivative<2>(_s(ji));
-            _d_ddd(ji) =
-                _quintic_polynomial.compute_order_derivative<3>(_s(ji));
-          }
-
-          double Jp = _d_ddd.squaredNorm();  // square of jerk
-          double Js = _s_ddd.squaredNorm();  // square of jerk
-
-          // square of diff from target speed
-          double _cd = _para.KJ * Jp + _para.KT * (_s(n_zero_Tj - 1) - _s0) +
-                       _para.KD * std::pow(_d(n_zero_Tj - 1), 2);
-          double _cv =
-              _para.KJ * Js + _para.KT * Tj(j) +
-              _para.KD *
-                  std::pow((_para.TARGET_SPEED - _s_d(n_zero_Tj - 1)), 2);
-          double _cf = _para.KLAT * _cd + _para.KLON * _cv;
-
-          // calc global positions;
-          Eigen::VectorXd _x(n_zero_Tj);      // global x
-          Eigen::VectorXd _y(n_zero_Tj);      // global y
-          Eigen::VectorXd _yaw(n_zero_Tj);    // heading
-          Eigen::VectorXd _ds(n_zero_Tj);     // arc length
-          Eigen::VectorXd _c(n_zero_Tj - 1);  // curvature
-          for (std::size_t ki = 0; ki != n_zero_Tj; ki++) {
-            Eigen::Vector2d ref_position =
-                target_Spline2D.compute_position(_s(ki));
-            double ref_yaw = target_Spline2D.compute_yaw(_s(ki));
-            _x(ki) = ref_position(0) + _d(ki) * std::cos(ref_yaw + 0.5 * M_PI);
-            _y(ki) = ref_position(1) + _d(ki) * std::sin(ref_yaw + 0.5 * M_PI);
-          }
-          // calc yaw and ds
-          for (std::size_t ki = 0; ki != (n_zero_Tj - 1); ki++) {
-            double dx = _x(ki + 1) - _x(ki);
-            double dy = _y(ki + 1) - _y(ki);
-            _yaw(ki) = std::atan2(dy, dx);
-            _ds(ki) = std::sqrt(std::pow(dx, 2) + std::pow(dy, 2));
-          }
-          _yaw(n_zero_Tj - 1) = _yaw(n_zero_Tj - 2);
-          _ds(n_zero_Tj - 1) = _ds(n_zero_Tj - 2);
-          // calc curvature (Attention !!!!)
-          for (std::size_t ki = 0; ki != (n_zero_Tj - 1); ki++) {
-            _c(ki) = (_yaw(ki + 1) - _yaw(ki)) / _ds(ki);
-          }
-
-          // add to frenet_paths
-          Frenet_path _frenet_path{
-              _t,      // t
-              _d,      // d
-              _d_d,    // d_d
-              _d_dd,   // d_dd
-              _d_ddd,  // d_ddd
-              _s,      // s
-              _s_d,    // s_d
-              _s_dd,   // s_dd
-              _s_ddd,  // s_ddd
-              _cd,     // cd
-              _cv,     // cv
-              _cf,     // cf
-              _x,      // x;
-              _y,      // y
-              _yaw,    // yaw
-              _ds,     // ds
-              _c       // c
-          };
-          frenet_paths.push_back(_frenet_path);
-        }
-      }
-    }
-  }  // calc_frenet_paths_lowspeed
 
   // find the closest point on the reference spline, given a position (x, y)
   int ClosestRefPoint(double _cart_vx, double _cart_vy,
@@ -518,6 +445,19 @@ class trajectorygenerator {
         continue;
     }
 
+    // int n_closestrefpoint = 0;
+    // double mindistance = 1e6;
+
+    // for (int i = 0; i != _cart_rx.size(); ++i) {
+    //   double t_distance = std::pow(_cart_vx - _cart_rx(i), 2) +
+    //                       std::pow(_cart_vy - _cart_ry(i), 2);
+    //   if (t_distance < mindistance) {
+    //     mindistance = t_distance;
+    //     n_closestrefpoint = i;
+    //   } else
+    //     continue;
+    // }
+
     return n_closestrefpoint;
   }  // ClosestRefPoint
 
@@ -532,12 +472,14 @@ class trajectorygenerator {
     // curvature of center line
     double ref_kappa = RefKappa(n_closestrefpoint);
     // dk/ds of center line
-    double ref_dcurvature_s =
-        target_Spline2D.compute_dcurvature(_frenetstate.s);
+    double ref_kappa_prime = RefKappa_prime(n_closestrefpoint);
     // heading of center line
     double ref_heading = RefHeading(n_closestrefpoint);
+
     // delta theta: (TODO: | delta_theta | < pi/2 )
     double delta_theta = _cartstate_v.theta - ref_heading;
+    if (std::abs(delta_theta) >= (0.5 * M_PI))
+      CLOG(ERROR, "Frenet") << "extreme situations";
     double cos_dtheta = std::cos(delta_theta);
     double sin_dtheta = std::sin(delta_theta);
     double tan_dtheta = std::tan(delta_theta);
@@ -548,71 +490,107 @@ class trajectorygenerator {
         std::sin(ref_heading) * (_cartstate_v.x - cart_RefX(n_closestrefpoint));
     // TODO: larger than zero
     double one_minus_kappa_r_d = 1 - ref_kappa * _frenetstate.d;
+    if (one_minus_kappa_r_d <= 0) CLOG(ERROR, "Frenet") << "extreme situations";
     // ds/dt
-    static double ds_t = 0;
-    double previous_ds_t = ds_t;
-    ds_t = _cartstate_v.speed * cos_dtheta / one_minus_kappa_r_d;
-    _frenetstate.ds_t = ds_t;
+    _frenetstate.s_dot = _cartstate_v.speed * cos_dtheta / one_minus_kappa_r_d;
     // dd/ds
-    _frenetstate.dd_s = one_minus_kappa_r_d * tan_dtheta;
+    _frenetstate.d_prime = one_minus_kappa_r_d * tan_dtheta;
     // dd/dt
-    _frenetstate.dd_t = _cartstate_v.speed * sin_dtheta;
-    // ddd/ds2
-    _frenetstate.ddd_s =
-        -(ref_dcurvature_s * _frenetstate.d + ref_kappa * _frenetstate.dd_s) *
-            tan_dtheta +
-        (_cartstate_v.kappa * one_minus_kappa_r_d / cos_dtheta - ref_kappa) *
-            one_minus_kappa_r_d / std::pow(cos_dtheta, 2);
-    //
-    _frenetstate.dds_t = (ds_t - previous_ds_t) / SAMPLE_TIME;
-    _frenetstate.ddd_t = _frenetstate.ddd_s * std::pow(_frenetstate.ds_t, 2) +
-                         _frenetstate.dd_s * _frenetstate.dds_t;
+    _frenetstate.d_dot = _cartstate_v.speed * sin_dtheta;
+    // d(d_prime)/ds
+    const double kappa_r_d_prime =
+        ref_kappa_prime * _frenetstate.d + ref_kappa * _frenetstate.d_prime;
+    const double delta_theta_prime =
+        _cartstate_v.kappa * one_minus_kappa_r_d / cos_dtheta - ref_kappa;
+    _frenetstate.d_pprime =
+        -kappa_r_d_prime * tan_dtheta +
+        delta_theta_prime * one_minus_kappa_r_d / std::pow(cos_dtheta, 2);
+    // d(s_dot) / dt
+    _frenetstate.s_ddot =
+        (_cartstate_v.dspeed * cos_dtheta -
+         _frenetstate.s_dot * _frenetstate.s_dot *
+             (_frenetstate.d_prime * delta_theta_prime - kappa_r_d_prime)) /
+        one_minus_kappa_r_d;
+    // d(d_dot) / dt
+    _frenetstate.d_ddot =
+        _frenetstate.d_pprime * _frenetstate.s_dot * _frenetstate.s_dot +
+        _frenetstate.d_prime * _frenetstate.s_ddot;
   }  // Cart2Frenet
 
   // Transform from Frenet s,d coordinates to Cartesian x,y
   void Frenet2Cart(const FrenetState &_frenetstate,
                    CartesianState &_cartstate_v) {
     // calc global positions;
-
-    Eigen::Vector2d ref_position =
-        target_Spline2D.compute_position(_frenetstate.s);
     double ref_heading = target_Spline2D.compute_yaw(_frenetstate.s);
     double ref_kappa = target_Spline2D.compute_curvature(_frenetstate.s);
-    _cartstate_v.x =
-        ref_position(0) + _frenetstate.d * std::cos(ref_heading + 0.5 * M_PI);
-    _cartstate_v.y =
-        ref_position(1) + _frenetstate.d * std::sin(ref_heading + 0.5 * M_PI);
+    double ref_kappa_prime = target_Spline2D.compute_dcurvature(_frenetstate.s);
+
+    auto _cart_position = CalculateCartesianPoint(
+        ref_heading, _frenetstate.d,
+        target_Spline2D.compute_position(_frenetstate.s));
+    _cartstate_v.x = _cart_position(0);
+    _cartstate_v.y = _cart_position(1);
 
     // TODO: larger than zero
-    double curvaturerd = 1 - ref_kappa * _frenetstate.d;
-
+    double one_minus_kappa_r_d = 1 - ref_kappa * _frenetstate.d;
+    if (one_minus_kappa_r_d <= 0) CLOG(ERROR, "Frenet") << "extreme situations";
     // speed
     _cartstate_v.speed =
-        std::sqrt(std::pow(_frenetstate.ds_t * curvaturerd, 2) +
-                  std::pow(_frenetstate.dd_t, 2));
+        std::sqrt(std::pow(_frenetstate.s_dot * one_minus_kappa_r_d, 2) +
+                  std::pow(_frenetstate.d_dot, 2));
 
     // theta
-    double delta_theta = std::asin(_frenetstate.dd_t / _cartstate_v.speed);
-    _cartstate_v.theta = delta_theta + ref_heading;
-    // // calc yaw and ds
-    // for (std::size_t ki = 0; ki != (n_zero_Tj - 1); ki++) {
-    //   double dx = _x(ki + 1) - _x(ki);
-    //   double dy = _y(ki + 1) - _y(ki);
-    //   _yaw(ki) = std::atan2(dy, dx);
-    //   _ds(ki) = std::sqrt(std::pow(dx, 2) + std::pow(dy, 2));
-    // }
-    // _yaw(n_zero_Tj - 1) = _yaw(n_zero_Tj - 2);
-    // _ds(n_zero_Tj - 1) = _ds(n_zero_Tj - 2);
-    // // calc curvature (Attention !!!!)
-    // for (std::size_t ki = 0; ki != (n_zero_Tj - 1); ki++) {
-    //   _c(ki) = (_yaw(ki + 1) - _yaw(ki)) / _ds(ki);
-    // }
+    const double tan_delta_theta = _frenetstate.d_prime / one_minus_kappa_r_d;
+    const double delta_theta =
+        std::atan2(_frenetstate.d_prime, one_minus_kappa_r_d);
+    const double cos_delta_theta = std::cos(delta_theta);
+    _cartstate_v.theta = Normalizeheadingangle(delta_theta + ref_heading);
+
+    // kappa
+    const double kappa_r_d_prime =
+        ref_kappa_prime * _frenetstate.d + ref_kappa * _frenetstate.d_prime;
+    _cartstate_v.kappa =
+        ((kappa_r_d_prime * tan_delta_theta + _frenetstate.d_pprime) *
+             cos_delta_theta * cos_delta_theta / one_minus_kappa_r_d +
+         ref_kappa) *
+        cos_delta_theta / one_minus_kappa_r_d;
+    // a
+    const double delta_theta_prime =
+        _cartstate_v.kappa * one_minus_kappa_r_d / cos_delta_theta - ref_kappa;
+
+    _cartstate_v.dspeed =
+        _frenetstate.s_ddot * one_minus_kappa_r_d / cos_delta_theta +
+        _frenetstate.s_dot * _frenetstate.s_dot *
+            (delta_theta_prime * _frenetstate.d_prime - kappa_r_d_prime) /
+            cos_delta_theta;
+
   }  // Frenet2Cart
+
+  double CalculateTheta(const double rtheta, const double rkappa,
+                        const double d, const double d_prime) {
+    return Normalizeheadingangle(rtheta + std::atan2(d_prime, 1 - d * rkappa));
+  }
+  double CalculateTheta(const double rtheta, const double d_dot,
+                        const double vx) {
+    return Normalizeheadingangle(rtheta + std::asin(d_dot / vx));
+  }
+
+  Eigen::Vector2d CalculateCartesianPoint(
+      const double _rtheta, const double _d,
+      const Eigen::Vector2d &_ref_position) {
+    double _x = _ref_position(0) - _d * std::sin(_rtheta);
+    double _y = _ref_position(1) + _d * std::cos(_rtheta);
+    return (Eigen::Vector2d() << _x, _y).finished();
+  }
 
 };  // trajectorygenerator
 
-void transformf2c(trajectorygenerator &_tg, FrenetState &_frenetstate,
+void transformf2c(trajectorygenerator &_tg, const FrenetState &_frenetstate,
                   CartesianState &_cartstate) {
+  _tg.Frenet2Cart(_frenetstate, _cartstate);
+}
+void transformc2f(trajectorygenerator &_tg, FrenetState &_frenetstate,
+                  const CartesianState &_cartstate) {
   _tg.Cart2Frenet(_cartstate, _frenetstate);
 }
 
