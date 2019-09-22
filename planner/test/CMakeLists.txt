@@ -32,8 +32,8 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 	"/usr/include" 
 	"${PROJECT_SOURCE_DIR}/../../common/fileIO/include"
 	"${PROJECT_SOURCE_DIR}/../../common/logging/include"
-	"${PROJECT_SOURCE_DIR}/../../math/eigen"
-	"${PROJECT_SOURCE_DIR}/../../math/NumericalAnalysis/include"
+	"${PROJECT_SOURCE_DIR}/../../common/math/eigen"
+	"${PROJECT_SOURCE_DIR}/../../common/math/NumericalAnalysis/include"
 	"${PROJECT_SOURCE_DIR}/../../common/communication/include"
 	"${PROJECT_SOURCE_DIR}/../../common/timer/include"
 	)

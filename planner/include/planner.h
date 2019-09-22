@@ -15,6 +15,8 @@
 #include "easylogging++.h"
 #include "plannerdata.h"
 
+namespace ASV {
+
 class planner {
  public:
   explicit planner(const plannerdata &_plannerdata)
@@ -82,6 +84,8 @@ class planner {
   Eigen::Vector2d computevectorlocation(double _angle) {
     return (Eigen::Vector2d() << std::cos(_angle), std::sin(_angle)).finished();
   }
-};
+};  // end class planner
+
+}  // end namespace ASV
 
 #endif /* _PLANNER_H_ */

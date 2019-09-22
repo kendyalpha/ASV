@@ -15,6 +15,7 @@
 #include <Eigen/Dense>
 #include <vector>
 
+namespace ASV {
 // real time data in planner
 struct plannerRTdata {
   double curvature;           // desired curvature of path
@@ -40,14 +41,16 @@ struct CartesianState {
 
 // state in the Frenet coodinate
 struct FrenetState {
-  double s;      // s
-  double ds_t;   // ds/dt
-  double dds_t;  // dds/dt2
-  double d;      // d
-  double dd_t;   // dd/dt
-  double ddd_t;  // ddd/dt2
-  double dd_s;   // dd/ds
-  double ddd_s;  // ddd/ds2
+  double s;         // s: longitudinal coordinate w.r.t reference line.
+  double s_dot;     // ds / dt
+  double s_ddot;    // d(s_dot) / dt
+  double d;         // d: lateral coordinate w.r.t. reference line
+  double d_dot;     // dd / dt
+  double d_ddot;    // d(d_dot) / dt
+  double d_prime;   // dd / ds
+  double d_pprime;  // d(d_prime)/ ds
 };
+
+}  // end namespace ASV
 
 #endif /*_PLANNERDATA_H_*/

@@ -13,6 +13,8 @@
 #include "trajectorygenerator.h"
 #include "utilityio.h"
 
+using namespace ASV;
+
 union trajectorymsg {
   double double_msg[100];
   char char_msg[800];

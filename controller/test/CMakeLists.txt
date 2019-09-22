@@ -36,7 +36,7 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 	"${PROJECT_SOURCE_DIR}/../../common/fileIO/include"
 	"${PROJECT_SOURCE_DIR}/../../common/logging/include"
 	"${PROJECT_SOURCE_DIR}/../../common/property/include"
-	"${PROJECT_SOURCE_DIR}/../../math/eigen"
+	"${PROJECT_SOURCE_DIR}/../../common/math/eigen"
 	"/opt/mosek/9.0/tools/platform/linux64x86/h")
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 

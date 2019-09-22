@@ -11,6 +11,7 @@
 
 #include "kalmanfilter.h"
 #include "lowpass.h"
+#include "math_utils.h"
 #include "outlierremove.h"
 
 namespace ASV {
@@ -208,16 +209,6 @@ class estimator {
     _CTB2G(0, 1) = -svalue;
     _CTB2G(1, 0) = svalue;
   }
-
-  // restrict heading angle or delta heading to (-PI ~ PI)
-  // compute the delta heading to find the shortest way to rotate
-  double Normalizeheadingangle(double _heading) noexcept {
-    double a = std::fmod(_heading + M_PI, 2.0 * M_PI);
-    if (a < 0.0) {
-      a += (2.0 * M_PI);
-    }
-    return a - M_PI;
-  }  // Normalizeheadingangle
 
   // GPS primary antenna is different from CoG, such deviation should be
   // considered.

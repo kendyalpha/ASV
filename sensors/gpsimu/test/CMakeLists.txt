@@ -14,7 +14,7 @@ find_package (GeographicLib 1.49 REQUIRED)
 
 # 添加 include 子目录
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../../../math/eigen"
+	"${PROJECT_SOURCE_DIR}/../../../common/math/eigen"
 	"${PROJECT_SOURCE_DIR}/../../../common/timer/include"
 	"${PROJECT_SOURCE_DIR}/../../../common/fileIO/include"
 	"${PROJECT_SOURCE_DIR}/../../../common/logging/include"

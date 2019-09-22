@@ -28,7 +28,7 @@ find_package(Threads REQUIRED)
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
 	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	"/usr/include" 
-	 "${PROJECT_SOURCE_DIR}/../../../math/eigen")
+	 "${PROJECT_SOURCE_DIR}/../../math/eigen")
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} "/usr/lib")
 set(SOURCE_FILES ${SOURCE_FILES} 

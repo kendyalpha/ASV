@@ -14,6 +14,8 @@
 #include "trajectorygenerator.h"
 #include "utilityio.h"
 
+using namespace ASV;
+
 int main() {
   // define the waypoints on the target course
   Eigen::VectorXd X(7);
