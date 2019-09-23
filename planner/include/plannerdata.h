@@ -29,6 +29,30 @@ struct plannerdata {
   double sample_time;
 };
 
+// constant data using in Frenet planner
+struct Frenetdata {
+  const double SAMPLE_TIME;  //[s]
+
+  /* constraints */
+  const double MAX_SPEED;      // maximum speed [m/s]
+  const double MAX_ACCEL;      // maximum acceleration [m/ss]
+  const double MIN_ACCEL;      // minimum acceleration [m/ss]
+  const double MAX_CURVATURE;  // max curvature [1/m]
+
+  /* end condition of Frenet Lattics */
+  const double TARGET_COURSE_ARC_STEP;  //[m]
+  const double MAX_ROAD_WIDTH;          // max lateral deviation [m]
+  const double ROAD_WIDTH_STEP;         // road width sampling length [m]
+  const double MAXT;                    // max prediction time [s]
+  const double MINT;                    // min prediction time [s]
+  const double DT;                      // time tick [s]
+  const double MAX_SPEED_DEVIATION;     // Max speed deviation [m/s]
+  const double TRAGET_SPEED_STEP;       // target speed sampling length [m/s]
+
+  /* collision check */
+  const double ROBOT_RADIUS;  // robot radius[m]
+};
+
 // state in the Cartesian coodinate
 struct CartesianState {
   double x;

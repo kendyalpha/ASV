@@ -8,9 +8,9 @@
 ***********************************************************************
 */
 #include <cstdlib>
+#include "FrenetTrajectoryGenerator.h"
 #include "tcpserver.h"
 #include "timecounter.h"
-#include "trajectorygenerator.h"
 #include "utilityio.h"
 
 using namespace ASV;
@@ -21,6 +21,8 @@ union trajectorymsg {
 };
 
 int main() {
+  el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
+  LOG(INFO) << "The program has started!";
   // trajectory generator
   Eigen::VectorXd X(5);
   Eigen::VectorXd Y(5);
@@ -30,9 +32,25 @@ int main() {
   Y << 0.0, -6.0, 5.0, 6.5, 0.0;
   ob_x << 20.0, 30.0, 30.0, 35.0, 50.0;
   ob_y << 10.0, 6.0, 8.0, 8.0, 3.0;
-  trajectorygenerator _trajectorygenerator(X, Y);
-  _trajectorygenerator.setobstacle(ob_x, ob_y);
 
+  Frenetdata _frenetdata{
+      0.1,         // SAMPLE_TIME
+      50.0 / 3.6,  // MAX_SPEED
+      4.0,         // MAX_ACCEL
+      -3.0,        // MIN_ACCEL
+      1.0,         // MAX_CURVATURE
+      0.05,        // TARGET_COURSE_ARC_STEP
+      7.0,         // MAX_ROAD_WIDTH
+      1.0,         // ROAD_WIDTH_STEP
+      5.0,         // MAXT
+      4.0,         // MINT
+      0.2,         // DT
+      0.5 / 3.6,   // MAX_SPEED_DEVIATION
+      0.5 / 3.6,   // TRAGET_SPEED_STEP
+      2.0          // ROBOT_RADIUS
+  };
+  FrenetTrajectoryGenerator _trajectorygenerator(_frenetdata, X, Y);
+  _trajectorygenerator.setobstacle(ob_x, ob_y);
   // socket
   tcpserver _tcpserver("9340");
   const int recv_size = 10;
@@ -44,7 +62,7 @@ int main() {
   timecounter _timer;
 
   for (int i = 0; i != 500; ++i) {
-    _trajectorygenerator.trajectoryonestep();
+    _trajectorygenerator.trajectoryonestep(10 / 3.6);
 
     auto _rx = _trajectorygenerator.getCartRefX();
     auto _ry = _trajectorygenerator.getCartRefY();

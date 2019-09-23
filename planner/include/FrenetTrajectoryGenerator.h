@@ -1,6 +1,6 @@
 /*
 ***********************************************************************
-* trajectorygenerator.h:
+* FrenetTrajectoryGenerator.h:
 * Frenet optimal trajectory generator
 * This header file can be read by C++ compilers
 *
@@ -11,18 +11,14 @@
 ***********************************************************************
 */
 
-#ifndef _TRAJECTORYGENERATOR_H_
-#define _TRAJECTORYGENERATOR_H_
+#ifndef _FRENETTRAJECTORYGENERATOR_H_
+#define _FRENETTRAJECTORYGENERATOR_H_
 
 #include "easylogging++.h"
 #include "planner_util.h"
 #include "plannerdata.h"
 
 namespace ASV {
-
-constexpr double TARGET_COURSE_ARC_STEP = 0.05;  //[m]
-constexpr double SAMPLE_TIME = 0.1;              //[s]
-constexpr double MAX_SPEED = 30;                 //[m/s]
 
 struct Frenet_path {
   Eigen::VectorXd t;
@@ -45,48 +41,28 @@ struct Frenet_path {
   double cf;
 };
 
-struct parameters {
-  double MAX_SPEED = 50.0 / 3.6;     // maximum speed [m/s]
-  double MAX_ACCEL = 4.0;            // maximum acceleration [m/ss]
-  double MAX_CURVATURE = 1.0;        // maximum curvature [1/m]
-  double MAX_ROAD_WIDTH = 7.0;       // maximum road width [m]
-  double D_ROAD_W = 1.0;             // road width sampling length [m]
-  double DT = 0.2;                   // time tick [s]
-  double MAXT = 5.0;                 // max prediction time [s]
-  double MINT = 4.0;                 // min prediction time [s]
-  double DS = 0.2;                   // [m]
-  double MAXS = 5.0;                 // max arclength [m]
-  double MINS = 4.0;                 // min arclength [m]
-  double TARGET_SPEED = 10.0 / 3.6;  // target speed [m/s]
-  double D_T_S = 0.5 / 3.6;          // target speed sampling length[m / s]
-  double N_S_SAMPLE = 1;             // sampling number of target speed
-  double ROBOT_RADIUS = 2.0;         // robot radius[m]
-
-  // cost weights
-  double KJ = 0.1;
-  double KT = 0.1;
-  double KD = 1.0;
-  double KLAT = 1.0;
-  double KLON = 1.0;
-};
-
-class trajectorygenerator {
-  friend void transformf2c(trajectorygenerator &, const FrenetState &,
-                           CartesianState &);
-  friend void transformc2f(trajectorygenerator &, FrenetState &,
-                           const CartesianState &);
+class FrenetTrajectoryGenerator {
+  enum FrenetScenarios {
+    FOLLOWing = 1,
+    MERGING = 2,
+    STOPPING = 3,
+    VELOCITYKEEPING = 4
+  };
 
  public:
-  trajectorygenerator(const Eigen::VectorXd &_wx, const Eigen::VectorXd &_wy)
-      : target_Spline2D(_wx, _wy) {
+  FrenetTrajectoryGenerator(const Frenetdata &_Frenetdata,
+                            const Eigen::VectorXd &_wx,
+                            const Eigen::VectorXd &_wy)
+      : frenetdata(_Frenetdata), target_Spline2D(_wx, _wy) {
     setup_target_course();
-    initialize_frenet_paths();
+    initialize_endcondition_FrenetLattice();
   }
+  virtual ~FrenetTrajectoryGenerator() = default;
 
-  void trajectoryonestep() {
+  void trajectoryonestep(double _targetspeed) {
     frenet_optimal_planning(cartesianstate.speed, frenetstate.d,
                             frenetstate.d_dot, frenetstate.d_ddot,
-                            frenetstate.s);
+                            frenetstate.s, _targetspeed);
     updatecurrentstatus();
   }  // trajectoryonestep
 
@@ -101,10 +77,10 @@ class trajectorygenerator {
   Eigen::VectorXd getCartRefY() const noexcept { return cart_RefY; }
   Eigen::VectorXd getRefHeading() const noexcept { return RefHeading; }
   Eigen::VectorXd getRefKappa() const noexcept { return RefKappa; }
-  Eigen::VectorXd getbestX() const noexcept { return _best_path.x; }
-  Eigen::VectorXd getbestY() const noexcept { return _best_path.y; }
+  Eigen::VectorXd getbestX() const noexcept { return mincost_path.x; }
+  Eigen::VectorXd getbestY() const noexcept { return mincost_path.y; }
 
-  double getcyaw() const noexcept { return _best_path.yaw(1); }
+  double getcyaw() const noexcept { return mincost_path.yaw(1); }
 
   void setobstacle(const Eigen::VectorXd &_obstacle_x,
                    const Eigen::VectorXd &_obstacle_y) noexcept {
@@ -112,22 +88,9 @@ class trajectorygenerator {
     obstacle_y = _obstacle_y;
   }  // setobstacle
 
-  virtual ~trajectorygenerator() = default;
-
  private:
-  std::vector<Frenet_path> frenet_paths;
-  Frenet_path _best_path;
-  std::size_t n_di;
-  std::size_t n_Tj;
-  std::size_t n_Sj;
-  std::size_t n_tvk;
-  Eigen::VectorXd di;
-  Eigen::VectorXd Tj;
-  Eigen::VectorXd tvk;
-
-  Eigen::VectorXd obstacle_x;
-  Eigen::VectorXd obstacle_y;
-
+  // constant data in Frenet trajectory generator
+  Frenetdata frenetdata;
   // center line
   Spline2D target_Spline2D;
   Eigen::VectorXd Frenet_s;        // arclength (m)
@@ -137,6 +100,23 @@ class trajectorygenerator {
   Eigen::VectorXd RefKappa;        // reference curvature
   Eigen::VectorXd RefKappa_prime;  // reference dk/ds
 
+  // end conditions of Frenet Lattice
+  std::size_t n_di = 0;
+  std::size_t n_Tj = 0;
+  std::size_t n_tvk = 0;
+  Eigen::VectorXd di;
+  Eigen::VectorXd Tj;
+  Eigen::VectorXd tvk;
+
+  // obstacles
+  Eigen::VectorXd obstacle_x;
+  Eigen::VectorXd obstacle_y;
+
+  //
+  std::vector<Frenet_path> frenet_paths;
+  Frenet_path mincost_path;
+
+  // real time data
   CartesianState cartesianstate{
       0,            // x
       0,            // y
@@ -156,38 +136,54 @@ class trajectorygenerator {
       0   // d_pprime
   };
 
-  parameters _para;
+  // cost weights
+  const double KJ = 0.1;
+  const double KT = 0.1;
+  const double KD = 1.0;
+  const double KLAT = 1.0;
+  const double KLON = 1.0;
 
   void frenet_optimal_planning(double _c_speed, double _c_d, double _c_d_d,
-                               double _c_d_dd, double _s0) {
-    calc_frenet_paths(_c_speed, _c_d, _c_d_d, _c_d_dd, _s0);
+                               double _c_d_dd, double _s0,
+                               double _targetspeed) {
+    update_endcondition_FrenetLattice(_targetspeed);
+
+    calc_frenet_lattice(_c_speed, _c_d, _c_d_d, _c_d_dd, _s0, _targetspeed);
 
     auto t_frenet_paths = check_paths();
 
     // find minimum cost path
-    double mincost = t_frenet_paths[0].cf;
-    _best_path = t_frenet_paths[0];
-    for (std::size_t i = 1; i != t_frenet_paths.size(); i++) {
-      if (mincost > t_frenet_paths[i].cf) {
-        mincost = t_frenet_paths[i].cf;
-        _best_path = t_frenet_paths[i];
+    mincost_path = findmincostpath(t_frenet_paths);
+
+  }  // frenet_optimal_planning
+
+  Frenet_path findmincostpath(const std::vector<Frenet_path> &_frenetpaths) {
+    // find minimum cost path
+    double mincost = 1e6;
+    Frenet_path _best_path;
+    for (std::size_t i = 0; i != _frenetpaths.size(); i++) {
+      if (mincost > _frenetpaths[i].cf) {
+        mincost = _frenetpaths[i].cf;
+        _best_path = _frenetpaths[i];
       }
     }
-  }  // frenet_optimal_planning
+    return _best_path;
+  }
 
   void updatecurrentstatus() {
     // TODO: cart2frenet
 
-    cartesianstate.speed = _best_path.s_dot(1);
-    frenetstate.d = _best_path.d(1);
-    frenetstate.d_dot = _best_path.d_dot(1);
-    frenetstate.d_ddot = _best_path.d_ddot(1);
-    frenetstate.s = _best_path.s(1);
+    cartesianstate.speed = mincost_path.s_dot(1);
+    frenetstate.d = mincost_path.d(1);
+    frenetstate.d_dot = mincost_path.d_dot(1);
+    frenetstate.d_ddot = mincost_path.d_ddot(1);
+    frenetstate.s = mincost_path.s(1);
 
   }  // updatecurrentstatus
 
   std::vector<Frenet_path> check_paths() {
-    std::vector<Frenet_path> t_frenet_paths;
+    std::vector<Frenet_path> t_roi_paths;
+    std::vector<Frenet_path> t_greedy_roi_paths;
 
     std::size_t count_max_speed = 0;
     std::size_t count_max_accel = 0;
@@ -195,36 +191,42 @@ class trajectorygenerator {
     std::size_t count_collsion = 0;
 
     for (std::size_t i = 0; i != frenet_paths.size(); i++) {
-      // std::cout << frenet_paths[i].c.transpose() << std::endl;
-
-      if (frenet_paths[i].speed.maxCoeff() > _para.MAX_SPEED) {
-        count_max_speed++;
-        continue;  // max speed check
-      }
-      if ((frenet_paths[i].dspeed.maxCoeff() > _para.MAX_ACCEL) ||
-          (frenet_paths[i].dspeed.minCoeff() < -_para.MAX_ACCEL)) {
-        count_max_accel++;
-        continue;  // Max accel check
-      }
-      if ((frenet_paths[i].kappa.maxCoeff() > _para.MAX_CURVATURE) ||
-          (frenet_paths[i].kappa.minCoeff() < -_para.MAX_CURVATURE)) {
-        count_max_curvature++;
-        continue;  // Max curvature check
-      }
-
       if (!check_collision(frenet_paths[i])) {
         count_collsion++;
         continue;  // collision occurs
       }
-      t_frenet_paths.push_back(frenet_paths[i]);
+      t_greedy_roi_paths.push_back(frenet_paths[i]);
     }
+
+    for (std::size_t i = 0; i != t_greedy_roi_paths.size(); i++) {
+      if (t_greedy_roi_paths[i].speed.maxCoeff() > frenetdata.MAX_SPEED) {
+        count_max_speed++;
+        continue;  // max speed check
+      }
+      if ((t_greedy_roi_paths[i].dspeed.maxCoeff() > frenetdata.MAX_ACCEL) ||
+          (t_greedy_roi_paths[i].dspeed.minCoeff() < frenetdata.MIN_ACCEL)) {
+        count_max_accel++;
+        continue;  // Max accel check
+      }
+      if ((t_greedy_roi_paths[i].kappa.maxCoeff() > frenetdata.MAX_CURVATURE) ||
+          (t_greedy_roi_paths[i].kappa.minCoeff() <
+           -frenetdata.MAX_CURVATURE)) {
+        count_max_curvature++;
+        continue;  // Max curvature check
+      }
+      t_roi_paths.push_back(t_greedy_roi_paths[i]);
+    }
+
+    if (t_greedy_roi_paths.size() == 0)
+      CLOG(ERROR, "Frenet") << "Collision will occur";  // TODO: Scenario switch
+
+    if (t_roi_paths.size() == 0) t_roi_paths = t_greedy_roi_paths;
     // std::cout << frenet_paths.size() << std::endl;
     // std::cout << "Max speed: " << count_max_speed << std::endl;
     // std::cout << "Max accel: " << count_max_accel << std::endl;
     // std::cout << "Max cuvature: " << count_max_curvature << std::endl;
     // std::cout << "collision: " << count_collsion << std::endl;
-
-    return t_frenet_paths;
+    return t_roi_paths;
   }  // check_paths
 
   bool check_collision(const Frenet_path &_Frenet_path) {
@@ -236,7 +238,7 @@ class trajectorygenerator {
       for (std::size_t j = 0; j != num_path_point; j++) {
         double _dis = std::pow(_Frenet_path.x(j) - obstacle_x(i), 2) +
                       std::pow(_Frenet_path.y(j) - obstacle_y(i), 2);
-        if (_dis <= std::pow(_para.ROBOT_RADIUS, 2))  // collision occurs
+        if (_dis <= std::pow(frenetdata.ROBOT_RADIUS, 2))  // collision occurs
           return false;
       }
     }
@@ -248,7 +250,8 @@ class trajectorygenerator {
   void setup_target_course() {
     Eigen::VectorXd s = target_Spline2D.getarclength();
     std::size_t n =
-        1 + static_cast<std::size_t>(s(s.size() - 1) / TARGET_COURSE_ARC_STEP);
+        1 + static_cast<std::size_t>(s(s.size() - 1) /
+                                     frenetdata.TARGET_COURSE_ARC_STEP);
 
     Frenet_s.resize(n);
     cart_RefX.resize(n);
@@ -258,7 +261,7 @@ class trajectorygenerator {
     RefKappa_prime.resize(n);
 
     for (std::size_t i = 0; i != n; i++) {
-      Frenet_s(i) = TARGET_COURSE_ARC_STEP * i;
+      Frenet_s(i) = frenetdata.TARGET_COURSE_ARC_STEP * i;
       Eigen::Vector2d position = target_Spline2D.compute_position(Frenet_s(i));
       cart_RefX(i) = position(0);
       cart_RefY(i) = position(1);
@@ -268,25 +271,35 @@ class trajectorygenerator {
     }
   }  // setup_target_course
 
-  void initialize_frenet_paths() {
-    n_di =
-        static_cast<std::size_t>(2 * _para.MAX_ROAD_WIDTH / _para.D_ROAD_W + 1);
-    n_Tj = static_cast<std::size_t>((_para.MAXT - _para.MINT) / _para.DT + 1);
-    n_Sj = static_cast<std::size_t>((_para.MAXT - _para.MINT) / _para.DT + 1);
-    n_tvk = static_cast<std::size_t>(2 * _para.N_S_SAMPLE + 1);
-    di = Eigen::VectorXd::LinSpaced(n_di, -_para.MAX_ROAD_WIDTH,
-                                    _para.MAX_ROAD_WIDTH);
-    Tj = Eigen::VectorXd::LinSpaced(n_Tj, _para.MINT, _para.MAXT);
-    tvk = Eigen::VectorXd::LinSpaced(
-        n_tvk, _para.TARGET_SPEED - _para.D_T_S * _para.N_S_SAMPLE,
-        _para.TARGET_SPEED + _para.D_T_S * _para.N_S_SAMPLE);
+  void initialize_endcondition_FrenetLattice() {
+    n_di = static_cast<std::size_t>(
+        2 * frenetdata.MAX_ROAD_WIDTH / frenetdata.ROAD_WIDTH_STEP + 1);
+    n_Tj = static_cast<std::size_t>(
+        (frenetdata.MAXT - frenetdata.MINT) / frenetdata.DT + 1);
+    n_tvk = static_cast<std::size_t>(
+        2 * frenetdata.MAX_SPEED_DEVIATION / frenetdata.TRAGET_SPEED_STEP + 1);
+
+    n_di = static_cast<std::size_t>(
+        2 * frenetdata.MAX_ROAD_WIDTH / frenetdata.ROAD_WIDTH_STEP + 1);
+    di = Eigen::VectorXd::LinSpaced(n_di, -frenetdata.MAX_ROAD_WIDTH,
+                                    frenetdata.MAX_ROAD_WIDTH);
+    Tj = Eigen::VectorXd::LinSpaced(n_Tj, frenetdata.MINT, frenetdata.MAXT);
+    tvk = Eigen::VectorXd::LinSpaced(n_tvk, 5 - frenetdata.MAX_SPEED_DEVIATION,
+                                     5 + frenetdata.MAX_SPEED_DEVIATION);
   }  // initialize_frenet_paths
 
-  void calc_frenet_paths(double _speed,   // current speed
-                         double _d,       // current d(t)
-                         double _d_dot,   // current d(d(t))/dt
-                         double _d_ddot,  // current
-                         double _s        // current arclength
+  void update_endcondition_FrenetLattice(double _targetspeed) {
+    tvk = Eigen::VectorXd::LinSpaced(
+        n_tvk, _targetspeed - frenetdata.MAX_SPEED_DEVIATION,
+        _targetspeed + frenetdata.MAX_SPEED_DEVIATION);
+  }  // initialize_frenet_paths
+
+  void calc_frenet_lattice(double _speed,       // current speed
+                           double _d,           // current d(t)
+                           double _d_dot,       // current d(d(t))/dt
+                           double _d_ddot,      // current
+                           double _s,           // current arclength
+                           double _targetspeed  // target speed
   ) {
     quintic_polynomial _quintic_polynomial;
     quartic_polynomial _quartic_polynomial;
@@ -301,7 +314,7 @@ class trajectorygenerator {
         _quintic_polynomial.update_startendposition(_d, _d_dot, _d_ddot, di(i),
                                                     0.0, 0.0, Tj(j));
         std::size_t n_zero_Tj =
-            static_cast<std::size_t>(std::ceil(Tj(j) / _para.DT + 1));
+            static_cast<std::size_t>(std::ceil(Tj(j) / frenetdata.DT + 1));
         Eigen::VectorXd _t = Eigen::VectorXd::LinSpaced(n_zero_Tj, 0.0, Tj(j));
         Eigen::VectorXd t_d(n_zero_Tj);
         Eigen::VectorXd t_d_dot(n_zero_Tj);
@@ -346,13 +359,12 @@ class trajectorygenerator {
           double Js = t_s_dddot.squaredNorm();  // square of jerk
 
           // square of diff from target speed
-          double _cd = _para.KJ * Jp + _para.KT * Tj(j) +
-                       _para.KD * std::pow(t_d(n_zero_Tj - 1), 2);
+          double _cd =
+              KJ * Jp + KT * Tj(j) + KD * std::pow(t_d(n_zero_Tj - 1), 2);
           double _cv =
-              _para.KJ * Js + _para.KT * Tj(j) +
-              _para.KD *
-                  std::pow((_para.TARGET_SPEED - t_s_dot(n_zero_Tj - 1)), 2);
-          double _cf = _para.KLAT * _cd + _para.KLON * _cv;
+              KJ * Js + KT * Tj(j) +
+              KD * std::pow((_targetspeed - t_s_dot(n_zero_Tj - 1)), 2);
+          double _cf = KLAT * _cd + KLON * _cv;
 
           // calc global positions;
           Eigen::VectorXd t_x(n_zero_Tj);       // global x
@@ -417,7 +429,7 @@ class trajectorygenerator {
         }
       }
     }
-  }  // calc_frenet_paths
+  }  // calc_frenet_lattice
 
   // find the closest point on the reference spline, given a position (x, y)
   std::size_t ClosestRefPoint(double _cart_vx, double _cart_vy,
@@ -429,8 +441,9 @@ class trajectorygenerator {
                          std::pow(_cart_vy - _cart_ry(n_closestrefpoint), 2);
 
     // TODO: decide iteration number
-    std::size_t max_iteration = static_cast<std::size_t>(
-        SAMPLE_TIME * MAX_SPEED / TARGET_COURSE_ARC_STEP);
+    std::size_t max_iteration =
+        static_cast<std::size_t>(frenetdata.SAMPLE_TIME * frenetdata.MAX_SPEED /
+                                 frenetdata.TARGET_COURSE_ARC_STEP);
     std::size_t max_index = static_cast<std::size_t>(_cart_rx.size());
 
     for (std::size_t i = 0; i != max_iteration; ++i) {
@@ -586,17 +599,23 @@ class trajectorygenerator {
     return (Eigen::Vector2d() << _x, _y).finished();
   }
 
-};  // trajectorygenerator
+ public:
+  friend void transformf2c(FrenetTrajectoryGenerator &, const FrenetState &,
+                           CartesianState &);
+  friend void transformc2f(FrenetTrajectoryGenerator &, FrenetState &,
+                           const CartesianState &);
 
-void transformf2c(trajectorygenerator &_tg, const FrenetState &_frenetstate,
-                  CartesianState &_cartstate) {
+};  // FrenetTrajectoryGenerator
+
+void transformf2c(FrenetTrajectoryGenerator &_tg,
+                  const FrenetState &_frenetstate, CartesianState &_cartstate) {
   _tg.Frenet2Cart(_frenetstate, _cartstate);
 }
-void transformc2f(trajectorygenerator &_tg, FrenetState &_frenetstate,
+void transformc2f(FrenetTrajectoryGenerator &_tg, FrenetState &_frenetstate,
                   const CartesianState &_cartstate) {
   _tg.Cart2Frenet(_cartstate, _frenetstate);
 }
 
 }  // end namespace ASV
 
-#endif /* _TRAJECTORYGENERATOR_H_*/
+#endif /* _FRENETTRAJECTORYGENERATOR_H_*/
