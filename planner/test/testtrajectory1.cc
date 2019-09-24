@@ -1,6 +1,6 @@
 /*
 ***********************************************************************
-* testFrenetTrajectoryGenerator.cc:
+* testtrajectory.cc:
 * Utility test for Frenet optimal trajectory generator
 * This header file can be read by C++ compilers
 *
@@ -8,7 +8,7 @@
 ***********************************************************************
 */
 #include <cstdlib>
-#include "FrenetTrajectoryGenerator.h"
+#include "FrenetTrajectoryGenerator1.h"
 #include "tcpserver.h"
 #include "timecounter.h"
 #include "utilityio.h"
@@ -23,7 +23,6 @@ union trajectorymsg {
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
-
   // trajectory generator
   Eigen::VectorXd X(5);
   Eigen::VectorXd Y(5);
@@ -43,36 +42,15 @@ int main() {
       0.05,        // TARGET_COURSE_ARC_STEP
       7.0,         // MAX_ROAD_WIDTH
       1.0,         // ROAD_WIDTH_STEP
-      5.0,         // MAXT
-      4.0,         // MINT
+      6.0,         // MAXT
+      5.0,         // MINT
       0.2,         // DT
       1.2,         // MAX_SPEED_DEVIATION
       0.3,         // TRAGET_SPEED_STEP
       2.0          // ROBOT_RADIUS
   };
-
-  // real time data
-  CartesianState Plan_cartesianstate{
-      0,           // x
-      0,           // y
-      M_PI / 3.0,  // theta
-      0,           // kappa
-      2,           // speed
-      0,           // dspeed
-  };
-
-  CartesianState estimate_cartesianstate{
-      0,            // x
-      0,            // y
-      -M_PI / 3.0,  // theta
-      0,            // kappa
-      1,            // speed
-      0,            // dspeed
-  };
-
   FrenetTrajectoryGenerator _trajectorygenerator(_frenetdata, X, Y);
   _trajectorygenerator.setobstacle(ob_x, ob_y);
-
   // socket
   tcpserver _tcpserver("9340");
   const int recv_size = 10;
@@ -84,15 +62,8 @@ int main() {
   timecounter _timer;
 
   for (int i = 0; i != 500; ++i) {
-    Plan_cartesianstate =
-        _trajectorygenerator
-            .trajectoryonestep(
-                estimate_cartesianstate.x, estimate_cartesianstate.y,
-                estimate_cartesianstate.theta, estimate_cartesianstate.kappa,
-                estimate_cartesianstate.speed, estimate_cartesianstate.dspeed,
-                10 / 3.6)
-            .getnextcartesianstate();
-    estimate_cartesianstate = Plan_cartesianstate;
+    _trajectorygenerator.trajectoryonestep(10 / 3.6);
+
     auto _rx = _trajectorygenerator.getCartRefX();
     auto _ry = _trajectorygenerator.getCartRefY();
     auto _bestX = _trajectorygenerator.getbestX();

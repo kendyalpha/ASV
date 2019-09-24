@@ -6,7 +6,6 @@
 *
 * Ref: "Optimal Trajectory Generation for Dynamic Street Scenarios in a Frenet
 * Frame", Moritz Werling et al.
-
 * by Hu.ZH(CrossOcean.ai)
 ***********************************************************************
 */
@@ -59,67 +58,18 @@ class FrenetTrajectoryGenerator {
   }
   virtual ~FrenetTrajectoryGenerator() = default;
 
-  FrenetTrajectoryGenerator &trajectoryonestep(double _x, double _y,
-                                               double _theta, double _kappa,
-                                               double _speed, double _a,
-                                               double _targetspeed) {
-    // static int i = 0;
+  void trajectoryonestep(double _targetspeed) {
+    frenet_optimal_planning(cartesianstate.speed, frenetstate.d,
+                            frenetstate.d_dot, frenetstate.d_ddot,
+                            frenetstate.s, _targetspeed);
 
-    Cart2Frenet(CartesianState{_x, _y, _theta, _kappa, _speed, _a},
-                current_frenetstate);
-
-    // std::cout << i << " After conversion\n";
-    // std::cout << "speed: " << current_frenetstate.s_dot << std::endl;
-    // std::cout << "d: " << current_frenetstate.d << std::endl;
-    // std::cout << "d_dot: " << current_frenetstate.d_dot << std::endl;
-    // std::cout << "d_ddot: " << current_frenetstate.d_ddot << std::endl;
-    // std::cout << "s: " << current_frenetstate.s << std::endl;
-
-    frenet_optimal_planning(current_frenetstate.d, current_frenetstate.d_dot,
-                            current_frenetstate.d_ddot, current_frenetstate.s,
-                            current_frenetstate.s_dot,
-                            current_frenetstate.s_ddot, _targetspeed);
-
-    std::cout << " conversion\n ";
-    std::cout << "speed: " << mincost_path.speed(1) << std::endl;
-    std::cout << "d: " << mincost_path.d(1) << std::endl;
-    std::cout << "d_dot: " << mincost_path.d_dot(1) << std::endl;
-    std::cout << "d_ddot: " << mincost_path.d_ddot(1) << std::endl;
-    std::cout << "s: " << mincost_path.s(1) << std::endl;
-
-    updateNextCartesianStatus();
-
-    // static FrenetState frenetstate{
-    //     0,  // s
-    //     0,  // s_dot
-    //     0,  // s_ddot
-    //     0,  // d
-    //     0,  // d_dot
-    //     0,  // d_ddot
-    //     0,  // d_prime
-    //     0   // d_pprime
-    // };
-
-    // static double t_speed = 1;
-
-    // frenet_optimal_planning(t_speed, frenetstate.d, frenetstate.d_dot,
-    //                         frenetstate.d_ddot, frenetstate.s, _targetspeed);
-
-    // t_speed = mincost_path.s_dot(1);
-    // frenetstate.d = mincost_path.d(1);
-    // frenetstate.d_dot = mincost_path.d_dot(1);
-    // frenetstate.d_ddot = mincost_path.d_ddot(1);
-    // frenetstate.s = mincost_path.s(1);
-
-    // std::cout << "Without conversion\n ";
-    // std::cout << "speed: " << mincost_path.s_dot(1) << std::endl;
-    // std::cout << "d: " << mincost_path.d(1) << std::endl;
-    // std::cout << "d_dot: " << mincost_path.d_dot(1) << std::endl;
-    // std::cout << "d_ddot: " << mincost_path.d_ddot(1) << std::endl;
-    // std::cout << "s: " << mincost_path.s(1) << std::endl;
-
-    // ++i;
-    return *this;
+    std::cout << " After conversion\n";
+    std::cout << "speed: " << cartesianstate.speed << std::endl;
+    std::cout << "d: " << frenetstate.d << std::endl;
+    std::cout << "d_dot: " << frenetstate.d_dot << std::endl;
+    std::cout << "d_ddot: " << frenetstate.d_ddot << std::endl;
+    std::cout << "s: " << frenetstate.s << std::endl;
+    updatecurrentstatus();
   }  // trajectoryonestep
 
   // setup a new targe course and re-generate it
@@ -143,10 +93,6 @@ class FrenetTrajectoryGenerator {
     obstacle_x = _obstacle_x;
     obstacle_y = _obstacle_y;
   }  // setobstacle
-
-  CartesianState getnextcartesianstate() const noexcept {
-    return next_cartesianstate;
-  }
 
  private:
   // constant data in Frenet trajectory generator
@@ -177,7 +123,7 @@ class FrenetTrajectoryGenerator {
   Frenet_path mincost_path;
 
   // real time data
-  CartesianState next_cartesianstate{
+  CartesianState cartesianstate{
       0,            // x
       0,            // y
       -M_PI / 3.0,  // theta
@@ -185,11 +131,11 @@ class FrenetTrajectoryGenerator {
       1,            // speed
       0,            // dspeed
   };
-  FrenetState current_frenetstate{
+  FrenetState frenetstate{
       0,  // s
       0,  // s_dot
       0,  // s_ddot
-      2,  // d
+      0,  // d
       0,  // d_dot
       0,  // d_ddot
       0,  // d_prime
@@ -203,13 +149,12 @@ class FrenetTrajectoryGenerator {
   const double KLAT = 1.0;
   const double KLON = 1.0;
 
-  void frenet_optimal_planning(double _c_d, double _c_d_dot, double _c_d_ddot,
-                               double _s, double _s_dot, double _s_ddot,
-                               double _target_s_dot) {
-    update_endcondition_FrenetLattice(_target_s_dot);
+  void frenet_optimal_planning(double _c_speed, double _c_d, double _c_d_d,
+                               double _c_d_dd, double _s0,
+                               double _targetspeed) {
+    update_endcondition_FrenetLattice(_targetspeed);
 
-    calc_frenet_lattice(_c_d, _c_d_dot, _c_d_ddot, _s, _s_dot, _s_ddot,
-                        _target_s_dot);
+    calc_frenet_lattice(_c_speed, _c_d, _c_d_d, _c_d_dd, _s0, _targetspeed);
 
     auto t_frenet_paths = check_paths();
 
@@ -231,17 +176,16 @@ class FrenetTrajectoryGenerator {
     return _best_path;
   }
 
-  void updateNextCartesianStatus() {
-    // The results of Frenet generation at "DT"
+  void updatecurrentstatus() {
+    // TODO: cart2frenet
 
-    next_cartesianstate.x = mincost_path.x(1);
-    next_cartesianstate.y = mincost_path.y(1);
-    next_cartesianstate.theta = mincost_path.yaw(1);
-    next_cartesianstate.kappa = mincost_path.kappa(1);
-    next_cartesianstate.speed = mincost_path.speed(1);
-    next_cartesianstate.dspeed = mincost_path.dspeed(1);
+    cartesianstate.speed = mincost_path.s_dot(1);
+    frenetstate.d = mincost_path.d(1);
+    frenetstate.d_dot = mincost_path.d_dot(1);
+    frenetstate.d_ddot = mincost_path.d_ddot(1);
+    frenetstate.s = mincost_path.s(1);
 
-  }  // updateNextCartesianStatus
+  }  // updatecurrentstatus
 
   std::vector<Frenet_path> check_paths() {
     std::vector<Frenet_path> t_roi_paths;
@@ -350,20 +294,18 @@ class FrenetTrajectoryGenerator {
                                      5 + frenetdata.MAX_SPEED_DEVIATION);
   }  // initialize_frenet_paths
 
-  void update_endcondition_FrenetLattice(double _target_s_dot) {
+  void update_endcondition_FrenetLattice(double _targetspeed) {
     tvk = Eigen::VectorXd::LinSpaced(
-        n_tvk, _target_s_dot - frenetdata.MAX_SPEED_DEVIATION,
-        _target_s_dot + frenetdata.MAX_SPEED_DEVIATION);
+        n_tvk, _targetspeed - frenetdata.MAX_SPEED_DEVIATION,
+        _targetspeed + frenetdata.MAX_SPEED_DEVIATION);
   }  // initialize_frenet_paths
 
-  void calc_frenet_lattice(double _d,                   // current d(t)
-                           double _d_dot,               // current d(d(t))/dt
-                           double _d_ddot,              // current
-                           double _s,                   // current arclength
-                           double _s_dot,               // current ds/dt
-                           double _s_ddot,              // current d(s_dot)/dt
-                           double _target_s_dot,        // target speed,
-                           double _target_s_ddot = 0.0  //
+  void calc_frenet_lattice(double _speed,       // current speed
+                           double _d,           // current d(t)
+                           double _d_dot,       // current d(d(t))/dt
+                           double _d_ddot,      // current
+                           double _s,           // current arclength
+                           double _targetspeed  // target speed
   ) {
     quintic_polynomial _quintic_polynomial;
     quartic_polynomial _quartic_polynomial;
@@ -396,8 +338,8 @@ class FrenetTrajectoryGenerator {
 
         // Longitudinal motion planning (Velocity keeping)
         for (std::size_t k = 0; k != n_tvk; k++) {
-          _quartic_polynomial.update_startendposition(
-              _s, _s_dot, _s_ddot, tvk(k), _target_s_ddot, Tj(j));
+          _quartic_polynomial.update_startendposition(_s, _speed, 0.0, tvk(k),
+                                                      0.0, Tj(j));
           Eigen::VectorXd t_s(n_zero_Tj);
           Eigen::VectorXd t_s_dot(n_zero_Tj);
           Eigen::VectorXd t_s_ddot(n_zero_Tj);
@@ -427,7 +369,7 @@ class FrenetTrajectoryGenerator {
               KJ * Jp + KT * Tj(j) + KD * std::pow(t_d(n_zero_Tj - 1), 2);
           double _cv =
               KJ * Js + KT * Tj(j) +
-              KD * std::pow((_target_s_dot - t_s_dot(n_zero_Tj - 1)), 2);
+              KD * std::pow((_targetspeed - t_s_dot(n_zero_Tj - 1)), 2);
           double _cf = KLAT * _cd + KLON * _cv;
 
           // calc global positions;
@@ -447,18 +389,18 @@ class FrenetTrajectoryGenerator {
                 0,  // speed
                 0   // dspeed
             };
-            Frenet2Cart(
-                FrenetState{
-                    t_s(ki),        // s
-                    t_s_dot(ki),    // s_dot
-                    t_s_ddot(ki),   // s_ddot
-                    t_d(ki),        // d
-                    t_d_dot(ki),    // d_dot
-                    t_d_ddot(ki),   // d_ddot
-                    t_d_prime(ki),  // d_prime
-                    t_d_pprime(ki)  // d_pprime
-                },
-                _cartesianstate);
+            // add to frenet_paths
+            FrenetState _frenetstate{
+                t_s(ki),        // s
+                t_s_dot(ki),    // s_dot
+                t_s_ddot(ki),   // s_ddot
+                t_d(ki),        // d
+                t_d_dot(ki),    // d_dot
+                t_d_ddot(ki),   // d_ddot
+                t_d_prime(ki),  // d_prime
+                t_d_pprime(ki)  // d_pprime
+            };
+            Frenet2Cart(_frenetstate, _cartesianstate);
 
             t_x(ki) = _cartesianstate.x;
             t_y(ki) = _cartesianstate.y;
@@ -469,7 +411,7 @@ class FrenetTrajectoryGenerator {
           }
 
           // add to frenet_paths
-          frenet_paths.push_back(Frenet_path{
+          Frenet_path _frenet_path{
               _t,          // vector of t
               t_d,         // vector of d
               t_d_dot,     // vector of dd/dt
@@ -488,7 +430,8 @@ class FrenetTrajectoryGenerator {
               _cd,         // cd
               _cv,         // cv
               _cf          // cf
-          });
+          };
+          frenet_paths.push_back(_frenet_path);
         }
       }
     }
