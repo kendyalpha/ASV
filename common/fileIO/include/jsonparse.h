@@ -33,9 +33,6 @@ body-fixed coordinate (BODY-G), whose origin located at the center of gravity
 namespace ASV {
 template <int m, int n = 3>
 class jsonparse {
-  template <int _m, int _n>
-  friend std::ostream& operator<<(std::ostream&, const jsonparse<_m, _n>&);
-
  public:
   explicit jsonparse(const std::string& _jsonname) : jsonname(_jsonname) {
     readjson();
@@ -57,6 +54,7 @@ class jsonparse {
   auto getpiddata() const noexcept { return pidcontrollerdata_input; }
   auto getestimatordata() const noexcept { return estimatordata_input; }
   auto getplannerdata() const noexcept { return plannerdata_input; }
+  auto getfrenetdata() const noexcept { return frenetdata_input; }
 
   std::string getsqlitedata() const noexcept { return dbpath; }
   std::string getgpsport() const noexcept { return gps_port; }
@@ -76,6 +74,7 @@ class jsonparse {
     parseestimatordata();
     parsesqlitedata();
     paresecomcenter();
+    parsefrenetdata();
   }
 
  private:
@@ -143,6 +142,23 @@ class jsonparse {
   estimatordata estimatordata_input{
       0.1,                     // sample_time
       Eigen::Vector3d::Zero()  // antenna2cog
+  };
+
+  Frenetdata frenetdata_input{
+      0.1,         // SAMPLE_TIME
+      50.0 / 3.6,  // MAX_SPEED
+      4.0,         // MAX_ACCEL
+      -3.0,        // MIN_ACCEL
+      1.0,         // MAX_CURVATURE
+      0.05,        // TARGET_COURSE_ARC_STEP
+      7.0,         // MAX_ROAD_WIDTH
+      1.0,         // ROAD_WIDTH_STEP
+      5.0,         // MAXT
+      4.0,         // MINT
+      0.2,         // DT
+      1.2,         // MAX_SPEED_DEVIATION
+      0.3,         // TRAGET_SPEED_STEP
+      2.0          // ROBOT_RADIUS
   };
 
   void parsejson() {
@@ -478,7 +494,41 @@ class jsonparse {
     wind_baudrate = file["comcenter"]["Wind"]["baudrate"].get<unsigned long>();
   }
 
-  void parsegps() {}
+  void parsefrenetdata() {
+    frenetdata_input.SAMPLE_TIME =
+        file["FrenetTrajectory"]["sample_time"].get<double>();
+    std::vector<double> speed_limit =
+        file["property"]["velocity_limit"]["surge"].get<std::vector<double>>();
+    frenetdata_input.MAX_SPEED = vesseldata_input.surge_v(1);
+    frenetdata_input.MAX_ACCEL =
+        vesseldata_input.x_thrust[1] / vesseldata_input.Mass(0, 0);
+    frenetdata_input.MIN_ACCEL =
+        vesseldata_input.x_thrust[0] / vesseldata_input.Mass(0, 0);
+    frenetdata_input.MAX_CURVATURE =
+        1 / file["property"]["mini_turn_radius"].get<double>();
+    frenetdata_input.TARGET_COURSE_ARC_STEP =
+        file["FrenetTrajectory"]["target_course_arc_step"].get<double>();
+    frenetdata_input.MAX_ROAD_WIDTH =
+        file["FrenetTrajectory"]["max_road_width"].get<double>();
+    frenetdata_input.ROAD_WIDTH_STEP =
+        file["FrenetTrajectory"]["road_width_step"].get<double>();
+    frenetdata_input.MAXT =
+        file["FrenetTrajectory"]["max_planning_horizon"].get<double>();
+    frenetdata_input.MINT =
+        file["FrenetTrajectory"]["min_planning_horizon"].get<double>();
+    frenetdata_input.DT =
+        file["FrenetTrajectory"]["planning_horizon_step"].get<double>();
+    frenetdata_input.MAX_SPEED_DEVIATION =
+        file["FrenetTrajectory"]["max_speed_deviation"].get<double>();
+    frenetdata_input.TRAGET_SPEED_STEP =
+        file["FrenetTrajectory"]["target_speed_step"].get<double>();
+    frenetdata_input.ROBOT_RADIUS =
+        file["FrenetTrajectory"]["robot_radius"].get<double>();
+  }  // parsefrenetdata
+
+ public:
+  template <int _m, int _n>
+  friend std::ostream& operator<<(std::ostream&, const jsonparse<_m, _n>&);
 };  // end class jsonparse
 
 template <int _m, int _n>
@@ -582,6 +632,22 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
 
   os << "dbpath:\n";
   os << _jp.dbpath << std::endl;
+
+  os << "Frenet:\n";
+  os << _jp.frenetdata_input.SAMPLE_TIME << std::endl;
+  os << _jp.frenetdata_input.MAX_SPEED << std::endl;
+  os << _jp.frenetdata_input.MAX_ACCEL << std::endl;
+  os << _jp.frenetdata_input.MIN_ACCEL << std::endl;
+  os << _jp.frenetdata_input.MAX_CURVATURE << std::endl;
+  os << _jp.frenetdata_input.TARGET_COURSE_ARC_STEP << std::endl;
+  os << _jp.frenetdata_input.MAX_ROAD_WIDTH << std::endl;
+  os << _jp.frenetdata_input.ROAD_WIDTH_STEP << std::endl;
+  os << _jp.frenetdata_input.MAXT << std::endl;
+  os << _jp.frenetdata_input.MINT << std::endl;
+  os << _jp.frenetdata_input.DT << std::endl;
+  os << _jp.frenetdata_input.MAX_SPEED_DEVIATION << std::endl;
+  os << _jp.frenetdata_input.TRAGET_SPEED_STEP << std::endl;
+  os << _jp.frenetdata_input.ROBOT_RADIUS << std::endl;
   return os;
 }  // friend operator<<
 }  // end namespace ASV

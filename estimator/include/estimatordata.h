@@ -52,6 +52,15 @@ struct estimatorRTdata {
   // x(m), y(m), z(m), roll(rad), pitch(rad), yaw(rad) of CoG
   Eigen::Matrix<double, 6, 1> Measurement_6dof;
 
+  /**************************** Cartesian_state  **************************/
+  /** Motion in Cartesian coordinate
+   * +----+----+------------+----------------+------------+--------------+
+   * | 0  | 1  |      2     |        3       |   4        |     5        |
+   * |x(m)|y(m)|heading(rad)| curvature(1/m) | speed(m/s) | dspeed(m/s2) |
+   * +----+----+------------+----------------+------------+--------------+
+   */
+  Eigen::Matrix<double, 6, 1> Cartesian_state;
+
   /********************* state *********************************************/
   // x(surge: m), y(sway: m), yaw(theta: rad), u, v, r
   // data wroten by Kalman

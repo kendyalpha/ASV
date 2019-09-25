@@ -31,6 +31,9 @@ int main() {
   Y.resize(5);
   X << 0.0, 10.0, 20.5, 35.0, 70.5;
   Y << 0.0, -6.0, 5.0, 6.5, 0.0;
+  // X = Eigen::VectorXd::LinSpaced(5, 0, 5);
+  // Y = Eigen::VectorXd::LinSpaced(5, 0, 0);
+
   _Spline2D.reinterpolation(X, Y);
   Eigen::VectorXd s = _Spline2D.getarclength();
 

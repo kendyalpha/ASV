@@ -60,7 +60,8 @@ class estimator {
     // Kalman filtering
     if constexpr (indicator_kalman == USEKALMAN::KALMANON)
       KalmanFilter.setState(EstimatorRTData.State);
-
+    // compute Cartesian state
+    computeCartesianState(EstimatorRTData);
     return *this;
   }
   // update the estimated force acting on the vessel
@@ -90,6 +91,9 @@ class estimator {
                                   .getState();  // kalman filtering
     else
       performlowpass(EstimatorRTData);  // use low-pass filtering only
+
+    // compute Cartesian state
+    computeCartesianState(EstimatorRTData);
 
     return *this;
 
@@ -236,7 +240,7 @@ class estimator {
     _RTdata.Measurement_6dof(3) = _motionrawdata.gps_roll;
     _RTdata.Measurement_6dof(4) = _motionrawdata.gps_pitch;
     _RTdata.Measurement_6dof(5) = _RTdata.Measurement(2);
-  }
+  }  // compensateantennadeviation
 
   void convert2standardunit(motionrawdata& _motionrawdata) noexcept {
     // project x is the east, y is the north
@@ -280,7 +284,41 @@ class estimator {
     // z_lowpass.movingaverage(_RTdata.Measurement_6dof(2));
     // roll_lowpass.movingaverage(_RTdata.Measurement_6dof(3));
     // pitch_lowpass.movingaverage(_RTdata.Measurement_6dof(4));
-  }
+  }  // performlowpass
+
+  // estimate the state for Frenet optimal trajectory generator
+  void computeCartesianState(estimatorRTdata& _RTdata) {
+    static double previous_cart_x = 0.0;
+    static double previous_cart_y = 0.0;
+    static double previous_theta = 0.0;
+    static double previous_speed = 0.0;
+
+    double _ds = std::sqrt(std::pow(_RTdata.State(0) - previous_cart_x, 2) +
+                           std::pow(_RTdata.State(1) - previous_cart_y, 2));
+
+    double _dtheta = Normalizeheadingangle(_RTdata.State(2) - previous_theta);
+    double _curvature = 0.0;
+
+    if (_ds > (0.05 * sample_time))
+      _curvature = _dtheta / _ds;  // consider the low-speed situation
+
+    double _speed = std::sqrt(std::pow(_RTdata.State(3), 2) +
+                              std::pow(_RTdata.State(4), 2));
+    double _dspeed = (_speed - previous_speed) / sample_time;
+    //
+    _RTdata.Cartesian_state(0) = _RTdata.State(0);
+    _RTdata.Cartesian_state(1) = _RTdata.State(1);
+    _RTdata.Cartesian_state(2) = _RTdata.State(2);
+    _RTdata.Cartesian_state(3) = _curvature;
+    _RTdata.Cartesian_state(4) = _speed;
+    _RTdata.Cartesian_state(5) = _dspeed;
+
+    // update previous state
+    previous_cart_x = _RTdata.State(0);
+    previous_cart_y = _RTdata.State(1);
+    previous_theta = _RTdata.State(2);
+    previous_speed = _speed;
+  }  // computeCartesianState
 
   double rad2degree(double _rad) const noexcept {
     return _rad * 180.0 / M_PI;

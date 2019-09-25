@@ -15,6 +15,7 @@
 #include <pthread.h>
 #include <chrono>
 #include <thread>
+#include "FrenetTrajectoryGenerator.h"
 #include "controller.h"
 #include "database.h"
 #include "easylogging++.h"
@@ -26,6 +27,8 @@
 #include "tcpserver.h"
 #include "timecounter.h"
 #include "trajectorytracking.h"
+
+using namespace ASV;
 
 constexpr int num_thruster = 2;
 constexpr int dim_controlspace = 3;
@@ -48,6 +51,7 @@ class threadloop {
                     _jsonparse.gettunneldata(), _jsonparse.getazimuthdata(),
                     _jsonparse.getmainrudderdata(),
                     _jsonparse.gettwinfixeddata()),
+        _trajectorygenerator(_jsonparse.getfrenetdata()),
         _sqlite(_jsonparse.getsqlitedata()),
         _tcpserver("9340") {
     intializethreadloop();
@@ -104,10 +108,21 @@ class threadloop {
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement_6dof
+      Eigen::Matrix<double, 6, 1>::Zero(),  // Cartesian_state
       Eigen::Matrix<double, 6, 1>::Zero(),  // State
       Eigen::Vector3d::Zero(),              // p_error
       Eigen::Vector3d::Zero(),              // v_error
       Eigen::Vector3d::Zero()               // BalphaU
+  };
+
+  // real time data
+  CartesianState Plan_cartesianstate{
+      0,           // x
+      0,           // y
+      M_PI / 3.0,  // theta
+      0,           // kappa
+      2,           // speed
+      0,           // dspeed
   };
 
   int indicator_socket;
@@ -119,6 +134,8 @@ class threadloop {
   trajectorytracking _trajectorytracking;
   controller<10, num_thruster, indicator_actuation, dim_controlspace>
       _controller;
+
+  FrenetTrajectoryGenerator _trajectorygenerator;
   database<num_thruster, dim_controlspace> _sqlite;
   tcpserver _tcpserver;
 
@@ -143,6 +160,8 @@ class threadloop {
     X << 0.0, 10.0, 20.5, 35.0, 70.5;
     Y << 0.0, 0, 5.0, 6.5, 0.0;
 
+    _trajectorygenerator.regenerate_target_course(X, Y);
+
     Spline2D target_Spline2D(X, Y);
 
     sqlite::database db(
@@ -154,19 +173,15 @@ class threadloop {
         " Y           DOUBLE); ";
     db << str;
 
-    Eigen::VectorXd s = target_Spline2D.getarclength();
-    double s_max = s.maxCoeff();
-    double step = 0.05;
-    int n = 1 + static_cast<int>(s_max / step);
+    auto CartRefX = _trajectorygenerator.getCartRefX();
+    auto CartRefY = _trajectorygenerator.getCartRefY();
 
-    for (int i = 0; i != n; i++) {
-      Eigen::Vector2d position = target_Spline2D.compute_position(step * i);
-
+    for (int i = 0; i != CartRefX.size(); i++) {
       // save to sqlite
       std::string str =
           "INSERT INTO WP"
           "(X, Y) VAlUES(" +
-          std::to_string(position(0)) + ", " + std::to_string(position(1)) +
+          std::to_string(CartRefX(i)) + ", " + std::to_string(CartRefY(i)) +
           ");";
       db << str;
     }
@@ -183,6 +198,15 @@ class threadloop {
     }
     while (1) {
       outerloop_elapsed_time = timer_planner.timeelapsed();
+
+      Plan_cartesianstate =
+          _trajectorygenerator
+              .trajectoryonestep(
+                  _estimatorRTdata.State(0), _estimatorRTdata.State(1),
+                  _estimatorRTdata.State(2), estimate_cartesianstate.kappa,
+                  estimate_cartesianstate.speed, estimate_cartesianstate.dspeed,
+                  10 / 3.6)
+              .getnextcartesianstate();
 
       is += sample_time_s * _plannerRTdata.speed;
       if (is <= s_max) {

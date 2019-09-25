@@ -50,9 +50,10 @@ class FrenetTrajectoryGenerator {
   };
 
  public:
-  FrenetTrajectoryGenerator(const Frenetdata &_Frenetdata,
-                            const Eigen::VectorXd &_wx,
-                            const Eigen::VectorXd &_wy)
+  FrenetTrajectoryGenerator(
+      const Frenetdata &_Frenetdata,
+      const Eigen::VectorXd &_wx = Eigen::VectorXd::LinSpaced(5, 0, 5),
+      const Eigen::VectorXd &_wy = Eigen::VectorXd::LinSpaced(5, 0, 0))
       : frenetdata(_Frenetdata), target_Spline2D(_wx, _wy) {
     setup_target_course();
     initialize_endcondition_FrenetLattice();

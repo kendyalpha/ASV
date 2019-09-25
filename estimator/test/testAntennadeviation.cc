@@ -59,6 +59,7 @@ int main() {
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement_6dof
+      Eigen::Matrix<double, 6, 1>::Zero(),  // Cartesian_state
       Eigen::Matrix<double, 6, 1>::Zero(),  // State
       Eigen::Vector3d::Zero(),              // p_error
       Eigen::Vector3d::Zero(),              // v_error

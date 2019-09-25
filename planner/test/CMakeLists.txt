@@ -55,9 +55,6 @@ target_include_directories(testplanner PRIVATE ${HEADER_DIRECTORY})
 add_executable (testtrajectory testtrajectory.cc ${SOURCE_FILES} )
 target_include_directories(testtrajectory PRIVATE ${HEADER_DIRECTORY})
 
-add_executable (testtrajectory1 testtrajectory1.cc ${SOURCE_FILES} )
-target_include_directories(testtrajectory1 PRIVATE ${HEADER_DIRECTORY})
-
 
 add_executable (testtransform testtransform.cc ${SOURCE_FILES} )
 target_include_directories(testtransform PRIVATE ${HEADER_DIRECTORY})

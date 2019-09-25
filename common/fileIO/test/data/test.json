@@ -5,6 +5,7 @@
   "property": {
     "L":3,
     "B":1,
+    "mini_turn_radius":1,
     "Mass": [540, 0, 0, 0, 540, 200, 0, 200, 1000],
     "AddedMass": [83, 0, 0, 0, 166, 244, 0, 244, 298],
     "Damping": [17, 0, 0, 0, 20, 0, 0, 0, 100],
@@ -120,6 +121,18 @@
   "planner": {
     "sample_time": 0.1
   },
+  "FrenetTrajectory":{
+    "sample_time": 0.1,
+    "target_course_arc_step":0.05,
+    "max_road_width":7,
+    "road_width_step":1,
+    "max_planning_horizon":5,  
+    "min_planning_horizon":4,
+    "planning_horizon_step":0.2,
+    "max_speed_deviation":1.2,
+    "target_speed_step":0.3,
+    "robot_radius":2
+  },
   "sensors":{
     "GPS":{
       "number": 1,
@@ -148,11 +161,5 @@
       "port":"/dev/ttyUSB3",
       "baudrate":9600
     }
-  },
-  "nothing": null,
-  "list": [1, 0, 2],
-  "object": {
-    "currency": "USD",
-    "value": 42.99
   }
 }
