@@ -28,7 +28,7 @@
 #include "timecounter.h"
 #include "trajectorytracking.h"
 
-using namespace ASV;
+namespace ASV {
 
 constexpr int num_thruster = 2;
 constexpr int dim_controlspace = 3;
@@ -108,7 +108,7 @@ class threadloop {
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement_6dof
-      Eigen::Matrix<double, 6, 1>::Zero(),  // Cartesian_state
+      Eigen::Matrix<double, 6, 1>::Zero(),  // Marine_state
       Eigen::Matrix<double, 6, 1>::Zero(),  // State
       Eigen::Vector3d::Zero(),              // p_error
       Eigen::Vector3d::Zero(),              // v_error
@@ -116,7 +116,7 @@ class threadloop {
   };
 
   // real time data
-  CartesianState Plan_cartesianstate{
+  CartesianState Planning_Marine_state{
       0,           // x
       0,           // y
       M_PI / 3.0,  // theta
@@ -151,7 +151,6 @@ class threadloop {
     long int innerloop_elapsed_time = 0;
     long int sample_time_ms =
         static_cast<long int>(1000 * _planner.getsampletime());
-    double sample_time_s = _planner.getsampletime();
 
     // trajectory generator
     Eigen::VectorXd X(5);
@@ -161,8 +160,6 @@ class threadloop {
     Y << 0.0, 0, 5.0, 6.5, 0.0;
 
     _trajectorygenerator.regenerate_target_course(X, Y);
-
-    Spline2D target_Spline2D(X, Y);
 
     sqlite::database db(
         "/home/scar1et/Coding/ASV/examples/siyuanhuhao/simulation/data/wp.db");
@@ -181,17 +178,12 @@ class threadloop {
       std::string str =
           "INSERT INTO WP"
           "(X, Y) VAlUES(" +
-          std::to_string(CartRefX(i)) + ", " + std::to_string(CartRefY(i)) +
+          std::to_string(CartRefX(i)) + ", " + std::to_string(-CartRefY(i)) +
           ");";
       db << str;
     }
     CLOG(INFO, "waypoints") << "Waypoints have been generated";
     indicator_waypoint = 1;
-
-    _plannerRTdata.speed = 1;  // desired speed
-    _plannerRTdata.waypoint0 << X(0), Y(0);
-    _plannerRTdata.waypoint1 << X(0), Y(0);
-    double is = 0.0;
 
     while (1) {
       if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
@@ -199,24 +191,22 @@ class threadloop {
     while (1) {
       outerloop_elapsed_time = timer_planner.timeelapsed();
 
-      Plan_cartesianstate =
+      auto Plan_cartesianstate =
           _trajectorygenerator
-              .trajectoryonestep(
-                  _estimatorRTdata.State(0), _estimatorRTdata.State(1),
-                  _estimatorRTdata.State(2), estimate_cartesianstate.kappa,
-                  estimate_cartesianstate.speed, estimate_cartesianstate.dspeed,
-                  10 / 3.6)
+              .trajectoryonestep(_estimatorRTdata.Marine_state(0),
+                                 _estimatorRTdata.Marine_state(1),
+                                 _estimatorRTdata.Marine_state(2),
+                                 _estimatorRTdata.Marine_state(3),
+                                 _estimatorRTdata.Marine_state(4),
+                                 _estimatorRTdata.Marine_state(5), 2)
               .getnextcartesianstate();
+      Planning_Marine_state.x = Plan_cartesianstate.x;
+      Planning_Marine_state.speed = Plan_cartesianstate.speed;
+      Planning_Marine_state.dspeed = Plan_cartesianstate.dspeed;
 
-      is += sample_time_s * _plannerRTdata.speed;
-      if (is <= s_max) {
-        _plannerRTdata.waypoint0 = _plannerRTdata.waypoint1;
-        _plannerRTdata.waypoint1 = target_Spline2D.compute_position(is);
-        _plannerRTdata.curvature = -target_Spline2D.compute_curvature(is);
-      } else {
-        CLOG(INFO, "planner") << "Planner reach the last waypoint";
-        break;
-      }
+      Cart2Marine(Plan_cartesianstate.y, Plan_cartesianstate.theta,
+                  Plan_cartesianstate.kappa, Planning_Marine_state.y,
+                  Planning_Marine_state.theta, Planning_Marine_state.kappa);
 
       innerloop_elapsed_time = timer_planner.timeelapsed();
       std::this_thread::sleep_for(
@@ -242,13 +232,11 @@ class threadloop {
       outerloop_elapsed_time = timer_controler.timeelapsed();
       _controller.setcontrolmode(CONTROLMODE::MANEUVERING);
       // trajectory tracking
-      _trackerRTdata =
-          _trajectorytracking
-              .CircularArcLOS(_plannerRTdata.curvature, _plannerRTdata.speed,
-                              _estimatorRTdata.State.head(2),
-                              _plannerRTdata.waypoint0,
-                              _plannerRTdata.waypoint1)
-              .gettrackerRTdata();
+      _trackerRTdata = _trajectorytracking
+                           .CircularArcLOS(Planning_Marine_state.kappa,
+                                           Planning_Marine_state.speed,
+                                           Planning_Marine_state.theta)
+                           .gettrackerRTdata();
       // controller
       _controllerRTdata = _controller
                               .controlleronestep(Eigen::Vector3d::Zero(),
@@ -366,6 +354,8 @@ class threadloop {
         CLOG(INFO, "socket") << "Too much time!";
     }
   }  // socketloop()
-};
+};   // end threadloop
+
+}  // end namespace ASV
 
 #endif /* _THREADLOOP_H_ */

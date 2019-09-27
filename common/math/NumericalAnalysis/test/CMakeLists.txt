@@ -1,5 +1,5 @@
 # CMake 最低版本号要求
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 3.8)
 
 # 项目信息
 project (testtimer)
@@ -36,6 +36,6 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} "/usr/lib")
 add_executable (testspline testspline.cc)
 target_include_directories(testspline PRIVATE ${HEADER_DIRECTORY})
 
-add_executable (testsplineplanner testsplineplanner.cc)
-target_include_directories(testsplineplanner PRIVATE ${HEADER_DIRECTORY})
+add_executable (testspline2d testspline2d.cc)
+target_include_directories(testspline2d PRIVATE ${HEADER_DIRECTORY})
 

@@ -108,6 +108,8 @@ class estimator {
     EstimatorRTData.State = KalmanFilter.linearkalman(EstimatorRTData)
                                 .getState();  // kalman filtering
 
+    // compute Cartesian state
+    computeCartesianState(EstimatorRTData);
     return *this;
   }
 
@@ -306,12 +308,12 @@ class estimator {
                               std::pow(_RTdata.State(4), 2));
     double _dspeed = (_speed - previous_speed) / sample_time;
     //
-    _RTdata.Cartesian_state(0) = _RTdata.State(0);
-    _RTdata.Cartesian_state(1) = _RTdata.State(1);
-    _RTdata.Cartesian_state(2) = _RTdata.State(2);
-    _RTdata.Cartesian_state(3) = _curvature;
-    _RTdata.Cartesian_state(4) = _speed;
-    _RTdata.Cartesian_state(5) = _dspeed;
+    _RTdata.Marine_state(0) = _RTdata.State(0);
+    _RTdata.Marine_state(1) = _RTdata.State(1);
+    _RTdata.Marine_state(2) = _RTdata.State(2);
+    _RTdata.Marine_state(3) = _curvature;
+    _RTdata.Marine_state(4) = _speed;
+    _RTdata.Marine_state(5) = _dspeed;
 
     // update previous state
     previous_cart_x = _RTdata.State(0);

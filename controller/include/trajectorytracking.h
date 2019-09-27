@@ -161,6 +161,21 @@ class trajectorytracking final : public lineofsight {
     return *this;
   }  // CircularArcLOS
 
+  // follow a circular arc without LOS
+  trajectorytracking &CircularArcLOS(double _desired_curvature,
+                                     double _desired_speed,
+                                     double _desired_heading) {
+    // desired u and r
+    double _rot = _desired_curvature * _desired_speed;
+    TrackerRTdata.v_setpoint(0) = _desired_speed;
+    TrackerRTdata.v_setpoint(2) = _rot;
+
+    // desired heading
+    TrackerRTdata.setpoint(2) = _desired_heading;
+
+    return *this;
+  }  // CircularArcLOS
+
   auto gettrackerRTdata() const noexcept { return TrackerRTdata; }
 
  private:

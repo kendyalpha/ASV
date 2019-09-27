@@ -25,12 +25,12 @@ int main() {
   LOG(INFO) << "The program has started!";
 
   // trajectory generator
-  Eigen::VectorXd X(5);
-  Eigen::VectorXd Y(5);
+  Eigen::VectorXd marine_X(5);
+  Eigen::VectorXd marine_Y(5);
   Eigen::VectorXd ob_x(5);
   Eigen::VectorXd ob_y(5);
-  X << 0.0, 10.0, 20.5, 35.0, 70.5;
-  Y << 0.0, -6.0, 5.0, 6.5, 0.0;
+  marine_X << 0.0, 10.0, 20.5, 35.0, 70.5;
+  marine_Y << 0.0, 6.0, -5.0, -6.5, 0.0;
   ob_x << 20.0, 30.0, 30.0, 35.0, 50.0;
   ob_y << 10.0, 6.0, 8.0, 8.0, 3.0;
 
@@ -54,23 +54,24 @@ int main() {
   // real time data
   CartesianState Plan_cartesianstate{
       0,           // x
-      0,           // y
+      -1,          // y
       M_PI / 3.0,  // theta
       0,           // kappa
       2,           // speed
       0,           // dspeed
   };
 
-  CartesianState estimate_cartesianstate{
-      0,            // x
-      0,            // y
-      -M_PI / 3.0,  // theta
-      0,            // kappa
-      1,            // speed
-      0,            // dspeed
+  CartesianState estimate_marinestate{
+      0,           // x
+      -1,          // y
+      M_PI / 3.0,  // theta
+      0,           // kappa
+      1,           // speed
+      0,           // dspeed
   };
 
-  FrenetTrajectoryGenerator _trajectorygenerator(_frenetdata, X, Y);
+  FrenetTrajectoryGenerator _trajectorygenerator(_frenetdata);
+  _trajectorygenerator.regenerate_target_course(marine_X, marine_Y);
   _trajectorygenerator.setobstacle(ob_x, ob_y);
 
   // socket
@@ -86,34 +87,37 @@ int main() {
   for (int i = 0; i != 500; ++i) {
     Plan_cartesianstate =
         _trajectorygenerator
-            .trajectoryonestep(
-                estimate_cartesianstate.x, estimate_cartesianstate.y,
-                estimate_cartesianstate.theta, estimate_cartesianstate.kappa,
-                estimate_cartesianstate.speed, estimate_cartesianstate.dspeed,
-                10 / 3.6)
+            .trajectoryonestep(estimate_marinestate.x, estimate_marinestate.y,
+                               estimate_marinestate.theta,
+                               estimate_marinestate.kappa,
+                               estimate_marinestate.speed,
+                               estimate_marinestate.dspeed, 10 / 3.6)
             .getnextcartesianstate();
-    estimate_cartesianstate = Plan_cartesianstate;
-    auto _rx = _trajectorygenerator.getCartRefX();
-    auto _ry = _trajectorygenerator.getCartRefY();
-    auto _bestX = _trajectorygenerator.getbestX();
-    auto _bestY = _trajectorygenerator.getbestY();
-    auto _cx = _bestX(1);
-    auto _cy = _bestY(1);
-    auto _cyaw = _trajectorygenerator.getcyaw();
 
-    _sendmsg.double_msg[0] = _cx;    // vessel x
-    _sendmsg.double_msg[1] = _cy;    // vessel y
-    _sendmsg.double_msg[2] = _cyaw;  // vessel heading
+    estimate_marinestate = Plan_cartesianstate;
+
+    Cart2Marine(Plan_cartesianstate.y, Plan_cartesianstate.theta,
+                Plan_cartesianstate.kappa, estimate_marinestate.y,
+                estimate_marinestate.theta, estimate_marinestate.kappa);
+
+    auto cart_rx = _trajectorygenerator.getCartRefX();
+    auto cart_ry = _trajectorygenerator.getCartRefY();
+    auto cart_bestX = _trajectorygenerator.getbestX();
+    auto cart_bestY = _trajectorygenerator.getbestY();
+
+    _sendmsg.double_msg[0] = estimate_marinestate.x;      // vessel x
+    _sendmsg.double_msg[1] = estimate_marinestate.y;      // vessel y
+    _sendmsg.double_msg[2] = estimate_marinestate.theta;  // vessel heading
 
     for (int j = 0; j != 5; j++) {
-      _sendmsg.double_msg[2 * j + 3] = ob_x(j);  // obstacle x
-      _sendmsg.double_msg[2 * j + 4] = ob_y(j);  // obstacle y
+      _sendmsg.double_msg[2 * j + 3] = ob_x(j);   // obstacle x
+      _sendmsg.double_msg[2 * j + 4] = -ob_y(j);  // obstacle y
     }
 
-    _sendmsg.double_msg[13] = _bestX.size();  // the length of vector
-    for (int j = 0; j != _bestX.size(); j++) {
-      _sendmsg.double_msg[2 * j + 14] = _bestX(j);  // best X
-      _sendmsg.double_msg[2 * j + 15] = _bestY(j);  // best Y
+    _sendmsg.double_msg[13] = cart_bestX.size();  // the length of vector
+    for (int j = 0; j != cart_bestX.size(); j++) {
+      _sendmsg.double_msg[2 * j + 14] = cart_bestX(j);   // best X
+      _sendmsg.double_msg[2 * j + 15] = -cart_bestY(j);  // best Y
     }
 
     // _sendmsg.double_msg[13 + 2 * _bestX.size()] =
@@ -126,8 +130,9 @@ int main() {
     _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
                             send_size);
 
-    if ((std::pow(_cx - _rx(_rx.size() - 1), 2) +
-         std::pow(_cy - _ry(_ry.size() - 1), 2)) <= 1.0) {
+    if ((std::pow(estimate_marinestate.x - cart_rx(cart_rx.size() - 1), 2) +
+         std::pow(estimate_marinestate.y + cart_ry(cart_ry.size() - 1), 2)) <=
+        1.0) {
       std::cout << "goal\n";
       break;
     }

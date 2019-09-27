@@ -5,6 +5,7 @@
   "property": {
     "L":3.1,
     "B":1.6,
+    "mini_turn_radius":1,
     "Mass": [225, 0, 0, 0, 225, 90, 0, 90, 460],
     "AddedMass": [37, 0, 0, 0, 68, 72, 0, 72, 80],
     "Damping": [12, 0, 0, 0, 15, 0, 0, 0, 25],
@@ -75,6 +76,18 @@
   },
   "planner": {
     "sample_time": 0.1
+  },
+  "FrenetTrajectory":{
+    "sample_time": 0.1,
+    "target_course_arc_step":0.05,
+    "max_road_width":7,
+    "road_width_step":1,
+    "max_planning_horizon":5,  
+    "min_planning_horizon":4,
+    "planning_horizon_step":0.2,
+    "max_speed_deviation":1.2,
+    "target_speed_step":0.3,
+    "robot_radius":2
   },
   "sensors":{
     "GPS":{

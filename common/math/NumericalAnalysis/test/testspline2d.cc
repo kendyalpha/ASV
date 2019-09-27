@@ -1,6 +1,6 @@
 /*
 ***********************************************************************
-* testsplineplanner.cc:
+* testspline2d.cc:
 * Utility test for cubic spline library
 * This header file can be read by C++ compilers
 *
@@ -56,6 +56,13 @@ int main() {
     rk[i] = _Spline2D.compute_curvature(is);
     ryaw[i] = _Spline2D.compute_yaw(is);
     rdk[i] = _Spline2D.compute_dcurvature(is);
+  }
+
+  for (int i = 0; i != (n - 1); i++) {
+    double ds = std::sqrt(std::pow(rx[i + 1] - rx[i], 2) +
+                          std::pow(ry[i + 1] - ry[i], 2));
+    double dtheta = ryaw[i + 1] - ryaw[i];
+    std::cout << dtheta / ds << std::endl;
   }
 
   utilityio _utilityio;

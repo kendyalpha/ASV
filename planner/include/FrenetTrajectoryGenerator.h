@@ -54,20 +54,47 @@ class FrenetTrajectoryGenerator {
       const Frenetdata &_Frenetdata,
       const Eigen::VectorXd &_wx = Eigen::VectorXd::LinSpaced(5, 0, 5),
       const Eigen::VectorXd &_wy = Eigen::VectorXd::LinSpaced(5, 0, 0))
-      : frenetdata(_Frenetdata), target_Spline2D(_wx, _wy) {
+      : frenetdata(_Frenetdata),
+        n_di(0),
+        n_Tj(0),
+        tvk(0),
+        target_Spline2D(_wx, _wy),
+        next_cartesianstate(CartesianState{
+            0,            // x
+            0,            // y
+            -M_PI / 3.0,  // theta
+            0,            // kappa
+            1,            // speed
+            0,            // dspeed
+        }),
+        current_frenetstate(FrenetState{
+            0,  // s
+            0,  // s_dot
+            0,  // s_ddot
+            2,  // d
+            0,  // d_dot
+            0,  // d_ddot
+            0,  // d_prime
+            0   // d_pprime
+        }) {
     setup_target_course();
     initialize_endcondition_FrenetLattice();
   }
   virtual ~FrenetTrajectoryGenerator() = default;
 
-  FrenetTrajectoryGenerator &trajectoryonestep(double _x, double _y,
-                                               double _theta, double _kappa,
-                                               double _speed, double _a,
+  FrenetTrajectoryGenerator &trajectoryonestep(double marine_x, double marine_y,
+                                               double marine_theta,
+                                               double marine_kappa,
+                                               double marine_speed,
+                                               double marine_a,
                                                double _targetspeed) {
     // static int i = 0;
+    CartesianState _cart_state{marine_x,     marine_y,     marine_theta,
+                               marine_kappa, marine_speed, marine_a};
 
-    Cart2Frenet(CartesianState{_x, _y, _theta, _kappa, _speed, _a},
-                current_frenetstate);
+    Marine2Cart(marine_y, marine_theta, marine_kappa, _cart_state.y,
+                _cart_state.theta, _cart_state.kappa);
+    Cart2Frenet(_cart_state, current_frenetstate);
 
     // std::cout << i << " After conversion\n";
     // std::cout << "speed: " << current_frenetstate.s_dot << std::endl;
@@ -81,12 +108,12 @@ class FrenetTrajectoryGenerator {
                             current_frenetstate.s_dot,
                             current_frenetstate.s_ddot, _targetspeed);
 
-    std::cout << " conversion\n ";
-    std::cout << "speed: " << mincost_path.speed(1) << std::endl;
-    std::cout << "d: " << mincost_path.d(1) << std::endl;
-    std::cout << "d_dot: " << mincost_path.d_dot(1) << std::endl;
-    std::cout << "d_ddot: " << mincost_path.d_ddot(1) << std::endl;
-    std::cout << "s: " << mincost_path.s(1) << std::endl;
+    // std::cout << " conversion\n ";
+    // std::cout << "speed: " << mincost_path.speed(1) << std::endl;
+    // std::cout << "d: " << mincost_path.d(1) << std::endl;
+    // std::cout << "d_dot: " << mincost_path.d_dot(1) << std::endl;
+    // std::cout << "d_ddot: " << mincost_path.d_ddot(1) << std::endl;
+    // std::cout << "s: " << mincost_path.s(1) << std::endl;
 
     updateNextCartesianStatus();
 
@@ -124,9 +151,10 @@ class FrenetTrajectoryGenerator {
   }  // trajectoryonestep
 
   // setup a new targe course and re-generate it
-  void regenerate_target_course(const Eigen::VectorXd &_wx,
-                                const Eigen::VectorXd &_wy) {
-    target_Spline2D.reinterpolation(_wx, _wy);
+  void regenerate_target_course(const Eigen::VectorXd &_marine_wx,
+                                const Eigen::VectorXd &_marine_wy) {
+    auto cart_wy = Marine2Cart(_marine_wy);
+    target_Spline2D.reinterpolation(_marine_wx, cart_wy);  // cart_wy=marine_wx
     setup_target_course();
   }  // regenerate_target_course
 
@@ -136,8 +164,6 @@ class FrenetTrajectoryGenerator {
   Eigen::VectorXd getRefKappa() const noexcept { return RefKappa; }
   Eigen::VectorXd getbestX() const noexcept { return mincost_path.x; }
   Eigen::VectorXd getbestY() const noexcept { return mincost_path.y; }
-
-  double getcyaw() const noexcept { return mincost_path.yaw(1); }
 
   void setobstacle(const Eigen::VectorXd &_obstacle_x,
                    const Eigen::VectorXd &_obstacle_y) noexcept {
@@ -152,6 +178,16 @@ class FrenetTrajectoryGenerator {
  private:
   // constant data in Frenet trajectory generator
   Frenetdata frenetdata;
+  // end conditions of Frenet Lattice
+  std::size_t n_di;
+  std::size_t n_Tj;
+  std::size_t n_tvk;
+  Eigen::VectorXd di;
+  Eigen::VectorXd Tj;
+  Eigen::VectorXd tvk;
+  // Frenet lattice
+  std::vector<Frenet_path> frenet_paths;
+  Frenet_path mincost_path;
   // center line
   Spline2D target_Spline2D;
   Eigen::VectorXd Frenet_s;        // arclength (m)
@@ -161,42 +197,13 @@ class FrenetTrajectoryGenerator {
   Eigen::VectorXd RefKappa;        // reference curvature
   Eigen::VectorXd RefKappa_prime;  // reference dk/ds
 
-  // end conditions of Frenet Lattice
-  std::size_t n_di = 0;
-  std::size_t n_Tj = 0;
-  std::size_t n_tvk = 0;
-  Eigen::VectorXd di;
-  Eigen::VectorXd Tj;
-  Eigen::VectorXd tvk;
-
   // obstacles
   Eigen::VectorXd obstacle_x;
   Eigen::VectorXd obstacle_y;
 
-  //
-  std::vector<Frenet_path> frenet_paths;
-  Frenet_path mincost_path;
-
   // real time data
-  CartesianState next_cartesianstate{
-      0,            // x
-      0,            // y
-      -M_PI / 3.0,  // theta
-      0,            // kappa
-      1,            // speed
-      0,            // dspeed
-  };
-  FrenetState current_frenetstate{
-      0,  // s
-      0,  // s_dot
-      0,  // s_ddot
-      2,  // d
-      0,  // d_dot
-      0,  // d_ddot
-      0,  // d_prime
-      0   // d_pprime
-  };
-
+  CartesianState next_cartesianstate;
+  FrenetState current_frenetstate;
   // cost weights
   const double KJ = 0.1;
   const double KT = 0.1;
@@ -234,13 +241,13 @@ class FrenetTrajectoryGenerator {
 
   void updateNextCartesianStatus() {
     // The results of Frenet generation at "DT"
-
-    next_cartesianstate.x = mincost_path.x(1);
-    next_cartesianstate.y = mincost_path.y(1);
-    next_cartesianstate.theta = mincost_path.yaw(1);
-    next_cartesianstate.kappa = mincost_path.kappa(1);
-    next_cartesianstate.speed = mincost_path.speed(1);
-    next_cartesianstate.dspeed = mincost_path.dspeed(1);
+    const int index = 10;
+    next_cartesianstate.x = mincost_path.x(index);
+    next_cartesianstate.y = mincost_path.y(index);
+    next_cartesianstate.theta = mincost_path.yaw(index);
+    next_cartesianstate.kappa = mincost_path.kappa(index);
+    next_cartesianstate.speed = mincost_path.speed(index);
+    next_cartesianstate.dspeed = mincost_path.dspeed(index);
 
   }  // updateNextCartesianStatus
 
