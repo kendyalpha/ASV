@@ -50,6 +50,8 @@ struct Frenetdata {
   double TRAGET_SPEED_STEP;       // target speed sampling length [m/s]
 
   /* collision check */
+  double HULL_LENGTH;   // [m] Length of vessel hull
+  double HULL_WIDTH;    // [m] Width of vessel hull
   double ROBOT_RADIUS;  // robot radius[m]
 };
 

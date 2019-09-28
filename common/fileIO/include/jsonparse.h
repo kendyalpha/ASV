@@ -158,6 +158,8 @@ class jsonparse {
       0.2,         // DT
       1.2,         // MAX_SPEED_DEVIATION
       0.3,         // TRAGET_SPEED_STEP
+      1,           // HULL_LENGTH
+      1,           // HULL_WIDTH
       2.0          // ROBOT_RADIUS
   };
 
@@ -522,6 +524,10 @@ class jsonparse {
         file["FrenetTrajectory"]["max_speed_deviation"].get<double>();
     frenetdata_input.TRAGET_SPEED_STEP =
         file["FrenetTrajectory"]["target_speed_step"].get<double>();
+
+    frenetdata_input.HULL_LENGTH = vesseldata_input.L;
+    frenetdata_input.HULL_WIDTH = vesseldata_input.B;
+
     frenetdata_input.ROBOT_RADIUS =
         file["FrenetTrajectory"]["robot_radius"].get<double>();
   }  // parsefrenetdata
@@ -647,6 +653,8 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
   os << _jp.frenetdata_input.DT << std::endl;
   os << _jp.frenetdata_input.MAX_SPEED_DEVIATION << std::endl;
   os << _jp.frenetdata_input.TRAGET_SPEED_STEP << std::endl;
+  os << _jp.frenetdata_input.HULL_LENGTH << std::endl;
+  os << _jp.frenetdata_input.HULL_WIDTH << std::endl;
   os << _jp.frenetdata_input.ROBOT_RADIUS << std::endl;
   return os;
 }  // friend operator<<

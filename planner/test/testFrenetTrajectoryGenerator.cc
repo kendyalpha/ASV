@@ -48,6 +48,8 @@ int main() {
       0.2,         // DT
       1.2,         // MAX_SPEED_DEVIATION
       0.3,         // TRAGET_SPEED_STEP
+      3,           // HULL_LENGTH
+      1,           // HULL_WIDTH
       2.0          // ROBOT_RADIUS
   };
 

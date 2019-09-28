@@ -239,9 +239,12 @@ class FrenetTrajectoryGenerator {
     return _best_path;
   }
 
-  void updateNextCartesianStatus() {
+  void updateNextCartesianStatus(double _target_s_dot = 1.0) {
     // The results of Frenet generation at "DT"
-    const int index = 10;
+    const int index = 8;
+
+    // int index = static_cast<int>(frenetdata.HULL_LENGTH /
+    //                              (_target_s_dot * frenetdata.SAMPLE_TIME));
     next_cartesianstate.x = mincost_path.x(index);
     next_cartesianstate.y = mincost_path.y(index);
     next_cartesianstate.theta = mincost_path.yaw(index);
