@@ -11,7 +11,7 @@
 #define _TIMECOUNTER_H_
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 
 namespace ASV {
 

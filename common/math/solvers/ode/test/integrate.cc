@@ -1,13 +1,13 @@
 /*
  [auto_generated]
- libs/numeric/odeint/test_external/eigen/runge_kutta4.cpp
+ integrate.cpp
 
  [begin_description]
  tba.
  [end_description]
 
- Copyright 2013 Karsten Ahnert
- Copyright 2013 Mario Mulansky
+ Copyright 2009-2012 Karsten Ahnert
+ Copyright 2009-2012 Mario Mulansky
 
  Distributed under the Boost Software License, Version 1.0.
  (See accompanying file LICENSE_1_0.txt or
@@ -19,29 +19,38 @@
 #pragma warning(disable : 4996)
 #endif
 
-#define BOOST_TEST_MODULE odeint_eigen_runge_kutta4
+#include "odesolver.h"
 
-#include <boost/test/unit_test.hpp>
-
-#include <boost/numeric/odeint/algebra/vector_space_algebra.hpp>
-#include <boost/numeric/odeint/external/eigen/eigen_resize.hpp>
-#include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
-
-using namespace boost::unit_test;
 using namespace boost::numeric::odeint;
 
-struct sys {
-  template <class State, class Deriv>
-  void operator()(const State &x, Deriv &dxdt, double t) const {
-    dxdt[0] = 1.0;
+struct lorenz {
+  template <typename State, typename Deriv, typename Time>
+  void operator()(const State& x, Deriv& dxdt, const Time& t) const {
+    const Time sigma = 10.0;
+    const Time R = 28.0;
+    const Time b = 8.0 / 3.0;
+    dxdt[0] = sigma * (x[1] - x[0]);
+    dxdt[1] = R * x[0] - x[1] - x[0] * x[2];
+    dxdt[2] = -b * x[2] + x[0] * x[1];
   }
 };
 
 int main() {
-  typedef Eigen::Matrix<double, 1, 1> state_type;
+  typedef Eigen::Matrix<double, 3, 1> state_type;
   state_type x;
   x[0] = 10.0;
-  runge_kutta4<state_type, double, state_type, double, vector_space_algebra>
-      rk4;
-  rk4.do_step(sys(), x, 0.0, 0.1);
+  x[1] = 10.0;
+  x[2] = 10.0;
+  double t_start = 0.0, t_end = 1000.0, dt = 0.1;
+  integrate<double>(lorenz(), x, t_start, t_end, dt);
+
+  std::vector<double> x2(3);
+  x2[0] = 10.0;
+  x2[1] = 10.0;
+  x2[2] = 10.0;
+  integrate(lorenz(), x2, t_start, t_end, dt);
+
+  // BOOST_CHECK_CLOSE(x[0], x2[0], 1.0e-13);
+  // BOOST_CHECK_CLOSE(x[1], x2[1], 1.0e-13);
+  // BOOST_CHECK_CLOSE(x[2], x2[2], 1.0e-13);
 }

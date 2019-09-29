@@ -40,7 +40,11 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 
 # 指定生成目标
 
+add_executable (test_runge_kutta4 runge_kutta4.cc )
+target_include_directories(test_runge_kutta4 PRIVATE ${HEADER_DIRECTORY})
+
+
 add_executable (testintegrate integrate.cc )
 target_include_directories(testintegrate PRIVATE ${HEADER_DIRECTORY})
-target_link_libraries(testintegrate ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+
 
