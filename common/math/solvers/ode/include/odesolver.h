@@ -11,6 +11,7 @@
 #ifndef _ODESOLVER_H_
 #define _ODESOLVER_H_
 
+#include <boost/config.hpp>
 #include <boost/numeric/odeint/algebra/vector_space_algebra.hpp>
 #include <boost/numeric/odeint/external/eigen/eigen_resize.hpp>
 #include <boost/numeric/odeint/integrate/integrate.hpp>

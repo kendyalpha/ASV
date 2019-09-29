@@ -1,22 +1,12 @@
 /*
- [auto_generated]
- integrate.cpp
-
- [begin_description]
- tba.
- [end_description]
-
- Copyright 2009-2012 Karsten Ahnert
- Copyright 2009-2012 Mario Mulansky
-
- Distributed under the Boost Software License, Version 1.0.
- (See accompanying file LICENSE_1_0.txt or
- copy at http://www.boost.org/LICENSE_1_0.txt)
- */
-
-#ifdef BOOST_MSVC
-#pragma warning(disable : 4996)
-#endif
+***********************************************************************
+* odesolver.cc:
+* ordinary differential equation solver with support to Eigen
+* This header file can be read by C++ compilers
+*
+* by Hu.ZH(CrossOcean.ai)
+***********************************************************************
+*/
 
 #include "odesolver.h"
 
@@ -33,6 +23,19 @@ struct lorenz {
 };
 
 int main() {
+  Eigen::Matrix3d M = Eigen::Matrix3d::Zero();
+  Eigen::Matrix3d D = Eigen::Matrix3d::Zero();
+
+  M(0, 0) = 100;
+  M(1, 1) = 100;
+  M(1, 2) = 10;
+  M(2, 1) = 10;
+  M(2, 2) = 200;
+
+  D(0, 0) = 10;
+  D(1, 1) = 10;
+  D(2, 2) = 10;
+
   typedef Eigen::Matrix<double, 3, 1> state_type;
   state_type x;
   x[0] = 10.0;
