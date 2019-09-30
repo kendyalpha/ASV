@@ -1,6 +1,8 @@
 /*
 ***********************************************************************
 * timecounter.h: to give the precise elapsed time in milliseconds.
+* Boost date_time is not a header-only library.  Please build the library
+* and then add it.
 * This header file can be read by C++ compilers
 *
 *  by Hu.ZH(CrossOcean.ai)
@@ -16,23 +18,32 @@
 namespace ASV {
 
 class timecounter {
-  using T_BOOST_CLOCK =
-      boost::date_time::microsec_clock<boost::posix_time::ptime>;
+  using PTIMER = boost::posix_time::ptime;
+  using PCLOCK = boost::posix_time::microsec_clock;
 
  public:
-  timecounter() : t_start(T_BOOST_CLOCK::local_time()){};
+  timecounter()
+      : pt_start(PCLOCK::universal_time()), pt_UTC(PCLOCK::universal_time()){};
 
   // return the elapsed duration in milliseconds
   long int timeelapsed() {
-    boost::posix_time::ptime t_now(T_BOOST_CLOCK::local_time());
-    boost::posix_time::time_duration t_elapsed = t_now - t_start;
-    t_start = t_now;
+    PTIMER pt_now(PCLOCK::universal_time());
+    boost::posix_time::time_duration t_elapsed = pt_now - pt_start;
+    pt_start = pt_now;
     return t_elapsed.total_milliseconds();
+  }
+
+  // return the UTC time (ISO)
+  std::string getUTCtime() {
+    pt_UTC = PCLOCK::universal_time();
+    return to_iso_string(pt_UTC);
   }
   ~timecounter() {}
 
  private:
-  boost::posix_time::ptime t_start;
+  PTIMER pt_start;
+  PTIMER pt_UTC;
+
 };  // end class timecounter
 
 }  // end namespace ASV

@@ -19,7 +19,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-
+find_package(Boost 1.71.0 COMPONENTS date_time REQUIRED)
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
@@ -31,3 +31,4 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 
 add_executable (testtimer testtimer.cc)
 target_include_directories(testtimer PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testtimer ${Boost_LIBRARIES})

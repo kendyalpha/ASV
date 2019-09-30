@@ -69,7 +69,7 @@ plt.ylabel('N (m)')
 plt.legend(('GPS_UTM', 'COG'), loc='upper right')
 
 
-plt.figure(1, figsize=(15, 10))
+plt.figure(2, figsize=(15, 10))
 plt.suptitle("time series of motion", fontsize=12)
 plt.subplot(3, 1, 1)
 plt.plot(gpsdata['DATETIME'], gpsdata['UTM_y'], '-r', lw=2)

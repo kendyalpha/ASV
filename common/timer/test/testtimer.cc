@@ -16,9 +16,9 @@
 int main() {
   using namespace ASV;
   timecounter _timer;
-  for (int i = 0; i != 3; ++i) {
+  for (int i = 0; i != 100; ++i) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     long int et = _timer.timeelapsed();
-    std::cout << et << std::endl;
+    std::cout << _timer.getUTCtime() << " " << et << std::endl;
   }
 }

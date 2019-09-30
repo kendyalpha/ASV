@@ -31,6 +31,7 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	"/usr/include" 
 	"${PROJECT_SOURCE_DIR}/../../../eigen"
+	"${PROJECT_SOURCE_DIR}/../../../../fileIO/include"
 	)
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
@@ -48,6 +49,6 @@ add_executable (testintegrate integrate.cc )
 target_include_directories(testintegrate PRIVATE ${HEADER_DIRECTORY})
 
 
-# add_executable (testintegrate integrate.cc )
-# target_include_directories(testintegrate PRIVATE ${HEADER_DIRECTORY})
+add_executable (testvessel vesselmotion.cc )
+target_include_directories(testvessel PRIVATE ${HEADER_DIRECTORY})
 

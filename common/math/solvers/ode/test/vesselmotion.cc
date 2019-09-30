@@ -8,49 +8,74 @@
 ***********************************************************************
 */
 
+#include <cmath>
 #include "odesolver.h"
+#include "utilityio.h"
 
-struct lorenz {
-  template <typename State, typename Deriv, typename Time>
-  void operator()(const State& x, Deriv& dxdt, const Time& t) const {
-    const Time sigma = 10.0;
-    const Time R = 28.0;
-    const Time b = 8.0 / 3.0;
-    dxdt[0] = sigma * (x[1] - x[0]);
-    dxdt[1] = R * x[0] - x[1] - x[0] * x[2];
-    dxdt[2] = -b * x[2] + x[0] * x[1];
+using namespace boost::numeric::odeint;
+
+struct vessel {
+  vessel() {
+    auto M_inv = M.inverse();
+    A.block(2, 2, 3, 3) = -M_inv * D;
+    B.block(2, 0, 3, 3) = M_inv;
   }
+
+  template <typename State, typename Deriv>
+  void operator()(const State& x, Deriv& dxdt, double t) const {
+    Eigen::Matrix<double, 6, 1> _dx = A * x + B * u;
+
+    for (int i = 0; i != 3; ++i) dxdt[i] = _dx[i];
+  }
+
+  void updateTransform(double _theta) {
+    double cvalue = std::cos(_theta);
+    double svalue = std::sin(_theta);
+    Transform(0, 0) = cvalue;
+    Transform(0, 1) = -svalue;
+    Transform(1, 0) = svalue;
+    Transform(1, 1) = cvalue;
+    Transform(2, 2) = 1;
+  }
+
+  void updateA(double _theta) {
+    updateTransform(_theta);
+    A.block(0, 2, 3, 3) = Transform;
+  }
+  void updateu(const Eigen::Vector3d& _u) { u = _u; }
+
+  Eigen::Matrix3d M =
+      (Eigen::Matrix3d() << 100, 0, 0, 0, 100, 10, 10, 0, 200).finished();
+  Eigen::Matrix3d D =
+      (Eigen::Matrix3d() << 10, 0, 0, 0, 10, 0, 0, 0, 10).finished();
+
+  Eigen::Matrix3d Transform = Eigen::Matrix3d::Identity();
+  Eigen::Matrix<double, 6, 6> A = Eigen::Matrix<double, 6, 6>::Zero();
+  Eigen::Matrix<double, 6, 3> B = Eigen::Matrix<double, 6, 3>::Zero();
+
+  Eigen::Vector3d u = Eigen::Vector3d::Zero();
 };
 
 int main() {
-  Eigen::Matrix3d M = Eigen::Matrix3d::Zero();
-  Eigen::Matrix3d D = Eigen::Matrix3d::Zero();
+  using state_type = Eigen::Matrix<double, 6, 1>;
+  vessel sys;
+  runge_kutta4<state_type, double, state_type, double, vector_space_algebra>
+      rk4;
+  state_type x = (state_type() << 0, 0, 1, 0, 0, 0).finished();
+  Eigen::Matrix3d P =
+      (Eigen::Matrix3d() << 10, 0, 0, 0, 10, 0, 0, 0, 10).finished();
+  Eigen::Vector3d u = Eigen::Vector3d::Zero();
 
-  M(0, 0) = 100;
-  M(1, 1) = 100;
-  M(1, 2) = 10;
-  M(2, 1) = 10;
-  M(2, 2) = 200;
+  int total_step = 500;
+  Eigen::MatrixXd save_x(total_step, 6);
 
-  D(0, 0) = 10;
-  D(1, 1) = 10;
-  D(2, 2) = 10;
-
-  typedef Eigen::Matrix<double, 3, 1> state_type;
-  state_type x;
-  x[0] = 10.0;
-  x[1] = 10.0;
-  x[2] = 10.0;
-  double t_start = 0.0, t_end = 1000.0, dt = 0.1;
-  boost::numeric::odeint::integrate<double>(lorenz(), x, t_start, t_end, dt);
-
-  std::vector<double> x2(3);
-  x2[0] = 10.0;
-  x2[1] = 10.0;
-  x2[2] = 10.0;
-  boost::numeric::odeint::integrate(lorenz(), x2, t_start, t_end, dt);
-
-  // BOOST_CHECK_CLOSE(x[0], x2[0], 1.0e-13);
-  // BOOST_CHECK_CLOSE(x[1], x2[1], 1.0e-13);
-  // BOOST_CHECK_CLOSE(x[2], x2[2], 1.0e-13);
+  for (int i = 0; i != total_step; ++i) {
+    sys.updateA(x(2));
+    u = -P * x.head(3);
+    sys.updateu(u);
+    rk4.do_step(sys, x, 0.0, 0.1);
+    save_x.row(i) = x.transpose();
+  }
+  ASV::utilityio _utilityio;
+  _utilityio.write2csvfile("../data/x.csv", save_x);
 }

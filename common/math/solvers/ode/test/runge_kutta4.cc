@@ -27,19 +27,22 @@ using namespace boost::numeric::odeint;
 struct sys {
   template <class State, class Deriv>
   void operator()(const State &x, Deriv &dxdt, double t) const {
-    dxdt[0] = -K / M * x[1];
+    dxdt[0] = -K / M * x[1] + T / M;
     dxdt[1] = x[0];
   }
 
   void setK(double _K) { K = _K; }
+  void setT(double _T) { T = _T; }
 
   double K = 1;
   double M = 1;
+  double T = 0;
 };
 
 int main() {
   typedef Eigen::Matrix<double, 2, 1> state_type;
   state_type x;
+  sys mysys;
   x[0] = 0.0;
   x[1] = 3.0;
 
@@ -49,10 +52,11 @@ int main() {
   int total_step = 100;
   Eigen::MatrixXd save_x(total_step, 2);
 
-  for (int i = 0; i != 100; ++i) {
-    rk4.do_step(sys(), x, 0.0, 0.1);
+  for (int i = 0; i != total_step; ++i) {
+    mysys.setT(1);
+    rk4.do_step(mysys, x, 0.0, 0.1);
     save_x.row(i) = x.transpose();
   }
-  utilityio _utilityio;
-  _utilityio.write2csvfile("csvfile.csv", vvv);
+  ASV::utilityio _utilityio;
+  _utilityio.write2csvfile("../../data/x.csv", save_x);
 }
