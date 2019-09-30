@@ -25,19 +25,27 @@ class stm32_link {
                       const std::string& _port = "/dev/ttyUSB0")
       : stmdata(_stm32data),
         stm32_serial(_port, _baud, serial::Timeout::simpleTimeout(1000)),
-        serial_buffer(""),
-  {}
+        send_buffer(""),
+        recv_buffer(""),
+        bytes_send(0),
+        bytes_reci(0),
+        crc16(CRC16::eCCITT_FALSE),
+        connectionstatus(10) {}
   virtual ~stm32_link() = default;
 
   // communication with stm32
   stm32_link& stm32onestep() {
-    serial_buffer = stm32_serial.readline(150);
-    hemisphereV102(serial_buffer, GPSdata);
+    checkconnection(stmdata);
+    senddata2stm32(stmdata);
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    parsedata_from_stm32(stmdata);
     return *this;
   }
 
+  void setstm32data(const stm32data& _stm32data) { stmdata = _stm32data; }
   auto getstmdata() const noexcept { return stmdata; }
-  std::string getserialbuffer() const noexcept { return serial_buffer; }
+  std::string getrecv_buffer() const noexcept { return recv_buffer; }
+  std::string getsend_buffer() const noexcept { return send_buffer; }
 
  private:
   stm32data stmdata;
@@ -50,6 +58,8 @@ class stm32_link {
 
   CRC16 crc16;
 
+  int connectionstatus;
+
   void enumerate_ports() {
     std::vector<serial::PortInfo> devices_found = serial::list_ports();
 
@@ -60,6 +70,13 @@ class stm32_link {
     }
   }
 
+  void checkconnection(stm32data& _stm32data) {
+    if (connectionstatus > 10)
+      _stm32data.linkstatus = LINKSTATUS::DISCONNECTED;
+    else
+      _stm32data.linkstatus = LINKSTATUS::CONNECTED;
+  }
+
   void judgeserialstatus() {
     if (stm32_serial.isOpen())
       CLOG(INFO, "stm32-serial") << " serial port open successful!";
@@ -67,9 +84,79 @@ class stm32_link {
       CLOG(INFO, "stm32-serial") << " serial port open failure!";
   }
 
-  void parsedata_from_stm32() {}
+  void parsedata_from_stm32(stm32data& _stm32data) {
+    recv_buffer = stm32_serial.readline(100, "\n");
 
-  void senddata2stm32() {}
+    std::size_t pos = recv_buffer.find("$");
+    if (pos != std::string::npos) {
+      // remove string before "$"
+      recv_buffer = recv_buffer.substr(pos + 1);
+      std::size_t rpos = recv_buffer.rfind("*");
+      if (rpos != std::string::npos) {
+        // compute the expected crc checksum value
+        std::string expected_crc = recv_buffer.substr(rpos + 1, 4);
+        recv_buffer = recv_buffer.substr(rpos);
+        if (std::to_string(crc16.crcCompute(recv_buffer.c_str(), rpos)) ==
+            expected_crc) {
+          connectionstatus = 0;  // reset to zero
+          int _stm32status = 0;
+          int _rcmode = 0;
+          sscanf(recv_buffer.c_str(),
+                 "STM,"
+                 "%d,"   // stm32status
+                 "%d,"   // feedback_n1
+                 "%d,"   // feedback_n2
+                 "%lf,"  // voltage_b1
+                 "%lf,"  // voltage_b2
+                 "%lf,"  // voltage_b3
+                 "%lf,"  // RC_X
+                 "%lf,"  // RC_Y
+                 "%lf,"  // RC_Mz
+                 "%d"    // rcmode
+                 ,
+                 &_stm32status,              // int
+                 &(_stm32data.feedback_n1),  // int
+                 &(_stm32data.feedback_n2),  // int
+                 &(_stm32data.voltage_b1),   // double
+                 &(_stm32data.voltage_b2),   // double
+                 &(_stm32data.voltage_b2),   // double
+                 &(_stm32data.RC_X),         // double
+                 &(_stm32data.RC_Y),         // double
+                 &(_stm32data.RC_Mz),        // double
+                 &_rcmode                    // int
+          );
+
+          _stm32data.stm32status = static_cast<STM32STATUS>(_stm32status);
+          _stm32data.rcmode = static_cast<RCMODE>(_rcmode);
+
+        } else {
+          connectionstatus++;
+          CLOG(INFO, "stm32-serial") << " checksum error!";
+        }
+      }
+    }
+  }  // parsedata_from_stm32
+
+  void senddata2stm32(const stm32data& _stm32data) {
+    send_buffer.clear();
+    send_buffer = "STM";
+    convert2string(_stm32data, send_buffer);
+    unsigned short crc =
+        crc16.crcCompute(send_buffer.c_str(), send_buffer.length());
+    send_buffer = "$" + send_buffer + "*" + std::to_string(crc) + "\n";
+    bytes_send = stm32_serial.write(send_buffer);
+  }  // senddata2stm32
+
+  void convert2string(const stm32data& _stm32data, std::string& _str) {
+    _str += ",";
+    _str += _stm32data.UTC_time;
+    _str += ",";
+    _str += std::to_string(_stm32data.command_n1);
+    _str += ",";
+    _str += std::to_string(_stm32data.command_n2);
+    _str += ",";
+    _str += std::to_string(static_cast<int>(_stm32data.linkstatus));
+  }  // convert2string
 
 };  // end class stm32_link
 

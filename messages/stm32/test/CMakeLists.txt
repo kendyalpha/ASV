@@ -12,14 +12,16 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall -march=native -mavx")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
-find_package(Boost 1.71.0 COMPONENTS date_time REQUIRED)
 
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
     "../include/"
-   	"${PROJECT_SOURCE_DIR}/../../timer/include"
-   	"${PROJECT_SOURCE_DIR}/../../logging/include"
+   	"${PROJECT_SOURCE_DIR}/../../../common/timer/include"
+   	"${PROJECT_SOURCE_DIR}/../../../common/logging/include"
+   	"${PROJECT_SOURCE_DIR}/../../../common/communication/include"
+   	"${PROJECT_SOURCE_DIR}/../../../third_party/serial/include"
+
     )
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
@@ -28,10 +30,13 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
    )
  
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../logging/src/easylogging++.cc" )
+	"${PROJECT_SOURCE_DIR}/../../../common/logging/src/easylogging++.cc" )
 
 
+find_package(Boost 1.71.0 COMPONENTS date_time REQUIRED)
+find_library(SERIAL_LIBRARY serial ${LIBRARY_DIRECTORY})
 # 指定生成目标
 add_executable (teststm32 teststm32.cc  ${SOURCE_FILES})
 target_include_directories(teststm32 PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(teststm32 ${Boost_LIBRARIES})
+target_link_libraries(teststm32 ${SERIAL_LIBRARY})
