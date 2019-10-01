@@ -10,6 +10,8 @@
 #ifndef _STM32_LINK_H_
 #define _STM32_LINK_H_
 
+#include <chrono>
+#include <thread>
 #include "crc.h"
 #include "easylogging++.h"
 #include "serial/serial.h"
@@ -24,25 +26,30 @@ class stm32_link {
                       unsigned long _baud,          // baudrate
                       const std::string& _port = "/dev/ttyUSB0")
       : stmdata(_stm32data),
-        stm32_serial(_port, _baud, serial::Timeout::simpleTimeout(1000)),
+        stm32_serial(_port, _baud, serial::Timeout::simpleTimeout(100)),
         send_buffer(""),
         recv_buffer(""),
         bytes_send(0),
         bytes_reci(0),
         crc16(CRC16::eCCITT_FALSE),
-        connectionstatus(10) {}
+        connectionstatus(10) {
+    checkserialstatus();
+  }
   virtual ~stm32_link() = default;
 
   // communication with stm32
   stm32_link& stm32onestep() {
     checkconnection(stmdata);
     senddata2stm32(stmdata);
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     parsedata_from_stm32(stmdata);
     return *this;
   }
 
-  void setstm32data(const stm32data& _stm32data) { stmdata = _stm32data; }
+  stm32_link& setstm32data(const stm32data& _stm32data) {
+    stmdata = _stm32data;
+    return *this;
+  }
   auto getstmdata() const noexcept { return stmdata; }
   std::string getrecv_buffer() const noexcept { return recv_buffer; }
   std::string getsend_buffer() const noexcept { return send_buffer; }
@@ -77,7 +84,7 @@ class stm32_link {
       _stm32data.linkstatus = LINKSTATUS::CONNECTED;
   }
 
-  void judgeserialstatus() {
+  void checkserialstatus() {
     if (stm32_serial.isOpen())
       CLOG(INFO, "stm32-serial") << " serial port open successful!";
     else
@@ -94,40 +101,38 @@ class stm32_link {
       std::size_t rpos = recv_buffer.rfind("*");
       if (rpos != std::string::npos) {
         // compute the expected crc checksum value
-        std::string expected_crc = recv_buffer.substr(rpos + 1, 4);
-        recv_buffer = recv_buffer.substr(rpos);
+        std::string expected_crc = recv_buffer.substr(rpos + 1);
+        expected_crc.pop_back();
+        recv_buffer = recv_buffer.substr(0, rpos);
+        std::cout << rpos - recv_buffer.length() << std::endl;
         if (std::to_string(crc16.crcCompute(recv_buffer.c_str(), rpos)) ==
             expected_crc) {
           connectionstatus = 0;  // reset to zero
           int _stm32status = 0;
-          int _rcmode = 0;
           sscanf(recv_buffer.c_str(),
-                 "STM,"
+                 "PC,"
                  "%d,"   // stm32status
-                 "%d,"   // feedback_n1
-                 "%d,"   // feedback_n2
                  "%lf,"  // voltage_b1
                  "%lf,"  // voltage_b2
                  "%lf,"  // voltage_b3
+                 "%d,"   // feedback_n1
+                 "%d,"   // feedback_n2
                  "%lf,"  // RC_X
                  "%lf,"  // RC_Y
-                 "%lf,"  // RC_Mz
-                 "%d"    // rcmode
+                 "%lf"   // RC_Mz
                  ,
                  &_stm32status,              // int
-                 &(_stm32data.feedback_n1),  // int
-                 &(_stm32data.feedback_n2),  // int
                  &(_stm32data.voltage_b1),   // double
                  &(_stm32data.voltage_b2),   // double
                  &(_stm32data.voltage_b2),   // double
+                 &(_stm32data.feedback_n1),  // int
+                 &(_stm32data.feedback_n2),  // int
                  &(_stm32data.RC_X),         // double
                  &(_stm32data.RC_Y),         // double
-                 &(_stm32data.RC_Mz),        // double
-                 &_rcmode                    // int
+                 &(_stm32data.RC_Mz)         // double
           );
 
           _stm32data.stm32status = static_cast<STM32STATUS>(_stm32status);
-          _stm32data.rcmode = static_cast<RCMODE>(_rcmode);
 
         } else {
           connectionstatus++;

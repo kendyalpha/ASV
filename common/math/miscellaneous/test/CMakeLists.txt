@@ -24,6 +24,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
 	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../eigen"
 	"/usr/include" )
 
 

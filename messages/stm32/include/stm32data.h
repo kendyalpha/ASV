@@ -21,13 +21,10 @@ enum class STM32STATUS {
   STANDBY = 0,    // 等待PC连接
   INITE,          // 初始化
   RUNNING,        // 正常运行
+  MANUAL,         // 手动控制
+  AUTO,           // 自动模式
   ALARM,          // 报警
   EMERGENCY_STOP  // 急停
-};
-
-enum class RCMODE {
-  MANUAL = 0,  // 手动控制
-  AUTO         // 自动模式
 };
 
 struct stm32data {
@@ -44,7 +41,6 @@ struct stm32data {
   double RC_X;
   double RC_Y;
   double RC_Mz;
-  RCMODE rcmode;
 
   // battery
   double voltage_b1;
