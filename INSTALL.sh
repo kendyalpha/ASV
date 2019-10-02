@@ -1,7 +1,8 @@
 #!/bin/bash
 
 sudo apt update
-sudo apt install build-essential cmake sqlite3 libsqlite3-dev rsync catkin python3 python3-pip
+sudo apt install build-essential cmake sqlite3 libsqlite3-dev rsync \
+	catkin python3 python3-pip vim sshfs cutecom
 
 # install GeographicLib
 cd third_party/GeographicLib-1.49

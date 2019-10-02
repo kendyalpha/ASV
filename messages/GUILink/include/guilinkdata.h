@@ -22,7 +22,7 @@
 #include "priority.h"
 #include "winddata.h"
 
-// real time data in gui communication (岸基数据)
+// real time data in gui link (岸基数据)
 struct guilinkRTdata {
   int gui_connection;
   // indicator for automatic control mode
