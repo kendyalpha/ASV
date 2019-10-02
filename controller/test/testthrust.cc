@@ -106,7 +106,6 @@ void testonestepthrustallocation() {
       _thrustallocationdata, v_tunnelthrusterdata, v_azimuththrusterdata,
       v_ruddermaindata, v_twinfixeddata);
   _thrustallocation.initializapropeller(_controllerRTdata);
-  utilityio _utilityio;
 
   std::cout << _controllerRTdata.alpha << std::endl;
   std::cout << "upper_delta_alpha: " << _thrustallocation.getupper_delta_alpha()
@@ -128,7 +127,7 @@ void testonestepthrustallocation() {
 
   Eigen::MatrixXd vvv(2, 3);
   vvv.setZero();
-  _utilityio.write2csvfile("csvfile.csv", vvv);
+  write2csvfile("csvfile.csv", vvv);
 }
 
 // test thrust allocation for 3 propellers (fully actuated)
@@ -248,14 +247,13 @@ void test_multiplethrusterallocation() {
   save_Balphau = save_Balphau.transpose().eval();
   save_rotation = save_rotation.transpose().eval();
   // save data to csv file
-  utilityio _utilityio;
   std::string _name("../data/");
-  _utilityio.write2csvfile(_name + "tau.csv", save_tau);
-  _utilityio.write2csvfile(_name + "u.csv", save_u);
-  _utilityio.write2csvfile(_name + "alpha.csv", save_alpha);
-  _utilityio.write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  _utilityio.write2csvfile(_name + "Balpha.csv", save_Balphau);
-  _utilityio.write2csvfile(_name + "rotation.csv", save_rotation);
+  write2csvfile(_name + "tau.csv", save_tau);
+  write2csvfile(_name + "u.csv", save_u);
+  write2csvfile(_name + "alpha.csv", save_alpha);
+  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
+  write2csvfile(_name + "Balpha.csv", save_Balphau);
+  write2csvfile(_name + "rotation.csv", save_rotation);
 }
 
 // test thrust allocation for twin-fixed propeller (underactuated)
@@ -366,14 +364,13 @@ void test_twinfixed() {
   save_Balphau = save_Balphau.transpose().eval();
   save_rotation = save_rotation.transpose().eval();
   // save data to csv file
-  utilityio _utilityio;
   std::string _name("../data/");
-  _utilityio.write2csvfile(_name + "tau.csv", save_tau);
-  _utilityio.write2csvfile(_name + "u.csv", save_u);
-  _utilityio.write2csvfile(_name + "alpha.csv", save_alpha);
-  _utilityio.write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  _utilityio.write2csvfile(_name + "Balpha.csv", save_Balphau);
-  _utilityio.write2csvfile(_name + "rotation.csv", save_rotation);
+  write2csvfile(_name + "tau.csv", save_tau);
+  write2csvfile(_name + "u.csv", save_u);
+  write2csvfile(_name + "alpha.csv", save_alpha);
+  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
+  write2csvfile(_name + "Balpha.csv", save_Balphau);
+  write2csvfile(_name + "rotation.csv", save_rotation);
 }
 
 void testrudder() {
@@ -496,14 +493,13 @@ void testrudder() {
   save_Balphau = save_Balphau.transpose().eval();
   save_rotation = save_rotation.transpose().eval();
   // save data to csv file
-  utilityio _utilityio;
   std::string _name("../data/");
-  _utilityio.write2csvfile(_name + "tau.csv", save_tau);
-  _utilityio.write2csvfile(_name + "u.csv", save_u);
-  _utilityio.write2csvfile(_name + "alpha.csv", save_alpha);
-  _utilityio.write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  _utilityio.write2csvfile(_name + "Balpha.csv", save_Balphau);
-  _utilityio.write2csvfile(_name + "rotation.csv", save_rotation);
+  write2csvfile(_name + "tau.csv", save_tau);
+  write2csvfile(_name + "u.csv", save_u);
+  write2csvfile(_name + "alpha.csv", save_alpha);
+  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
+  write2csvfile(_name + "Balpha.csv", save_Balphau);
+  write2csvfile(_name + "rotation.csv", save_rotation);
 }
 
 void testbiling() {
@@ -670,14 +666,13 @@ void testbiling() {
   save_Balphau = save_Balphau.transpose().eval();
   save_rotation = save_rotation.transpose().eval();
   // save data to csv file
-  utilityio _utilityio;
   std::string _name("../data/");
-  _utilityio.write2csvfile(_name + "tau.csv", save_tau);
-  _utilityio.write2csvfile(_name + "u.csv", save_u);
-  _utilityio.write2csvfile(_name + "alpha.csv", save_alpha);
-  _utilityio.write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  _utilityio.write2csvfile(_name + "Balpha.csv", save_Balphau);
-  _utilityio.write2csvfile(_name + "rotation.csv", save_rotation);
+  write2csvfile(_name + "tau.csv", save_tau);
+  write2csvfile(_name + "u.csv", save_u);
+  write2csvfile(_name + "alpha.csv", save_alpha);
+  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
+  write2csvfile(_name + "Balpha.csv", save_Balphau);
+  write2csvfile(_name + "rotation.csv", save_rotation);
 }
 
 int main() {

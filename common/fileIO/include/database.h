@@ -22,6 +22,7 @@
 #include "gpsdata.h"
 #include "plannerdata.h"
 #include "priority.h"
+#include "utilityio.h"
 #include "winddata.h"
 
 namespace ASV {
@@ -482,13 +483,6 @@ class database {
     _str += std::to_string(_RTdata.orientation);
   }
 
-  template <typename T>
-  std::string to_string_with_precision(const T _value, const int p = 6) {
-    std::ostringstream out;
-    out.precision(p);
-    out << std::fixed << _value;
-    return out.str();
-  }
 };  // end class database
 }  // end namespace ASV
 

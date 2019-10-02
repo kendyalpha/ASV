@@ -93,12 +93,10 @@ void test2d() {
   save_x = save_x.transpose().eval();
   PEigen = PEigen.transpose().eval();
 
-  utilityio _utilityio;
-
-  _utilityio.write2csvfile("../data/truex.csv", x_noise);
-  _utilityio.write2csvfile("../data/observed.csv", z);
-  _utilityio.write2csvfile("../data/kalman.csv", save_x);
-  _utilityio.write2csvfile("../data/EigenP.csv", PEigen);
+  write2csvfile("../data/truex.csv", x_noise);
+  write2csvfile("../data/observed.csv", z);
+  write2csvfile("../data/kalman.csv", save_x);
+  write2csvfile("../data/EigenP.csv", PEigen);
 }
 
 void test3d() {

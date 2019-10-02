@@ -9,13 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../../sensors/wind/include"
-	"${PROJECT_SOURCE_DIR}/../../sensors/gpsimu/include"
 	"${PROJECT_SOURCE_DIR}/../../common/property/include"
-	"${PROJECT_SOURCE_DIR}/../../controller/include"
-	"${PROJECT_SOURCE_DIR}/../../controller/motor/include"
-	"${PROJECT_SOURCE_DIR}/../../estimator/include"
-	"${PROJECT_SOURCE_DIR}/../../planner/include"
 	"${PROJECT_SOURCE_DIR}/../../math/eigen"
 	"${PROJECT_SOURCE_DIR}/../../third_party/serial/include"
 	"${PROJECT_SOURCE_DIR}/../../common/timer/include"

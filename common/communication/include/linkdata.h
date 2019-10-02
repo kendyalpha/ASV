@@ -17,6 +17,13 @@ enum class LINKSTATUS {
   CONNECTED
 };
 
+enum class LINKPROTOCOL {
+  SERIAL_RS232 = 0,  //
+  TCPCLIENT,
+  TCPSERVER
+
+};
+
 }  // end namespace ASV
 
 #endif /* _LINKDATA_H_ */

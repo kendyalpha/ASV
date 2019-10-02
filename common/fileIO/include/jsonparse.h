@@ -82,8 +82,6 @@ class jsonparse {
   // json file = json::parse(in);
   nlohmann::json file;
 
-  utilityio _utilityio;
-
   std::string dbpath;  // directory for database file
 
   unsigned long gps_baudrate;
@@ -419,10 +417,9 @@ class jsonparse {
         file["estimator"]["sample_time"].get<double>();
 
     estimatordata_input.antenna2cog =
-        vesseldata_input.cog -
-        _utilityio.convertstdvector2EigenMat<double, 3, 1>(
-            file["sensors"]["GPS"]["primary_antenna"]
-                .get<std::vector<double>>());
+        vesseldata_input.cog - convertstdvector2EigenMat<double, 3, 1>(
+                                   file["sensors"]["GPS"]["primary_antenna"]
+                                       .get<std::vector<double>>());
     // bool kalman_on = file["estimator"]["KALMANON"];
     // if (kalman_on)
     //   estimatordata_input.kalman_use = KALMANON;
@@ -436,15 +433,13 @@ class jsonparse {
   }  // parseplannerdata
 
   void parsevesselpropertydata() {
-    vesseldata_input.Mass = _utilityio.convertstdvector2EigenMat<double, 3, 3>(
+    vesseldata_input.Mass = convertstdvector2EigenMat<double, 3, 3>(
         file["property"]["Mass"].get<std::vector<double>>());
-    vesseldata_input.AddedMass =
-        _utilityio.convertstdvector2EigenMat<double, 3, 3>(
-            file["property"]["AddedMass"].get<std::vector<double>>());
-    vesseldata_input.Damping =
-        _utilityio.convertstdvector2EigenMat<double, 3, 3>(
-            file["property"]["Damping"].get<std::vector<double>>());
-    vesseldata_input.cog = _utilityio.convertstdvector2EigenMat<double, 3, 1>(
+    vesseldata_input.AddedMass = convertstdvector2EigenMat<double, 3, 3>(
+        file["property"]["AddedMass"].get<std::vector<double>>());
+    vesseldata_input.Damping = convertstdvector2EigenMat<double, 3, 3>(
+        file["property"]["Damping"].get<std::vector<double>>());
+    vesseldata_input.cog = convertstdvector2EigenMat<double, 3, 1>(
         file["property"]["CoG"].get<std::vector<double>>());
 
     vesseldata_input.x_thrust
@@ -457,16 +452,13 @@ class jsonparse {
         << file["controller"]["yaw"]["min_output"].get<double>(),
         file["controller"]["yaw"]["max_output"].get<double>();
 
-    vesseldata_input
-        .surge_v = _utilityio.convertstdvector2EigenMat<double, 2, 1>(
+    vesseldata_input.surge_v = convertstdvector2EigenMat<double, 2, 1>(
         file["property"]["velocity_limit"]["surge"].get<std::vector<double>>());
-    vesseldata_input
-        .sway_v = _utilityio.convertstdvector2EigenMat<double, 2, 1>(
+    vesseldata_input.sway_v = convertstdvector2EigenMat<double, 2, 1>(
         file["property"]["velocity_limit"]["sway"].get<std::vector<double>>());
-    vesseldata_input.yaw_v = _utilityio.convertstdvector2EigenMat<double, 2, 1>(
+    vesseldata_input.yaw_v = convertstdvector2EigenMat<double, 2, 1>(
         file["property"]["velocity_limit"]["yaw"].get<std::vector<double>>());
-    vesseldata_input
-        .roll_v = _utilityio.convertstdvector2EigenMat<double, 2, 1>(
+    vesseldata_input.roll_v = convertstdvector2EigenMat<double, 2, 1>(
         file["property"]["velocity_limit"]["roll"].get<std::vector<double>>());
 
     vesseldata_input.L = file["property"]["L"].get<double>();

@@ -49,6 +49,16 @@ void Cart2Marine(double cart_y, double cart_theta, double cart_kappa,
 
 }  // Marine2Cart
 
+// convert rad to degree
+double Rad2Degree(double _rad) noexcept {
+  return 180.0 * _rad / M_PI;
+}  // Rad2Degree
+
+// convert marine coordinate to cartesian coordinate
+double Degree2Rad(double _degree) noexcept {
+  return M_PI * _degree / 180.0;
+}  // Marine2Cart
+
 }  // end namespace ASV
 
 #endif /* _MATH_UTILS_H_ */

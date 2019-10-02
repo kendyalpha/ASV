@@ -104,7 +104,6 @@ class stm32_link {
         std::string expected_crc = recv_buffer.substr(rpos + 1);
         expected_crc.pop_back();
         recv_buffer = recv_buffer.substr(0, rpos);
-        std::cout << rpos - recv_buffer.length() << std::endl;
         if (std::to_string(crc16.crcCompute(recv_buffer.c_str(), rpos)) ==
             expected_crc) {
           connectionstatus = 0;  // reset to zero

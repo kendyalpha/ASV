@@ -250,13 +250,13 @@ class estimator {
     _motionrawdata.gps_x = _motionrawdata.gps_y;
     _motionrawdata.gps_y = temp;
     _motionrawdata.gps_z *= (-1);
-    _motionrawdata.gps_roll = degree2rad(_motionrawdata.gps_roll);
-    _motionrawdata.gps_pitch = degree2rad(_motionrawdata.gps_pitch);
+    _motionrawdata.gps_roll = Degree2Rad(_motionrawdata.gps_roll);
+    _motionrawdata.gps_pitch = Degree2Rad(_motionrawdata.gps_pitch);
     // convert degree to rad and -pi ~ pi
     _motionrawdata.gps_heading =
-        Normalizeheadingangle(degree2rad(_motionrawdata.gps_heading));
+        Normalizeheadingangle(Degree2Rad(_motionrawdata.gps_heading));
     _motionrawdata.gps_roti =
-        degree2rad(_motionrawdata.gps_roti) / 60.0;  // degree/min -> rad/s
+        Degree2Rad(_motionrawdata.gps_roti) / 60.0;  // degree/min -> rad/s
 
   }  // convert2standardunit
 
@@ -321,14 +321,6 @@ class estimator {
     previous_theta = _RTdata.State(2);
     previous_speed = _speed;
   }  // computeCartesianState
-
-  double rad2degree(double _rad) const noexcept {
-    return _rad * 180.0 / M_PI;
-  }  // rad2degree
-
-  double degree2rad(double _degree) const noexcept {
-    return _degree * M_PI / 180.0;
-  }  // degree2rad
 
 };  // end class estimator
 }  // end namespace ASV
