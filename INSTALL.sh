@@ -5,7 +5,9 @@ sudo apt install build-essential cmake sqlite3 libsqlite3-dev rsync \
 	catkin python3 python3-pip vim sshfs cutecom
 
 # install GeographicLib
-cd third_party/GeographicLib-1.49
+cd third_party/
+tar xvf GeographicLib-1.50.tar.gz
+cd GeographicLib-1.50
 sudo mkdir -m 777 BUILD
 cd BUILD
 cmake ..
@@ -22,9 +24,7 @@ make
 sudo make install	
 
 # install boost 1.71
-cd ../
-tar xvf boost_1_71_0.tar.bz2
-cd boost_1_71_0
+cd ../boost_1_71_0
 ./bootstrap.sh --prefix=/usr
 sudo ./b2 install
 
