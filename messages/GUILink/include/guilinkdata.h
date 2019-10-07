@@ -14,6 +14,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <vector>
+#include "linkdata.h"
 #include "priority.h"
 
 namespace ASV {

@@ -8,98 +8,56 @@
 *****************************************************************************
 */
 
-#include "guiserver.h"
+#include "guilink.h"
 
-int main() {
+using namespace ASV;
+
+void test_gui_serial() {
   constexpr int num_thruster = 6;
   constexpr int dim_controlspace = 3;
 
-  guiserver<num_thruster, dim_controlspace> _guiserver;
-
-  plannerRTdata _plannerRTdata{
-      Eigen::Vector3d::Zero(),  // setpoint
-      Eigen::Vector3d::Zero(),  // v_setpoint
-      Eigen::Vector2d::Zero(),  // waypoint0
-      Eigen::Vector2d::Zero(),  // waypoint1
-      Eigen::Vector3d::Zero()   // command
-  };
-
-  // realtime parameters of the estimators
-  estimatorRTdata _estimatorRTdata{
-      Eigen::Matrix3d::Identity(),          // CTB2G
-      Eigen::Matrix3d::Identity(),          // CTG2B
-      Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
-      (Eigen::Matrix<double, 6, 1>() << 351042.103705, 3433888.98025, 0.626135,
-       0.1, 0, -0.003678)
-          .finished(),
-      Eigen::Vector3d::Zero(),              // p_error
-      Eigen::Vector3d::Zero(),              // v_error
-      Eigen::Vector3d::Zero(),              // BalphaU
-      Eigen::Matrix<double, 6, 1>::Zero(),  // motiondata_6dof
-      Eigen::Vector3d::Zero()               // wind
-  };
-
-  gpsRTdata gps_data{
-      0,                // date
-      0,                // time
-      0,                // heading
-      0,                // pitch
-      0,                // roll
-      31.028788,        // latitude
-      121.439365,       // longitude
-      0,                // altitude
-      0,                // Ve
-      0,                // Vn
-      0,                // Vu
-      0,                // base_line
-      0,                // NSV1
-      0,                // NSV2
-      'a',              // status
-      {'a', 'b', '0'},  // check
-      0,                // UTM_x
-      0                 // UTM_y
-  };
   // real time gui-link data
-  guilinkRTdata _guilinkRTdata{
-      0,                                   // gui_connection
-      0,                                   // indicator_controlmode
-      0,                                   // indicator_windstatus
-      Eigen::Vector3d::Zero(),             // setpoints
-      Eigen::Vector2d::Zero(),             // startingpoint
-      Eigen::Vector2d::Zero(),             // endingpoint
-      Eigen::Matrix<double, 2, 8>::Zero()  // waypoints
-  };
-  indicators _indicators{
-      0,                // gui_connection
-      0,                // joystick_connection
-      DYNAMICPOSITION,  // controlmode
-      WINDON,           // windstatus
-  };
-
-  windRTdata _windRTdata{
-      1,   // speed
-      20,  // orientation
+  guilinkRTdata<num_thruster> _guilinkRTdata{
+      "",                                           // UTC_time
+      LINKSTATUS::DISCONNECTED,                     // linkstatus
+      0,                                            // indicator_autocontrolmode
+      0,                                            // indicator_windstatus
+      0.0,                                          // latitude
+      0.0,                                          // longitude
+      Eigen::Matrix<double, 6, 1>::Zero(),          // State
+      0.0,                                          // roll
+      0.0,                                          // pitch
+      Eigen::Matrix<int, num_thruster, 1>::Zero(),  // feedback_rotation
+      Eigen::Matrix<int, num_thruster, 1>::Zero(),  // feedback_alpha
+      Eigen::Vector3d::Zero(),                      // setpoints
+      0.0,                                          // desired_speed
+      Eigen::Vector2d::Zero(),                      // startingpoint
+      Eigen::Vector2d::Zero(),                      // endingpoint
+      Eigen::Matrix<double, 2, 8>::Zero()           // waypoints
   };
 
-  motorRTdata<6> testmotorRTdata = {};
+  guilink_serial<num_thruster, dim_controlspace> _guiserial(_guilinkRTdata,
+                                                            115200);
   timecounter _timer;
   while (1) {
+    std::string pt_utc = _timer.getUTCtime();
+    long int et = _timer.timeelapsed();
+    std::cout << _timer.getUTCtime() << " " << et << std::endl;
     static int count = 0;
-    for (int i = 0; i != num_thruster; ++i) {
-      testmotorRTdata.feedback_alpha[i] = 30 + i;
-    }
-    for (int i = 0; i != num_thruster; ++i) {
-      testmotorRTdata.feedback_rotation[i] = 300 + i + count;
-    }
-    for (int i = 0; i != (2 * num_thruster); ++i) {
-      testmotorRTdata.feedback_torque[i] = 3000;
-    }
-    testmotorRTdata.feedback_allinfo = 0;
     count++;
     if (count > 400) count = 0;
-    _guiserver.guicommunication(_guilinkRTdata, _indicators, _estimatorRTdata,
-                                _plannerRTdata, gps_data, testmotorRTdata,
-                                _windRTdata);
-    std::cout << _guiserver;
+
+    _guilinkRTdata.UTC_time = pt_utc;
+    _guilinkRTdata.indicator_autocontrolmode = count;
+    _guiserial.setguilinkRTdata(_guilinkRTdata).guicommunication();
+    _guilinkRTdata = _guiserial.getguilinkRTdata();
   }
+}  // test_gui_serial
+
+void test_gui_socket() {}
+
+int main() {
+  el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
+  LOG(INFO) << "The program has started!";
+  test_gui_serial();
 }

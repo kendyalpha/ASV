@@ -18,8 +18,10 @@
 #include "crc.h"
 #include "easylogging++.h"
 #include "guilinkdata.h"
+#include "math_utils.h"
 #include "serial/serial.h"
 #include "timecounter.h"
+#include "utilityio.h"
 
 namespace ASV {
 
@@ -43,14 +45,22 @@ class guilink_serial {
 
   virtual ~guilink_serial() = default;
 
+  // communication with gui
   guilink_serial &guicommunication() {
     checkconnection(guilinkrtdata);
     senddata2gui(guilinkrtdata);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    parsedatafromgui(_guilinkRTdata);
+    parsedatafromgui(guilinkrtdata);
     return *this;
   }  // guicommunication
+
+  guilink_serial &setguilinkRTdata(const guilinkRTdata<m> &_guilinkRTdata) {
+    guilinkrtdata = _guilinkRTdata;
+    return *this;
+  }  // setguilinkRTdata
+  auto getguilinkRTdata() const noexcept { return guilinkrtdata; }
+  std::string getrecv_buffer() const noexcept { return recv_buffer; }
+  std::string getsend_buffer() const noexcept { return send_buffer; }
 
  private:
   guilinkRTdata<m> guilinkrtdata;
@@ -120,7 +130,7 @@ class guilink_serial {
     }
   }  // convert2string
 
-  void parsedatafromgui(guilinkRTdata &_guilinkRTdata) {
+  void parsedatafromgui(guilinkRTdata<m> &_guilinkRTdata) {
     recv_buffer = gui_serial.readline(300, "\n");
 
     std::size_t pos = recv_buffer.find("$");
@@ -202,15 +212,19 @@ class guilink_serial {
           _guilinkRTdata.waypoints(1, 6) = wp7_y;
           _guilinkRTdata.waypoints(0, 7) = wp8_x;
           _guilinkRTdata.waypoints(1, 7) = wp8_y;
+          _guilinkRTdata.startingpoint(0) = wp1_x;
+          _guilinkRTdata.startingpoint(1) = wp1_y;
+          _guilinkRTdata.endingpoint(0) = wp8_x;
+          _guilinkRTdata.endingpoint(1) = wp8_y;
         } else {
-          connectionstatus++;
+          gui_connetion_failure_count++;
           CLOG(INFO, "gui-link") << " checksum error!";
         }
       }
     }
   }  // parsedatafromgui
 
-  void senddata2gui(const guilinkRTdata<m> &_guilinkRTdata;) {
+  void senddata2gui(const guilinkRTdata<m> &_guilinkRTdata) {
     send_buffer.clear();
     send_buffer = "GUI";
     convert2string(_guilinkRTdata, send_buffer);
@@ -219,20 +233,7 @@ class guilink_serial {
     send_buffer = "$" + send_buffer + "*" + std::to_string(crc) + "\n";
     bytes_send = gui_serial.write(send_buffer);
   }  // senddata2gui
-
- public:
-  template <int _m, int _n>
-  friend std::ostream &operator<<(std::ostream &, const guilink<_m, _n> &);
 };
-
-template <int _m, int _n>
-std::ostream &operator<<(std::ostream &os,
-                         const guiserver<_m, _n> &_guiserver) {
-  os << "Buffer sent is: " << _guiserver.send_buffer;
-  os << "length of Buffer sent is: " << _guiserver.bytes_send;
-  os << "Buffer recv is: " << _guiserver.recv_buffer << std::endl;
-  return os;
-}
 
 }  // end namespace ASV
 

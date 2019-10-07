@@ -32,7 +32,7 @@ class tcpserver {
       : fdmax(0), listener(0), port(_port), results(0) {
     initializesocket();
   }
-  ~tcpserver() {}
+  virtual ~tcpserver() = default;
 
   void selectserver(char *recv_buffer, const char *send_buffer, int recv_size,
                     int send_size) {
