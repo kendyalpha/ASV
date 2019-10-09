@@ -14,17 +14,7 @@ find_package (GeographicLib 1.49 REQUIRED)
 
 # 添加 include 子目录
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../../../common/math/eigen"
-	"${PROJECT_SOURCE_DIR}/../../../common/timer/include"
-	"${PROJECT_SOURCE_DIR}/../../../common/fileIO/include"
-	"${PROJECT_SOURCE_DIR}/../../../common/logging/include"
-	"${PROJECT_SOURCE_DIR}/../../../common/property/include"
-	"${PROJECT_SOURCE_DIR}/../../../third_party/serial/include"
-	"${PROJECT_SOURCE_DIR}/../../../controller/include"
-	"${PROJECT_SOURCE_DIR}/../../../estimator/include"
-	"${PROJECT_SOURCE_DIR}/../../../planner/include"
-	"${PROJECT_SOURCE_DIR}/../../wind/include"
-    "../include/")
+	"${PROJECT_SOURCE_DIR}/../../../../")
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
     "/usr/lib"
@@ -33,7 +23,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
     
 
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../../common/logging/src/easylogging++.cc")          
+	"${PROJECT_SOURCE_DIR}/../../../../common/logging/src/easylogging++.cc")          
 # 指定生成目标
 add_executable (testGPS testGPS.cc)
 target_include_directories(testGPS PRIVATE ${HEADER_DIRECTORY})

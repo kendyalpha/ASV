@@ -9,9 +9,9 @@
 #ifndef _ESTIMATOR_H_
 #define _ESTIMATOR_H_
 
+#include "common/math/miscellaneous/include/math_utils.h"
 #include "kalmanfilter.h"
 #include "lowpass.h"
-#include "math_utils.h"
 #include "outlierremove.h"
 
 namespace ASV {

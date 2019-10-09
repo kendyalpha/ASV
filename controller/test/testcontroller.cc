@@ -8,8 +8,8 @@
 *******************************************************************************
 */
 
-#include "controller.h"
-#include "utilityio.h"
+#include "../include/controller.h"
+#include "common/fileIO/include/utilityio.h"
 
 using namespace ASV;
 

@@ -15,13 +15,14 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include "crc.h"
-#include "easylogging++.h"
+
+#include "common/communication/include/crc.h"
+#include "common/fileIO/include/utilityio.h"
+#include "common/logging/include/easylogging++.h"
+#include "common/math/miscellaneous/include/math_utils.h"
+#include "common/timer/include/timecounter.h"
 #include "guilinkdata.h"
-#include "math_utils.h"
-#include "serial/serial.h"
-#include "timecounter.h"
-#include "utilityio.h"
+#include "third_party/serial/include/serial/serial.h"
 
 namespace ASV {
 

@@ -22,7 +22,7 @@
 #include <iostream>
 #include "gpsdata.h"
 #include "nmea.h"
-#include "serial/serial.h"
+#include "third_party/serial/include/serial/serial.h"
 
 namespace ASV {
 class GPS final : public nmea {

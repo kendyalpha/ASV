@@ -1,5 +1,5 @@
 #include <string>
-#include "crc.h"
+#include "../include/crc.h"
 
 using namespace std;
 using namespace ASV;

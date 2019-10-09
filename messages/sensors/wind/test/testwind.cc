@@ -11,7 +11,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
-#include "wind.h"
+#include "../include/wind.h"
 
 using namespace ASV;
 

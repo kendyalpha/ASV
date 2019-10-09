@@ -7,8 +7,8 @@
 *******************************************************************************
 */
 
-#include "database.h"
-#include "timecounter.h"
+#include "../include/database.h"
+#include "common/timer/include/timecounter.h"
 
 using namespace ASV;
 

@@ -11,7 +11,8 @@
 #ifndef _WIND_H_
 #define _WIND_H_
 
-#include "serial/serial.h"
+#include <cmath>
+#include "third_party/serial/include/serial/serial.h"
 #include "winddata.h"
 
 namespace ASV {

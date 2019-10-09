@@ -11,8 +11,8 @@
 #ifndef UTILITYIO_H
 #define UTILITYIO_H
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
+#include <common/math/eigen/Eigen/Core>
+#include <common/math/eigen/Eigen/Dense>
 #include <fstream>
 #include <iostream>
 #include <sstream>

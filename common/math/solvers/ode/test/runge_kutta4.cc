@@ -19,8 +19,8 @@
 #endif
 
 #include <iostream>
-#include "odesolver.h"
-#include "utilityio.h"
+#include "../include/odesolver.h"
+#include "common/fileIO/include/utilityio.h"
 
 using namespace boost::numeric::odeint;
 
@@ -57,6 +57,5 @@ int main() {
     rk4.do_step(mysys, x, 0.0, 0.1);
     save_x.row(i) = x.transpose();
   }
-  ASV::utilityio _utilityio;
-  _utilityio.write2csvfile("../../data/x.csv", save_x);
+  ASV::write2csvfile("../../data/x.csv", save_x);
 }

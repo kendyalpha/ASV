@@ -12,11 +12,10 @@
 
 #include <chrono>
 #include <thread>
-#include "crc.h"
-#include "easylogging++.h"
-#include "serial/serial.h"
+#include "common/communication/include/crc.h"
+#include "common/logging/include/easylogging++.h"
 #include "stm32data.h"
-#include "timecounter.h"
+#include "third_party/serial/include/serial/serial.h"
 
 namespace ASV {
 

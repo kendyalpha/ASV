@@ -8,7 +8,7 @@
 *******************************************************************************
 */
 
-#include "trajectorytracking.h"
+#include "../include/trajectorytracking.h"
 
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);

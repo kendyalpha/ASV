@@ -8,7 +8,7 @@
 *****************************************************************************
 */
 
-#include "guilink.h"
+#include "../include/guilink.h"
 
 using namespace ASV;
 

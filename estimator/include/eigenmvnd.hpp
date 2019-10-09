@@ -12,7 +12,7 @@
 #ifndef _EIGENMVND_HPP
 #define _EIGENMVND_HPP
 
-#include <Eigen/Dense>
+#include <common/math/eigen/Eigen/Dense>
 #include <cstdlib>
 #include <ctime>
 #include <initializer_list>

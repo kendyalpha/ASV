@@ -13,7 +13,7 @@
 #define _STM32DATA_H_
 
 #include <string>
-#include "linkdata.h"
+#include "common/communication/include/linkdata.h"
 
 namespace ASV {
 

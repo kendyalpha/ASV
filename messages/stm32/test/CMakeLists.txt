@@ -16,12 +16,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-    "../include/"
-   	"${PROJECT_SOURCE_DIR}/../../../common/timer/include"
-   	"${PROJECT_SOURCE_DIR}/../../../common/logging/include"
-   	"${PROJECT_SOURCE_DIR}/../../../common/communication/include"
-   	"${PROJECT_SOURCE_DIR}/../../../third_party/serial/include"
-
+   	"${PROJECT_SOURCE_DIR}/../../../"
     )
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 

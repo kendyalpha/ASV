@@ -8,8 +8,8 @@
 ***********************************************************************
 */
 #include <cstdlib>
-#include "spline.h"
-#include "utilityio.h"
+#include "../include/spline.h"
+#include "common/fileIO/include/utilityio.h"
 
 using namespace ASV;
 
@@ -65,23 +65,16 @@ int main() {
     std::cout << dtheta / ds << std::endl;
   }
 
-  utilityio _utilityio;
-  _utilityio.write2csvfile("../data/x.csv", X);
-  _utilityio.write2csvfile("../data/y.csv", Y);
-  _utilityio.write2csvfile(
-      "../data/s.csv",
-      _utilityio.convertstdvector2EigenMat(arclength, arclength.size(), 1));
-  _utilityio.write2csvfile(
-      "../data/rx.csv", _utilityio.convertstdvector2EigenMat(rx, rx.size(), 1));
-  _utilityio.write2csvfile(
-      "../data/ry.csv", _utilityio.convertstdvector2EigenMat(ry, ry.size(), 1));
-  _utilityio.write2csvfile(
-      "../data/yaw.csv",
-      _utilityio.convertstdvector2EigenMat(ryaw, ryaw.size(), 1));
-  _utilityio.write2csvfile(
-      "../data/k.csv", _utilityio.convertstdvector2EigenMat(rk, rk.size(), 1));
-  _utilityio.write2csvfile(
-      "../data/dk.csv",
-      _utilityio.convertstdvector2EigenMat(rdk, rdk.size(), 1));
+  write2csvfile("../data/x.csv", X);
+  write2csvfile("../data/y.csv", Y);
+  write2csvfile("../data/s.csv",
+                convertstdvector2EigenMat(arclength, arclength.size(), 1));
+  write2csvfile("../data/rx.csv", convertstdvector2EigenMat(rx, rx.size(), 1));
+  write2csvfile("../data/ry.csv", convertstdvector2EigenMat(ry, ry.size(), 1));
+  write2csvfile("../data/yaw.csv",
+                convertstdvector2EigenMat(ryaw, ryaw.size(), 1));
+  write2csvfile("../data/k.csv", convertstdvector2EigenMat(rk, rk.size(), 1));
+  write2csvfile("../data/dk.csv",
+                convertstdvector2EigenMat(rdk, rdk.size(), 1));
   return EXIT_SUCCESS;
 }

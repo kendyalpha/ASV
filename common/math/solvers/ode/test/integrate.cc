@@ -18,7 +18,7 @@
 #pragma warning(disable : 4996)
 #endif
 
-#include "odesolver.h"
+#include "../include/odesolver.h"
 
 struct lorenz {
   template <typename State, typename Deriv, typename Time>

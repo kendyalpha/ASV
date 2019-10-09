@@ -11,7 +11,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
-#include "timecounter.h"
+#include "../include/timecounter.h"
 
 int main() {
   using namespace ASV;

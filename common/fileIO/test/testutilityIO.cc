@@ -8,7 +8,7 @@
 ***********************************************************************
 */
 
-#include "utilityio.h"
+#include "../include/utilityio.h"
 
 int main() {
   Eigen::MatrixXd mat(3, 4);

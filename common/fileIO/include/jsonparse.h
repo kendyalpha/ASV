@@ -11,18 +11,18 @@
 #ifndef JSONPARSE_H
 #define JSONPARSE_H
 #include <cmath>
+#include <common/fileIO/include/json.hpp>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <json.hpp>
 #include <string>
 #include <vector>
-#include "controllerdata.h"
-#include "estimatordata.h"
-#include "plannerdata.h"
-#include "utilityio.h"
-#include "vesseldata.h"
+#include "common/fileIO/include/utilityio.h"
+#include "common/property/include/vesseldata.h"
+#include "controller/include/controllerdata.h"
+#include "estimator/include/estimatordata.h"
+#include "planner/common/include/plannerdata.h"
 
 /*
 global coordinate (GLOBAL), which is an inertial reference frame;

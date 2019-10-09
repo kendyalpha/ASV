@@ -12,9 +12,8 @@
 #ifndef _ESTIMATORDATA_H_
 #define _ESTIMATORDATA_H_
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
-
+#include <common/math/eigen/Eigen/Core>
+#include <common/math/eigen/Eigen/Dense>
 namespace ASV {
 
 enum class USEKALMAN {

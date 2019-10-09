@@ -10,8 +10,6 @@
 #ifndef OUTLIERREMOVE_H
 #define OUTLIERREMOVE_H
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
 #include <cmath>
 
 namespace ASV {

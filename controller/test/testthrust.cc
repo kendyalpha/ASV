@@ -8,8 +8,8 @@
 *******************************************************************************
 */
 
-#include "thrustallocation.h"
-#include "utilityio.h"
+#include "../include/thrustallocation.h"
+#include "common/fileIO/include/utilityio.h"
 
 using namespace ASV;
 

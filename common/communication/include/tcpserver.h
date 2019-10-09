@@ -22,7 +22,7 @@
 
 #include <string>
 
-#include "easylogging++.h"
+#include "common/logging/include/easylogging++.h"
 
 namespace ASV {
 

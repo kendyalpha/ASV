@@ -11,8 +11,8 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
-#include "tcpserver.h"
-#include "wind.h"
+#include "../include/wind.h"
+#include "common/communication/include/tcpserver.h"
 
 using namespace ASV;
 

@@ -28,10 +28,8 @@ find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
-	"/usr/include" 
 	"${PROJECT_SOURCE_DIR}/../../../eigen"
-	"${PROJECT_SOURCE_DIR}/../../../../fileIO/include"
+	"${PROJECT_SOURCE_DIR}/../../../../../"
 	)
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 

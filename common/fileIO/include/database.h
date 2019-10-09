@@ -12,18 +12,18 @@
 #define _DATABASE_H_
 
 #include <sqlite_modern_cpp.h>
-#include <Eigen/Core>
+#include <common/math/eigen/Eigen/Core>
 #include <sstream>
 #include <string>
 #include <vector>
-#include "controllerdata.h"
-#include "easylogging++.h"
-#include "estimatordata.h"
-#include "gpsdata.h"
-#include "plannerdata.h"
-#include "priority.h"
-#include "utilityio.h"
-#include "winddata.h"
+#include "common/fileIO/include/utilityio.h"
+#include "common/logging/include/easylogging++.h"
+#include "common/property/include/priority.h"
+#include "controller/include/controllerdata.h"
+#include "estimator/include/estimatordata.h"
+#include "messages/sensors/gpsimu/include/gpsdata.h"
+#include "messages/sensors/wind/include/winddata.h"
+#include "planner/common/include/plannerdata.h"
 
 namespace ASV {
 

@@ -13,11 +13,11 @@
 #ifndef TK_SPLINE_H
 #define TK_SPLINE_H
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <common/math/eigen/Eigen/Core>
+#include <common/math/eigen/Eigen/Dense>
 #include <cstdio>
 #include <iostream>
 #include <vector>

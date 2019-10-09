@@ -8,11 +8,11 @@
 ***********************************************************************
 */
 
-#include "database.h"
-#include "estimator.h"
-#include "gps.h"
-#include "timecounter.h"
-#include "windcompensation.h"
+#include "common/fileIO/include/database.h"
+#include "common/timer/include/timecounter.h"
+#include "estimator/include/estimator.h"
+#include "estimator/include/windcompensation.h"
+#include "messages/sensors/gpsimu/include/gps.h"
 
 using std::setprecision;
 using namespace ASV;

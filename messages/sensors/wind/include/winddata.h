@@ -11,8 +11,6 @@
 #ifndef _WINDDATA_H_
 #define _WINDDATA_H_
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
 #include <vector>
 
 namespace ASV {

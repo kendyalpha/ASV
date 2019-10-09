@@ -21,8 +21,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "common/logging/include/easylogging++.h"
 #include "controllerdata.h"
-#include "easylogging++.h"
 #include "mosek.h"
 
 namespace ASV {

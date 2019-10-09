@@ -8,7 +8,7 @@
 ***********************************************************************
 */
 
-#include "jsonparse.h"
+#include "../include/jsonparse.h"
 
 int main() {
   // read a JSON file

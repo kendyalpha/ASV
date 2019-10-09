@@ -11,13 +11,13 @@
 #ifndef _TRAJECTORYTRACKING_H_
 #define _TRAJECTORYTRACKING_H_
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
+#include <common/math/eigen/Eigen/Core>
+#include <common/math/eigen/Eigen/Dense>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include "common/logging/include/easylogging++.h"
 #include "controllerdata.h"
-#include "easylogging++.h"
 
 namespace ASV {
 

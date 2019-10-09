@@ -11,7 +11,7 @@
 #include <chrono>
 #include <cstdio>
 #include <iostream>
-#include "nmea.h"
+#include "../include/nmea.h"
 using std::setprecision;
 
 void testGPGGA() {

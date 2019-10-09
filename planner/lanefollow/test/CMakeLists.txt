@@ -28,15 +28,7 @@ find_package(Threads MODULE REQUIRED)
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
-	"/usr/include" 
-	"${PROJECT_SOURCE_DIR}/../../common/fileIO/include"
-	"${PROJECT_SOURCE_DIR}/../../common/logging/include"
-	"${PROJECT_SOURCE_DIR}/../../common/math/eigen"
-	"${PROJECT_SOURCE_DIR}/../../common/math/NumericalAnalysis/include"
-	"${PROJECT_SOURCE_DIR}/../../common/math/miscellaneous/include"
-	"${PROJECT_SOURCE_DIR}/../../common/communication/include"
-	"${PROJECT_SOURCE_DIR}/../../common/timer/include"
+	"${PROJECT_SOURCE_DIR}/../../../"
 	)
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
@@ -44,13 +36,10 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
     )
 
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../common/logging/src/easylogging++.cc" )
+	"${PROJECT_SOURCE_DIR}/../../../common/logging/src/easylogging++.cc" )
 
 
 # 指定生成目标
-
-add_executable (testplanner testplanner.cc ${SOURCE_FILES} )
-target_include_directories(testplanner PRIVATE ${HEADER_DIRECTORY})
 
 add_executable (testFrenetTrajectoryGenerator testFrenetTrajectoryGenerator.cc ${SOURCE_FILES} )
 target_include_directories(testFrenetTrajectoryGenerator PRIVATE ${HEADER_DIRECTORY})

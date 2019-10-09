@@ -10,9 +10,9 @@
 */
 
 #include <cstdlib>
-#include "FrenetTrajectoryGenerator.h"
-#include "timecounter.h"
-#include "utilityio.h"
+#include "../include/FrenetTrajectoryGenerator.h"
+#include "common/fileIO/include/utilityio.h"
+#include "common/timer/include/timecounter.h"
 
 using namespace ASV;
 

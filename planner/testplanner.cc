@@ -8,8 +8,8 @@
 *******************************************************************************
 */
 
+#include "common/fileIO/include/utilityio.h"
 #include "planner.h"
-#include "utilityio.h"
 
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);

@@ -10,9 +10,8 @@
 
 #ifndef _PLANNERDATA_H_
 #define _PLANNERDATA_H_
-
-#include <Eigen/Core>
-#include <Eigen/Dense>
+#include <common/math/eigen/Eigen/Core>
+#include <common/math/eigen/Eigen/Dense>
 #include <vector>
 
 namespace ASV {

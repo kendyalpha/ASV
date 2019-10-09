@@ -8,8 +8,8 @@
 ***********************************************************************
 */
 #include <cstdlib>
-#include "spline.h"
-#include "utilityio.h"
+#include "../include/spline.h"
+#include "common/fileIO/include/utilityio.h"
 using namespace ASV;
 int main() {
   Eigen::VectorXd X(5);
@@ -27,13 +27,10 @@ int main() {
     y[j] = s(_t);
   }
 
-  utilityio _utilityio;
-  _utilityio.write2csvfile("../data/x.csv", X);
-  _utilityio.write2csvfile("../data/y.csv", Y);
-  _utilityio.write2csvfile("../data/spline_x.csv",
-                           _utilityio.convertstdvector2EigenMat(x, 300, 1));
-  _utilityio.write2csvfile("../data/spline_y.csv",
-                           _utilityio.convertstdvector2EigenMat(y, 300, 1));
+  write2csvfile("../data/x.csv", X);
+  write2csvfile("../data/y.csv", Y);
+  write2csvfile("../data/spline_x.csv", convertstdvector2EigenMat(x, 300, 1));
+  write2csvfile("../data/spline_y.csv", convertstdvector2EigenMat(y, 300, 1));
 
   // Eigen::Matrix<double, 6, 1> a;
   // a << 1, 1, 1, 1, 1, 1;

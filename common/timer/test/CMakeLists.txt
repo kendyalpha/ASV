@@ -23,7 +23,6 @@ find_package(Boost 1.71.0 COMPONENTS date_time REQUIRED)
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	"/usr/include" )
 
 

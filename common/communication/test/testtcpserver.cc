@@ -10,7 +10,7 @@
 
 #include <cmath>
 #include <iostream>
-#include "tcpserver.h"
+#include "../include/tcpserver.h"
 
 union lidarmsg {
   double double_msg[5];

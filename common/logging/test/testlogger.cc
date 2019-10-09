@@ -5,7 +5,7 @@
 //
 
 #include <thread>
-#include "easylogging++.h"
+#include "../include/easylogging++.h"
 
 class testlog {
  public:

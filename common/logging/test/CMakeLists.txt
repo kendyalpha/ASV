@@ -26,9 +26,7 @@ find_package(Threads REQUIRED)
 
 # 添加 include 子目录
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
-	"/usr/include" 
-	 "${PROJECT_SOURCE_DIR}/../../math/eigen")
+	"/usr/include" )
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} "/usr/lib")
 set(SOURCE_FILES ${SOURCE_FILES} 

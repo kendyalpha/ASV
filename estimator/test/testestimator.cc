@@ -8,8 +8,8 @@
 ***********************************************************************
 */
 
-#include "estimator.h"
-#include "windcompensation.h"
+#include "estimator/include/estimator.h"
+#include "estimator/include/windcompensation.h"
 
 using namespace ASV;
 

@@ -15,9 +15,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+#include "common/property/include/vesseldata.h"
 #include "controllerdata.h"
 #include "thrustallocation.h"
-#include "vesseldata.h"
 
 namespace ASV {
 // n: # of dimension of control space

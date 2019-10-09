@@ -9,12 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../../../common/math/eigen"
-	"${PROJECT_SOURCE_DIR}/../../../third_party/serial/include"
-	"${PROJECT_SOURCE_DIR}/../../serial_port/inc"
-	"${PROJECT_SOURCE_DIR}/../../../common/communication/include"
-	"${PROJECT_SOURCE_DIR}/../../../common/logging/include"
-    "../include/")
+	"${PROJECT_SOURCE_DIR}/../../../../")
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
     "/usr/lib"
@@ -24,7 +19,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 find_package(Threads REQUIRED)
 
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../../common/logging/src/easylogging++.cc")  
+	"${PROJECT_SOURCE_DIR}/../../../../common/logging/src/easylogging++.cc")  
 
 # 指定生成目标
 add_executable (testwind testwind.cc)

@@ -8,7 +8,7 @@
 *******************************************************************************
 */
 
-#include "tcpclient.h"
+#include "../include/tcpclient.h"
 
 union lidarmsg {
   double double_msg[5];

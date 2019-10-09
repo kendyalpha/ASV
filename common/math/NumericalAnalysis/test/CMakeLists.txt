@@ -23,11 +23,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../include"
-	"${PROJECT_SOURCE_DIR}/../../../fileIO/include"
-	"${PROJECT_SOURCE_DIR}/../../../timer/include"
-	"${PROJECT_SOURCE_DIR}/../../eigen/"
-	"/usr/include" )
+   	"${PROJECT_SOURCE_DIR}/../../../../" )
 
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} "/usr/lib")

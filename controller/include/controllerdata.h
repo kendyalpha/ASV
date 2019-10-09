@@ -11,8 +11,9 @@
 #ifndef _CONTROLLERDATA_H_
 #define _CONTROLLERDATA_H_
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
+#include <common/math/eigen/Eigen/Core>
+#include <common/math/eigen/Eigen/Dense>
+
 #include <vector>
 
 namespace ASV {

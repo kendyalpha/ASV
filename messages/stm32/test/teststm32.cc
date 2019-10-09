@@ -8,8 +8,8 @@
 *****************************************************************************
 */
 
-#include "stm32_link.h"
-#include "timecounter.h"
+#include "../include/stm32_link.h"
+#include "common/timer/include/timecounter.h"
 
 using namespace ASV;
 

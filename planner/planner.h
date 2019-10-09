@@ -12,8 +12,8 @@
 #define _PLANNER_H_
 
 #include <cmath>
-#include "easylogging++.h"
-#include "plannerdata.h"
+#include "common/logging/include/easylogging++.h"
+#include "planner/common/include/plannerdata.h"
 
 namespace ASV {
 

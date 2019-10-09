@@ -10,9 +10,9 @@
 #ifndef _MATH_UTILS_H_
 #define _MATH_UTILS_H_
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
 #include <cmath>
+#include <common/math/eigen/Eigen/Core>
+#include <common/math/eigen/Eigen/Dense>
 
 namespace ASV {
 

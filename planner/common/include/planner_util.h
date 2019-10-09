@@ -11,8 +11,8 @@
 #ifndef _PLANNER_UTIL_H_
 #define _PLANNER_UTIL_H_
 
-#include "math_utils.h"
-#include "spline.h"
+#include "common/math/NumericalAnalysis/include/spline.h"
+#include "common/math/miscellaneous/include/math_utils.h"
 
 namespace ASV {
 

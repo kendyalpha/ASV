@@ -11,11 +11,12 @@
 #ifndef _GUILINKDATA_H_
 #define _GUILINKDATA_H_
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
 #include <vector>
-#include "linkdata.h"
-#include "priority.h"
+
+#include <common/math/eigen/Eigen/Core>
+#include <common/math/eigen/Eigen/Dense>
+#include "common/communication/include/linkdata.h"
+#include "common/property/include/priority.h"
 
 namespace ASV {
 
