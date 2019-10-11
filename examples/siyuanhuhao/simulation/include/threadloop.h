@@ -15,18 +15,19 @@
 #include <pthread.h>
 #include <chrono>
 #include <thread>
-#include "FrenetTrajectoryGenerator.h"
-#include "controller.h"
-#include "database.h"
-#include "easylogging++.h"
-#include "estimator.h"
-#include "jsonparse.h"
-#include "planner.h"
-#include "priority.h"
-#include "spline.h"
-#include "tcpserver.h"
-#include "timecounter.h"
-#include "trajectorytracking.h"
+
+#include "common/communication/include/tcpserver.h"
+#include "common/fileIO/include/database.h"
+#include "common/fileIO/include/jsonparse.h"
+#include "common/logging/include/easylogging++.h"
+#include "common/math/solvers/ode/include/odesolver.h"
+#include "common/property/include/priority.h"
+#include "common/timer/include/timecounter.h"
+#include "controller/include/controller.h"
+#include "controller/include/trajectorytracking.h"
+#include "estimator/include/estimator.h"
+#include "planner/lanefollow/include/FrenetTrajectoryGenerator.h"
+#include "planner/planner.h"
 
 namespace ASV {
 
@@ -291,6 +292,43 @@ class threadloop {
     }
 
   }  // estimatorloop()
+
+  // loop to solve the 3DoF motion equation
+  void odeloop() {
+    timecounter timer_ode;
+    long int outerloop_elapsed_time = 0;
+    long int innerloop_elapsed_time = 0;
+    long int sample_time =
+        static_cast<long int>(1000 * _estimator.getsampletime());
+
+    _estimator.setvalue(0, 0, 0, 0, 0, 0, 0, 1, 0);
+    CLOG(INFO, "GPS") << "initialation successful!";
+
+    while (1) {
+      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
+    }
+    while (1) {
+      outerloop_elapsed_time = timer_estimator.timeelapsed();
+
+      _estimator
+          .updateestimatedforce(_controllerRTdata.BalphaU,
+                                Eigen::Vector3d::Zero())
+          .estimatestate(_trackerRTdata.setpoint(2));
+
+      _estimatorRTdata =
+          _estimator
+              .estimateerror(_trackerRTdata.setpoint, _trackerRTdata.v_setpoint)
+              .getEstimatorRTData();
+
+      innerloop_elapsed_time = timer_estimator.timeelapsed();
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
+
+      if (outerloop_elapsed_time > 1.1 * sample_time)
+        CLOG(INFO, "estimator") << "Too much time!";
+    }
+
+  }  // odeloop()
 
   // loop to save real time data using sqlite3
   void sqlloop() {

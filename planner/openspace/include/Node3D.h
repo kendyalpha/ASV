@@ -54,10 +54,9 @@ class Node3D {
   double getTheta() const noexcept { return theta; }
   double getG() const noexcept { return g; }
   double getH() const noexcept { return h; }
+  int getIdx() const noexcept { return idx; }
   // get the total estimated cost
   double getC() const noexcept { return g + h; }
-  // get the index of the node in the 3D array
-  int getIdx() const noexcept { return idx; }
   // get the number associated with the motion primitive of the node
   MOVEPRIMITIVE getPrim() const noexcept { return primitive; }
   // determine whether the node is open

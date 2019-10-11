@@ -8,18 +8,23 @@
 ***********************************************************************
 */
 
-#include <cmath>
-#include <iostream>
-#include "../include/odesolver.h"
-#include "common/fileIO/include/utilityio.h"
-using namespace boost::numeric::odeint;
+#ifndef _SIMULATOR_H_
+#define _SIMULATOR_H_
 
-struct vessel {
+#include <cmath>
+#include "common/math/solvers/ode/include/odesolver.h"
+#include "common/property/include/vesseldata.h"
+namespace ASV {
+
+struct vessel_simulator {
   // constructor
-  vessel() {
-    auto M_inv = M.inverse();
-    A.block(3, 3, 3, 3) = -M_inv * D;
-    B.block(3, 0, 3, 3) = M_inv;
+  vessel_simulator(const vessel& _vessel)
+      : M(_vessel.AddedMass + _vessel.Mass),
+        D(_vessel.Damping),
+        A(Eigen::Matrix<double, 6, 6>::Zero()),
+        B(Eigen::Matrix<double, 6, 3>::Zero()),
+        u(Eigen::Vector3d::Zero()) {
+    initializeAB();
   }
 
   template <typename State, typename Deriv>
@@ -27,43 +32,66 @@ struct vessel {
     Eigen::Matrix<double, 6, 1> _dx = A * x + B * u;
     for (int i = 0; i != 6; ++i) dxdt[i] = _dx[i];
   }
-
-  // update the transformation matrix
-  void updateTransform(double _theta) {
+  // update the A matrix in state space model
+  void updateA(double _theta) {
+    // update the transformation matrix
     double cvalue = std::cos(_theta);
     double svalue = std::sin(_theta);
+    Eigen::Matrix3d Transform = Eigen::Matrix3d::Identity();
     Transform(0, 0) = cvalue;
     Transform(0, 1) = -svalue;
     Transform(1, 0) = svalue;
     Transform(1, 1) = cvalue;
-    Transform(2, 2) = 1;
-  }
 
-  // update the A matrix in state space model
-  void updateA(double _theta) {
-    updateTransform(_theta);
+    //
     A.block(0, 3, 3, 3) = Transform;
   }
 
   // update the thrust
   void updateu(const Eigen::Vector3d& _u) { u = _u; }
 
-  Eigen::Matrix3d M =
-      (Eigen::Matrix3d() << 100, 0, 0, 0, 100, 10, 0, 10, 200).finished();
-  Eigen::Matrix3d D =
-      (Eigen::Matrix3d() << 10, 0, 0, 0, 10, 0, 0, 0, 10).finished();
+  //
+  void initializeAB() {
+    auto M_inv = M.inverse();
+    A.block(3, 3, 3, 3) = -M_inv * D;
+    B.block(3, 0, 3, 3) = M_inv;
+  }
 
-  Eigen::Matrix3d Transform = Eigen::Matrix3d::Identity();
-  Eigen::Matrix<double, 6, 6> A = Eigen::Matrix<double, 6, 6>::Zero();
-  Eigen::Matrix<double, 6, 3> B = Eigen::Matrix<double, 6, 3>::Zero();
-  Eigen::Vector3d u = Eigen::Vector3d::Zero();
+  Eigen::Matrix3d M;
+  Eigen::Matrix3d D;
+  Eigen::Matrix<double, 6, 6> A;
+  Eigen::Matrix<double, 6, 3> B;
+  Eigen::Vector3d u;
 };
 
-int main() {
+class simulator {
+  using namespace boost::numeric::odeint;
   using state_type = Eigen::Matrix<double, 6, 1>;
-  vessel sys;
+
+ public:
+  simulator() {}
+  virtual ~simulator() = default;
+
+  simulator_onestep(const Eigen::Vector3d& _u) {
+    sys.updateA(x(2));
+    sys.updateu(_u);
+    rk4.do_step(sys, x, 0.0, 0.1);
+  }
+
+  state_type getX() const noexcept { return x; }
+
+ private:
+  vessel_simulator sys;
   runge_kutta4<state_type, double, state_type, double, vector_space_algebra>
       rk4;
+
+  state_type x;
+  double sample_time;
+};
+
+}  // namespace ASV
+
+int main() {
   state_type x = (state_type() << 0, 1, 0.1, 0, 0, 0).finished();
   Eigen::Matrix3d P =
       (Eigen::Matrix3d() << 10, 0, 0, 0, 10, 0, 0, 0, 100).finished();
@@ -82,3 +110,5 @@ int main() {
   }
   ASV::write2csvfile("../data/x.csv", save_x);
 }
+
+#endif /* _SIMULATOR_H_ */

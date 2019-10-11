@@ -25,22 +25,8 @@ find_package(Threads REQUIRED)
 # 添加 include 子目录
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../../../../sensors/gpsimu/include"
-	"${PROJECT_SOURCE_DIR}/../../../../sensors/wind/include"
-	"${PROJECT_SOURCE_DIR}/../../../../controller/include"
-	"${PROJECT_SOURCE_DIR}/../../../../estimator/include"
-	"${PROJECT_SOURCE_DIR}/../../../../planner/include"
-	"${PROJECT_SOURCE_DIR}/../../../../common/timer/include"
-	"${PROJECT_SOURCE_DIR}/../../../../common/fileIO/include"
-	"${PROJECT_SOURCE_DIR}/../../../../common/property/include"
-	"${PROJECT_SOURCE_DIR}/../../../../common/logging/include"
-	"${PROJECT_SOURCE_DIR}/../../../../common/communication/include"
-	"${PROJECT_SOURCE_DIR}/../../../../common/math/eigen"
-	"${PROJECT_SOURCE_DIR}/../../../../common/math/NumericalAnalysis/include"
-	"${PROJECT_SOURCE_DIR}/../../../../common/math/miscellaneous/include"
-	"/opt/mosek/9.0/tools/platform/linux64x86/h"
-	"/usr/include" 
-    "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+	"${PROJECT_SOURCE_DIR}/../../../../"
+	"/opt/mosek/9.0/tools/platform/linux64x86/h")
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
     "/usr/lib"
