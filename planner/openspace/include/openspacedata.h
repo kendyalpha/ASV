@@ -17,6 +17,7 @@
 namespace ASV {
 namespace planning {
 
+bool FLAGS_enable_parallel_hybrid_a = true;
 // _________________
 // GENERAL CONSTANTS
 
@@ -75,6 +76,12 @@ constexpr double DUBINS_SHOT_DISTANCE = 100;
 /// [m] --- The step size for the analytical solution (Dubin's shot) primarily
 /// relevant for collision checking
 constexpr double dubinsStepSize = 1;
+
+struct PlannerOpenSpaceConfig {};
+
+struct VehicleParam {
+  max_kappa;  // max curvature of vessel
+};
 
 }  // namespace planning
 }  // namespace ASV

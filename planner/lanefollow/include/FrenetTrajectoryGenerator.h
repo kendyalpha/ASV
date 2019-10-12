@@ -270,7 +270,7 @@ class FrenetTrajectoryGenerator {
         count_collsion++;
         continue;  // collision occurs
       }
-      t_greedy_roi_paths.push_back(frenet_paths[i]);
+      t_greedy_roi_paths.push_back(frenet_paths[i]);  // emplace_back is better
     }
 
     for (std::size_t i = 0; i != t_greedy_roi_paths.size(); i++) {
