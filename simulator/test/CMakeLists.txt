@@ -2,7 +2,7 @@
 cmake_minimum_required (VERSION 3.8)
 
 # 项目信息
-project (testlos)
+project (testsimulator)
 set(CMAKE_CXX_STANDARD 17)
 
 
@@ -14,35 +14,32 @@ elseif(WIN32)
     message("This is a Windows System")
 endif()
 
-set(CMAKE_BUILD_TYPE "Debug") # "Debug" or "Release" mode
+set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -Wextra -g -ggdb -pedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+
 # thread库
 find_package(Threads MODULE REQUIRED)
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
+
 # 添加 include 子目录
 
+
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../../../eigen"
-	"${PROJECT_SOURCE_DIR}/../../../../../"
-	)
+	"${PROJECT_SOURCE_DIR}/../../"
+	"${PROJECT_SOURCE_DIR}/../../common/math/eigen"
+)
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
-	"/usr/lib"
-    )
+	"/usr/lib")
+
 
 
 # 指定生成目标
-
-add_executable (test_runge_kutta4 runge_kutta4.cc )
-target_include_directories(test_runge_kutta4 PRIVATE ${HEADER_DIRECTORY})
-
-
-add_executable (testintegrate integrate.cc )
-target_include_directories(testintegrate PRIVATE ${HEADER_DIRECTORY})
-
+add_executable (testsimulator testsimulator.cc)
+target_include_directories(testsimulator PRIVATE ${HEADER_DIRECTORY})

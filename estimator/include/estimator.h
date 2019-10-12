@@ -100,13 +100,18 @@ class estimator {
   }  // estimatestate
 
   // read sensor data and perform state estimation (simulation)
-  estimator& estimatestate(double _dheading) {
+  estimator& estimatestate(const Eigen::Matrix<double, 6, 1>& _simulator_state,
+                           double _dheading) {
+    EstimatorRTData.Measurement = _simulator_state;
     // calculate the coordinate transform matrix
-    EstimatorRTData.Measurement = EstimatorRTData.State;
     calculateCoordinateTransform(EstimatorRTData.CTG2B, EstimatorRTData.CTB2G,
                                  EstimatorRTData.Measurement(2), _dheading);
-    EstimatorRTData.State = KalmanFilter.linearkalman(EstimatorRTData)
-                                .getState();  // kalman filtering
+
+    if constexpr (indicator_kalman == USEKALMAN::KALMANON)
+      EstimatorRTData.State = KalmanFilter.linearkalman(EstimatorRTData)
+                                  .getState();  // kalman filtering
+    else
+      performlowpass(EstimatorRTData);  // use low-pass filtering only
 
     // compute Cartesian state
     computeCartesianState(EstimatorRTData);

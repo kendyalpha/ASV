@@ -26,6 +26,7 @@ find_package(Threads REQUIRED)
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
 	"${PROJECT_SOURCE_DIR}/../../../../"
+	"${PROJECT_SOURCE_DIR}/../../../../common/math/eigen"
 	"/opt/mosek/9.0/tools/platform/linux64x86/h")
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 

@@ -121,6 +121,9 @@
   "planner": {
     "sample_time": 0.1
   },
+  "simulator": {
+    "sample_time": 0.1
+  },
   "FrenetTrajectory":{
     "sample_time": 0.1,
     "target_course_arc_step":0.05,

@@ -54,6 +54,7 @@ class jsonparse {
   auto getpiddata() const noexcept { return pidcontrollerdata_input; }
   auto getestimatordata() const noexcept { return estimatordata_input; }
   auto getplannerdata() const noexcept { return plannerdata_input; }
+  auto getsimulatordata() const noexcept { return simulator_sample_time; }
   auto getfrenetdata() const noexcept { return frenetdata_input; }
 
   std::string getsqlitedata() const noexcept { return dbpath; }
@@ -70,6 +71,7 @@ class jsonparse {
     parsejson();
     parsevesselpropertydata();
     parseplannerdata();
+    parsesimulatordata();
     parsecontrollerdata();
     parseestimatordata();
     parsesqlitedata();
@@ -84,13 +86,13 @@ class jsonparse {
 
   std::string dbpath;  // directory for database file
 
-  unsigned long gps_baudrate;
+  unsigned long gps_baudrate = 9600;
   std::string gps_port;
-  unsigned long gui_baudrate;
+  unsigned long gui_baudrate = 9600;
   std::string gui_port;
-  unsigned long rc_baudrate;
+  unsigned long rc_baudrate = 9600;
   std::string rc_port;
-  unsigned long wind_baudrate;
+  unsigned long wind_baudrate = 9600;
   std::string wind_port;
 
   // vessel property
@@ -122,6 +124,9 @@ class jsonparse {
   plannerdata plannerdata_input{
       0.1  // sample_time
   };
+
+  // simulator data
+  double simulator_sample_time = 0.1;
   // thrustallocationdata
   thrustallocationdata thrustallocationdata_input{
       0,  // num_tunnel
@@ -431,7 +436,9 @@ class jsonparse {
     plannerdata_input.sample_time =
         file["planner"]["sample_time"].get<double>();
   }  // parseplannerdata
-
+  void parsesimulatordata() {
+    simulator_sample_time = file["simulator"]["sample_time"].get<double>();
+  }  // parsesimulatordata
   void parsevesselpropertydata() {
     vesseldata_input.Mass = convertstdvector2EigenMat<double, 3, 3>(
         file["property"]["Mass"].get<std::vector<double>>());

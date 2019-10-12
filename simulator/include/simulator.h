@@ -1,7 +1,7 @@
 /*
 ***********************************************************************
-* odesolver.cc:
-* ordinary differential equation solver with support to Eigen
+* simulator.h:
+* 3DoF motion simulator for USV
 * This header file can be read by C++ compilers
 *
 * by Hu.ZH(CrossOcean.ai)
@@ -12,10 +12,12 @@
 #define _SIMULATOR_H_
 
 #include <cmath>
+#include "common/math/miscellaneous/include/math_utils.h"
 #include "common/math/solvers/ode/include/odesolver.h"
 #include "common/property/include/vesseldata.h"
 namespace ASV {
 
+// vessel motion used in simulation
 struct vessel_simulator {
   // constructor
   vessel_simulator(const vessel& _vessel)
@@ -31,6 +33,7 @@ struct vessel_simulator {
   void operator()(const State& x, Deriv& dxdt, double t) const {
     Eigen::Matrix<double, 6, 1> _dx = A * x + B * u;
     for (int i = 0; i != 6; ++i) dxdt[i] = _dx[i];
+    t = t;  // disable warning!
   }
   // update the A matrix in state space model
   void updateA(double _theta) {
@@ -47,7 +50,7 @@ struct vessel_simulator {
     A.block(0, 3, 3, 3) = Transform;
   }
 
-  // update the thrust
+  // update the input
   void updateu(const Eigen::Vector3d& _u) { u = _u; }
 
   //
@@ -61,54 +64,52 @@ struct vessel_simulator {
   Eigen::Matrix3d D;
   Eigen::Matrix<double, 6, 6> A;
   Eigen::Matrix<double, 6, 3> B;
-  Eigen::Vector3d u;
+  Eigen::Vector3d u;  // input defined in the body-fixed coordinate frame
 };
 
 class simulator {
-  using namespace boost::numeric::odeint;
   using state_type = Eigen::Matrix<double, 6, 1>;
 
  public:
-  simulator() {}
+  simulator(double _sample_time, const vessel& _vessel,
+            const state_type& _x = state_type::Zero())
+      : sample_time(_sample_time), sys(_vessel), x(_x) {}
   virtual ~simulator() = default;
 
-  simulator_onestep(const Eigen::Vector3d& _u) {
-    sys.updateA(x(2));
-    sys.updateu(_u);
-    rk4.do_step(sys, x, 0.0, 0.1);
+  simulator& simulator_onestep(
+      double _desired_heading, const Eigen::Vector3d& _thrust,
+      const Eigen::Vector3d& _seaload = Eigen::Vector3d::Zero()) {
+    double _theta = 0.0;
+    if (std::abs(Normalizeheadingangle(x(2) - _desired_heading)) < M_PI / 36) {
+      // use the fixed setpoint orientation to prevent measurement noise
+      _theta = _desired_heading;
+    } else {
+      // if larger than 5 deg, we use the realtime orientation
+      _theta = x(2);
+    }
+
+    sys.updateA(_theta);              // update the transform matrix and A
+    sys.updateu(_thrust + _seaload);  // update the input
+    rk4.do_step(sys, x, 0.0, sample_time);
+    return *this;
   }
 
+  void setX(const state_type& _x) { x = _x; }
   state_type getX() const noexcept { return x; }
+  double getsampletime() const noexcept { return sample_time; }
 
  private:
+  double sample_time;  // second
   vessel_simulator sys;
-  runge_kutta4<state_type, double, state_type, double, vector_space_algebra>
-      rk4;
+  state_type x;  // state space
 
-  state_type x;
-  double sample_time;
+  // 4-order Runge-Kutta methods
+  boost::numeric::odeint::runge_kutta4<
+      state_type, double, state_type, double,
+      boost::numeric::odeint::vector_space_algebra>
+      rk4;
 };
 
 }  // namespace ASV
-
-int main() {
-  state_type x = (state_type() << 0, 1, 0.1, 0, 0, 0).finished();
-  Eigen::Matrix3d P =
-      (Eigen::Matrix3d() << 10, 0, 0, 0, 10, 0, 0, 0, 100).finished();
-  Eigen::Vector3d u = Eigen::Vector3d::Zero();
-
-  int total_step = 5000;
-  Eigen::MatrixXd save_x(total_step, 6);
-
-  for (int i = 0; i != total_step; ++i) {
-    sys.updateA(x(2));
-    u = -P * x.head(3);
-    sys.updateu(u);
-    rk4.do_step(sys, x, 0.0, 0.1);
-    std::cout << x << std::endl;
-    save_x.row(i) = x.transpose();
-  }
-  ASV::write2csvfile("../data/x.csv", save_x);
-}
 
 #endif /* _SIMULATOR_H_ */

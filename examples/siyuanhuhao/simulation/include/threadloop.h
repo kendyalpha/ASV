@@ -20,7 +20,6 @@
 #include "common/fileIO/include/database.h"
 #include "common/fileIO/include/jsonparse.h"
 #include "common/logging/include/easylogging++.h"
-#include "common/math/solvers/ode/include/odesolver.h"
 #include "common/property/include/priority.h"
 #include "common/timer/include/timecounter.h"
 #include "controller/include/controller.h"
@@ -28,12 +27,13 @@
 #include "estimator/include/estimator.h"
 #include "planner/lanefollow/include/FrenetTrajectoryGenerator.h"
 #include "planner/planner.h"
+#include "simulator/include/simulator.h"
 
 namespace ASV {
 
 constexpr int num_thruster = 2;
 constexpr int dim_controlspace = 3;
-constexpr USEKALMAN indicator_kalman = USEKALMAN::KALMANON;
+constexpr USEKALMAN indicator_kalman = USEKALMAN::KALMANOFF;
 constexpr ACTUATION indicator_actuation = ACTUATION::UNDERACTUATED;
 
 class threadloop {
@@ -45,6 +45,7 @@ class threadloop {
         _planner(_jsonparse.getplannerdata()),
         _estimator(_estimatorRTdata, _jsonparse.getvessel(),
                    _jsonparse.getestimatordata()),
+        _simulator(_jsonparse.getsimulatordata(), _jsonparse.getvessel()),
         _trajectorytracking(_jsonparse.getcontrollerdata(), _trackerRTdata),
         _controller(_controllerRTdata, _jsonparse.getcontrollerdata(),
                     _jsonparse.getvessel(), _jsonparse.getpiddata(),
@@ -131,7 +132,7 @@ class threadloop {
 
   planner _planner;
   estimator<indicator_kalman, 1, 1, 1, 1, 1, 1> _estimator;
-
+  simulator _simulator;
   trajectorytracking _trajectorytracking;
   controller<10, num_thruster, indicator_actuation, dim_controlspace>
       _controller;
@@ -265,6 +266,8 @@ class threadloop {
         static_cast<long int>(1000 * _estimator.getsampletime());
 
     _estimator.setvalue(0, 0, 0, 0, 0, 0, 0, 1, 0);
+    _simulator.setX(_estimatorRTdata.State);
+
     CLOG(INFO, "GPS") << "initialation successful!";
 
     while (1) {
@@ -273,10 +276,14 @@ class threadloop {
     while (1) {
       outerloop_elapsed_time = timer_estimator.timeelapsed();
 
+      auto x = _simulator
+                   .simulator_onestep(_trackerRTdata.setpoint(2),
+                                      _controllerRTdata.BalphaU)
+                   .getX();
       _estimator
           .updateestimatedforce(_controllerRTdata.BalphaU,
                                 Eigen::Vector3d::Zero())
-          .estimatestate(_trackerRTdata.setpoint(2));
+          .estimatestate(x, _trackerRTdata.setpoint(2));
 
       _estimatorRTdata =
           _estimator
@@ -292,43 +299,6 @@ class threadloop {
     }
 
   }  // estimatorloop()
-
-  // loop to solve the 3DoF motion equation
-  void odeloop() {
-    timecounter timer_ode;
-    long int outerloop_elapsed_time = 0;
-    long int innerloop_elapsed_time = 0;
-    long int sample_time =
-        static_cast<long int>(1000 * _estimator.getsampletime());
-
-    _estimator.setvalue(0, 0, 0, 0, 0, 0, 0, 1, 0);
-    CLOG(INFO, "GPS") << "initialation successful!";
-
-    while (1) {
-      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
-    }
-    while (1) {
-      outerloop_elapsed_time = timer_estimator.timeelapsed();
-
-      _estimator
-          .updateestimatedforce(_controllerRTdata.BalphaU,
-                                Eigen::Vector3d::Zero())
-          .estimatestate(_trackerRTdata.setpoint(2));
-
-      _estimatorRTdata =
-          _estimator
-              .estimateerror(_trackerRTdata.setpoint, _trackerRTdata.v_setpoint)
-              .getEstimatorRTData();
-
-      innerloop_elapsed_time = timer_estimator.timeelapsed();
-      std::this_thread::sleep_for(
-          std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
-
-      if (outerloop_elapsed_time > 1.1 * sample_time)
-        CLOG(INFO, "estimator") << "Too much time!";
-    }
-
-  }  // odeloop()
 
   // loop to save real time data using sqlite3
   void sqlloop() {

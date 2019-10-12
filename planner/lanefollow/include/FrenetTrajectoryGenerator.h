@@ -241,11 +241,12 @@ class FrenetTrajectoryGenerator {
 
   void updateNextCartesianStatus(double _target_s_dot = 1.0) {
     // The results of Frenet generation at "DT"
-    // const int index = 1;  // simulation without considering controller
+    const int index = 12;  // simulation without considering controller
 
     // TODO: adjust the "index", which is empirical
-    int index = static_cast<int>(frenetdata.HULL_LENGTH /
-                                 (4 * _target_s_dot * frenetdata.SAMPLE_TIME));
+    // int index = static_cast<int>(frenetdata.HULL_LENGTH /
+    //                              (4 * _target_s_dot *
+    //                              frenetdata.SAMPLE_TIME));
     next_cartesianstate.x = mincost_path.x(index);
     next_cartesianstate.y = mincost_path.y(index);
     next_cartesianstate.theta = mincost_path.yaw(index);

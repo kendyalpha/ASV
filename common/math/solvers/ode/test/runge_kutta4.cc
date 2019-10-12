@@ -29,6 +29,7 @@ struct sys {
   void operator()(const State &x, Deriv &dxdt, double t) const {
     dxdt[0] = -K / M * x[1] + T / M;
     dxdt[1] = x[0];
+    t = t;
   }
 
   void setK(double _K) { K = _K; }

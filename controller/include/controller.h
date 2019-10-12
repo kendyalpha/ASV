@@ -299,8 +299,6 @@ class controller {
   void compensatelineardamping(vectornd &_tau, const vectornd &_desired_speed) {
     for (int i = 0; i != n; ++i)
       _tau(i) += lineardamping(i, i) * _desired_speed(i);
-
-    std::cout << lineardamping(0, 0) * _desired_speed(0);
   }
   // TODO: quadratic damping
   void compensatequadricdamping(vectornd &_tau,
