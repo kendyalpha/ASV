@@ -14,7 +14,7 @@
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
 
-namespace ASV {
+namespace ASV::common::math {
 
 // restrict heading angle or delta heading to (-PI ~ PI)
 // compute the delta heading to find the shortest way to rotate
@@ -59,6 +59,12 @@ double Degree2Rad(double _degree) noexcept {
   return M_PI * _degree / 180.0;
 }  // Marine2Cart
 
-}  // end namespace ASV
+// convert Cartesian coordinates to Polar coordinates
+void Cartesian2Polar(const double x, const double y, double &r, double &theta) {
+  r = std::sqrt(x * x + y * y);
+  theta = std::atan2(y, x);
+}  // Cartesian2Polar
+
+}  // namespace ASV::common::math
 
 #endif /* _MATH_UTILS_H_ */

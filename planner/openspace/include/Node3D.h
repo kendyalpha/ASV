@@ -118,7 +118,7 @@ class Node3D {
   bool operator==(const Node3D& rhs) const {
     return static_cast<int>(x) == static_cast<int>(rhs.x) &&
            static_cast<int>(y) == static_cast<int>(rhs.y) &&
-           (std::abs(Normalizeheadingangle(theta - rhs.theta)) <=
+           (std::abs(common::math::Normalizeheadingangle(theta - rhs.theta)) <=
             DELTA_HEADING_RAD);
   }
 
@@ -153,12 +153,12 @@ class Node3D {
       // calculate successor positions forward
       xSucc = x + dx(i) * cvalue - dy(i) * svalue;
       ySucc = y + dx(i) * svalue + dy(i) * cvalue;
-      theta_Succ = Normalizeheadingangle(theta + dtheta(i));
+      theta_Succ = common::math::Normalizeheadingangle(theta + dtheta(i));
     } else {
       // backwards
       xSucc = x - dx(i - 3) * cvalue - dy(i - 3) * svalue;
       ySucc = y - dx(i - 3) * svalue + dy(i - 3) * cvalue;
-      theta_Succ = Normalizeheadingangle(theta - dtheta(i - 3));
+      theta_Succ = common::math::Normalizeheadingangle(theta - dtheta(i - 3));
     }
 
     return Node3D(xSucc, ySucc, theta_Succ, g, 0, dx, dy, dtheta, _prim);

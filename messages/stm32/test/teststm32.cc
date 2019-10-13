@@ -33,7 +33,7 @@ int main() {
       LINKSTATUS::CONNECTED  // linkstatus;
   };
 
-  timecounter _timer;
+  common::timecounter _timer;
   stm32_link _stm32_link(_stm32data, 115200);
 
   while (1) {

@@ -8,6 +8,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 #### Introduction
 
+* C++ 17
 * communication: socket TCP/IP, serial communication, checksum, etc
 * controller: PID controller, thrust allocation, actuator, etc
 * math: library involving linear algebra, numerical analysis, etc
@@ -19,7 +20,8 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 #### TODO: 
 
-1. Motion Planning
-2. Path following for spline
+1. Hybrid A star
+2. Perception (e.g. Lidar, Marine Radar, camera, etc)
 3. Hardware-in-loop simulation
 4. Finite state machine
+5. Message broker

@@ -1,5 +1,5 @@
 # CMake 最低版本号要求
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.10)
 
 # 项目信息
 project (testopenspace)
@@ -23,7 +23,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # thread库
 find_package(Threads MODULE REQUIRED)
-
+find_package(OpenMP REQUIRED)
+find_package(Boost 1.71.0 COMPONENTS date_time REQUIRED)
 
 # 添加 include 子目录
 
@@ -44,3 +45,9 @@ set(SOURCE_FILES ${SOURCE_FILES}
 
 add_executable (testnode testnode2d.cc)
 target_include_directories(testnode PRIVATE ${HEADER_DIRECTORY})
+
+
+add_executable (testmp testopenmp.cc)
+target_include_directories(testmp PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testmp PUBLIC OpenMP::OpenMP_CXX)
+target_link_libraries(testmp PUBLIC ${Boost_LIBRARIES})

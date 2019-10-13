@@ -80,7 +80,7 @@ constexpr double dubinsStepSize = 1;
 struct PlannerOpenSpaceConfig {};
 
 struct VehicleParam {
-  max_kappa;  // max curvature of vessel
+  double max_kappa;  // max curvature of vessel
 };
 
 }  // namespace planning

@@ -80,7 +80,8 @@ class simulator {
       double _desired_heading, const Eigen::Vector3d& _thrust,
       const Eigen::Vector3d& _seaload = Eigen::Vector3d::Zero()) {
     double _theta = 0.0;
-    if (std::abs(Normalizeheadingangle(x(2) - _desired_heading)) < M_PI / 36) {
+    if (std::abs(common::math::Normalizeheadingangle(x(2) - _desired_heading)) <
+        M_PI / 36) {
       // use the fixed setpoint orientation to prevent measurement noise
       _theta = _desired_heading;
     } else {

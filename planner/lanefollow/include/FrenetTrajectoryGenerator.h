@@ -92,8 +92,9 @@ class FrenetTrajectoryGenerator {
     CartesianState _cart_state{marine_x,     marine_y,     marine_theta,
                                marine_kappa, marine_speed, marine_a};
 
-    Marine2Cart(marine_y, marine_theta, marine_kappa, _cart_state.y,
-                _cart_state.theta, _cart_state.kappa);
+    common::math::Marine2Cart(marine_y, marine_theta, marine_kappa,
+                              _cart_state.y, _cart_state.theta,
+                              _cart_state.kappa);
     Cart2Frenet(_cart_state, current_frenetstate);
 
     // std::cout << i << " After conversion\n";
@@ -153,7 +154,7 @@ class FrenetTrajectoryGenerator {
   // setup a new targe course and re-generate it
   void regenerate_target_course(const Eigen::VectorXd &_marine_wx,
                                 const Eigen::VectorXd &_marine_wy) {
-    auto cart_wy = Marine2Cart(_marine_wy);
+    auto cart_wy = common::math::Marine2Cart(_marine_wy);
     target_Spline2D.reinterpolation(_marine_wx, cart_wy);  // cart_wy=marine_wx
     setup_target_course();
   }  // regenerate_target_course
@@ -636,7 +637,8 @@ class FrenetTrajectoryGenerator {
     const double delta_theta =
         std::atan2(_frenetstate.d_prime, one_minus_kappa_r_d);
     const double cos_delta_theta = std::cos(delta_theta);
-    _cartstate_v.theta = Normalizeheadingangle(delta_theta + ref_heading);
+    _cartstate_v.theta =
+        common::math::Normalizeheadingangle(delta_theta + ref_heading);
 
     // kappa
     const double kappa_r_d_prime =
@@ -660,11 +662,12 @@ class FrenetTrajectoryGenerator {
 
   double CalculateTheta(const double rtheta, const double rkappa,
                         const double d, const double d_prime) {
-    return Normalizeheadingangle(rtheta + std::atan2(d_prime, 1 - d * rkappa));
+    return common::math::Normalizeheadingangle(
+        rtheta + std::atan2(d_prime, 1 - d * rkappa));
   }
   double CalculateTheta(const double rtheta, const double d_dot,
                         const double vx) {
-    return Normalizeheadingangle(rtheta + std::asin(d_dot / vx));
+    return common::math::Normalizeheadingangle(rtheta + std::asin(d_dot / vx));
   }
 
   Eigen::Vector2d CalculateCartesianPoint(

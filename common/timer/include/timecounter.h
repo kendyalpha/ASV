@@ -15,7 +15,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/timer/timer.hpp>
 
-namespace ASV {
+namespace ASV::common {
 
 class timecounter {
   using PTIMER = boost::posix_time::ptime;
@@ -46,6 +46,6 @@ class timecounter {
 
 };  // end class timecounter
 
-}  // end namespace ASV
+}  // namespace ASV::common
 
 #endif /*_TIMECOUNTER_H_*/

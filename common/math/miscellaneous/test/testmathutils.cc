@@ -1,14 +1,27 @@
 #include <iostream>
 #include "../include/math_utils.h"
-int main() {
-  std::cout << "Result of 3.15 is " << ASV::Normalizeheadingangle(3.15)
+
+using namespace ASV::common::math;
+
+void testNormalizeAngle() {
+  std::cout << "Result of 3.15 is " << Normalizeheadingangle(3.15) << std::endl;
+  std::cout << "Result of 3.14 is " << Normalizeheadingangle(3.14) << std::endl;
+  std::cout << "Result of -3.14 is " << Normalizeheadingangle(-3.14)
             << std::endl;
-  std::cout << "Result of 3.14 is " << ASV::Normalizeheadingangle(3.14)
+  std::cout << "Result of -2Pi is " << Normalizeheadingangle(-2 * M_PI)
             << std::endl;
-  std::cout << "Result of -3.14 is " << ASV::Normalizeheadingangle(-3.14)
-            << std::endl;
-  std::cout << "Result of -2Pi is " << ASV::Normalizeheadingangle(-2 * M_PI)
-            << std::endl;
-  std::cout << "Result of 5Pi is " << ASV::Normalizeheadingangle(5 * M_PI)
+  std::cout << "Result of 5Pi is " << Normalizeheadingangle(5 * M_PI)
             << std::endl;
 }
+
+void testCartesian2Polar() {
+  double x = 1;
+  double y = 3;
+  double r = 0;
+  double theta = 0;
+  Cartesian2Polar(x, y, r, theta);
+  std::cout << "r: " << r << std::endl;
+  std::cout << "theta: " << Rad2Degree(theta) << std::endl;
+}
+
+int main() { testCartesian2Polar(); }

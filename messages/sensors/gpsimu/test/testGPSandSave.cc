@@ -35,7 +35,7 @@ int main() {
   try {
     database<3, 3> _sqlitetest("dbtest.db");
     _sqlitetest.initializetables();
-    timecounter _timer;
+    common::timecounter _timer;
     GPS _gpsimu(gps_data, 51, true, 115200);  // zone 51 N
     int count = 0;
     while (1) {

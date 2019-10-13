@@ -31,7 +31,7 @@ int main() {
       0   // UTM_y
   };
   try {
-    timecounter _timer;
+    common::timecounter _timer;
     GPS _gpsimu(gps_data, 51, true, 115200);  // zone 51 N
     long int totaltime = 0;
     int count = 0;

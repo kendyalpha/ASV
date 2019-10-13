@@ -148,7 +148,7 @@ class threadloop {
   }
 
   void plannerloop() {
-    timecounter timer_planner;
+    common::timecounter timer_planner;
     long int outerloop_elapsed_time = 0;
     long int innerloop_elapsed_time = 0;
     long int sample_time_ms =
@@ -206,9 +206,10 @@ class threadloop {
       Planning_Marine_state.speed = Plan_cartesianstate.speed;
       Planning_Marine_state.dspeed = Plan_cartesianstate.dspeed;
 
-      Cart2Marine(Plan_cartesianstate.y, Plan_cartesianstate.theta,
-                  Plan_cartesianstate.kappa, Planning_Marine_state.y,
-                  Planning_Marine_state.theta, Planning_Marine_state.kappa);
+      common::math::Cart2Marine(
+          Plan_cartesianstate.y, Plan_cartesianstate.theta,
+          Plan_cartesianstate.kappa, Planning_Marine_state.y,
+          Planning_Marine_state.theta, Planning_Marine_state.kappa);
 
       innerloop_elapsed_time = timer_planner.timeelapsed();
       std::this_thread::sleep_for(
@@ -221,7 +222,7 @@ class threadloop {
   }  // plannerloop
 
   void controllerloop() {
-    timecounter timer_controler;
+    common::timecounter timer_controler;
     long int outerloop_elapsed_time = 0;
     long int innerloop_elapsed_time = 0;
     long int sample_time =
@@ -259,7 +260,7 @@ class threadloop {
 
   // loop to give real time state estimation
   void estimatorloop() {
-    timecounter timer_estimator;
+    common::timecounter timer_estimator;
     long int outerloop_elapsed_time = 0;
     long int innerloop_elapsed_time = 0;
     long int sample_time =
@@ -324,7 +325,7 @@ class threadloop {
     char recv_buffer[recv_size];
     socketmsg _sendmsg = {0.0, 0.0, 0.0, 0.0, 0.0};
 
-    timecounter timer_socket;
+    common::timecounter timer_socket;
     long int outerloop_elapsed_time = 0;
     long int innerloop_elapsed_time = 0;
     long int sample_time = 100;

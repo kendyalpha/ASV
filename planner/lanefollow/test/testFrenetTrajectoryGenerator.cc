@@ -98,9 +98,10 @@ int main() {
 
     estimate_marinestate = Plan_cartesianstate;
 
-    Cart2Marine(Plan_cartesianstate.y, Plan_cartesianstate.theta,
-                Plan_cartesianstate.kappa, estimate_marinestate.y,
-                estimate_marinestate.theta, estimate_marinestate.kappa);
+    common::math::Cart2Marine(Plan_cartesianstate.y, Plan_cartesianstate.theta,
+                              Plan_cartesianstate.kappa, estimate_marinestate.y,
+                              estimate_marinestate.theta,
+                              estimate_marinestate.kappa);
 
     auto cart_rx = _trajectorygenerator.getCartRefX();
     auto cart_ry = _trajectorygenerator.getCartRefY();

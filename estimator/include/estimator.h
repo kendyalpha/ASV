@@ -124,8 +124,8 @@ class estimator {
     Eigen::Vector3d _perror = Eigen::Vector3d::Zero();
     for (int i = 0; i != 2; ++i)
       _perror(i) = _setpoints(i) - EstimatorRTData.State(i);
-    _perror(2) =
-        Normalizeheadingangle(_setpoints(2) - EstimatorRTData.State(2));
+    _perror(2) = common::math::Normalizeheadingangle(_setpoints(2) -
+                                                     EstimatorRTData.State(2));
 
     EstimatorRTData.p_error = EstimatorRTData.CTG2B * _perror;
     EstimatorRTData.v_error = _vsetpoints - EstimatorRTData.State.tail(3);
@@ -181,8 +181,8 @@ class estimator {
     double cvalue = 0.0;
     double svalue = 0.0;
 
-    if (std::abs(Normalizeheadingangle(_rtheading - desired_heading)) <
-        M_PI / 36) {
+    if (std::abs(common::math::Normalizeheadingangle(
+            _rtheading - desired_heading)) < M_PI / 36) {
       // use the fixed setpoint orientation to prevent measurement noise
       cvalue = std::cos(desired_heading);
       svalue = std::sin(desired_heading);
@@ -255,13 +255,15 @@ class estimator {
     _motionrawdata.gps_x = _motionrawdata.gps_y;
     _motionrawdata.gps_y = temp;
     _motionrawdata.gps_z *= (-1);
-    _motionrawdata.gps_roll = Degree2Rad(_motionrawdata.gps_roll);
-    _motionrawdata.gps_pitch = Degree2Rad(_motionrawdata.gps_pitch);
+    _motionrawdata.gps_roll = common::math::Degree2Rad(_motionrawdata.gps_roll);
+    _motionrawdata.gps_pitch =
+        common::math::Degree2Rad(_motionrawdata.gps_pitch);
     // convert degree to rad and -pi ~ pi
-    _motionrawdata.gps_heading =
-        Normalizeheadingangle(Degree2Rad(_motionrawdata.gps_heading));
+    _motionrawdata.gps_heading = common::math::Normalizeheadingangle(
+        common::math::Degree2Rad(_motionrawdata.gps_heading));
     _motionrawdata.gps_roti =
-        Degree2Rad(_motionrawdata.gps_roti) / 60.0;  // degree/min -> rad/s
+        common::math::Degree2Rad(_motionrawdata.gps_roti) /
+        60.0;  // degree/min -> rad/s
 
   }  // convert2standardunit
 
@@ -303,7 +305,8 @@ class estimator {
     double _ds = std::sqrt(std::pow(_RTdata.State(0) - previous_cart_x, 2) +
                            std::pow(_RTdata.State(1) - previous_cart_y, 2));
 
-    double _dtheta = Normalizeheadingangle(_RTdata.State(2) - previous_theta);
+    double _dtheta =
+        common::math::Normalizeheadingangle(_RTdata.State(2) - previous_theta);
     double _curvature = 0.0;
 
     if (_ds > (0.05 * sample_time))
