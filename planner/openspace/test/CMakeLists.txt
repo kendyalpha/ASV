@@ -14,7 +14,7 @@ elseif(WIN32)
     message("This is a Windows System")
 endif()
 
-set(CMAKE_BUILD_TYPE "Debug") # "Debug" or "Release" mode
+set(CMAKE_BUILD_TYPE "Release") # "Debug" or "Release" mode
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -Wextra -g -ggdb -pedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
@@ -51,3 +51,8 @@ add_executable (testmp testopenmp.cc)
 target_include_directories(testmp PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testmp PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(testmp PUBLIC ${Boost_LIBRARIES})
+
+add_executable (testtuple test.cc)
+target_include_directories(testtuple PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testtuple PUBLIC OpenMP::OpenMP_CXX)
+target_link_libraries(testtuple PUBLIC ${Boost_LIBRARIES})

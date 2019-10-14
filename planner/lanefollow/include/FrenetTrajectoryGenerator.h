@@ -92,9 +92,8 @@ class FrenetTrajectoryGenerator {
     CartesianState _cart_state{marine_x,     marine_y,     marine_theta,
                                marine_kappa, marine_speed, marine_a};
 
-    common::math::Marine2Cart(marine_y, marine_theta, marine_kappa,
-                              _cart_state.y, _cart_state.theta,
-                              _cart_state.kappa);
+    std::tie(_cart_state.y, _cart_state.theta, _cart_state.kappa) =
+        common::math::Marine2Cart(marine_y, marine_theta, marine_kappa);
     Cart2Frenet(_cart_state, current_frenetstate);
 
     // std::cout << i << " After conversion\n";

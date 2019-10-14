@@ -17,9 +17,7 @@ void testNormalizeAngle() {
 void testCartesian2Polar() {
   double x = 1;
   double y = 3;
-  double r = 0;
-  double theta = 0;
-  Cartesian2Polar(x, y, r, theta);
+  auto [r, theta] = Cartesian2Polar(x, y);
   std::cout << "r: " << r << std::endl;
   std::cout << "theta: " << Rad2Degree(theta) << std::endl;
 }

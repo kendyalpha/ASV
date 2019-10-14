@@ -69,16 +69,15 @@ class ReedShepp {
                    const std::shared_ptr<Node3d> end_node,
                    ReedSheppPath& _optimal_path) {
     std::vector<ReedSheppPath> all_possible_paths;
-    if (!GenerateRSPs(start_node, end_node, &all_possible_paths)) {
-      ADEBUG << "Fail to generate different combination of Reed Shepp "
-                "paths";
+    if (!GenerateRSPs(start_node, end_node, all_possible_paths)) {
+      std::cout << "Fail to generate different combination of Reed Shepp "
+                   "paths";
       return false;
     }
 
     double optimal_path_length = std::numeric_limits<double>::infinity();
     std::size_t optimal_path_index = 0;
-    std::size_t paths_size = all_possible_paths.size();
-    for (std::size_t i = 0; i < paths_size; ++i) {
+    for (std::size_t i = 0; i < all_possible_paths.size(); ++i) {
       if (all_possible_paths.at(i).total_length > 0 &&
           all_possible_paths.at(i).total_length < optimal_path_length) {
         optimal_path_index = i;
@@ -88,7 +87,7 @@ class ReedShepp {
 
     if (!GenerateLocalConfigurations(start_node, end_node,
                                      all_possible_paths[optimal_path_index])) {
-      ADEBUG << "Fail to generate local configurations(x, y, phi) in SetRSP";
+      std::cout << "Fail to generate local configurations(x, y, phi) in SetRSP";
       return false;
     }
 
@@ -98,18 +97,18 @@ class ReedShepp {
                  end_node->GetY()) > 1e-3 ||
         std::abs(all_possible_paths[optimal_path_index].phi.back() -
                  end_node->GetPhi()) > 1e-3) {
-      ADEBUG << "RSP end position not right";
+      std::cout << "RSP end position not right";
       for (size_t i = 0;
            i < all_possible_paths[optimal_path_index].segs_types.size(); ++i) {
-        ADEBUG << "types are "
-               << all_possible_paths[optimal_path_index].segs_types[i];
+        std::cout << "types are "
+                  << all_possible_paths[optimal_path_index].segs_types[i];
       }
-      ADEBUG << "x, y, phi are: "
-             << all_possible_paths[optimal_path_index].x.back() << ", "
-             << all_possible_paths[optimal_path_index].y.back() << ", "
-             << all_possible_paths[optimal_path_index].phi.back();
-      ADEBUG << "end x, y, phi are: " << end_node->GetX() << ", "
-             << end_node->GetY() << ", " << end_node->GetPhi();
+      std::cout << "x, y, phi are: "
+                << all_possible_paths[optimal_path_index].x.back() << ", "
+                << all_possible_paths[optimal_path_index].y.back() << ", "
+                << all_possible_paths[optimal_path_index].phi.back();
+      std::cout << "end x, y, phi are: " << end_node->GetX() << ", "
+                << end_node->GetY() << ", " << end_node->GetPhi();
       return false;
     }
     _optimal_path.x = all_possible_paths[optimal_path_index].x;
@@ -134,12 +133,12 @@ class ReedShepp {
     if (FLAGS_enable_parallel_hybrid_a) {
       // AINFO << "parallel hybrid a*";
       if (!GenerateRSPPar(start_node, end_node, all_possible_paths)) {
-        ADEBUG << "Fail to generate general profile of different RSPs";
+        std::cout << "Fail to generate general profile of different RSPs";
         return false;
       }
     } else {
       if (!GenerateRSP(start_node, end_node, all_possible_paths)) {
-        AERROR << "Fail to generate general profile of different RSPs";
+        std::cout << "Fail to generate general profile of different RSPs";
         return false;
       }
     }
@@ -1038,10 +1037,8 @@ class ReedShepp {
 
   // different options for different combination of motion primitives
   void LSL(const double x, const double y, const double phi, RSPParam& param) {
-    double rho = 0.0;
-    double theta = 0.0;
-    common::math::Cartesian2Polar(x - std::sin(phi), y - 1.0 + std::cos(phi),
-                                  rho, theta);
+    auto [rho, theta] = common::math::Cartesian2Polar(x - std::sin(phi),
+                                                      y - 1.0 + std::cos(phi));
     double u = rho;
     double t = theta;
     double v = 0.0;
@@ -1057,10 +1054,8 @@ class ReedShepp {
   }  // LSL
 
   void LSR(const double x, const double y, const double phi, RSPParam& param) {
-    double rho = 0.0;
-    double theta = 0.0;
-    common::math::Cartesian2Polar(x + std::sin(phi), y - 1.0 - std::cos(phi),
-                                  rho, theta);
+    auto [rho, theta] = common::math::Cartesian2Polar(x + std::sin(phi),
+                                                      y - 1.0 - std::cos(phi));
     double u1 = rho * rho;
     double t1 = theta;
     double u = 0.0;
@@ -1083,10 +1078,8 @@ class ReedShepp {
 
   // TODO: return RSPParam
   void LRL(const double x, const double y, const double phi, RSPParam& param) {
-    double rho = 0.0;
-    double theta = 0.0;
-    common::math::Cartesian2Polar(x - std::sin(phi), y - 1.0 + std::cos(phi),
-                                  rho, theta);
+    auto [rho, theta] = common::math::Cartesian2Polar(x - std::sin(phi),
+                                                      y - 1.0 + std::cos(phi));
     double u1 = rho;
     double t1 = theta;
     double u = 0.0;
@@ -1178,9 +1171,7 @@ class ReedShepp {
   void LRSR(const double x, const double y, const double phi, RSPParam& param) {
     double xi = x + std::sin(phi);
     double eta = y - 1.0 - std::cos(phi);
-    double rho = 0.0;
-    double theta = 0.0;
-    common::math::Cartesian2Polar(-eta, xi, rho, theta);
+    auto [rho, theta] = common::math::Cartesian2Polar(-eta, xi);
     double t = 0.0;
     double u = 0.0;
     double v = 0.0;
@@ -1200,9 +1191,7 @@ class ReedShepp {
   void LRSL(const double x, const double y, const double phi, RSPParam& param) {
     double xi = x - std::sin(phi);
     double eta = y - 1.0 + std::cos(phi);
-    double rho = 0.0;
-    double theta = 0.0;
-    common::math::Cartesian2Polar(xi, eta, rho, theta);
+    auto [rho, theta] = common::math::Cartesian2Polar(xi, eta);
     double r = 0.0;
     double t = 0.0;
     double u = 0.0;
@@ -1226,9 +1215,7 @@ class ReedShepp {
              RSPParam& param) {
     double xi = x + std::sin(phi);
     double eta = y - 1.0 - std::cos(phi);
-    double rho = 0.0;
-    double theta = 0.0;
-    common::math::Cartesian2Polar(xi, eta, rho, theta);
+    auto [rho, theta] = common::math::Cartesian2Polar(xi, eta);
     double t = 0.0;
     double u = 0.0;
     double v = 0.0;

@@ -13,6 +13,7 @@
 #include <cmath>
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
+#include <tuple>
 
 namespace ASV::common::math {
 
@@ -27,25 +28,21 @@ double Normalizeheadingangle(double _heading) noexcept {
 }  // Normalizeheadingangle
 
 // convert marine coordinate to cartesian coordinate
-void Marine2Cart(double marine_y, double marine_theta, double marine_kappa,
-                 double &cart_y, double &cart_theta,
-                 double &cart_kappa) noexcept {
-  cart_y = -marine_y;
-  cart_theta = -marine_theta;
-  cart_kappa = -marine_kappa;
-
+std::tuple<double, double, double> Marine2Cart(double marine_y,
+                                               double marine_theta,
+                                               double marine_kappa) noexcept {
+  return {-marine_y, -marine_theta, -marine_kappa};
 }  // Marine2Cart
+
 // convert marine coordinate to cartesian coordinate
 Eigen::VectorXd Marine2Cart(const Eigen::VectorXd &_marine_y) noexcept {
   return (-1) * _marine_y;
 }  // Marine2Cart
+
 // convert marine coordinate to cartesian coordinate
-void Cart2Marine(double cart_y, double cart_theta, double cart_kappa,
-                 double &marine_y, double &marine_theta,
-                 double &marine_kappa) noexcept {
-  marine_y = -cart_y;
-  marine_theta = -cart_theta;
-  marine_kappa = -cart_kappa;
+std::tuple<double, double, double> Cart2Marine(double cart_y, double cart_theta,
+                                               double cart_kappa) noexcept {
+  return {-cart_y, -cart_theta, -cart_kappa};
 
 }  // Marine2Cart
 
@@ -60,9 +57,8 @@ double Degree2Rad(double _degree) noexcept {
 }  // Marine2Cart
 
 // convert Cartesian coordinates to Polar coordinates
-void Cartesian2Polar(const double x, const double y, double &r, double &theta) {
-  r = std::sqrt(x * x + y * y);
-  theta = std::atan2(y, x);
+std::tuple<double, double> Cartesian2Polar(const double x, const double y) {
+  return {std::sqrt(x * x + y * y), std::atan2(y, x)};
 }  // Cartesian2Polar
 
 }  // namespace ASV::common::math

@@ -84,7 +84,7 @@ int main() {
   trajectorymsg _sendmsg = {0.0, 0.0, 0.0, 0.0, 0.0};
 
   // timer
-  timecounter _timer;
+  common::timecounter _timer;
 
   for (int i = 0; i != 500; ++i) {
     Plan_cartesianstate =
@@ -98,10 +98,11 @@ int main() {
 
     estimate_marinestate = Plan_cartesianstate;
 
-    common::math::Cart2Marine(Plan_cartesianstate.y, Plan_cartesianstate.theta,
-                              Plan_cartesianstate.kappa, estimate_marinestate.y,
-                              estimate_marinestate.theta,
-                              estimate_marinestate.kappa);
+    std::tie(estimate_marinestate.y, estimate_marinestate.theta,
+             estimate_marinestate.kappa) =
+        common::math::Cart2Marine(Plan_cartesianstate.y,
+                                  Plan_cartesianstate.theta,
+                                  Plan_cartesianstate.kappa);
 
     auto cart_rx = _trajectorygenerator.getCartRefX();
     auto cart_ry = _trajectorygenerator.getCartRefY();

@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <exception>
 #include <iostream>
+#include <tuple>
 #include "gpsdata.h"
 #include "nmea.h"
 #include "third_party/serial/include/serial/serial.h"
