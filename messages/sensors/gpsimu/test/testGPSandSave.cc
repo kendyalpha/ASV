@@ -17,7 +17,7 @@ using namespace ASV;
 
 int main() {
   // real time GPS/IMU data
-  gpsRTdata gps_data{
+  messages::gpsRTdata gps_data{
       0,  // UTC
       0,  // latitude
       0,  // longitude
@@ -33,10 +33,10 @@ int main() {
       0   // UTM_y
   };
   try {
-    database<3, 3> _sqlitetest("dbtest.db");
+    common::database<3, 3> _sqlitetest("dbtest.db");
     _sqlitetest.initializetables();
     common::timecounter _timer;
-    GPS _gpsimu(gps_data, 51, true, 115200);  // zone 51 N
+    messages::GPS _gpsimu(gps_data, 115200);  // zone 51 N
     int count = 0;
     while (1) {
       std::string gps_buffer = _gpsimu.gpsonestep().getserialbuffer();

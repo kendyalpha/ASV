@@ -25,7 +25,7 @@
 #include "messages/sensors/wind/include/winddata.h"
 #include "planner/common/include/plannerdata.h"
 
-namespace ASV {
+namespace ASV::common {
 
 template <int m, int n = 3>
 class database {
@@ -47,7 +47,7 @@ class database {
     create_indicators_table();
   }
   // insert a bow into gps table
-  void update_gps_table(const gpsRTdata &_gpsRTdata) {
+  void update_gps_table(const messages::gpsRTdata &_gpsRTdata) {
     try {
       std::string str =
           "INSERT INTO GPS"
@@ -362,7 +362,8 @@ class database {
     }
   }
   // convert real time GPS data to sql string
-  void convert2string(const gpsRTdata &_gpsRTdata, std::string &_str) {
+  void convert2string(const messages::gpsRTdata &_gpsRTdata,
+                      std::string &_str) {
     _str += ", ";
     _str += to_string_with_precision<double>(_gpsRTdata.UTC, 2);
     _str += ", ";
@@ -484,6 +485,6 @@ class database {
   }
 
 };  // end class database
-}  // end namespace ASV
+}  // namespace ASV::common
 
 #endif /* _DATABASE_H_ */

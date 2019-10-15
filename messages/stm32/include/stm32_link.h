@@ -17,7 +17,7 @@
 #include "stm32data.h"
 #include "third_party/serial/include/serial/serial.h"
 
-namespace ASV {
+namespace ASV::messages {
 
 class stm32_link {
  public:
@@ -31,7 +31,7 @@ class stm32_link {
         bytes_send(0),
         bytes_reci(0),
         crc16(CRC16::eCCITT_FALSE),
-        connectionstatus(10) {
+        connection_count(0) {
     checkserialstatus();
   }
   virtual ~stm32_link() = default;
@@ -41,7 +41,13 @@ class stm32_link {
     checkconnection(stmdata);
     senddata2stm32(stmdata);
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    parsedata_from_stm32(stmdata);
+    if (parsedata_from_stm32(stmdata)) {
+      // parse successfully
+      connection_count = std::min(connection_count + 1, 10);
+    } else {
+      // fail to parse
+      connection_count = std::max(connection_count - 1, 0);
+    }
     return *this;
   }
 
@@ -64,7 +70,7 @@ class stm32_link {
 
   CRC16 crc16;
 
-  int connectionstatus;
+  int connection_count;
 
   void enumerate_ports() {
     std::vector<serial::PortInfo> devices_found = serial::list_ports();
@@ -77,10 +83,12 @@ class stm32_link {
   }
 
   void checkconnection(stm32data& _stm32data) {
-    if (connectionstatus > 10)
-      _stm32data.linkstatus = LINKSTATUS::DISCONNECTED;
+    if (connection_count < 2)
+      _stm32data.linkstatus = common::LINKSTATUS::DISCONNECTED;
+    else if (2 <= connection_count && connection_count < 8)
+      _stm32data.linkstatus = common::LINKSTATUS::CONNECTING;
     else
-      _stm32data.linkstatus = LINKSTATUS::CONNECTED;
+      _stm32data.linkstatus = common::LINKSTATUS::CONNECTED;
   }
 
   void checkserialstatus() {
@@ -90,7 +98,7 @@ class stm32_link {
       CLOG(INFO, "stm32-serial") << " serial port open failure!";
   }
 
-  void parsedata_from_stm32(stm32data& _stm32data) {
+  bool parsedata_from_stm32(stm32data& _stm32data) {
     recv_buffer = stm32_serial.readline(100, "\n");
 
     std::size_t pos = recv_buffer.find("$");
@@ -105,7 +113,6 @@ class stm32_link {
         recv_buffer = recv_buffer.substr(0, rpos);
         if (std::to_string(crc16.crcCompute(recv_buffer.c_str(), rpos)) ==
             expected_crc) {
-          connectionstatus = 0;  // reset to zero
           int _stm32status = 0;
           sscanf(recv_buffer.c_str(),
                  "PC,"
@@ -131,13 +138,14 @@ class stm32_link {
           );
 
           _stm32data.stm32status = static_cast<STM32STATUS>(_stm32status);
+          return true;
 
         } else {
-          connectionstatus++;
           CLOG(INFO, "stm32-serial") << " checksum error!";
         }
       }
     }
+    return false;
   }  // parsedata_from_stm32
 
   void senddata2stm32(const stm32data& _stm32data) {
@@ -163,6 +171,6 @@ class stm32_link {
 
 };  // end class stm32_link
 
-}  // end namespace ASV
+}  // namespace ASV::messages
 
 #endif /* _STM32_LINK_H_ */

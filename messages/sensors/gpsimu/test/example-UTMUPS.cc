@@ -14,7 +14,7 @@ int main() {
     // See also example-GeoCoords.cpp
     {
       // Sample forward calculation
-      double lat = 33.3, lon = 44.4;  // Baghdad
+      double lat = -33.3, lon = 44.4;  // Baghdad
       int zone;
       bool northp;
       double x, y;
@@ -35,6 +35,11 @@ int main() {
       cout << lat << " " << lon << "\n";
     }
 
+    {
+      double lat = 31.2303904, lon = 121.4737021;  // Shanghai
+      int _zone = UTMUPS::StandardZone(lat, lon);
+      std::cout << "zone is: " << _zone << std::endl;
+    }
   } catch (const exception& e) {
     cerr << "Caught exception: " << e.what() << "\n";
     return 1;

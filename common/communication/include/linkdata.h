@@ -10,10 +10,11 @@
 #ifndef _LINKDATA_H_
 #define _LINKDATA_H_
 
-namespace ASV {
+namespace ASV::common {
 
 enum class LINKSTATUS {
   DISCONNECTED = 0,  //
+  CONNECTING = 1,
   CONNECTED
 };
 
@@ -24,6 +25,6 @@ enum class LINKPROTOCOL {
 
 };
 
-}  // end namespace ASV
+}  // namespace ASV::common
 
 #endif /* _LINKDATA_H_ */

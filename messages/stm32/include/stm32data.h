@@ -15,7 +15,7 @@
 #include <string>
 #include "common/communication/include/linkdata.h"
 
-namespace ASV {
+namespace ASV::messages {
 
 enum class STM32STATUS {
   STANDBY = 0,    // 等待PC连接
@@ -51,10 +51,10 @@ struct stm32data {
   STM32STATUS stm32status;
 
   // link status
-  LINKSTATUS linkstatus;
+  common::LINKSTATUS linkstatus;
 
 };  // stm32data
 
-}  // end namespace ASV
+}  // namespace ASV::messages
 
 #endif /* _STM32DATA_H_ */

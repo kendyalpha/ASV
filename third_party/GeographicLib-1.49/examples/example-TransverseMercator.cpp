@@ -40,6 +40,8 @@ class UTMalt {
 
 int main() {
   try {
+    UTMUPS::StandardZone(real lat, real lon, int setzone = STANDARD);
+
     UTMalt tm(6378388, 1 / 297.0, 30,
               true);  // International ellipsoid, zone 30n
     {

@@ -19,7 +19,7 @@ int main() {
 
   LOG(INFO) << "The program has started!";
 
-  database<m, n> _sqlitetest("dbtest.db");
+  common::database<m, n> _sqlitetest("dbtest.db");
   _sqlitetest.initializetables();
   // real time GPS/IMU data
   gpsRTdata gps_data{
@@ -84,7 +84,7 @@ int main() {
       1   // orientation
   };
 
-  timecounter _timer;
+  common::timecounter _timer;
 
   for (int i = 0; i != 3; ++i) {
     _sqlitetest.update_gps_table(gps_data);

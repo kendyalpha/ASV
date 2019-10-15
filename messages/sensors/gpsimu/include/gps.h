@@ -1,22 +1,23 @@
 /*
  *************************************************
- *gps.h
- *function for read and transter the data to UTM
- *using serial lib to read the serial data
- *using GeographicLib to transfer to UTM
- *the header file can be read by C++ compilers
+ * gps.h
+ * function for read and transter the data to UTM
+ * using serial lib to read the serial data
+ * using GeographicLib to transfer to UTM
+ * note: Earth's polar regions (areas of north of 84°N and south of 80°S)
+ * are not convered in UTM grids.
+ * the header file can be read by C++ compilers
  *
- *by ZH.Hu (CrossOcean.ai)
+ * by ZH.Hu (CrossOcean.ai)
  *************************************************
  */
-
-// TODO: adjust the central longitude and attitude for UTM
 
 #ifndef _GPS_H_
 #define _GPS_H_
 
 #include <string.h>
 #include <GeographicLib/TransverseMercator.hpp>
+#include <GeographicLib/UTMUPS.hpp>
 #include <cstdio>
 #include <exception>
 #include <iostream>
@@ -25,26 +26,15 @@
 #include "nmea.h"
 #include "third_party/serial/include/serial/serial.h"
 
-namespace ASV {
+namespace ASV::messages {
 class GPS final : public nmea {
  public:
   explicit GPS(const gpsRTdata& _gpsRTdata,  //
-               int _zone,                    // the UTM zone
-               bool _northp,                 // hemisphere,
                unsigned long _baud,          // baudrate
                const std::string& _port = "/dev/ttyUSB0")
       : GPSdata(_gpsRTdata),
         GPS_serial(_port, _baud, serial::Timeout::simpleTimeout(2000)),
-        serial_buffer(""),
-        tmercator(6378388,    // equatorial radius
-                  1 / 297.0,  // flattening
-                  GeographicLib::Constants::UTM_k0()),
-        centrallong(6 * _zone - 183),
-        falseeasting(5e5),
-        falsenorthing(_northp ? 0 : 100e5) {
-    if (!(_zone >= 1 && _zone <= 60))
-      throw GeographicLib::GeographicErr("zone not in [1,60]");
-  }
+        serial_buffer("") {}
   GPS() = delete;
   ~GPS() {}
 
@@ -59,22 +49,11 @@ class GPS final : public nmea {
   auto getgpsRTdata() const noexcept { return GPSdata; }
   std::string getserialbuffer() const noexcept { return serial_buffer; }
 
-  void updateUTMzone(int zone,  // the UTM zone + hemisphere
-                     bool northp) {
-    centrallong = 6 * zone - 183;
-    falsenorthing = (northp ? 0 : 100e5);  // true = N, false = S
-  }
-
  private:
   gpsRTdata GPSdata;
   /** serial data **/
   serial::Serial GPS_serial;
   std::string serial_buffer;
-  /** Define a UTM projection for an arbitrary ellipsoid **/
-  GeographicLib::TransverseMercator tmercator;  // The projection
-  double centrallong;                           // Central longitude
-  double falseeasting;
-  double falsenorthing;
 
   /** real time NMEA data **/
   HEROT herot;
@@ -90,8 +69,9 @@ class GPS final : public nmea {
       _gpsdata.longitude = convertlongitudeunit(gpgga.longitude, gpgga.EW);
       _gpsdata.altitude = gpgga.altitude;
       _gpsdata.status = gpgga.gps_Q;
-      Forward(_gpsdata.latitude, _gpsdata.longitude, _gpsdata.UTM_x,
-              _gpsdata.UTM_y);
+      auto [utm_x, utm_y] = Forward(_gpsdata.latitude, _gpsdata.longitude);
+      _gpsdata.UTM_x = utm_x;
+      _gpsdata.UTM_y = utm_y;
 
     } else if (_serial_buffer.find("$HEROT") != std::string::npos) {
       nmea::nmea_parse(_serial_buffer, herot);
@@ -107,7 +87,7 @@ class GPS final : public nmea {
     } else {
       printf("No NMEA Data!\n");
     }
-  }
+  }  // hemisphereV102
 
   void enumerate_ports() {
     std::vector<serial::PortInfo> devices_found = serial::list_ports();
@@ -118,21 +98,18 @@ class GPS final : public nmea {
       serial::PortInfo device = *iter++;
     }
   }
+
   // convert longitude and latitude to UTM
-  void Forward(double lat,  // latitude of point (degrees)
-               double lon,  //  longitude of point (degrees)
-               double& x,   // easting of point (meters)
-               double& y    // northing of point (meters)
+  std::tuple<double, double> Forward(
+      const double lat,  // latitude of point (degrees)
+      const double lon   //  longitude of point (degrees)
   ) {
-    tmercator.Forward(centrallong, lat, lon, x, y);
-    x += falseeasting;
-    y += falsenorthing;
-  }
-  // convert UTM to longitude and latitude
-  void Reverse(double x, double y, double& lat, double& lon) {
-    x -= falseeasting;
-    y -= falsenorthing;
-    tmercator.Reverse(centrallong, x, y, lat, lon);
+    int zone = 0;        // the UTM zone (zero means UPS).
+    bool northp = true;  // hemisphere (true means north, false means south).
+    double x = 0.0;      // easting of point (meters)
+    double y = 0.0;      // northing of point (meters)
+    GeographicLib::UTMUPS::Forward(lat, lon, zone, northp, x, y);
+    return {x, y};
   }
 
   // convert the unit of latitude (ddmm.mmm -> dd.dddddd)
@@ -166,6 +143,6 @@ class GPS final : public nmea {
     _Vn = _speed * cvalue;
   }
 };  // end class GPS
-}  // end namespace ASV
+}  // namespace ASV::messages
 
 #endif
