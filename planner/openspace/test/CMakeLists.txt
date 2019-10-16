@@ -56,3 +56,7 @@ add_executable (testtuple test.cc)
 target_include_directories(testtuple PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testtuple PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(testtuple PUBLIC ${Boost_LIBRARIES})
+
+
+add_executable (dubins_demo dubins_demo.cc)
+target_include_directories(dubins_demo PRIVATE ${HEADER_DIRECTORY})

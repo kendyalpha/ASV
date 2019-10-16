@@ -105,7 +105,7 @@
   },
   "comcenter":{
     "GPS":{
-      "port":"/dev/ttyS1",
+      "port":"/dev/ttyS0",
       "baudrate":115200
     },
     "GUI_server":{
@@ -119,6 +119,10 @@
     "Wind":{
       "port":"/dev/ttyUSB0",
       "baudrate":9600
+    },
+    "stm32":{
+      "port":"/dev/ttyUSB0",
+      "baudrate":115200
     }
   }
 }
