@@ -80,7 +80,7 @@ class threadloop {
 
  private:
   // json
-  jsonparse<num_thruster, dim_controlspace> _jsonparse;
+  common::jsonparse<num_thruster, dim_controlspace> _jsonparse;
 
   plannerRTdata _plannerRTdata{
       0,                        // curvature
@@ -138,7 +138,7 @@ class threadloop {
       _controller;
 
   FrenetTrajectoryGenerator _trajectorygenerator;
-  database<num_thruster, dim_controlspace> _sqlite;
+  common::database<num_thruster, dim_controlspace> _sqlite;
   tcpserver _tcpserver;
 
   void intializethreadloop() {

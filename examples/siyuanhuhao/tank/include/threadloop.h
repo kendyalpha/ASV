@@ -41,12 +41,10 @@ class threadloop {
  public:
   threadloop()
       : _jsonparse("./../../properties/property.json"),
-        indicator_socket(0),
-        indicator_waypoint(0),
         _planner(_jsonparse.getplannerdata()),
+        _gpsimu(gps_data, _jsonparse.getgpsbaudrate(), _jsonparse.getgpsport()),
         _estimator(_estimatorRTdata, _jsonparse.getvessel(),
                    _jsonparse.getestimatordata()),
-        _simulator(_jsonparse.getsimulatordata(), _jsonparse.getvessel()),
         _trajectorytracking(_jsonparse.getcontrollerdata(), _trackerRTdata),
         _controller(_controllerRTdata, _jsonparse.getcontrollerdata(),
                     _jsonparse.getvessel(), _jsonparse.getpiddata(),
@@ -54,9 +52,10 @@ class threadloop {
                     _jsonparse.gettunneldata(), _jsonparse.getazimuthdata(),
                     _jsonparse.getmainrudderdata(),
                     _jsonparse.gettwinfixeddata()),
+        _stm32_link(_stm32data, _jsonparse.getstm32baudrate(),
+                    _jsonparse.getstm32port()),
         _trajectorygenerator(_jsonparse.getfrenetdata()),
-        _sqlite(_jsonparse.getsqlitedata()),
-        _tcpserver("9340") {
+        _sqlite(_jsonparse.getsqlitedata()) {
     intializethreadloop();
   }
   ~threadloop() {}
@@ -66,7 +65,8 @@ class threadloop {
     std::thread estimator_thread(&threadloop::estimatorloop, this);
     std::thread controller_thread(&threadloop::controllerloop, this);
     std::thread sql_thread(&threadloop::sqlloop, this);
-    std::thread socket_thread(&threadloop::socketloop, this);
+    std::thread gps_thread(&threadloop::gpsloop, this);
+    std::thread stm32_thread(&threadloop::stm32loop, this);
 
     // planner_thread.detach();
     // controller_thread.detach();
@@ -76,12 +76,13 @@ class threadloop {
     estimator_thread.join();
     controller_thread.join();
     sql_thread.join();
-    socket_thread.join();
+    gps_thread.join();
+    stm32_thread.join();
   }
 
  private:
   // json
-  jsonparse<num_thruster, dim_controlspace> _jsonparse;
+  common::jsonparse<num_thruster, dim_controlspace> _jsonparse;
 
   plannerRTdata _plannerRTdata{
       0,                        // curvature
@@ -129,7 +130,7 @@ class threadloop {
   };
 
   // real time GPS/IMU data
-  gpsRTdata gps_data{
+  messages::gpsRTdata gps_data{
       0,  // UTC
       0,  // latitude
       0,  // longitude
@@ -145,19 +146,37 @@ class threadloop {
       0   // UTM_y
   };
 
-  int indicator_socket;
-  int indicator_waypoint;
+  messages::stm32data _stm32data{
+      "",                              // UTC_time
+      0,                               // command_n1
+      -10,                             // command_n2
+      0,                               // feedback_n1
+      0,                               // feedback_n2
+      0,                               // RC_X
+      0,                               // RC_Y
+      0,                               // RC_Mz
+      0,                               // voltage_b1
+      0,                               // voltage_b2
+      0,                               // voltage_b2
+      messages::STM32STATUS::STANDBY,  // stm32status
+      common::LINKSTATUS::CONNECTED    // linkstatus;
+  };
 
   planner _planner;
+
+  messages::GPS _gpsimu;
+
   estimator<indicator_kalman, 1, 1, 1, 1, 1, 1> _estimator;
-  simulator _simulator;
   trajectorytracking _trajectorytracking;
   controller<10, num_thruster, indicator_actuation, dim_controlspace>
       _controller;
 
+  messages::stm32_link _stm32_link;
+
   FrenetTrajectoryGenerator _trajectorygenerator;
-  database<num_thruster, dim_controlspace> _sqlite;
-  tcpserver _tcpserver;
+  common::database<num_thruster, dim_controlspace> _sqlite;
+
+  common::timecounter utc_timer;
 
   void intializethreadloop() {
     _controllerRTdata =
@@ -203,11 +222,7 @@ class threadloop {
       db << str;
     }
     CLOG(INFO, "waypoints") << "Waypoints have been generated";
-    indicator_waypoint = 1;
 
-    while (1) {
-      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
-    }
     while (1) {
       outerloop_elapsed_time = timer_planner.timeelapsed();
 
@@ -248,9 +263,6 @@ class threadloop {
         static_cast<long int>(1000 * _controller.getsampletime());
 
     while (1) {
-      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
-    }
-    while (1) {
       outerloop_elapsed_time = timer_controler.timeelapsed();
       _controller.setcontrolmode(CONTROLMODE::MANEUVERING);
       // trajectory tracking
@@ -285,25 +297,40 @@ class threadloop {
     long int sample_time =
         static_cast<long int>(1000 * _estimator.getsampletime());
 
-    _estimator.setvalue(0, 0, 0, 0, 0, 0, 0, 1, 0);
-    _simulator.setX(_estimatorRTdata.State);
-
-    CLOG(INFO, "GPS") << "initialation successful!";
-
     while (1) {
-      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
+      if (gps_data.status >= 1) {
+        _estimator.setvalue(gps_data.UTM_x,     // gps_x
+                            gps_data.UTM_y,     // gps_y
+                            gps_data.altitude,  // gps_z
+                            gps_data.roll,      // gps_roll
+                            gps_data.pitch,     // gps_pitch
+                            gps_data.heading,   // gps_heading
+                            gps_data.Ve,        // gps_Ve
+                            gps_data.Vn,        // gps_Vn
+                            gps_data.roti       // gps_roti
+        );
+
+        CLOG(INFO, "GPS") << "initialation successful!";
+        break;
+      }
     }
     while (1) {
       outerloop_elapsed_time = timer_estimator.timeelapsed();
 
-      auto x = _simulator
-                   .simulator_onestep(_trackerRTdata.setpoint(2),
-                                      _controllerRTdata.BalphaU)
-                   .getX();
       _estimator
           .updateestimatedforce(_controllerRTdata.BalphaU,
                                 Eigen::Vector3d::Zero())
-          .estimatestate(x, _trackerRTdata.setpoint(2));
+          .estimatestate(gps_data.UTM_x,             // gps_x
+                         gps_data.UTM_y,             // gps_y
+                         gps_data.altitude,          // gps_z
+                         gps_data.roll,              // gps_roll
+                         gps_data.pitch,             // gps_pitch
+                         gps_data.heading,           // gps_heading
+                         gps_data.Ve,                // gps_Ve
+                         gps_data.Vn,                // gps_Vn
+                         gps_data.roti,              // gps_roti
+                         _trackerRTdata.setpoint(2)  //_dheading
+          );
 
       _estimatorRTdata =
           _estimator
@@ -320,70 +347,32 @@ class threadloop {
 
   }  // estimatorloop()
 
-  // loop to save real time data using sqlite3
+  // loop to save real time data using sqlite3 and modern_sqlite3_cpp_wrapper
   void sqlloop() {
     while (1) {
-      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
-    }
-    while (1) {
-      _sqlite.update_gps_table(_plannerRTdata);
+      _sqlite.update_gps_table(gps_data);
       _sqlite.update_planner_table(_plannerRTdata);
       _sqlite.update_estimator_table(_estimatorRTdata);
       _sqlite.update_controller_table(_controllerRTdata, _trackerRTdata);
     }
   }  // sqlloop()
 
-  // socket server
-  void socketloop() {
-    union socketmsg {
-      double double_msg[20];
-      char char_msg[160];
-    };
-
-    const int recv_size = 10;
-    const int send_size = 160;
-    char recv_buffer[recv_size];
-    socketmsg _sendmsg = {0.0, 0.0, 0.0, 0.0, 0.0};
-
-    common::timecounter timer_socket;
-    long int outerloop_elapsed_time = 0;
-    long int innerloop_elapsed_time = 0;
-    long int sample_time = 100;
-
+  // loop to give messages to stm32
+  void stm32loop() {
     while (1) {
-      outerloop_elapsed_time = timer_socket.timeelapsed();
-
-      for (int i = 0; i != 6; ++i)
-        _sendmsg.double_msg[i] = _estimatorRTdata.State(i);  // State
-
-      _sendmsg.double_msg[6] = _plannerRTdata.curvature;      // curvature
-      _sendmsg.double_msg[7] = _plannerRTdata.speed;          // speed
-      _sendmsg.double_msg[8] = _plannerRTdata.waypoint0(0);   // waypoint0
-      _sendmsg.double_msg[9] = _plannerRTdata.waypoint0(1);   // waypoint0
-      _sendmsg.double_msg[10] = _plannerRTdata.waypoint1(0);  // waypoint1
-      _sendmsg.double_msg[11] = _plannerRTdata.waypoint1(1);  // waypoint1
-
-      for (int i = 0; i != dim_controlspace; ++i) {
-        _sendmsg.double_msg[12 + i] = _controllerRTdata.tau(i);  // tau
-      }
-      for (int i = 0; i != num_thruster; ++i) {
-        _sendmsg.double_msg[12 + dim_controlspace + i] =
-            _controllerRTdata.rotation(i);  // rotation
-      }
-      _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
-                              send_size);
-
-      if (_tcpserver.getconnectioncount() > 0) indicator_socket = 1;
-
-      innerloop_elapsed_time = timer_socket.timeelapsed();
-      std::this_thread::sleep_for(
-          std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
-
-      if (outerloop_elapsed_time > 1.1 * sample_time)
-        CLOG(INFO, "socket") << "Too much time!";
+      _stm32_link.setstm32data(_stm32data).stm32onestep();
+      _stm32data = _stm32_link.getstmdata();
     }
-  }  // socketloop()
-};   // end threadloop
+  }  // stm32loop()
+
+  // read gps data and convert it to UTM
+  void gpsloop() {
+    while (1) {
+      gps_data = _gpsimu.gpsonestep().getgpsRTdata();
+    }
+  }  // gpsloop()
+
+};  // end threadloop
 
 }  // end namespace ASV
 

@@ -163,6 +163,10 @@
     "Wind":{
       "port":"/dev/ttyUSB3",
       "baudrate":9600
+    },
+    "stm32":{
+      "port":"/dev/ttyUSB4",
+      "baudrate":115200
     }
   }
 }

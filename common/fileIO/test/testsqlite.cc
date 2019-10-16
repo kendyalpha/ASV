@@ -22,7 +22,7 @@ int main() {
   common::database<m, n> _sqlitetest("dbtest.db");
   _sqlitetest.initializetables();
   // real time GPS/IMU data
-  gpsRTdata gps_data{
+  messages::gpsRTdata gps_data{
       0,  // UTC
       0,  // latitude
       0,  // longitude

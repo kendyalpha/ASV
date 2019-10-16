@@ -18,7 +18,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
-namespace ASV {
+
+namespace ASV::common {
 
 template <typename T>
 std::string to_string_with_precision(const T _value, const int p = 6) {
@@ -95,6 +96,6 @@ void write2csvfile(const std::string &name, const Eigen::MatrixXi &_matrix) {
   }
 }  // write2csvfile
 
-}  // end  namespace ASV
+}  // namespace ASV::common
 
 #endif /*UTILITYIO_H*/

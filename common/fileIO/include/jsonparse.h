@@ -30,7 +30,7 @@ body-fixed coordinate (BODY); whose origin located at the stern
 body-fixed coordinate (BODY-G), whose origin located at the center of gravity
 */
 
-namespace ASV {
+namespace ASV::common {
 template <int m, int n = 3>
 class jsonparse {
  public:
@@ -62,10 +62,13 @@ class jsonparse {
   std::string getguiport() const noexcept { return gui_port; }
   std::string getremotecontrolport() const noexcept { return rc_port; }
   std::string getwindport() const noexcept { return wind_port; }
+  std::string getstm32port() const noexcept { return stm32_port; }
+
   unsigned long getgpsbaudrate() const noexcept { return gps_baudrate; }
   unsigned long getguibaudrate() const noexcept { return gui_baudrate; }
   unsigned long getrcbaudrate() const noexcept { return rc_baudrate; }
   unsigned long getwindbaudrate() const noexcept { return wind_baudrate; }
+  unsigned long getstm32baudrate() const noexcept { return stm32_baudrate; }
 
   void readjson() {
     parsejson();
@@ -94,6 +97,8 @@ class jsonparse {
   std::string rc_port;
   unsigned long wind_baudrate = 9600;
   std::string wind_port;
+  unsigned long stm32_baudrate = 9600;
+  std::string stm32_port;
 
   // vessel property
   vessel vesseldata_input{
@@ -493,6 +498,9 @@ class jsonparse {
         file["comcenter"]["remotecontrol"]["baudrate"].get<unsigned long>();
     wind_port = file["comcenter"]["Wind"]["port"];
     wind_baudrate = file["comcenter"]["Wind"]["baudrate"].get<unsigned long>();
+    stm32_port = file["comcenter"]["stm32"]["port"];
+    stm32_baudrate =
+        file["comcenter"]["stm32"]["baudrate"].get<unsigned long>();
   }
 
   void parsefrenetdata() {
@@ -634,6 +642,7 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
   os << _jp.gui_port << " " << _jp.gui_baudrate << std::endl;
   os << _jp.rc_port << " " << _jp.rc_baudrate << std::endl;
   os << _jp.wind_port << " " << _jp.wind_baudrate << std::endl;
+  os << _jp.stm32_port << " " << _jp.stm32_baudrate << std::endl;
 
   os << "dbpath:\n";
   os << _jp.dbpath << std::endl;
@@ -657,6 +666,6 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
   os << _jp.frenetdata_input.ROBOT_RADIUS << std::endl;
   return os;
 }  // friend operator<<
-}  // end namespace ASV
+}  // namespace ASV::common
 
 #endif /* JSONPARSE_H */

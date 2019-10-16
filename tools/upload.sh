@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo cp -r guiclient.* CMakeLists.txt /mnt/sshfs_mount
+sudo cp -rf ./ASV.tar.gz /mnt/sshfs_mount

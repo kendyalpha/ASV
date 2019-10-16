@@ -22,16 +22,18 @@
 #include <exception>
 #include <iostream>
 #include <tuple>
-#include "gpsdata.h"
-#include "nmea.h"
+#include "common/logging/include/easylogging++.h"
+#include "messages/sensors/gpsimu/include/gpsdata.h"
+#include "messages/sensors/gpsimu/include/nmea.h"
 #include "third_party/serial/include/serial/serial.h"
 
 namespace ASV::messages {
 class GPS final : public nmea {
  public:
-  explicit GPS(const gpsRTdata& _gpsRTdata,  //
-               unsigned long _baud,          // baudrate
-               const std::string& _port = "/dev/ttyUSB0")
+  explicit GPS(const gpsRTdata& _gpsRTdata,               //
+               unsigned long _baud,                       // baudrate
+               const std::string& _port = "/dev/ttyUSB0"  // serial port
+               )
       : GPSdata(_gpsRTdata),
         GPS_serial(_port, _baud, serial::Timeout::simpleTimeout(2000)),
         serial_buffer("") {}
@@ -41,8 +43,9 @@ class GPS final : public nmea {
   // read serial data and transform to UTM
   GPS& gpsonestep() {
     serial_buffer = GPS_serial.readline(150);
-
     hemisphereV102(serial_buffer, GPSdata);
+    check_gps_tatus(GPSdata);
+
     return *this;
   }
 
@@ -85,7 +88,7 @@ class GPS final : public nmea {
       _gpsdata.pitch = psat.pitch;
       _gpsdata.roll = psat.roll;
     } else {
-      printf("No NMEA Data!\n");
+      CLOG(ERROR, "GPS") << "No NMEA Data!";
     }
   }  // hemisphereV102
 
@@ -99,6 +102,11 @@ class GPS final : public nmea {
     }
   }
 
+  // check the gps status and give the warning
+  void check_gps_tatus(const gpsRTdata& _gpsdata) {
+    if (_gpsdata.status == 0) CLOG(ERROR, "GPS") << "GPS no fix!";
+  }
+
   // convert longitude and latitude to UTM
   std::tuple<double, double> Forward(
       const double lat,  // latitude of point (degrees)
@@ -110,7 +118,7 @@ class GPS final : public nmea {
     double y = 0.0;      // northing of point (meters)
     GeographicLib::UTMUPS::Forward(lat, lon, zone, northp, x, y);
     return {x, y};
-  }
+  }  // Forward
 
   // convert the unit of latitude (ddmm.mmm -> dd.dddddd)
   double convertlatitudeunit(double _latitude, char _NS) {
@@ -141,8 +149,9 @@ class GPS final : public nmea {
     double svalue = std::sin(_TMG);
     _Ve = _speed * svalue;
     _Vn = _speed * cvalue;
-  }
-};  // end class GPS
+  }  // decomposespeed
+};   // end class GPS
+
 }  // namespace ASV::messages
 
 #endif

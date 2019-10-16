@@ -58,5 +58,5 @@ int main() {
     rk4.do_step(mysys, x, 0.0, 0.1);
     save_x.row(i) = x.transpose();
   }
-  ASV::write2csvfile("../data/x.csv", save_x);
+  ASV::common::write2csvfile("../data/x.csv", save_x);
 }

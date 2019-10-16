@@ -48,5 +48,5 @@ int main() {
     x = _simulator.simulator_onestep(0, u).getX();
     save_x.row(i) = x.transpose();
   }
-  ASV::write2csvfile("../data/x.csv", save_x);
+  ASV::common::write2csvfile("../data/x.csv", save_x);
 }

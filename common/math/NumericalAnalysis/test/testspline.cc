@@ -27,10 +27,12 @@ int main() {
     y[j] = s(_t);
   }
 
-  write2csvfile("../data/x.csv", X);
-  write2csvfile("../data/y.csv", Y);
-  write2csvfile("../data/spline_x.csv", convertstdvector2EigenMat(x, 300, 1));
-  write2csvfile("../data/spline_y.csv", convertstdvector2EigenMat(y, 300, 1));
+  common::write2csvfile("../data/x.csv", X);
+  common::write2csvfile("../data/y.csv", Y);
+  common::write2csvfile("../data/spline_x.csv",
+                        common::convertstdvector2EigenMat(x, 300, 1));
+  common::write2csvfile("../data/spline_y.csv",
+                        common::convertstdvector2EigenMat(y, 300, 1));
 
   // Eigen::Matrix<double, 6, 1> a;
   // a << 1, 1, 1, 1, 1, 1;
