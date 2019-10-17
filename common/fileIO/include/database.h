@@ -63,8 +63,8 @@ class database {
     }
   }
   // insert a bow into controller table
-  void update_controller_table(const controllerRTdata<m, n> &_RTdata,
-                               const trackerRTdata &_trackRTdata) {
+  void update_controller_table(const control::controllerRTdata<m, n> &_RTdata,
+                               const control::trackerRTdata &_trackRTdata) {
     try {
       std::string str =
           "INSERT INTO controller"
@@ -392,8 +392,9 @@ class database {
     _str += to_string_with_precision<double>(_gpsRTdata.UTM_y, 3);
   }
 
-  void convert2string(const controllerRTdata<m, n> &_RTdata,
-                      const trackerRTdata &_trackRTdata, std::string &_str) {
+  void convert2string(const control::controllerRTdata<m, n> &_RTdata,
+                      const control::trackerRTdata &_trackRTdata,
+                      std::string &_str) {
     // setpoint
     for (int i = 0; i != 3; ++i) {
       _str += ", ";

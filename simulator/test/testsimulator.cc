@@ -15,7 +15,7 @@ using namespace ASV;
 int main() {
   using state_type = Eigen::Matrix<double, 6, 1>;
 
-  vessel _vessel{
+  common::vessel _vessel{
       (Eigen::Matrix3d() << 100, 0, 1, 0, 100, 0, 1, 0, 1000)
           .finished(),          // Mass
       Eigen::Matrix3d::Zero(),  // AddedMass

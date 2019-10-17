@@ -3,6 +3,8 @@
 #include "estimator/include/eigenmvnd.hpp"
 #include "estimator/include/kalmanfilter.h"
 using namespace ASV;
+using namespace ASV::common;
+
 void test1d() { /* Set Matrix and Vector for Kalman Filter: */
   Eigen::MatrixXd A(1, 1);
   A << 1;

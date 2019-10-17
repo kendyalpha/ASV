@@ -11,7 +11,8 @@
 #include "../include/controller.h"
 #include "common/fileIO/include/utilityio.h"
 
-using namespace ASV;
+using namespace ASV::control;
+using namespace ASV::common;
 
 void test_multiplecontroller() {
   // set the parameters in the thrust allocation

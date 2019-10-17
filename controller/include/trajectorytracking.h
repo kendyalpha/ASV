@@ -19,7 +19,7 @@
 #include "common/logging/include/easylogging++.h"
 #include "controllerdata.h"
 
-namespace ASV {
+namespace ASV::control {
 
 class lineofsight {
  public:
@@ -184,6 +184,6 @@ class trajectorytracking final : public lineofsight {
 
 };  // end class trajectorytracking
 
-}  // end namespace ASV
+}  // namespace ASV::control
 
 #endif /* _TRAJECTORYTRACKING_H_ */

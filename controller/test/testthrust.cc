@@ -11,7 +11,8 @@
 #include "../include/thrustallocation.h"
 #include "common/fileIO/include/utilityio.h"
 
-using namespace ASV;
+using namespace ASV::control;
+using namespace ASV::common;
 
 // test thrust allocation for 4 propellers (fully actuated)
 void testonestepthrustallocation() {
@@ -127,7 +128,7 @@ void testonestepthrustallocation() {
 
   Eigen::MatrixXd vvv(2, 3);
   vvv.setZero();
-  common::write2csvfile("csvfile.csv", vvv);
+  write2csvfile("csvfile.csv", vvv);
 }
 
 // test thrust allocation for 3 propellers (fully actuated)
@@ -248,12 +249,12 @@ void test_multiplethrusterallocation() {
   save_rotation = save_rotation.transpose().eval();
   // save data to csv file
   std::string _name("../data/");
-  common::write2csvfile(_name + "tau.csv", save_tau);
-  common::write2csvfile(_name + "u.csv", save_u);
-  common::write2csvfile(_name + "alpha.csv", save_alpha);
-  common::write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  common::write2csvfile(_name + "Balpha.csv", save_Balphau);
-  common::write2csvfile(_name + "rotation.csv", save_rotation);
+  write2csvfile(_name + "tau.csv", save_tau);
+  write2csvfile(_name + "u.csv", save_u);
+  write2csvfile(_name + "alpha.csv", save_alpha);
+  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
+  write2csvfile(_name + "Balpha.csv", save_Balphau);
+  write2csvfile(_name + "rotation.csv", save_rotation);
 }
 
 // test thrust allocation for twin-fixed propeller (underactuated)
@@ -365,12 +366,12 @@ void test_twinfixed() {
   save_rotation = save_rotation.transpose().eval();
   // save data to csv file
   std::string _name("../data/");
-  common::write2csvfile(_name + "tau.csv", save_tau);
-  common::write2csvfile(_name + "u.csv", save_u);
-  common::write2csvfile(_name + "alpha.csv", save_alpha);
-  common::write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  common::write2csvfile(_name + "Balpha.csv", save_Balphau);
-  common::write2csvfile(_name + "rotation.csv", save_rotation);
+  write2csvfile(_name + "tau.csv", save_tau);
+  write2csvfile(_name + "u.csv", save_u);
+  write2csvfile(_name + "alpha.csv", save_alpha);
+  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
+  write2csvfile(_name + "Balpha.csv", save_Balphau);
+  write2csvfile(_name + "rotation.csv", save_rotation);
 }
 
 void testrudder() {
@@ -494,12 +495,12 @@ void testrudder() {
   save_rotation = save_rotation.transpose().eval();
   // save data to csv file
   std::string _name("../data/");
-  common::write2csvfile(_name + "tau.csv", save_tau);
-  common::write2csvfile(_name + "u.csv", save_u);
-  common::write2csvfile(_name + "alpha.csv", save_alpha);
-  common::write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  common::write2csvfile(_name + "Balpha.csv", save_Balphau);
-  common::write2csvfile(_name + "rotation.csv", save_rotation);
+  write2csvfile(_name + "tau.csv", save_tau);
+  write2csvfile(_name + "u.csv", save_u);
+  write2csvfile(_name + "alpha.csv", save_alpha);
+  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
+  write2csvfile(_name + "Balpha.csv", save_Balphau);
+  write2csvfile(_name + "rotation.csv", save_rotation);
 }
 
 void testbiling() {
@@ -667,12 +668,12 @@ void testbiling() {
   save_rotation = save_rotation.transpose().eval();
   // save data to csv file
   std::string _name("../data/");
-  common::write2csvfile(_name + "tau.csv", save_tau);
-  common::write2csvfile(_name + "u.csv", save_u);
-  common::write2csvfile(_name + "alpha.csv", save_alpha);
-  common::write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  common::write2csvfile(_name + "Balpha.csv", save_Balphau);
-  common::write2csvfile(_name + "rotation.csv", save_rotation);
+  write2csvfile(_name + "tau.csv", save_tau);
+  write2csvfile(_name + "u.csv", save_u);
+  write2csvfile(_name + "alpha.csv", save_alpha);
+  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
+  write2csvfile(_name + "Balpha.csv", save_Balphau);
+  write2csvfile(_name + "rotation.csv", save_rotation);
 }
 
 int main() {

@@ -49,7 +49,7 @@ int main() {
       Eigen::Vector3d::Zero(),              // v_error
       Eigen::Vector3d::Zero()               // BalphaU
   };
-  controllerRTdata<m, n> _controllerRTdata{
+  control::controllerRTdata<m, n> _controllerRTdata{
       (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),    // tau
       Eigen::Matrix<double, n, 1>::Zero(),                      // BalphaU
       (Eigen::Matrix<double, m, 1>() << 0, 0.5, 0).finished(),  // u
@@ -61,7 +61,7 @@ int main() {
 
   };
 
-  trackerRTdata _trackRTdata{
+  control::trackerRTdata _trackRTdata{
       (Eigen::Vector3d() << 0, 0, 1).finished(),  // setpoint
       Eigen::Matrix<double, 3, 1>::Zero()         // v_setpoint
   };

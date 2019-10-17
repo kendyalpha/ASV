@@ -41,10 +41,8 @@ class jsonparse {
   ~jsonparse() {}
 
   vessel getvessel() const noexcept { return vesseldata_input; }
-  controllerdata getcontrollerdata() const noexcept {
-    return controllerdata_input;
-  }
-  thrustallocationdata getthrustallocationdata() const noexcept {
+  auto getcontrollerdata() const noexcept { return controllerdata_input; }
+  auto getthrustallocationdata() const noexcept {
     return thrustallocationdata_input;
   }
   auto gettunneldata() const noexcept { return tunnelthrusterdata_input; }
@@ -118,12 +116,12 @@ class jsonparse {
   };
 
   // controllerdata
-  controllerdata controllerdata_input{
-      0.1,                      // sample_time
-      0,                        // los_radius
-      0,                        // los_capture_radius
-      CONTROLMODE::MANUAL,      // controlmode
-      ACTUATION::FULLYACTUATED  // index_actuation
+  control::controllerdata controllerdata_input{
+      0.1,                               // sample_time
+      0,                                 // los_radius
+      0,                                 // los_capture_radius
+      control::CONTROLMODE::MANUAL,      // controlmode
+      control::ACTUATION::FULLYACTUATED  // index_actuation
   };
   // plannerdata
   plannerdata plannerdata_input{
@@ -133,18 +131,18 @@ class jsonparse {
   // simulator data
   double simulator_sample_time = 0.1;
   // thrustallocationdata
-  thrustallocationdata thrustallocationdata_input{
+  control::thrustallocationdata thrustallocationdata_input{
       0,  // num_tunnel
       0,  // num_azimuth
       0,  // num_mainrudder
       0,  // num_twinfixed
       {}  // index_thrusters
   };
-  std::vector<tunnelthrusterdata> tunnelthrusterdata_input;
-  std::vector<azimuththrusterdata> azimuththrusterdata_input;
-  std::vector<ruddermaindata> ruddermaindata_input;
-  std::vector<twinfixedthrusterdata> twinfixeddata_input;
-  std::vector<pidcontrollerdata> pidcontrollerdata_input;
+  std::vector<control::tunnelthrusterdata> tunnelthrusterdata_input;
+  std::vector<control::azimuththrusterdata> azimuththrusterdata_input;
+  std::vector<control::ruddermaindata> ruddermaindata_input;
+  std::vector<control::twinfixedthrusterdata> twinfixeddata_input;
+  std::vector<control::pidcontrollerdata> pidcontrollerdata_input;
 
   // estimatordata
   estimatordata estimatordata_input{
@@ -189,7 +187,7 @@ class jsonparse {
         vesseldata_input.L *
         file["controller"]["LOS"]["capture_radius_co"].get<double>();
 
-    pidcontrollerdata _pidcontrollerdata_input;
+    control::pidcontrollerdata _pidcontrollerdata_input;
     // surge-- controller
     _pidcontrollerdata_input.position_P =
         file["controller"]["surge"]["position_P"].get<double>();
@@ -261,7 +259,7 @@ class jsonparse {
         ++thrustallocationdata_input.num_tunnel;
         thrustallocationdata_input.index_thrusters.push_back(1);
 
-        tunnelthrusterdata _thrusterdata_input;
+        control::tunnelthrusterdata _thrusterdata_input;
 
         // position
         std::vector<double> _position = file[str_thruster]["position"];
@@ -294,7 +292,7 @@ class jsonparse {
         ++thrustallocationdata_input.num_azimuth;
         thrustallocationdata_input.index_thrusters.push_back(2);
 
-        azimuththrusterdata _thrusterdata_input;
+        control::azimuththrusterdata _thrusterdata_input;
 
         // position
         std::vector<double> _position = file[str_thruster]["position"];
@@ -337,7 +335,7 @@ class jsonparse {
         ++thrustallocationdata_input.num_mainrudder;
         thrustallocationdata_input.index_thrusters.push_back(3);
 
-        ruddermaindata _thrusterdata_input;
+        control::ruddermaindata _thrusterdata_input;
 
         // position
         std::vector<double> _position = file[str_thruster]["position"];
@@ -381,7 +379,7 @@ class jsonparse {
         ++thrustallocationdata_input.num_twinfixed;
         thrustallocationdata_input.index_thrusters.push_back(4);
 
-        twinfixedthrusterdata _thrusterdata_input;
+        control::twinfixedthrusterdata _thrusterdata_input;
 
         // position
         std::vector<double> _position = file[str_thruster]["position"];

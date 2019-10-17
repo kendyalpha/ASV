@@ -156,7 +156,8 @@ class kalmanfilter {
 // Kalman filtering for surface vessel
 class USV_kalmanfilter : public kalmanfilter<3, 6, 6> {
  public:
-  explicit USV_kalmanfilter(const vessel &_vessel, double _sample_time) noexcept
+  explicit USV_kalmanfilter(const common::vessel &_vessel,
+                            double _sample_time) noexcept
       : kalmanfilter(matrixnnd::Zero(), matrixnld::Zero(),
                      matrixmnd::Identity(), matrixnnd::Identity(),
                      matrixmmd::Identity()),
@@ -177,7 +178,7 @@ class USV_kalmanfilter : public kalmanfilter<3, 6, 6> {
   const double sample_time;
 
   // initialize parameters in Kalman filter
-  void initializekalman(const vessel &_vessel) {
+  void initializekalman(const common::vessel &_vessel) {
     // copy the constant data
     Eigen::Matrix3d Mass(_vessel.Mass + _vessel.AddedMass);
     Eigen::Matrix3d Damping(_vessel.Damping);

@@ -10,7 +10,7 @@
 
 #include "motorclient.h"
 #include "thrustallocation.h"
-using namespace ASV;
+using namespace ASV::control;
 
 void test() {
   // set the parameters in the thrust allocation

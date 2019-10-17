@@ -19,7 +19,7 @@ using namespace ASV;
 
 int main() {
   // real time GPS/IMU data
-  gpsRTdata gps_data{
+  messages::gpsRTdata gps_data{
       0,  // UTC
       0,  // latitude
       0,  // longitude
@@ -35,7 +35,7 @@ int main() {
       0   // UTM_y
   };
 
-  vessel _vessel{
+  common::vessel _vessel{
       (Eigen::Matrix3d() << 100, 0, 1, 0, 100, 0, 1, 0, 1000)
           .finished(),          // Mass
       Eigen::Matrix3d::Zero(),  // AddedMass
@@ -77,10 +77,10 @@ int main() {
       (Eigen::Vector3d() << 2, 0, 0).finished()  // cog2anntena_position
   };
 
-  database<3, 3> _sqlitetest("../data/dbtest.db");
+  common::database<3, 3> _sqlitetest("../data/dbtest.db");
   _sqlitetest.initializetables();
-  timecounter _timer;
-  GPS _gpsimu(gps_data, 51, true, 115200);  // zone 51 N
+  common::timecounter _timer;
+  messages::GPS _gpsimu(gps_data, 115200);  // zone 51 N
   estimator<USEKALMAN::KALMANOFF> _estimator(_estimatorRTdata, _vessel,
                                              estimatordata_input);
   _estimator.setvalue(gps_data.UTM_x, gps_data.UTM_y, gps_data.altitude,

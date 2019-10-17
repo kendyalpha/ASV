@@ -20,7 +20,7 @@ namespace ASV {
 // vessel motion used in simulation
 struct vessel_simulator {
   // constructor
-  vessel_simulator(const vessel& _vessel)
+  vessel_simulator(const common::vessel& _vessel)
       : M(_vessel.AddedMass + _vessel.Mass),
         D(_vessel.Damping),
         A(Eigen::Matrix<double, 6, 6>::Zero()),
@@ -71,7 +71,7 @@ class simulator {
   using state_type = Eigen::Matrix<double, 6, 1>;
 
  public:
-  simulator(double _sample_time, const vessel& _vessel,
+  simulator(double _sample_time, const common::vessel& _vessel,
             const state_type& _x = state_type::Zero())
       : sample_time(_sample_time), sys(_vessel), x(_x) {}
   virtual ~simulator() = default;

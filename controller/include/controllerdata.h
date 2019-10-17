@@ -15,7 +15,7 @@
 #include <common/math/eigen/Eigen/Dense>
 #include <vector>
 
-namespace ASV {
+namespace ASV::control {
 
 enum class CONTROLMODE {
   MANUAL = 0,      // manual controller
@@ -141,6 +141,6 @@ struct pidcontrollerdata {
   double max_output;
 };
 
-}  // end namespace ASV
+}  // namespace ASV::control
 
 #endif /* _CONTROLLERDATA_H_ */

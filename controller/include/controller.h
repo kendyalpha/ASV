@@ -19,7 +19,7 @@
 #include "controllerdata.h"
 #include "thrustallocation.h"
 
-namespace ASV {
+namespace ASV::control {
 // n: # of dimension of control space
 // m: # of all thrusters on the vessel
 // L: # of integral length of PID controller
@@ -32,7 +32,7 @@ class controller {
  public:
   explicit controller(
       const controllerRTdata<m, n> &_controllerRTdata,
-      const controllerdata &_controllerdata, const vessel &_vessel,
+      const controllerdata &_controllerdata, const common::vessel &_vessel,
       const std::vector<pidcontrollerdata> &_piddata,
       const thrustallocationdata &_thrustallocationdata,
       const std::vector<tunnelthrusterdata> &_v_tunnelthrusterdata,
@@ -308,6 +308,6 @@ class controller {
   }
 };  // end class controller
 
-}  // end namespace ASV
+}  // namespace ASV::control
 
 #endif /*_CONTROLLER_H_*/

@@ -22,7 +22,8 @@ template <USEKALMAN indicator_kalman, int nlp_x = 1, int nlp_y = 1,
 class estimator {
  public:
   explicit estimator(const estimatorRTdata& _estimatorRTdata,
-                     const vessel& _vessel, const estimatordata& _estimatordata)
+                     const common::vessel& _vessel,
+                     const estimatordata& _estimatordata)
       : EstimatorRTData(_estimatorRTdata),
         Motionrawdata({0, 0, 0, 0, 0, 0, 0, 0, 0}),
         roll_outlierremove(_vessel.roll_v(1), _vessel.roll_v(0),

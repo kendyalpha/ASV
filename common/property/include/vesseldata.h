@@ -15,7 +15,7 @@
 #include <common/math/eigen/Eigen/Dense>
 #include <vector>
 
-namespace ASV {
+namespace ASV::common {
 
 // 船体的参数
 struct vessel {
@@ -41,6 +41,6 @@ struct vessel {
   double B;  // total width of vessel
 };
 
-}  // end namespace ASV
+}  // namespace ASV::common
 
 #endif /* _VESSELDATA_H_ */

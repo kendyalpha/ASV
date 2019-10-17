@@ -25,7 +25,7 @@
 #include "controllerdata.h"
 #include "mosek.h"
 
-namespace ASV {
+namespace ASV::control {
 // m: # of all thrusters on the vessel
 // n: # of dimension of control space
 template <int m, ACTUATION index_actuation, int n = 3>
@@ -1023,6 +1023,6 @@ class thrustallocation {
     }
   }  // onestepmosek
 };   // end class thrustallocation
-}  // end namespace ASV
+}  // namespace ASV::control
 
 #endif /* _THRUSTALLOCATION_H_*/
