@@ -112,7 +112,7 @@ class database {
     }
   }
   // insert a bow into estimator table
-  void update_planner_table(const plannerRTdata &_RTdata) {
+  void update_planner_table(const planning::plannerRTdata &_RTdata) {
     try {
       std::string str =
           "INSERT INTO planner"
@@ -449,7 +449,8 @@ class database {
     }
   }
 
-  void convert2string(const plannerRTdata &_RTdata, std::string &_str) {
+  void convert2string(const planning::plannerRTdata &_RTdata,
+                      std::string &_str) {
     // command
     for (int i = 0; i != 3; ++i) {
       _str += ", ";

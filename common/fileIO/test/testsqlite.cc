@@ -66,7 +66,7 @@ int main() {
       Eigen::Matrix<double, 3, 1>::Zero()         // v_setpoint
   };
 
-  plannerRTdata _plannerRTdata{
+  planning::plannerRTdata _plannerRTdata{
       0, 0, Eigen::Vector2d::Zero(),  // waypoint0
       Eigen::Vector2d::Zero(),        // waypoint1
       Eigen::Vector3d::Zero()         // command

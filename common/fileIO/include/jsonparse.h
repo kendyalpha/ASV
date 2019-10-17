@@ -124,7 +124,7 @@ class jsonparse {
       control::ACTUATION::FULLYACTUATED  // index_actuation
   };
   // plannerdata
-  plannerdata plannerdata_input{
+  planning::plannerdata plannerdata_input{
       0.1  // sample_time
   };
 
@@ -150,7 +150,7 @@ class jsonparse {
       Eigen::Vector3d::Zero()  // antenna2cog
   };
 
-  Frenetdata frenetdata_input{
+  planning::Frenetdata frenetdata_input{
       0.1,         // SAMPLE_TIME
       50.0 / 3.6,  // MAX_SPEED
       4.0,         // MAX_ACCEL

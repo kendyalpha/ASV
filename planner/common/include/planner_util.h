@@ -14,7 +14,7 @@
 #include "common/math/NumericalAnalysis/include/spline.h"
 #include "common/math/miscellaneous/include/math_utils.h"
 
-namespace ASV {
+namespace ASV::planning {
 
 class quintic_polynomial final : public polynomialvalue<5> {
  public:
@@ -136,6 +136,6 @@ class quartic_polynomial final : public polynomialvalue<4> {
 
 };  // quartic_polynomial
 
-}  // end namespace ASV
+}  // namespace ASV::planning
 
 #endif /* _PLANNER_UTIL_H_ */

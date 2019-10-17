@@ -1,11 +1,12 @@
 /*
 ***********************************************************************
-* dubins_path.h:
+* dubins.h:
 * A dubins path class for finding analytical solutions to the problem of
 * the shortest path.
 * This header file can be read by C++ compilers
 *
-* by Hu.ZH(CrossOcean.ai)
+* by Andrew Walker (https://github.com/AndrewWalker/Dubins-Curves)
+* and Hu.ZH(CrossOcean.ai)
 ***********************************************************************
 */
 
@@ -271,7 +272,7 @@ class dubins {
    */
   int dubins_path_sample_many(DubinsPath* path, double stepSize,
                               DubinsPathSamplingCallback cb, void* user_data) {
-    int retcode;
+    int retcode = 0;
     double q[3] = {0, 0, 0};
     double x = 0.0;
     double length = dubins_path_length(path);

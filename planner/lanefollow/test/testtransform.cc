@@ -20,7 +20,7 @@ int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
 
-  Frenetdata _frenetdata{
+  planning::Frenetdata _frenetdata{
       0.1,         // SAMPLE_TIME
       50.0 / 3.6,  // MAX_SPEED
       4.0,         // MAX_ACCEL
@@ -39,7 +39,7 @@ int main() {
       2.0          // ROBOT_RADIUS
   };
 
-  CartesianState cartesianstate{
+  planning::CartesianState cartesianstate{
       1,            // x
       0,            // y
       -M_PI / 3.0,  // theta
@@ -47,7 +47,7 @@ int main() {
       2,            // speed
       0,            // dspeed
   };
-  FrenetState frenetstate{
+  planning::FrenetState frenetstate{
       10,  // s
       0,   // s_dot
       0,   // s_ddot
@@ -61,7 +61,7 @@ int main() {
   Eigen::VectorXd Y(5);
   X << 0.0, 10.0, 20.5, 35.0, 70.5;
   Y << 0.0, -6.0, 5.0, 6.5, 0.0;
-  FrenetTrajectoryGenerator _trajectorygenerator(_frenetdata, X, Y);
+  planning::FrenetTrajectoryGenerator _trajectorygenerator(_frenetdata, X, Y);
 
   transformc2f(_trajectorygenerator, frenetstate, cartesianstate);
   std::cout << "Results of Transformation from Cartesian to Frenet\n";

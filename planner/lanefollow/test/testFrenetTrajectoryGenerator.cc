@@ -34,7 +34,7 @@ int main() {
   ob_x << 20.0, 30.0, 30.0, 35.0, 50.0;
   ob_y << 10.0, 6.0, 8.0, 8.0, 3.0;
 
-  Frenetdata _frenetdata{
+  planning::Frenetdata _frenetdata{
       0.1,         // SAMPLE_TIME
       50.0 / 3.6,  // MAX_SPEED
       4.0,         // MAX_ACCEL
@@ -54,7 +54,7 @@ int main() {
   };
 
   // real time data
-  CartesianState Plan_cartesianstate{
+  planning::CartesianState Plan_cartesianstate{
       0,           // x
       -1,          // y
       M_PI / 3.0,  // theta
@@ -63,7 +63,7 @@ int main() {
       0,           // dspeed
   };
 
-  CartesianState estimate_marinestate{
+  planning::CartesianState estimate_marinestate{
       0,           // x
       -1,          // y
       M_PI / 3.0,  // theta
@@ -72,7 +72,7 @@ int main() {
       0,           // dspeed
   };
 
-  FrenetTrajectoryGenerator _trajectorygenerator(_frenetdata);
+  planning::FrenetTrajectoryGenerator _trajectorygenerator(_frenetdata);
   _trajectorygenerator.regenerate_target_course(marine_X, marine_Y);
   _trajectorygenerator.setobstacle(ob_x, ob_y);
 

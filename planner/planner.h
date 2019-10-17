@@ -15,7 +15,7 @@
 #include "common/logging/include/easylogging++.h"
 #include "planner/common/include/plannerdata.h"
 
-namespace ASV {
+namespace ASV::planning {
 
 class planner {
  public:
@@ -86,6 +86,6 @@ class planner {
   }
 };  // end class planner
 
-}  // end namespace ASV
+}  // namespace ASV::planning
 
 #endif /* _PLANNER_H_ */

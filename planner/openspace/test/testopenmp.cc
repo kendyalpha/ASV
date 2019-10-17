@@ -1,3 +1,13 @@
+/*
+***********************************************************************
+* testopenmp.cc:
+* multiple threads using openmp
+* This header file can be read by C++ compilers
+*
+* by Hu.ZH(CrossOcean.ai)
+***********************************************************************
+*/
+
 #include <omp.h>
 #include <chrono>
 #include <cmath>

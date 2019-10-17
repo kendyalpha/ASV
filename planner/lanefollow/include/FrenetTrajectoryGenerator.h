@@ -18,7 +18,7 @@
 #include "planner/common/include/planner_util.h"
 #include "planner/common/include/plannerdata.h"
 
-namespace ASV {
+namespace ASV::planning {
 
 struct Frenet_path {
   Eigen::VectorXd t;
@@ -694,6 +694,6 @@ void transformc2f(FrenetTrajectoryGenerator &_tg, FrenetState &_frenetstate,
   _tg.Cart2Frenet(_cartstate, _frenetstate);
 }
 
-}  // end namespace ASV
+}  // namespace ASV::planning
 
 #endif /* _FRENETTRAJECTORYGENERATOR_H_*/

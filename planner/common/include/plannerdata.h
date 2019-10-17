@@ -14,7 +14,7 @@
 #include <common/math/eigen/Eigen/Dense>
 #include <vector>
 
-namespace ASV {
+namespace ASV::planning {
 // real time data in planner
 struct plannerRTdata {
   double curvature;           // desired curvature of path
@@ -76,6 +76,6 @@ struct FrenetState {
   double d_pprime;  // d(d_prime)/ ds
 };
 
-}  // end namespace ASV
+}  // namespace ASV::planning
 
 #endif /*_PLANNERDATA_H_*/

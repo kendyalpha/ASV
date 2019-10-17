@@ -52,11 +52,9 @@ target_include_directories(testmp PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testmp PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(testmp PUBLIC ${Boost_LIBRARIES})
 
-add_executable (testtuple test.cc)
-target_include_directories(testtuple PRIVATE ${HEADER_DIRECTORY})
-target_link_libraries(testtuple PUBLIC OpenMP::OpenMP_CXX)
-target_link_libraries(testtuple PUBLIC ${Boost_LIBRARIES})
-
 
 add_executable (dubins_demo dubins_demo.cc)
 target_include_directories(dubins_demo PRIVATE ${HEADER_DIRECTORY})
+
+add_executable (montecarlo_tests montecarlo_tests.cc)
+target_include_directories(montecarlo_tests PRIVATE ${HEADER_DIRECTORY})

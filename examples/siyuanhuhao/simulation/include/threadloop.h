@@ -34,7 +34,8 @@ namespace ASV {
 constexpr int num_thruster = 2;
 constexpr int dim_controlspace = 3;
 constexpr USEKALMAN indicator_kalman = USEKALMAN::KALMANOFF;
-constexpr ACTUATION indicator_actuation = ACTUATION::UNDERACTUATED;
+constexpr control::ACTUATION indicator_actuation =
+    control::ACTUATION::UNDERACTUATED;
 
 class threadloop {
  public:
@@ -82,7 +83,7 @@ class threadloop {
   // json
   common::jsonparse<num_thruster, dim_controlspace> _jsonparse;
 
-  plannerRTdata _plannerRTdata{
+  planning::plannerRTdata _plannerRTdata{
       0,                        // curvature
       0,                        // speed
       Eigen::Vector2d::Zero(),  // waypoint0
@@ -90,12 +91,12 @@ class threadloop {
       Eigen::Vector3d::Zero()   // command
   };
 
-  trackerRTdata _trackerRTdata{
+  control::trackerRTdata _trackerRTdata{
       Eigen::Vector3d::Zero(),  // setpoint
       Eigen::Vector3d::Zero()   // v_setpoint
   };
 
-  controllerRTdata<num_thruster, dim_controlspace> _controllerRTdata{
+  control::controllerRTdata<num_thruster, dim_controlspace> _controllerRTdata{
       Eigen::Matrix<double, dim_controlspace, 1>::Zero(),  // tau
       Eigen::Matrix<double, dim_controlspace, 1>::Zero(),  // BalphaU
       Eigen::Matrix<double, num_thruster, 1>::Zero(),      // u
@@ -118,7 +119,7 @@ class threadloop {
   };
 
   // real time data
-  CartesianState Planning_Marine_state{
+  planning::CartesianState Planning_Marine_state{
       0,           // x
       0,           // y
       M_PI / 3.0,  // theta
@@ -130,14 +131,14 @@ class threadloop {
   int indicator_socket;
   int indicator_waypoint;
 
-  planner _planner;
+  planning::planner _planner;
   estimator<indicator_kalman, 1, 1, 1, 1, 1, 1> _estimator;
   simulator _simulator;
-  trajectorytracking _trajectorytracking;
-  controller<10, num_thruster, indicator_actuation, dim_controlspace>
+  control::trajectorytracking _trajectorytracking;
+  control::controller<10, num_thruster, indicator_actuation, dim_controlspace>
       _controller;
 
-  FrenetTrajectoryGenerator _trajectorygenerator;
+  planning::FrenetTrajectoryGenerator _trajectorygenerator;
   common::database<num_thruster, dim_controlspace> _sqlite;
   tcpserver _tcpserver;
 
@@ -234,7 +235,7 @@ class threadloop {
     }
     while (1) {
       outerloop_elapsed_time = timer_controler.timeelapsed();
-      _controller.setcontrolmode(CONTROLMODE::MANEUVERING);
+      _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
       // trajectory tracking
       _trackerRTdata = _trajectorytracking
                            .CircularArcLOS(Planning_Marine_state.kappa,
