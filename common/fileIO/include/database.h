@@ -23,6 +23,7 @@
 #include "estimator/include/estimatordata.h"
 #include "messages/sensors/gpsimu/include/gpsdata.h"
 #include "messages/sensors/wind/include/winddata.h"
+#include "messages/stm32/include/stm32data.h"
 #include "planner/common/include/plannerdata.h"
 
 namespace ASV::common {
@@ -33,7 +34,7 @@ class database {
   explicit database(const std::string &_savepath)
       : db(_savepath),
         clientset({"controller", "estimator", "planner", "GPS", "wind", "motor",
-                   "indicators"}) {}
+                   "indicators", "stm32"}) {}
 
   ~database() {}
 
@@ -45,7 +46,9 @@ class database {
     create_estimator_table();
     create_planner_table();
     create_indicators_table();
-  }
+    create_stm32_table();
+  }  // initializetables
+
   // insert a bow into gps table
   void update_gps_table(const messages::gpsRTdata &_gpsRTdata) {
     try {
@@ -61,7 +64,8 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-GPS") << e.what();
     }
-  }
+  }  // update_gps_table
+
   // insert a bow into controller table
   void update_controller_table(const control::controllerRTdata<m, n> &_RTdata,
                                const control::trackerRTdata &_trackRTdata) {
@@ -94,7 +98,8 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-controller") << e.what();
     }
-  }
+  }  // update_controller_table
+
   // insert a bow into estimator table
   void update_estimator_table(const estimatorRTdata &_RTdata) {
     try {
@@ -110,7 +115,8 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-estimator") << e.what();
     }
-  }
+  }  // update_estimator_table
+
   // insert a bow into estimator table
   void update_planner_table(const planning::plannerRTdata &_RTdata) {
     try {
@@ -124,7 +130,7 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-planner") << e.what();
     }
-  }
+  }  // update_planner_table
 
   // insert a row into estimator table
   void update_indicators_table(const indicators &_RTdata) {
@@ -139,7 +145,25 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-indicators") << e.what();
     }
-  }
+  }  // update_indicators_table
+
+  void update_stm32_table(const messages::stm32data &_RTdata) {
+    try {
+      std::string str =
+          "INSERT INTO stm32"
+          "(DATETIME, stm32_link, stm32_status, command_u1, command_u2, "
+          "feedback_u1, feedback_u2, feedback_pwm1, feedback_pwm2, "
+          "RC_X, RC_Y, RC_Mz, voltage_b1, voltage_b2, voltage_b3 ) "
+          "VALUES(julianday('now')";
+      convert2string(_RTdata, str);
+      str += ");";
+      db << str;
+
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-stm32") << e.what();
+    }
+  }  // update_stm32_table
+
   // insert a row into wind table
   void update_wind_table(const windRTdata &_RTdata) {
     try {
@@ -153,7 +177,8 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-wind") << e.what();
     }
-  }
+  }  // update_wind_table
+
   // // read sql data from database
   // void readdatafromdb(gpsRTdata &_gpsRTdata, controllerRTdata<m, n> &_RTdata,
   //                     estimatorRTdata &_RTdata, plannerRTdata &_RTdata,
@@ -203,7 +228,7 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql") << e.what();
     }
-  }
+  }  // create_mastertable
 
   // create GPS table
   void create_GPS_table() {
@@ -231,7 +256,8 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql") << e.what();
     }
-  }
+  }  // create_GPS_table
+
   // create each controller table (TODO: controller for underactuated USV)
   void create_controller_table() {
     try {
@@ -269,7 +295,7 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql") << e.what();
     }
-  }
+  }  // create_controller_table
 
   // create each estimator table
   void create_estimator_table() {
@@ -303,7 +329,7 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql") << e.what();
     }
-  }
+  }  // create_estimator_table
 
   // create planner table
   void create_planner_table() {
@@ -326,7 +352,7 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql") << e.what();
     }
-  }
+  }  // create_planner_table
 
   // create indicators table
   void create_indicators_table() {
@@ -344,7 +370,7 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql") << e.what();
     }
-  }
+  }  // create_indicators_table
 
   // create wind table
   void create_wind_table() {
@@ -360,7 +386,36 @@ class database {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql") << e.what();
     }
-  }
+  }  // create_wind_table
+
+  // create stm32 table
+  void create_stm32_table() {
+    try {
+      std::string str =
+          "CREATE TABLE stm32"
+          "(ID               INTEGER PRIMARY KEY AUTOINCREMENT,"
+          " DATETIME         TEXT       NOT NULL,"
+          " stm32_link       INT, "
+          " stm32_status     INT, "
+          " command_u1       DOUBLE, " /* motor */
+          " command_u2       DOUBLE, "
+          " feedback_u1      DOUBLE, "
+          " feedback_u2      DOUBLE, "
+          " feedback_pwm1    INT, "
+          " feedback_pwm2    INT, "
+          " RC_X             DOUBLE, " /* remote control */
+          " RC_Y             DOUBLE, "
+          " RC_Mz            DOUBLE, "
+          " voltage_b1       DOUBLE, " /* battery */
+          " voltage_b2       DOUBLE, "
+          " voltage_b3       DOUBLE); ";
+      db << str;
+
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql") << e.what();
+    }
+  }  // create_stm32_table
+
   // convert real time GPS data to sql string
   void convert2string(const messages::gpsRTdata &_gpsRTdata,
                       std::string &_str) {
@@ -447,6 +502,42 @@ class database {
       _str += ", ";
       _str += std::to_string(_RTdata.v_error(i));
     }
+  }
+
+  void convert2string(const messages::stm32data &_RTdata, std::string &_str) {
+    _str += ",";
+    _str += std::to_string(static_cast<int>(_RTdata.linkstatus));
+    _str += ",";
+    _str += std::to_string(static_cast<int>(_RTdata.stm32status));
+
+    // motor
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.command_u1, 1);
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.command_u2, 1);
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.feedback_u1, 1);
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.feedback_u2, 1);
+    _str += ", ";
+    _str += std::to_string(_RTdata.feedback_pwm1);
+    _str += ", ";
+    _str += std::to_string(_RTdata.feedback_pwm2);
+    // remote control
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.RC_X, 1);
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.RC_Y, 1);
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.RC_Mz, 1);
+
+    // battery
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.voltage_b1, 1);
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.voltage_b2, 1);
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.voltage_b3, 1);
   }
 
   void convert2string(const planning::plannerRTdata &_RTdata,

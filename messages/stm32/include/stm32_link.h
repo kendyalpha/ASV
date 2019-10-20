@@ -120,21 +120,25 @@ class stm32_link {
                  "%lf,"  // voltage_b1
                  "%lf,"  // voltage_b2
                  "%lf,"  // voltage_b3
-                 "%d,"   // feedback_n1
-                 "%d,"   // feedback_n2
+                 "%lf,"  // feedback_u1
+                 "%lf,"  // feedback_u2
+                 "%d,"   // feedback_pwm1
+                 "%d,"   // feedback_pwm2
                  "%lf,"  // RC_X
                  "%lf,"  // RC_Y
                  "%lf"   // RC_Mz
                  ,
-                 &_stm32status,              // int
-                 &(_stm32data.voltage_b1),   // double
-                 &(_stm32data.voltage_b2),   // double
-                 &(_stm32data.voltage_b2),   // double
-                 &(_stm32data.feedback_n1),  // int
-                 &(_stm32data.feedback_n2),  // int
-                 &(_stm32data.RC_X),         // double
-                 &(_stm32data.RC_Y),         // double
-                 &(_stm32data.RC_Mz)         // double
+                 &_stm32status,                // int
+                 &(_stm32data.voltage_b1),     // double
+                 &(_stm32data.voltage_b2),     // double
+                 &(_stm32data.voltage_b2),     // double
+                 &(_stm32data.feedback_u1),    // double
+                 &(_stm32data.feedback_u2),    // double
+                 &(_stm32data.feedback_pwm1),  // int
+                 &(_stm32data.feedback_pwm2),  // int
+                 &(_stm32data.RC_X),           // double
+                 &(_stm32data.RC_Y),           // double
+                 &(_stm32data.RC_Mz)           // double
           );
 
           _stm32data.stm32status = static_cast<STM32STATUS>(_stm32status);
@@ -162,9 +166,9 @@ class stm32_link {
     _str += ",";
     _str += _stm32data.UTC_time;
     _str += ",";
-    _str += std::to_string(_stm32data.command_n1);
+    _str += std::to_string(_stm32data.command_u1);
     _str += ",";
-    _str += std::to_string(_stm32data.command_n2);
+    _str += std::to_string(_stm32data.command_u2);
     _str += ",";
     _str += std::to_string(static_cast<int>(_stm32data.linkstatus));
   }  // convert2string

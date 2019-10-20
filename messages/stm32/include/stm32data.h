@@ -32,10 +32,12 @@ struct stm32data {
   std::string UTC_time;
 
   // motor
-  int command_n1;
-  int command_n2;
-  int feedback_n1;
-  int feedback_n2;
+  double command_u1;
+  double command_u2;
+  double feedback_u1;
+  double feedback_u2;
+  int feedback_pwm1;
+  int feedback_pwm2;
 
   // remote control
   double RC_X;

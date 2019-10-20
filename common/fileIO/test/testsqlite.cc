@@ -84,6 +84,24 @@ int main() {
       1   // orientation
   };
 
+  messages::stm32data _stm32data{
+      "",                              // UTC_time
+      0,                               // command_u1
+      -10,                             // command_u2
+      0,                               // feedback_u1
+      0,                               // feedback_u2
+      0,                               // feedback_pwm1
+      0,                               // feedback_pwm2
+      0,                               // RC_X
+      0,                               // RC_Y
+      0,                               // RC_Mz
+      0,                               // voltage_b1
+      0,                               // voltage_b2
+      0,                               // voltage_b2
+      messages::STM32STATUS::STANDBY,  // stm32status
+      common::LINKSTATUS::CONNECTED    // linkstatus;
+  };
+
   common::timecounter _timer;
 
   for (int i = 0; i != 3; ++i) {
@@ -93,6 +111,7 @@ int main() {
     _sqlitetest.update_planner_table(_plannerRTdata);
     _sqlitetest.update_indicators_table(_indicators);
     _sqlitetest.update_wind_table(_windRTdata);
+    _sqlitetest.update_stm32_table(_stm32data);
   }
   long int et = _timer.timeelapsed();
   std::cout << "time:" << et << std::endl;

@@ -12,6 +12,7 @@
 
 #ifndef _THRUSTALLOCATION_H_
 #define _THRUSTALLOCATION_H_
+
 #include <math.h>
 #include <stdio.h>
 #include <algorithm>
