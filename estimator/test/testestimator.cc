@@ -52,8 +52,10 @@ int main() {
 
   // estimatordata
   estimatordata estimatordata_input{
-      0.1,                     // sample_time
-      Eigen::Vector3d::Zero()  // cog2anntena_position
+      0.1,                                      // sample_time
+      Eigen::Vector3d::Zero(),                  // cog2anntena_position
+      Eigen::Matrix<double, 6, 6>::Identity(),  // Q
+      Eigen::Matrix<double, 6, 6>::Identity()   // R
   };
 
   double gps_x = 1;

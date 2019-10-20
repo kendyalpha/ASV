@@ -1,6 +1,6 @@
 /*
 ***********************************************************************
-* estimator.h: state estimation of USV
+* estimator.h: state estimation of USV (3 DoF)
 * This header file can be read by C++ compilers
 *
 *  by Hu.ZH(CrossOcean.ai)
@@ -28,7 +28,7 @@ class estimator {
         Motionrawdata({0, 0, 0, 0, 0, 0, 0, 0, 0}),
         roll_outlierremove(_vessel.roll_v(1), _vessel.roll_v(0),
                            _estimatordata.sample_time),
-        KalmanFilter(_vessel, _estimatordata.sample_time),
+        KalmanFilter(_vessel, _estimatordata),
         sample_time(_estimatordata.sample_time),
         antenna2cog(_estimatordata.antenna2cog) {}
   estimator() = delete;

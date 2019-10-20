@@ -73,8 +73,10 @@ int main() {
 
   // estimatordata
   estimatordata estimatordata_input{
-      0.1,                                       // sample_time
-      (Eigen::Vector3d() << 2, 0, 0).finished()  // cog2anntena_position
+      0.1,                                        // sample_time
+      (Eigen::Vector3d() << 2, 0, 0).finished(),  // cog2anntena_position
+      Eigen::Matrix<double, 6, 6>::Identity(),    // Q
+      Eigen::Matrix<double, 6, 6>::Identity()     // R
   };
 
   common::database<3, 3> _sqlitetest("../data/dbtest.db");

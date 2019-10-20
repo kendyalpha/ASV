@@ -88,7 +88,8 @@ class dubins {
    */
   int dubins_shortest_path(DubinsPath* path, double q0[3], double q1[3],
                            double rho) {
-    int i, errcode;
+    int i = 0;
+    int errcode = 0;
     DubinsIntermediateResults in;
     double params[3];
     double cost;
@@ -285,7 +286,7 @@ class dubins {
       x += stepSize;
     }
     return 0;
-  }
+  }  // dubins_path_sample_many
 
   /**
    * Convenience function to identify the endpoint of a path
@@ -325,7 +326,7 @@ class dubins {
     newpath->param[2] =
         fmin(path->param[2], tprime - newpath->param[0] - newpath->param[1]);
     return 0;
-  }
+  }  // dubins_extract_subpath
 
  private:
   // No error

@@ -32,6 +32,10 @@ struct estimatordata {
 
   // location of CoG relative to primary anntena
   Eigen::Vector3d antenna2cog;
+
+  // Kalman filter
+  Eigen::Matrix<double, 6, 6> Q;
+  Eigen::Matrix<double, 6, 6> R;
 };
 
 // real-time data in the state estimators

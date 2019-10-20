@@ -157,11 +157,10 @@ class kalmanfilter {
 class USV_kalmanfilter : public kalmanfilter<3, 6, 6> {
  public:
   explicit USV_kalmanfilter(const common::vessel &_vessel,
-                            double _sample_time) noexcept
+                            const estimatordata &_estimatordata) noexcept
       : kalmanfilter(matrixnnd::Zero(), matrixnld::Zero(),
-                     matrixmnd::Identity(), matrixnnd::Identity(),
-                     matrixmmd::Identity()),
-        sample_time(_sample_time) {
+                     matrixmnd::Identity(), _estimatordata.Q, _estimatordata.R),
+        sample_time(_estimatordata.sample_time) {
     initializekalman(_vessel);
   }
 

@@ -146,8 +146,10 @@ class jsonparse {
 
   // estimatordata
   estimatordata estimatordata_input{
-      0.1,                     // sample_time
-      Eigen::Vector3d::Zero()  // antenna2cog
+      0.1,                                      // sample_time
+      Eigen::Vector3d::Zero(),                  // antenna2cog
+      Eigen::Matrix<double, 6, 6>::Identity(),  // Q
+      Eigen::Matrix<double, 6, 6>::Identity()   // R
   };
 
   planning::Frenetdata frenetdata_input{
@@ -428,11 +430,11 @@ class jsonparse {
         vesseldata_input.cog - convertstdvector2EigenMat<double, 3, 1>(
                                    file["sensors"]["GPS"]["primary_antenna"]
                                        .get<std::vector<double>>());
-    // bool kalman_on = file["estimator"]["KALMANON"];
-    // if (kalman_on)
-    //   estimatordata_input.kalman_use = KALMANON;
-    // else
-    //   estimatordata_input.kalman_use = KALMANOFF;
+
+    estimatordata_input.Q = convertstdvector2EigenMat<double, 6, 6>(
+        file["estimator"]["Kalman"]["Q"].get<std::vector<double>>());
+    estimatordata_input.R = convertstdvector2EigenMat<double, 6, 6>(
+        file["estimator"]["Kalman"]["R"].get<std::vector<double>>());
   }  // parseestimatordata
 
   void parseplannerdata() {
@@ -619,6 +621,8 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
   }
   os << "estimator:\n";
   os << _jp.estimatordata_input.sample_time << std::endl;
+  os << _jp.estimatordata_input.Q << std::endl;
+  os << _jp.estimatordata_input.R << std::endl;
   os << "planner:\n";
   os << _jp.plannerdata_input.sample_time << std::endl;
 
