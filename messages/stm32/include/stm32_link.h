@@ -131,7 +131,7 @@ class stm32_link {
                  &_stm32status,                // int
                  &(_stm32data.voltage_b1),     // double
                  &(_stm32data.voltage_b2),     // double
-                 &(_stm32data.voltage_b2),     // double
+                 &(_stm32data.voltage_b3),     // double
                  &(_stm32data.feedback_u1),    // double
                  &(_stm32data.feedback_u2),    // double
                  &(_stm32data.feedback_pwm1),  // int
