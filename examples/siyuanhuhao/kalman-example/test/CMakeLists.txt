@@ -39,7 +39,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
    )
     
 # 指定生成目标
-set(SOURCE_FILES ${SOURCE_FILES} 
+set(SOURCE_FILES  
 	"${PROJECT_SOURCE_DIR}/../../../../common/logging/src/easylogging++.cc"                            
 	"${CMAKE_CURRENT_SOURCE_DIR}/run.cc")
 add_executable (testASV ${SOURCE_FILES})
@@ -49,3 +49,13 @@ target_link_libraries(testASV PUBLIC ${SQLITE3_LIBRARY})
 target_link_libraries(testASV PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(testASV PUBLIC ${MOSEK8_LIBRARY})
 target_link_libraries(testASV PUBLIC ${GeographicLib_LIBRARIES})
+
+
+set(SOURCE_FILES
+	"${PROJECT_SOURCE_DIR}/../../../../common/logging/src/easylogging++.cc"                            
+	"${CMAKE_CURRENT_SOURCE_DIR}/estimate_kalman_Q.cc")
+add_executable (testKalman ${SOURCE_FILES})
+target_include_directories(testKalman PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testKalman PUBLIC ${SQLITE3_LIBRARY})
+target_link_libraries(testKalman PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(testKalman PUBLIC ${MOSEK8_LIBRARY})
