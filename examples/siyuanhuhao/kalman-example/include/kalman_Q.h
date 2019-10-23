@@ -41,7 +41,7 @@ class threadloop {
         _estimator(_estimatorRTdata, _jsonparse.getvessel(),
                    _jsonparse.getestimatordata()),
         _sqlite(_jsonparse.getsqlitedata()),
-        db("../data//Mon Oct 21 09:57:25 2019.db") {
+        db("./../../data/Mon Oct 21 09:57:25 2019.db") {
     intializethreadloop();
   }
   ~threadloop() {}
@@ -57,7 +57,6 @@ class threadloop {
  private:
   // json
   common::jsonparse<num_thruster, dim_controlspace> _jsonparse;
-
   std::vector<control::twinfixedthrusterdata> _twinfixeddata;
 
   // realtime parameters of the estimators
@@ -94,15 +93,22 @@ class threadloop {
 
   sqlite::database db;
 
-  void intializethreadloop() { _sqlite.initializetables(); }
-
-  // loop to give real time state estimation
-  void estimatorloop() {
+  void intializethreadloop() {
+    _sqlite.initializetables();
     _twinfixeddata = _jsonparse.gettwinfixeddata();
     readstm32data();
     readgpsdata();
+  }
 
-    int si = 50;
+  // loop to give real time state estimation
+  void estimatorloop() {
+    common::timecounter timer_estimator;
+    long int outerloop_elapsed_time = 0;
+    long int innerloop_elapsed_time = 0;
+    long int sample_time =
+        static_cast<long int>(1000 * _estimator.getsampletime());
+
+    std::size_t si = 4247;
 
     _estimator.setvalue(gps_x[si],        // gps_x
                         gps_y[si],        // gps_y
@@ -115,32 +121,45 @@ class threadloop {
                         gps_roti[si]      // gps_roti
     );
     while (1) {
+      outerloop_elapsed_time = timer_estimator.timeelapsed();
+
+      if (si < gps_x.size()) {
+        Eigen::Vector3d thrust = calculateThrust(stm32_u1[si], stm32_u2[si]);
+        // std::cout << thrust << std::endl;
+        _estimatorRTdata =
+            _estimator.updateestimatedforce(thrust,
+                                            Eigen::Vector3d::Zero())
+                .estimatestate(gps_x[si],        // gps_x
+                               gps_y[si],        // gps_y
+                               gps_z[si],        // gps_z
+                               gps_roll[si],     // gps_roll
+                               gps_pitch[si],    // gps_pitch
+                               gps_heading[si],  // gps_heading
+                               gps_Ve[si],       // gps_Ve
+                               gps_Vn[si],       // gps_Vn
+                               gps_roti[si],     // gps_roti
+                               0                 //_dheading
+                               )
+                .getEstimatorRTData();
+      } else {
+        std::cout << "estimiation done!\n";
+      }
+
       si++;
 
-      _estimatorRTdata =
-          _estimator
-              .updateestimatedforce(calculateThrust(stm32_u1[si], stm32_u2[si]),
-                                    Eigen::Vector3d::Zero())
-              .estimatestate(gps_x[si],        // gps_x
-                             gps_y[si],        // gps_y
-                             gps_z[si],        // gps_z
-                             gps_roll[si],     // gps_roll
-                             gps_pitch[si],    // gps_pitch
-                             gps_heading[si],  // gps_heading
-                             gps_Ve[si],       // gps_Ve
-                             gps_Vn[si],       // gps_Vn
-                             gps_roti[si],     // gps_roti
-                             0                 //_dheading
-                             )
-              .getEstimatorRTData();
-    }
+      innerloop_elapsed_time = timer_estimator.timeelapsed();
 
+      std::cout << innerloop_elapsed_time << std::endl;
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
+    }
   }  // estimatorloop()
 
   // loop to save real time data using sqlite3 and modern_sqlite3_cpp_wrapper
   void sqlloop() {
     while (1) {
       _sqlite.update_estimator_table(_estimatorRTdata);
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
   }  // sqlloop()
 
@@ -163,43 +182,27 @@ class threadloop {
 
   // loop to give messages to stm32
   void readstm32data() {
-    db << "SELECT numbers from stm32 where name = ?;"
-       << "feedback_u1" >>
-        stm32_u1;
-    db << "SELECT numbers from stm32 where name = ?;"
-       << "feedback_u2" >>
-        stm32_u2;
+    db << "select feedback_u1 from stm32;" >>
+        [&](double _x) { stm32_u1.push_back(_x); };
+    db << "select feedback_u2 from stm32;" >>
+        [&](double _x) { stm32_u2.push_back(_x); };
+
   }  // readstm32data()
 
   // read gps data  from database
   void readgpsdata() {
-    db << "SELECT numbers from GPS where name = ?;"
-       << "UTM_x" >>
-        gps_x;
-    db << "SELECT numbers from GPS where name = ?;"
-       << "UTM_y" >>
-        gps_y;
-    db << "SELECT numbers from GPS where name = ?;"
-       << "altitude" >>
-        gps_z;
-    db << "SELECT numbers from GPS where name = ?;"
-       << "roll" >>
-        gps_roll;
-    db << "SELECT numbers from GPS where name = ?;"
-       << "pitch" >>
-        gps_pitch;
-    db << "SELECT numbers from GPS where name = ?;"
-       << "heading" >>
-        gps_heading;
-    db << "SELECT numbers from GPS where name = ?;"
-       << "Ve" >>
-        gps_Ve;
-    db << "SELECT numbers from GPS where name = ?;"
-       << "Vn" >>
-        gps_Vn;
-    db << "SELECT numbers from GPS where name = ?;"
-       << "roti" >>
-        gps_roti;
+    db << "select UTM_x from GPS;" >> [&](double _x) { gps_x.push_back(_x); };
+    db << "select UTM_y from GPS;" >> [&](double _x) { gps_y.push_back(_x); };
+    db << "select altitude from GPS;" >>
+        [&](double _x) { gps_z.push_back(_x); };
+    db << "select roll from GPS;" >> [&](double _x) { gps_roll.push_back(_x); };
+    db << "select pitch from GPS;" >>
+        [&](double _x) { gps_pitch.push_back(_x); };
+    db << "select heading from GPS;" >>
+        [&](double _x) { gps_heading.push_back(_x); };
+    db << "select Ve from GPS;" >> [&](double _x) { gps_Ve.push_back(_x); };
+    db << "select Vn from GPS;" >> [&](double _x) { gps_Vn.push_back(_x); };
+    db << "select roti from GPS;" >> [&](double _x) { gps_roti.push_back(_x); };
 
   }  // readgpsdata()
 

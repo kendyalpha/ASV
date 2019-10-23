@@ -1,6 +1,6 @@
 # /*
 # ****************************************************************************
-# * plotestimator.py:
+# * plotKalman.py:
 # * Illustration of results of state estimator
 # *
 # * by Hu.ZH(CrossOcean.ai)
@@ -14,18 +14,13 @@ import math
 import numpy as np
 
 # connect to sqlite database
-db_conn = sqlite3.connect('../data/Mon Oct 21 09:57:25 2019.db')
+db_conn = sqlite3.connect('../data/Wed Oct 23 22:19:14 2019.db')
 # create a cursor to execute SQL commands
 db_cursor = db_conn.cursor()
-
-#  retrieve GPS data from database
-db_cursor.execute("SELECT * FROM GPS")
-gps_rows = db_cursor.fetchall()
 
 #  retrieve estimator data from database
 db_cursor.execute("SELECT * FROM estimator")
 estimator_rows = db_cursor.fetchall()
-
 
 # Save (commit) the changes
 db_conn.commit()
@@ -36,14 +31,6 @@ db_conn.close()
 
 
 # convert lists to dataframe
-gpsdata = pd.DataFrame(gps_rows)
-gpsdata.columns = ['ID', 'DATETIME', 'UTC',
-                   'latitude', 'longitude',
-                   'heading', 'pitch', 'roll',
-                   'altitude', 'Ve', 'Vn',
-                   'roti', 'status', 'UTM_x', 'UTM_y']
-gpsdata['DATETIME'] = gpsdata['DATETIME'].astype(float)
-
 estimatordata = pd.DataFrame(estimator_rows)
 estimatordata.columns = ['ID', 'DATETIME',
                          'meas_x', 'meas_y', 'meas_theta',
@@ -56,10 +43,8 @@ estimatordata['DATETIME'] = estimatordata['DATETIME'].astype(float)
 
 
 # convert datetime to second
-min_timestamp = min(gpsdata["DATETIME"].iloc[0],
-                    estimatordata["DATETIME"].iloc[0])
-gpsdata['DATETIME'] = (gpsdata['DATETIME']-min_timestamp)*86400
-estimatordata['DATETIME'] = (estimatordata['DATETIME']-min_timestamp)*86400
+estimatordata['DATETIME'] = (
+    estimatordata['DATETIME']-estimatordata["DATETIME"].iloc[0])*86400
 
 
 # 选择显示的时间段
@@ -67,46 +52,69 @@ time_stamp_select = np.array([50, 350])
 
 estimatordata = estimatordata[(estimatordata['DATETIME'] > time_stamp_select[0])
                               & (estimatordata['DATETIME'] < time_stamp_select[1])]
-gpsdata = gpsdata[(gpsdata['DATETIME'] > time_stamp_select[0])
-                  & (gpsdata['DATETIME'] < time_stamp_select[1])]
 
-
-print(estimatordata)
 
 plt.figure(1, figsize=(10, 8))
-plt.suptitle("Plannar trajectory of GPS", fontsize=14)
-plt.plot(gpsdata["UTM_x"], gpsdata["UTM_y"], '.r', lw=2, markersize=1)
+plt.suptitle("Plannar trajectory of estimator", fontsize=14)
+plt.plot(estimatordata["state_y"], estimatordata["state_x"],
+         ':k', lw=2, markersize=1)
 plt.plot(estimatordata["meas_y"],
-         estimatordata["meas_x"], 'ko', lw=2, markersize=1)
+         estimatordata["meas_x"], '.r', lw=2, markersize=1)
 
 plt.axis('equal')
 plt.xlabel('E (m)')
 plt.ylabel('N (m)')
-plt.legend(('GPS_UTM', 'COG'), loc='upper right')
+plt.legend(('state', 'measurement'), loc='upper right')
 
 
 plt.figure(2, figsize=(15, 10))
 plt.suptitle("time series of motion", fontsize=12)
 plt.subplot(3, 1, 1)
-plt.plot(gpsdata['DATETIME'], gpsdata['UTM_y'], '-r', lw=2)
+plt.plot(estimatordata['DATETIME'], estimatordata['state_x'], '-r', lw=2)
 plt.plot(estimatordata['DATETIME'],
          estimatordata['meas_x'], '--k', lw=2)
 plt.ylabel('X (m)')
-plt.legend(('GPS Antenna', 'CoG'), loc='upper right')
+plt.legend(('state', 'measurement'), loc='upper right')
+
 
 plt.subplot(3, 1, 2)
-plt.plot(gpsdata['DATETIME'], gpsdata['UTM_x'], '-r', lw=2)
+plt.plot(estimatordata['DATETIME'], estimatordata['state_y'], '-r', lw=2)
 plt.plot(estimatordata['DATETIME'],
          estimatordata['meas_y'], '--k', lw=2)
 plt.ylabel('Y (m)')
-plt.legend(('GPS Antenna', 'CoG'), loc='upper right')
+plt.legend(('state', 'measurement'), loc='upper right')
+
 
 plt.subplot(3, 1, 3)
-plt.plot(gpsdata['DATETIME'], gpsdata['heading'], '-r', lw=2)
-plt.plot(estimatordata['DATETIME'], (180/math.pi)
-         * estimatordata['meas_theta'], '--k', lw=2)
-plt.ylabel('theta (deg)')
-plt.legend(('GPS Antenna', 'CoG'), loc='upper right')
+plt.plot(estimatordata['DATETIME'], estimatordata['state_theta'], '-r', lw=2)
+plt.plot(estimatordata['DATETIME'], estimatordata['meas_theta'], '--k', lw=2)
+plt.ylabel('theta (rad)')
+plt.legend(('state', 'measurement'), loc='upper right')
+
+
+plt.figure(3, figsize=(15, 10))
+plt.suptitle("time series of velocity", fontsize=12)
+plt.subplot(3, 1, 1)
+plt.plot(estimatordata['DATETIME'], estimatordata['state_u'], '-r', lw=2)
+plt.plot(estimatordata['DATETIME'],
+         estimatordata['meas_u'], '--k', lw=2)
+plt.ylabel('u (m/s)')
+plt.legend(('state', 'measurement'), loc='upper right')
+
+
+plt.subplot(3, 1, 2)
+plt.plot(estimatordata['DATETIME'], estimatordata['state_v'], '-r', lw=2)
+plt.plot(estimatordata['DATETIME'],
+         estimatordata['meas_v'], '--k', lw=2)
+plt.ylabel('v (m/s)')
+plt.legend(('state', 'measurement'), loc='upper right')
+
+
+plt.subplot(3, 1, 3)
+plt.plot(estimatordata['DATETIME'], estimatordata['state_r'], '-r', lw=2)
+plt.plot(estimatordata['DATETIME'], estimatordata['meas_r'], '--k', lw=2)
+plt.ylabel('r (rad/s)')
+plt.legend(('state', 'measurement'), loc='upper right')
 
 
 plt.show()

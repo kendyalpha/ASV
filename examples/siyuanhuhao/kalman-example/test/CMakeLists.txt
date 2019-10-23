@@ -59,3 +59,4 @@ target_include_directories(testKalman PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testKalman PUBLIC ${SQLITE3_LIBRARY})
 target_link_libraries(testKalman PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(testKalman PUBLIC ${MOSEK8_LIBRARY})
+

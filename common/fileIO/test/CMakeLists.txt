@@ -57,5 +57,3 @@ add_executable (testcsv testcsv.cc)
 target_include_directories(testcsv PRIVATE ${HEADER_DIRECTORY})
 
 
-add_executable (testread testread.cc)
-target_link_libraries(testread PUBLIC ${SQLITE3_LIBRARY})
