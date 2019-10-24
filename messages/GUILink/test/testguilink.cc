@@ -17,9 +17,9 @@ void test_gui_serial() {
   constexpr int dim_controlspace = 3;
 
   // real time gui-link data
-  guilinkRTdata<num_thruster> _guilinkRTdata{
+  messages::guilinkRTdata<num_thruster> _guilinkRTdata{
       "",                                           // UTC_time
-      LINKSTATUS::DISCONNECTED,                     // linkstatus
+      common::LINKSTATUS::DISCONNECTED,             // linkstatus
       0,                                            // indicator_autocontrolmode
       0,                                            // indicator_windstatus
       0.0,                                          // latitude
@@ -36,9 +36,9 @@ void test_gui_serial() {
       Eigen::Matrix<double, 2, 8>::Zero()           // waypoints
   };
 
-  guilink_serial<num_thruster, dim_controlspace> _guiserial(_guilinkRTdata,
-                                                            115200);
-  timecounter _timer;
+  messages::guilink_serial<num_thruster, dim_controlspace> _guiserial(
+      _guilinkRTdata, 115200);
+  common::timecounter _timer;
   while (1) {
     std::string pt_utc = _timer.getUTCtime();
     long int et = _timer.timeelapsed();

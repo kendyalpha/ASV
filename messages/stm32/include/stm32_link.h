@@ -21,8 +21,8 @@ namespace ASV::messages {
 
 class stm32_link {
  public:
-  explicit stm32_link(const stm32data& _stm32data,  //
-                      unsigned long _baud,          // baudrate
+  explicit stm32_link(const stm32data& _stm32data,   //
+                      unsigned long _baud = 115200,  // baudrate
                       const std::string& _port = "/dev/ttyUSB0")
       : stmdata(_stm32data),
         stm32_serial(_port, _baud, serial::Timeout::simpleTimeout(100)),

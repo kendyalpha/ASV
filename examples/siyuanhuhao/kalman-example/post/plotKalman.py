@@ -14,7 +14,7 @@ import math
 import numpy as np
 
 # connect to sqlite database
-db_conn = sqlite3.connect('../data/Wed Oct 23 22:19:14 2019.db')
+db_conn = sqlite3.connect('../data/Thu Oct 24 10:10:06 2019.db')
 # create a cursor to execute SQL commands
 db_cursor = db_conn.cursor()
 

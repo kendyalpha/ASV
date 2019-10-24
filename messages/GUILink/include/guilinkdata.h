@@ -18,7 +18,7 @@
 #include "common/communication/include/linkdata.h"
 #include "common/property/include/priority.h"
 
-namespace ASV {
+namespace ASV::messages {
 
 enum class GUISTATUS {
   STANDBY = 0,    // 等待PC连接
@@ -37,7 +37,7 @@ struct guilinkRTdata {
   std::string UTC_time;
 
   // link status
-  LINKSTATUS linkstatus;
+  common::LINKSTATUS linkstatus;
   // indicator for automatic control mode
   int indicator_autocontrolmode;
   int indicator_windstatus;
@@ -62,6 +62,6 @@ struct guilinkRTdata {
   Eigen::Matrix<double, 2, 8> waypoints;
 };
 
-}  // end namespace ASV
+}  //  namespace ASV::messages
 
 #endif /*_GUILINKDATA_H_*/

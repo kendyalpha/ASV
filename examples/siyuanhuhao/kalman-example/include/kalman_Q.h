@@ -159,7 +159,7 @@ class threadloop {
   void sqlloop() {
     while (1) {
       _sqlite.update_estimator_table(_estimatorRTdata);
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   }  // sqlloop()
 

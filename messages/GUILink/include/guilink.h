@@ -10,7 +10,6 @@
 #ifndef _GUILINK_H_
 #define _GUILINK_H_
 
-#include <boost/lexical_cast.hpp>
 #include <chrono>
 #include <iostream>
 #include <thread>
@@ -24,7 +23,7 @@
 #include "guilinkdata.h"
 #include "third_party/serial/include/serial/serial.h"
 
-namespace ASV {
+namespace ASV::messages {
 
 template <int m, int n = 3>
 class guilink_serial {
@@ -39,7 +38,7 @@ class guilink_serial {
         recv_buffer(""),
         bytes_send(0),
         bytes_reci(0),
-        gui_connetion_failure_count(21),
+        gui_connetion_failure_count(0),
         crc16(CRC16::eCCITT_FALSE) {
     checkserialstatus();
   }
@@ -51,7 +50,16 @@ class guilink_serial {
     checkconnection(guilinkrtdata);
     senddata2gui(guilinkrtdata);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    parsedatafromgui(guilinkrtdata);
+
+    if (parsedata_from_gui(guilinkrtdata)) {
+      // parse successfully
+      gui_connetion_failure_count =
+          std::min(gui_connetion_failure_count + 1, 20);
+    } else {
+      // fail to parse
+      gui_connetion_failure_count =
+          std::max(gui_connetion_failure_count - 1, 0);
+    }
     return *this;
   }  // guicommunication
 
@@ -96,9 +104,9 @@ class guilink_serial {
 
   void checkconnection(guilinkRTdata<m> &_RTdata) {
     if (gui_connetion_failure_count > 20)
-      _RTdata.linkstatus = LINKSTATUS::DISCONNECTED;
+      _RTdata.linkstatus = common::LINKSTATUS::DISCONNECTED;
     else
-      _RTdata.linkstatus = LINKSTATUS::CONNECTED;
+      _RTdata.linkstatus = common::LINKSTATUS::CONNECTED;
   }  // checkconnection
 
   // convert real time GPS data to sql string
@@ -109,17 +117,20 @@ class guilink_serial {
     _str += ",";
     _str += std::to_string(static_cast<int>(_guilinkRTdata.linkstatus));
     _str += ",";
-    _str += to_string_with_precision<double>(_guilinkRTdata.latitude, 6);
+    _str +=
+        common::to_string_with_precision<double>(_guilinkRTdata.latitude, 6);
     _str += ",";
-    _str += to_string_with_precision<double>(_guilinkRTdata.longitude, 6);
+    _str +=
+        common::to_string_with_precision<double>(_guilinkRTdata.longitude, 6);
     for (int i = 0; i != 6; ++i) {
       _str += ",";
-      _str += to_string_with_precision<double>(_guilinkRTdata.State(i), 3);
+      _str +=
+          common::to_string_with_precision<double>(_guilinkRTdata.State(i), 3);
     }
     _str += ",";
-    _str += to_string_with_precision<double>(_guilinkRTdata.roll, 3);
+    _str += common::to_string_with_precision<double>(_guilinkRTdata.roll, 3);
     _str += ",";
-    _str += to_string_with_precision<double>(_guilinkRTdata.pitch, 3);
+    _str += common::to_string_with_precision<double>(_guilinkRTdata.pitch, 3);
 
     for (int i = 0; i != m; ++i) {
       _str += ",";
@@ -131,7 +142,7 @@ class guilink_serial {
     }
   }  // convert2string
 
-  void parsedatafromgui(guilinkRTdata<m> &_guilinkRTdata) {
+  bool parsedata_from_gui(guilinkRTdata<m> &_guilinkRTdata) {
     recv_buffer = gui_serial.readline(300, "\n");
 
     std::size_t pos = recv_buffer.find("$");
@@ -146,8 +157,6 @@ class guilink_serial {
         recv_buffer = recv_buffer.substr(0, rpos);
         if (std::to_string(crc16.crcCompute(recv_buffer.c_str(), rpos)) ==
             expected_crc) {
-          gui_connetion_failure_count = 0;  // reset to zero
-
           double _heading = 0.0;
           double wp1_x = 0.0;
           double wp1_y = 0.0;
@@ -196,7 +205,7 @@ class guilink_serial {
 
           _guilinkRTdata.setpoints(0) = wp1_x;
           _guilinkRTdata.setpoints(1) = wp1_y;
-          _guilinkRTdata.setpoints(2) = Degree2Rad(_heading);
+          _guilinkRTdata.setpoints(2) = common::math::Degree2Rad(_heading);
           _guilinkRTdata.waypoints(0, 0) = wp1_x;
           _guilinkRTdata.waypoints(1, 0) = wp1_y;
           _guilinkRTdata.waypoints(0, 1) = wp2_x;
@@ -217,13 +226,17 @@ class guilink_serial {
           _guilinkRTdata.startingpoint(1) = wp1_y;
           _guilinkRTdata.endingpoint(0) = wp8_x;
           _guilinkRTdata.endingpoint(1) = wp8_y;
+
+          return true;
+
         } else {
-          gui_connetion_failure_count++;
           CLOG(INFO, "gui-link") << " checksum error!";
         }
       }
-    }
-  }  // parsedatafromgui
+    }  // end if
+    return false;
+
+  }  // parsedata_from_gui
 
   void senddata2gui(const guilinkRTdata<m> &_guilinkRTdata) {
     send_buffer.clear();
@@ -236,6 +249,6 @@ class guilink_serial {
   }  // senddata2gui
 };
 
-}  // end namespace ASV
+}  // namespace ASV::messages
 
 #endif /* _GUILINK_H_ */
