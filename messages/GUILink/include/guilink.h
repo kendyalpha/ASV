@@ -33,7 +33,7 @@ class guilink_serial {
                  unsigned long _rate = 115200,
                  const std::string &_port = "/dev/ttyUSB0")
       : guilinkrtdata(_guilinkRTdata),
-        gui_serial(_port, _rate, serial::Timeout::simpleTimeout(100)),
+        gui_serial(_port, _rate, serial::Timeout::simpleTimeout(200)),
         send_buffer(""),
         recv_buffer(""),
         bytes_send(0),
@@ -49,7 +49,7 @@ class guilink_serial {
   guilink_serial &guicommunication() {
     checkconnection(guilinkrtdata);
     senddata2gui(guilinkrtdata);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     if (parsedata_from_gui(guilinkrtdata)) {
       // parse successfully
@@ -109,7 +109,7 @@ class guilink_serial {
       _RTdata.linkstatus = common::LINKSTATUS::CONNECTED;
   }  // checkconnection
 
-  // convert real time GPS data to sql string
+  // convert real time gui data to sql string
   void convert2string(const guilinkRTdata<m> &_guilinkRTdata,
                       std::string &_str) {
     _str += ",";
@@ -142,6 +142,39 @@ class guilink_serial {
     }
   }  // convert2string
 
+  // convert real time gui data to sql string (lightweight)
+  void convert2string_lightweight(const guilinkRTdata<m> &_guilinkRTdata,
+                                  std::string &_str) {
+    _str += ",";
+    _str += _guilinkRTdata.UTC_time;
+    _str += ",";
+    _str += std::to_string(static_cast<int>(_guilinkRTdata.linkstatus));
+    _str += ",";
+    _str +=
+        common::to_string_with_precision<double>(_guilinkRTdata.latitude, 6);
+    _str += ",";
+    _str +=
+        common::to_string_with_precision<double>(_guilinkRTdata.longitude, 6);
+    for (int i = 0; i != 3; ++i) {
+      _str += ",";
+      _str +=
+          common::to_string_with_precision<double>(_guilinkRTdata.State(i), 3);
+    }
+    _str += ",";
+    _str += common::to_string_with_precision<double>(_guilinkRTdata.roll, 3);
+    _str += ",";
+    _str += common::to_string_with_precision<double>(_guilinkRTdata.pitch, 3);
+
+    for (int i = 0; i != m; ++i) {
+      _str += ",";
+      if (_guilinkRTdata.feedback_alpha(i) < M_PI / 4)
+        _str += std::to_string(_guilinkRTdata.feedback_rotation(i));
+      else
+        _str += std::to_string(-_guilinkRTdata.feedback_rotation(i));
+    }
+
+  }  // convert2string_lightweight
+
   bool parsedata_from_gui(guilinkRTdata<m> &_guilinkRTdata) {
     recv_buffer = gui_serial.readline(300, "\n");
 
@@ -162,70 +195,27 @@ class guilink_serial {
           double wp1_y = 0.0;
           double wp2_x = 0.0;
           double wp2_y = 0.0;
-          double wp3_x = 0.0;
-          double wp3_y = 0.0;
-          double wp4_x = 0.0;
-          double wp4_y = 0.0;
-          double wp5_x = 0.0;
-          double wp5_y = 0.0;
-          double wp6_x = 0.0;
-          double wp6_y = 0.0;
-          double wp7_x = 0.0;
-          double wp7_y = 0.0;
-          double wp8_x = 0.0;
-          double wp8_y = 0.0;
           sscanf(recv_buffer.c_str(),
-                 "CORE,"
+                 "GUI,"
                  "%d,"       // indicator_autocontrolmode
-                 "%d,"       // indicator_windstatus
-                 "%lf,"      // desired_speed
                  "%lf,"      // heading
                  ",%lf,%lf"  // waypoint1
                  ",%lf,%lf"  // waypoint2
-                 ",%lf,%lf"  // waypoint3
-                 ",%lf,%lf"  // waypoint4
-                 ",%lf,%lf"  // waypoint5
-                 ",%lf,%lf"  // waypoint6
-                 ",%lf,%lf"  // waypoint7
-                 ",%lf,%lf"  // waypoint8
                  ,
                  &(_guilinkRTdata.indicator_autocontrolmode),  // int
-                 &(_guilinkRTdata.indicator_windstatus),       // int
-                 &(_guilinkRTdata.desired_speed),              // double
                  &_heading,                                    // double
                  &wp1_x, &wp1_y,  // waypoint1_x, waypoint1_y
-                 &wp2_x, &wp2_y,  // waypoint2_x, waypoint2_y
-                 &wp3_x, &wp3_y,  // waypoint3_x, waypoint3_y
-                 &wp4_x, &wp4_y,  // waypoint4_x, waypoint4_y
-                 &wp5_x, &wp5_y,  // waypoint5_x, waypoint5_y
-                 &wp6_x, &wp6_y,  // waypoint6_x, waypoint6_y
-                 &wp7_x, &wp7_y,  // waypoint7_x, waypoint7_y
-                 &wp8_x, &wp8_y   // waypoint8_x, waypoint8_y
+                 &wp2_x, &wp2_y   // waypoint2_x, waypoint2_y
           );
 
           _guilinkRTdata.setpoints(0) = wp1_x;
           _guilinkRTdata.setpoints(1) = wp1_y;
           _guilinkRTdata.setpoints(2) = common::math::Degree2Rad(_heading);
-          _guilinkRTdata.waypoints(0, 0) = wp1_x;
-          _guilinkRTdata.waypoints(1, 0) = wp1_y;
-          _guilinkRTdata.waypoints(0, 1) = wp2_x;
-          _guilinkRTdata.waypoints(1, 1) = wp2_y;
-          _guilinkRTdata.waypoints(0, 2) = wp3_x;
-          _guilinkRTdata.waypoints(1, 2) = wp3_y;
-          _guilinkRTdata.waypoints(0, 3) = wp4_x;
-          _guilinkRTdata.waypoints(1, 3) = wp4_y;
-          _guilinkRTdata.waypoints(0, 4) = wp5_x;
-          _guilinkRTdata.waypoints(1, 4) = wp5_y;
-          _guilinkRTdata.waypoints(0, 5) = wp6_x;
-          _guilinkRTdata.waypoints(1, 5) = wp6_y;
-          _guilinkRTdata.waypoints(0, 6) = wp7_x;
-          _guilinkRTdata.waypoints(1, 6) = wp7_y;
-          _guilinkRTdata.waypoints(0, 7) = wp8_x;
-          _guilinkRTdata.waypoints(1, 7) = wp8_y;
+
           _guilinkRTdata.startingpoint(0) = wp1_x;
           _guilinkRTdata.startingpoint(1) = wp1_y;
-          _guilinkRTdata.endingpoint(0) = wp8_x;
-          _guilinkRTdata.endingpoint(1) = wp8_y;
+          _guilinkRTdata.endingpoint(0) = wp2_x;
+          _guilinkRTdata.endingpoint(1) = wp2_y;
 
           return true;
 
@@ -241,7 +231,7 @@ class guilink_serial {
   void senddata2gui(const guilinkRTdata<m> &_guilinkRTdata) {
     send_buffer.clear();
     send_buffer = "GUI";
-    convert2string(_guilinkRTdata, send_buffer);
+    convert2string_lightweight(_guilinkRTdata, send_buffer);
     unsigned short crc =
         crc16.crcCompute(send_buffer.c_str(), send_buffer.length());
     send_buffer = "$" + send_buffer + "*" + std::to_string(crc) + "\n";

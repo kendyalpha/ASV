@@ -1,7 +1,7 @@
 # /*
 # ****************************************************************************
 # * plotKalman.py:
-# * Illustration of results of state estimator
+# * Illustration of results of Kalman filtering
 # *
 # * by Hu.ZH(CrossOcean.ai)
 # ****************************************************************************
@@ -50,8 +50,9 @@ estimatordata['DATETIME'] = (
 # 选择显示的时间段
 time_stamp_select = np.array([50, 350])
 
-estimatordata = estimatordata[(estimatordata['DATETIME'] > time_stamp_select[0])
-                              & (estimatordata['DATETIME'] < time_stamp_select[1])]
+estimatordata = estimatordata[
+    (estimatordata['DATETIME'] > time_stamp_select[0])
+    & (estimatordata['DATETIME'] < time_stamp_select[1])]
 
 
 plt.figure(1, figsize=(10, 8))

@@ -50,6 +50,9 @@ void test_gui_serial() {
     _guilinkRTdata.UTC_time = pt_utc;
     _guilinkRTdata.indicator_autocontrolmode = count;
     _guiserial.setguilinkRTdata(_guilinkRTdata).guicommunication();
+    std::cout << "recv: " << _guiserial.getrecv_buffer() << std::endl;
+    std::cout << "send: " << _guiserial.getsend_buffer() << std::endl;
+
     _guilinkRTdata = _guiserial.getguilinkRTdata();
   }
 }  // test_gui_serial

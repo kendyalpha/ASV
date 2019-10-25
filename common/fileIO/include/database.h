@@ -483,25 +483,36 @@ class database {
   }
   void convert2string(const estimatorRTdata &_RTdata, std::string &_str) {
     // Measurement
-    for (int i = 0; i != 6; ++i) {
+    for (int i = 0; i != 5; ++i) {
       _str += ", ";
       _str += to_string_with_precision<double>(_RTdata.Measurement(i), 3);
     }
+    // r is special
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.Measurement(5), 4);
+
     // State
-    for (int i = 0; i != 6; ++i) {
+    for (int i = 0; i != 5; ++i) {
       _str += ", ";
       _str += to_string_with_precision<double>(_RTdata.State(i), 3);
     }
+    // r is special
+    _str += ", ";
+    _str += to_string_with_precision<double>(_RTdata.State(5), 4);
+
     // Perror
     for (int i = 0; i != 3; ++i) {
       _str += ", ";
       _str += std::to_string(_RTdata.p_error(i));
     }
     // verror
-    for (int i = 0; i != 3; ++i) {
+    for (int i = 0; i != 2; ++i) {
       _str += ", ";
       _str += std::to_string(_RTdata.v_error(i));
     }
+    // r is special
+    _str += ", ";
+    _str += std::to_string(_RTdata.v_error(2));
   }
 
   void convert2string(const messages::stm32data &_RTdata, std::string &_str) {

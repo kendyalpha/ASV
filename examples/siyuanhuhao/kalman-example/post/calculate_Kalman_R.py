@@ -1,7 +1,7 @@
 # /*
 # ****************************************************************************
-# * plottrajectorytracking.py:
-# * Illustration of results of trajectory tracking results
+# * calculate_Kalman_R.py:
+# * Illustration of results of GPS and compute the R matrix in Kalman
 # *
 # * by Hu.ZH(CrossOcean.ai)
 # ****************************************************************************
@@ -87,14 +87,14 @@ gpsdata = gpsdata[(gpsdata['DATETIME'] > time_stamp_select[0])
 stm32data = stm32data[(stm32data['DATETIME'] > time_stamp_select[0])
                       & (stm32data['DATETIME'] < time_stamp_select[1])]
 
-# 计算协方差矩阵
-state_data = estimatordata.iloc[:, 2:7]
-gps_data = gpsdata.iloc[:, 11:12]*math.pi/180/60
-# state_data = state_data.join(gpsdata['roti']*math.pi/180/60)
+
+#### 计算协方差矩阵 ####
+state_data = estimatordata.iloc[:, 2:8]
 # print(state_data)
 print(state_data.cov())
-print(gps_data.cov())
 
+
+#### 开始作图 ####
 plt.figure(1, figsize=(10, 8))
 plt.suptitle("Plannar trajectory of GPS", fontsize=14)
 plt.plot(gpsdata["UTM_x"], gpsdata["UTM_y"], '.r', lw=2, markersize=1)
