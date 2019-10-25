@@ -92,7 +92,6 @@ class threadloop {
   };
 
   control::trackerRTdata _trackerRTdata{
-      control::TRACKERMODE::STARTED,
       Eigen::Vector3d::Zero(),  // setpoint
       Eigen::Vector3d::Zero()   // v_setpoint
   };
@@ -130,7 +129,6 @@ class threadloop {
   };
 
   int indicator_socket;
-  int indicator_waypoint;
 
   planning::planner _planner;
   estimator<indicator_kalman, 1, 1, 1, 1, 1, 1> _estimator;
@@ -139,7 +137,6 @@ class threadloop {
   control::controller<10, num_thruster, indicator_actuation, dim_controlspace>
       _controller;
 
-  planning::FrenetTrajectoryGenerator _trajectorygenerator;
   common::database<num_thruster, dim_controlspace> _sqlite;
   tcpserver _tcpserver;
 
@@ -163,35 +160,12 @@ class threadloop {
     X << 0.0, 10.0, 20.5, 35.0, 70.5;
     Y << 0.0, 0, 5.0, 6.5, 0.0;
 
-    _trajectorygenerator.regenerate_target_course(X, Y);
-
-    sqlite::database db(
-        "/home/scar1et/Coding/ASV/examples/siyuanhuhao/simulation/data/wp.db");
-    std::string str =
-        "CREATE TABLE WP"
-        "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
-        " X           DOUBLE, "
-        " Y           DOUBLE); ";
-    db << str;
-
-    auto CartRefX = _trajectorygenerator.getCartRefX();
-    auto CartRefY = _trajectorygenerator.getCartRefY();
-
-    for (int i = 0; i != CartRefX.size(); i++) {
-      // save to sqlite
-      std::string str =
-          "INSERT INTO WP"
-          "(X, Y) VAlUES(" +
-          std::to_string(CartRefX(i)) + ", " + std::to_string(-CartRefY(i)) +
-          ");";
-      db << str;
-    }
-    CLOG(INFO, "waypoints") << "Waypoints have been generated";
-    indicator_waypoint = 1;
-
     while (1) {
-      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
+      if (indicator_socket == 1) break;
     }
+
+    //
+
     while (1) {
       outerloop_elapsed_time = timer_planner.timeelapsed();
 
@@ -231,18 +205,20 @@ class threadloop {
     long int sample_time =
         static_cast<long int>(1000 * _controller.getsampletime());
 
+    _controller.setcontrolmode(
+        control::CONTROLMODE::MANEUVERING);  // defined by user
+
     while (1) {
-      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
+      if (indicator_socket == 1) break;
     }
     while (1) {
       outerloop_elapsed_time = timer_controler.timeelapsed();
-      _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
+
       // trajectory tracking
-      _trackerRTdata = _trajectorytracking
-                           .CircularArcLOS(Planning_Marine_state.kappa,
-                                           Planning_Marine_state.speed,
-                                           Planning_Marine_state.theta)
-                           .gettrackerRTdata();
+      _trajectorytracking.Grid_LOS(Planning_Marine_state.kappa,
+                                   Planning_Marine_state.speed,
+                                   _estimatorRTdata.State.head(2));
+      _trackerRTdata = _trajectorytracking.gettrackerRTdata();
       // controller
       _controllerRTdata = _controller
                               .controlleronestep(Eigen::Vector3d::Zero(),
@@ -275,7 +251,7 @@ class threadloop {
     CLOG(INFO, "GPS") << "initialation successful!";
 
     while (1) {
-      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
+      if (indicator_socket == 1) break;
     }
     while (1) {
       outerloop_elapsed_time = timer_estimator.timeelapsed();
@@ -307,7 +283,7 @@ class threadloop {
   // loop to save real time data using sqlite3
   void sqlloop() {
     while (1) {
-      if ((indicator_socket == 1) && (indicator_waypoint == 1)) break;
+      if (indicator_socket == 1) break;
     }
     while (1) {
       _sqlite.update_planner_table(_plannerRTdata);

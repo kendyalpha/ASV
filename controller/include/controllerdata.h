@@ -25,6 +25,13 @@ enum class CONTROLMODE {
                    // vessel)
 };
 
+enum class TRACKERMODE {
+  STARTED = 0,  // setup the reference points and start to track
+  TRACKING,     // robot is following the path
+  FINISHED,     // we have reached the destination
+  DEVIATION     // the cross error is larger than we expect
+};
+
 enum class ACTUATION {
   UNDERACTUATED = 0,  // underactuated usv
   FULLYACTUATED       // fully actuated usv
@@ -58,6 +65,7 @@ struct controllerRTdata {
 
 // real-time data in the trajecotry tracking
 struct trackerRTdata {
+  TRACKERMODE trackermode;     // FSM of tracker
   Eigen::Vector3d setpoint;    // x, y, theta in the global coordinate
   Eigen::Vector3d v_setpoint;  // u, v, r in the body coordinate
 };
