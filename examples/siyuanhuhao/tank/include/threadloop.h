@@ -25,17 +25,21 @@
 #include "controller/include/controller.h"
 #include "controller/include/trajectorytracking.h"
 #include "estimator/include/estimator.h"
+#include "messages/GUILink/include/guilink.h"
 #include "messages/sensors/gpsimu/include/gps.h"
 #include "messages/stm32/include/stm32_link.h"
 #include "planner/lanefollow/include/FrenetTrajectoryGenerator.h"
 #include "planner/planner.h"
+#include "simulator/include/simulator.h"
 
 namespace ASV {
 
+constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_LOS;
 constexpr int num_thruster = 2;
 constexpr int dim_controlspace = 3;
 constexpr USEKALMAN indicator_kalman = USEKALMAN::KALMANOFF;
-constexpr ACTUATION indicator_actuation = ACTUATION::UNDERACTUATED;
+constexpr control::ACTUATION indicator_actuation =
+    control::ACTUATION::UNDERACTUATED;
 
 class threadloop {
  public:
@@ -43,16 +47,19 @@ class threadloop {
       : _jsonparse("./../../properties/property.json"),
         _planner(_jsonparse.getplannerdata()),
         _gpsimu(gps_data, _jsonparse.getgpsbaudrate(), _jsonparse.getgpsport()),
-        _estimator(_estimatorRTdata, _jsonparse.getvessel(),
+        _estimator(estimator_RTdata, _jsonparse.getvessel(),
                    _jsonparse.getestimatordata()),
+        _simulator(_jsonparse.getsimulatordata(), _jsonparse.getvessel()),
         _trajectorytracking(_jsonparse.getcontrollerdata(), _trackerRTdata),
-        _controller(_controllerRTdata, _jsonparse.getcontrollerdata(),
+        _controller(controller_RTdata, _jsonparse.getcontrollerdata(),
                     _jsonparse.getvessel(), _jsonparse.getpiddata(),
                     _jsonparse.getthrustallocationdata(),
                     _jsonparse.gettunneldata(), _jsonparse.getazimuthdata(),
                     _jsonparse.getmainrudderdata(),
                     _jsonparse.gettwinfixeddata()),
-        _stm32_link(_stm32data, _jsonparse.getstm32baudrate(),
+        _gui_link(guilink_RTdata, _jsonparse.getguibaudrate(),
+                  _jsonparse.getguiport()),
+        _stm32_link(stm32_data, _jsonparse.getstm32baudrate(),
                     _jsonparse.getstm32port()),
         _trajectorygenerator(_jsonparse.getfrenetdata()),
         _sqlite(_jsonparse.getsqlitedata()) {
@@ -92,12 +99,15 @@ class threadloop {
       Eigen::Vector3d::Zero()   // command
   };
 
+  // real time data of tracker
   trackerRTdata _trackerRTdata{
-      Eigen::Vector3d::Zero(),  // setpoint
-      Eigen::Vector3d::Zero()   // v_setpoint
+      control::TRACKERMODE::STARTED,  // trackermode
+      Eigen::Vector3d::Zero(),        // setpoint
+      Eigen::Vector3d::Zero()         // v_setpoint
   };
 
-  controllerRTdata<num_thruster, dim_controlspace> _controllerRTdata{
+  // real time data of controller
+  controllerRTdata<num_thruster, dim_controlspace> controller_RTdata{
       Eigen::Matrix<double, dim_controlspace, 1>::Zero(),  // tau
       Eigen::Matrix<double, dim_controlspace, 1>::Zero(),  // BalphaU
       Eigen::Matrix<double, num_thruster, 1>::Zero(),      // u
@@ -107,7 +117,7 @@ class threadloop {
   };
 
   // realtime parameters of the estimators
-  estimatorRTdata _estimatorRTdata{
+  estimatorRTdata estimator_RTdata{
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
@@ -120,7 +130,7 @@ class threadloop {
   };
 
   // real time data
-  CartesianState Planning_Marine_state{
+  planning::CartesianState Planning_Marine_state{
       0,           // x
       0,           // y
       M_PI / 3.0,  // theta
@@ -146,7 +156,7 @@ class threadloop {
       0   // UTM_y
   };
 
-  messages::stm32data _stm32data{
+  messages::stm32data stm32_data{
       "",                              // UTC_time
       0,                               // command_n1
       -10,                             // command_n2
@@ -162,24 +172,48 @@ class threadloop {
       common::LINKSTATUS::CONNECTED    // linkstatus;
   };
 
-  planner _planner;
+  // real time gui-link data
+  messages::guilinkRTdata<num_thruster> guilink_RTdata{
+      "",                                           // UTC_time
+      common::LINKSTATUS::DISCONNECTED,             // linkstatus
+      0,                                            // indicator_autocontrolmode
+      0,                                            // indicator_windstatus
+      0.0,                                          // latitude
+      0.0,                                          // longitude
+      Eigen::Matrix<double, 6, 1>::Zero(),          // State
+      0.0,                                          // roll
+      0.0,                                          // pitch
+      Eigen::Matrix<int, num_thruster, 1>::Zero(),  // feedback_rotation
+      Eigen::Matrix<int, num_thruster, 1>::Zero(),  // feedback_alpha
+      Eigen::Vector3d::Zero(),                      // setpoints
+      0.0,                                          // desired_speed
+      Eigen::Vector2d::Zero(),                      // startingpoint
+      Eigen::Vector2d::Zero(),                      // endingpoint
+      Eigen::Matrix<double, 2, 8>::Zero()           // waypoints
+  };
+
+  planning::planner _planner;
 
   messages::GPS _gpsimu;
 
   estimator<indicator_kalman, 1, 1, 1, 1, 1, 1> _estimator;
-  trajectorytracking _trajectorytracking;
-  controller<10, num_thruster, indicator_actuation, dim_controlspace>
+
+  simulator _simulator;
+
+  control::trajectorytracking _trajectorytracking;
+  control::controller<10, num_thruster, indicator_actuation, dim_controlspace>
       _controller;
 
   messages::stm32_link _stm32_link;
+  messages::guilink_serial<num_thruster, dim_controlspace> _gui_link;
 
-  FrenetTrajectoryGenerator _trajectorygenerator;
+  planning::FrenetTrajectoryGenerator _trajectorygenerator;
   common::database<num_thruster, dim_controlspace> _sqlite;
 
   common::timecounter utc_timer;
 
   void intializethreadloop() {
-    _controllerRTdata =
+    controller_RTdata =
         _controller.initializecontroller().getcontrollerRTdata();
     _sqlite.initializetables();
   }
@@ -228,12 +262,12 @@ class threadloop {
 
       auto Plan_cartesianstate =
           _trajectorygenerator
-              .trajectoryonestep(_estimatorRTdata.Marine_state(0),
-                                 _estimatorRTdata.Marine_state(1),
-                                 _estimatorRTdata.Marine_state(2),
-                                 _estimatorRTdata.Marine_state(3),
-                                 _estimatorRTdata.Marine_state(4),
-                                 _estimatorRTdata.Marine_state(5), 2)
+              .trajectoryonestep(estimator_RTdata.Marine_state(0),
+                                 estimator_RTdata.Marine_state(1),
+                                 estimator_RTdata.Marine_state(2),
+                                 estimator_RTdata.Marine_state(3),
+                                 estimator_RTdata.Marine_state(4),
+                                 estimator_RTdata.Marine_state(5), 2)
               .getnextcartesianstate();
       Planning_Marine_state.x = Plan_cartesianstate.x;
       Planning_Marine_state.speed = Plan_cartesianstate.speed;
@@ -272,10 +306,10 @@ class threadloop {
                                            Planning_Marine_state.theta)
                            .gettrackerRTdata();
       // controller
-      _controllerRTdata = _controller
+      controller_RTdata = _controller
                               .controlleronestep(Eigen::Vector3d::Zero(),
-                                                 _estimatorRTdata.p_error,
-                                                 _estimatorRTdata.v_error,
+                                                 estimator_RTdata.p_error,
+                                                 estimator_RTdata.v_error,
                                                  _plannerRTdata.command,
                                                  _trackerRTdata.v_setpoint)
                               .getcontrollerRTdata();
@@ -318,7 +352,7 @@ class threadloop {
       outerloop_elapsed_time = timer_estimator.timeelapsed();
 
       _estimator
-          .updateestimatedforce(_controllerRTdata.BalphaU,
+          .updateestimatedforce(controller_RTdata.BalphaU,
                                 Eigen::Vector3d::Zero())
           .estimatestate(gps_data.UTM_x,             // gps_x
                          gps_data.UTM_y,             // gps_y
@@ -332,7 +366,7 @@ class threadloop {
                          _trackerRTdata.setpoint(2)  //_dheading
           );
 
-      _estimatorRTdata =
+      estimator_RTdata =
           _estimator
               .estimateerror(_trackerRTdata.setpoint, _trackerRTdata.v_setpoint)
               .getEstimatorRTData();
@@ -352,16 +386,16 @@ class threadloop {
     while (1) {
       _sqlite.update_gps_table(gps_data);
       _sqlite.update_planner_table(_plannerRTdata);
-      _sqlite.update_estimator_table(_estimatorRTdata);
-      _sqlite.update_controller_table(_controllerRTdata, _trackerRTdata);
+      _sqlite.update_estimator_table(estimator_RTdata);
+      _sqlite.update_controller_table(controller_RTdata, _trackerRTdata);
     }
   }  // sqlloop()
 
   // loop to give messages to stm32
   void stm32loop() {
     while (1) {
-      _stm32_link.setstm32data(_stm32data).stm32onestep();
-      _stm32data = _stm32_link.getstmdata();
+      _stm32_link.setstm32data(stm32_data).stm32onestep();
+      stm32_data = _stm32_link.getstmdata();
     }
   }  // stm32loop()
 
@@ -371,6 +405,14 @@ class threadloop {
       gps_data = _gpsimu.gpsonestep().getgpsRTdata();
     }
   }  // gpsloop()
+
+  // gui data link
+  void guiloop() {
+    while (1) {
+      _gui_link.setguilinkRTdata(guilink_RTdata).guicommunication();
+      guilink_RTdata = _gui_link.getguilinkRTdata();
+    }
+  }  // guiloop
 
 };  // end threadloop
 

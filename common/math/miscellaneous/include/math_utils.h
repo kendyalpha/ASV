@@ -46,6 +46,14 @@ std::tuple<double, double, double> Cart2Marine(double cart_y, double cart_theta,
 
 }  // Marine2Cart
 
+// convert marine coordinate to cartesian coordinate
+std::tuple<double, double, double, double, double, double> Cart2Marine(
+    double cart_x, double cart_y, double cart_theta, double cart_kappa,
+    double cart_speed, double cart_dspeed) noexcept {
+  return {cart_x, -cart_y, -cart_theta, -cart_kappa, cart_speed, cart_dspeed};
+
+}  // Marine2Cart
+
 // convert rad to degree
 double Rad2Degree(double _rad) noexcept {
   return 180.0 * _rad / M_PI;

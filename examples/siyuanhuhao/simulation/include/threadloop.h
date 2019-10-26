@@ -204,15 +204,14 @@ class threadloop {
                                  _estimatorRTdata.Marine_state(4),
                                  _estimatorRTdata.Marine_state(5), 2)
               .getnextcartesianstate();
-      Planning_Marine_state.x = Plan_cartesianstate.x;
-      Planning_Marine_state.speed = Plan_cartesianstate.speed;
-      Planning_Marine_state.dspeed = Plan_cartesianstate.dspeed;
 
-      std::tie(Planning_Marine_state.y, Planning_Marine_state.theta,
-               Planning_Marine_state.kappa) =
-          common::math::Cart2Marine(Plan_cartesianstate.y,
-                                    Plan_cartesianstate.theta,
-                                    Plan_cartesianstate.kappa);
+      std::tie(Planning_Marine_state.x, Planning_Marine_state.y,
+               Planning_Marine_state.theta, Planning_Marine_state.kappa,
+               Planning_Marine_state.speed, Planning_Marine_state.dspeed) =
+          common::math::Cart2Marine(
+              Plan_cartesianstate.x, Plan_cartesianstate.y,
+              Plan_cartesianstate.theta, Plan_cartesianstate.kappa,
+              Plan_cartesianstate.speed, Plan_cartesianstate.dspeed);
 
       innerloop_elapsed_time = timer_planner.timeelapsed();
       std::this_thread::sleep_for(

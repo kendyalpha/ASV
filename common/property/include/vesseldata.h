@@ -41,6 +41,17 @@ struct vessel {
   double B;  // total width of vessel
 };
 
+// 测试的模式
+enum class TESTMODE {
+  SIMULATION_DP,      // simulation for dynamic positioning
+  SIMULATION_LOS,     // simulation for los
+  SIMULATION_FRENET,  // simulation for frenet planner
+  EXPERIMENT_DP,      // experiment for dynamic positioning
+  EXPERIMENT_LOS,     // experiment for los
+  EXPERIMENT_FRENET   // experiment for frenet planner
+
+};
+
 }  // namespace ASV::common
 
 #endif /* _VESSELDATA_H_ */
