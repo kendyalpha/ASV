@@ -34,14 +34,14 @@ class lineofsight {
   lineofsight() = delete;
   virtual ~lineofsight() = default;
 
-  bool judgewaypoint(const Eigen::Vector2d &_vesselposition,
-                     const Eigen::Vector2d &_wp1) {
+  bool switch2next_waypoint(const Eigen::Vector2d &_vesselposition,
+                            const Eigen::Vector2d &_wp1) {
     Eigen::Vector2d _error = _vesselposition - _wp1;
     double _distance =
         std::sqrt(std::pow(_error(0), 2) + std::pow(_error(1), 2));
     if (_distance < capture_radius) return true;
     return false;
-  }  // judgewaypoint
+  }  // switch2next_waypoint
 
   // compute the orientation of LOS vector and cross-track error
   void computelospoint(const Eigen::Vector2d &_vesselposition,
@@ -95,8 +95,6 @@ class lineofsight {
 };   // end class lineofsight
 
 class trajectorytracking final : public lineofsight {
-  using Matrixd2d = Eigen::Matrix<double, 2, Eigen::Dynamic>;
-
  public:
   trajectorytracking(const controllerdata &_controllerdata,
                      const trackerRTdata &_TrackerRTdata)
@@ -151,19 +149,25 @@ class trajectorytracking final : public lineofsight {
 
   // follow a set of points like grid using LOS
   void Grid_LOS(double _desired_u, const Eigen::Vector2d &_vesselposition) {
-    if (lineofsight::judgewaypoint(_vesselposition,
-                                   grid_points.col(grid_points_index + 1))) {
+    Eigen::Vector2d wp0 =
+        (Eigen::Vector2d() << grid_points_x(grid_points_index),
+         grid_points_y(grid_points_index))
+            .finished();
+    Eigen::Vector2d wp1 =
+        (Eigen::Vector2d() << grid_points_x(grid_points_index + 1),
+         grid_points_y(grid_points_index + 1))
+            .finished();
+
+    if (lineofsight::switch2next_waypoint(_vesselposition, wp1)) {
       // switch waypoints
-      if (grid_points_index == grid_points.cols() - 2) {
+      if (grid_points_index == grid_points_x.size() - 2) {
         TrackerRTdata.trackermode = TRACKERMODE::FINISHED;
         CLOG(INFO, "LOS") << "reach the last waypoint!";
         return;
       } else
         ++grid_points_index;
     }
-    CircularArcLOS(0, _desired_u, _vesselposition,
-                   grid_points.col(grid_points_index),
-                   grid_points.col(grid_points_index + 1));
+    CircularArcLOS(0, _desired_u, _vesselposition, wp0, wp1);
     TrackerRTdata.trackermode = TRACKERMODE::TRACKING;
     return;
 
@@ -202,10 +206,13 @@ class trajectorytracking final : public lineofsight {
   }  // CircularArcLOS
 
   auto gettrackerRTdata() const noexcept { return TrackerRTdata; }
-  void setgrid_points(const Matrixd2d &_grid_points) {
-    assert(_grid_points.cols() >= 2);
+  void set_grid_points(const Eigen::VectorXd &_grid_points_x,
+                       const Eigen::VectorXd &_grid_points_y) {
+    assert(_grid_points_x.size() == _grid_points_y.size());
+    assert(_grid_points_x.size() >= 2);
     TrackerRTdata.trackermode = TRACKERMODE::STARTED;
-    grid_points = _grid_points;
+    grid_points_x = _grid_points_x;
+    grid_points_y = _grid_points_y;
     grid_points_index = 0;  // reset the index
   }
 
@@ -213,7 +220,8 @@ class trajectorytracking final : public lineofsight {
   trackerRTdata TrackerRTdata;
   const double sample_time;  // sample time of controller
   int grid_points_index;
-  Matrixd2d grid_points;  // a set of points like grid
+  Eigen::VectorXd grid_points_x;  // a set of points like grid
+  Eigen::VectorXd grid_points_y;
 
 };  // end class trajectorytracking
 }  // namespace ASV::control

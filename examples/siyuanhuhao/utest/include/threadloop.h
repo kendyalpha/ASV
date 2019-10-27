@@ -34,6 +34,7 @@
 
 namespace ASV {
 
+// constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_LOS;
 constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_FRENET;
 
 constexpr int num_thruster = 2;
@@ -47,6 +48,7 @@ class threadloop {
   threadloop()
       : _jsonparse("./../../properties/property.json"),
         _trajectorygenerator(_jsonparse.getfrenetdata()),
+        _trajectorytracking(_jsonparse.getcontrollerdata(), tracker_RTdata),
         indicator_waypoint(0),
         _tcpserver("9340") {}
   ~threadloop() {}
@@ -139,7 +141,7 @@ class threadloop {
       0,  // UTM_x
       0   // UTM_y
   };
-
+  // real time stm32 data
   messages::stm32data stm32_data{
       "",                              // UTC_time
       0,                               // command_u1
@@ -186,6 +188,7 @@ class threadloop {
   common::jsonparse<num_thruster, dim_controlspace> _jsonparse;
 
   planning::FrenetTrajectoryGenerator _trajectorygenerator;
+  control::trajectorytracking _trajectorytracking;
 
   int indicator_waypoint;
 
@@ -198,24 +201,46 @@ class threadloop {
       }
       case common::TESTMODE::SIMULATION_LOS: {
         // trajectory generator
-        Eigen::VectorXd X(5);
-        Eigen::VectorXd Y(5);
+        Eigen::VectorXd WX(5);
+        Eigen::VectorXd WY(5);
 
-        X << 0.0, 10.0, 20.5, 35.0, 70.5;
-        Y << 0.0, 0, 5.0, 6.5, 0.0;
-        double _desired_speed = 2;
+        WX << 0.0, 10.0, 20.5, 35.0, 70.5;
+        WY << 0.0, 0, 5.0, 6.5, 0.0;
+
+        _trajectorytracking.set_grid_points(WX, WY);
+
+        planner_RTdata.speed = 2;
+
+        sqlite::database db("./../../data/wp.db");
+        std::string str =
+            "CREATE TABLE WP"
+            "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+            " X           DOUBLE, "
+            " Y           DOUBLE); ";
+        db << str;
+
+        for (int i = 0; i != WX.size(); i++) {
+          // save to sqlite
+          std::string str =
+              "INSERT INTO WP"
+              "(X, Y) VAlUES(" +
+              std::to_string(WX(i)) + ", " + std::to_string(WY(i)) + ");";
+          db << str;
+        }
+        CLOG(INFO, "waypoints") << "Waypoints have been generated";
         indicator_waypoint = 1;
+
         break;
       }
       case common::TESTMODE::SIMULATION_FRENET: {
         // trajectory generator
-        Eigen::VectorXd X(5);
-        Eigen::VectorXd Y(5);
+        Eigen::VectorXd WX(5);
+        Eigen::VectorXd WY(5);
 
-        X << 0.0, 10.0, 20.5, 35.0, 70.5;
-        Y << 0.0, 0, 5.0, 6.5, 0.0;
+        WX << 0.0, 10.0, 20.5, 35.0, 70.5;
+        WY << 0.0, 0, 5.0, 6.5, 0.0;
 
-        _trajectorygenerator.regenerate_target_course(X, Y);
+        _trajectorygenerator.regenerate_target_course(WX, WY);
 
         sqlite::database db("./../../data/wp.db");
         std::string str =
@@ -341,8 +366,6 @@ class threadloop {
   }  // plannerloop
 
   void controllerloop() {
-    control::trajectorytracking _trajectorytracking(
-        _jsonparse.getcontrollerdata(), tracker_RTdata);
     control::controller<10, num_thruster, indicator_actuation, dim_controlspace>
         _controller(controller_RTdata, _jsonparse.getcontrollerdata(),
                     _jsonparse.getvessel(), _jsonparse.getpiddata(),
@@ -378,7 +401,7 @@ class threadloop {
         case common::TESTMODE::SIMULATION_LOS: {
           _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
           // trajectory tracking
-          _trajectorytracking.Grid_LOS(Planning_Marine_state.speed,
+          _trajectorytracking.Grid_LOS(planner_RTdata.speed,
                                        estimator_RTdata.State.head(2));
           tracker_RTdata = _trajectorytracking.gettrackerRTdata();
 
@@ -680,53 +703,70 @@ class threadloop {
 
   // socket server
   void socket_loop() {
-    union socketmsg {
-      double double_msg[20];
-      char char_msg[160];
-    };
+    switch (testmode) {
+      case common::TESTMODE::SIMULATION_DP:
+      case common::TESTMODE::SIMULATION_LOS:
+      case common::TESTMODE::SIMULATION_FRENET: {
+        union socketmsg {
+          double double_msg[20];
+          char char_msg[160];
+        };
 
-    const int recv_size = 10;
-    const int send_size = 160;
-    char recv_buffer[recv_size];
-    socketmsg _sendmsg = {0.0, 0.0, 0.0, 0.0, 0.0};
+        const int recv_size = 10;
+        const int send_size = 160;
+        char recv_buffer[recv_size];
+        socketmsg _sendmsg = {0.0, 0.0, 0.0, 0.0, 0.0};
 
-    common::timecounter timer_socket;
-    long int outerloop_elapsed_time = 0;
-    long int innerloop_elapsed_time = 0;
-    long int sample_time = 100;
+        common::timecounter timer_socket;
+        long int outerloop_elapsed_time = 0;
+        long int innerloop_elapsed_time = 0;
+        long int sample_time = 100;
 
-    while (1) {
-      outerloop_elapsed_time = timer_socket.timeelapsed();
+        while (1) {
+          outerloop_elapsed_time = timer_socket.timeelapsed();
 
-      for (int i = 0; i != 6; ++i)
-        _sendmsg.double_msg[i] = estimator_RTdata.State(i);  // State
+          for (int i = 0; i != 6; ++i)
+            _sendmsg.double_msg[i] = estimator_RTdata.State(i);  // State
 
-      _sendmsg.double_msg[6] = planner_RTdata.curvature;      // curvature
-      _sendmsg.double_msg[7] = planner_RTdata.speed;          // speed
-      _sendmsg.double_msg[8] = planner_RTdata.waypoint0(0);   // waypoint0
-      _sendmsg.double_msg[9] = planner_RTdata.waypoint0(1);   // waypoint0
-      _sendmsg.double_msg[10] = planner_RTdata.waypoint1(0);  // waypoint1
-      _sendmsg.double_msg[11] = planner_RTdata.waypoint1(1);  // waypoint1
+          _sendmsg.double_msg[6] = planner_RTdata.curvature;      // curvature
+          _sendmsg.double_msg[7] = planner_RTdata.speed;          // speed
+          _sendmsg.double_msg[8] = planner_RTdata.waypoint0(0);   // waypoint0
+          _sendmsg.double_msg[9] = planner_RTdata.waypoint0(1);   // waypoint0
+          _sendmsg.double_msg[10] = planner_RTdata.waypoint1(0);  // waypoint1
+          _sendmsg.double_msg[11] = planner_RTdata.waypoint1(1);  // waypoint1
 
-      for (int i = 0; i != dim_controlspace; ++i) {
-        _sendmsg.double_msg[12 + i] = controller_RTdata.tau(i);  // tau
+          for (int i = 0; i != dim_controlspace; ++i) {
+            _sendmsg.double_msg[12 + i] = controller_RTdata.tau(i);  // tau
+          }
+          for (int i = 0; i != num_thruster; ++i) {
+            _sendmsg.double_msg[12 + dim_controlspace + i] =
+                controller_RTdata.rotation(i);  // rotation
+          }
+          _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
+                                  send_size);
+
+          // if (_tcpserver.getconnectioncount() > 0) indicator_socket = 1;
+
+          innerloop_elapsed_time = timer_socket.timeelapsed();
+          std::this_thread::sleep_for(
+              std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
+
+          if (outerloop_elapsed_time > 1.1 * sample_time)
+            CLOG(INFO, "socket") << "Too much time!";
+        }
+
+        break;
       }
-      for (int i = 0; i != num_thruster; ++i) {
-        _sendmsg.double_msg[12 + dim_controlspace + i] =
-            controller_RTdata.rotation(i);  // rotation
+      case common::TESTMODE::EXPERIMENT_DP:
+      case common::TESTMODE::EXPERIMENT_LOS:
+      case common::TESTMODE::EXPERIMENT_FRENET: {
+        // experiment: do nothing
+        break;
       }
-      _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
-                              send_size);
+      default:
+        break;
+    }  // end switch
 
-      // if (_tcpserver.getconnectioncount() > 0) indicator_socket = 1;
-
-      innerloop_elapsed_time = timer_socket.timeelapsed();
-      std::this_thread::sleep_for(
-          std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
-
-      if (outerloop_elapsed_time > 1.1 * sample_time)
-        CLOG(INFO, "socket") << "Too much time!";
-    }
   }  // socketloop()
 
 };  // end threadloop

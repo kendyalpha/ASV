@@ -115,7 +115,7 @@ class FrenetTrajectoryGenerator {
     // std::cout << "d_ddot: " << mincost_path.d_ddot(1) << std::endl;
     // std::cout << "s: " << mincost_path.s(1) << std::endl;
 
-    updateNextCartesianStatus();
+    updateNextCartesianStatus(_targetspeed);
 
     // static FrenetState frenetstate{
     //     0,  // s
@@ -241,12 +241,15 @@ class FrenetTrajectoryGenerator {
 
   void updateNextCartesianStatus(double _target_s_dot = 1.0) {
     // The results of Frenet generation at "DT"
-    const int index = 12;  // simulation without considering controller
+    // TODO: adjust the "index", which is empirical; For simulation without
+    // considering controller, index = 1
+    double empirical_num = 0.7;
+    int index = static_cast<int>(empirical_num * frenetdata.HULL_LENGTH /
+                                 (_target_s_dot * frenetdata.SAMPLE_TIME));
+    int max_index = mincost_path.x.size() - 1;
+    if (index <= 1) index = 1;
+    if (index >= max_index) index = max_index;
 
-    // TODO: adjust the "index", which is empirical
-    // int index = static_cast<int>(frenetdata.HULL_LENGTH /
-    //                              (4 * _target_s_dot *
-    //                              frenetdata.SAMPLE_TIME));
     next_cartesianstate.x = mincost_path.x(index);
     next_cartesianstate.y = mincost_path.y(index);
     next_cartesianstate.theta = mincost_path.yaw(index);

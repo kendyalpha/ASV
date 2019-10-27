@@ -30,24 +30,12 @@ class planner {
     return *this;
   }
 
-  void setcommandfromjoystick(double tau_x, double tau_y, double tau_theta) {
-    PlannerRTdata.command << tau_x, tau_y, tau_theta;
-  }
-
   auto getPlannerRTdata() const noexcept { return PlannerRTdata; }
   double getsampletime() const noexcept { return sample_time; }
 
  private:
   double sample_time;
   plannerRTdata PlannerRTdata;
-
-  double Normalizeheadingangle(double _heading) noexcept {
-    double a = std::fmod(_heading + M_PI, 2.0 * M_PI);
-    if (a < 0.0) {
-      a += (2.0 * M_PI);
-    }
-    return a - M_PI;
-  }
 
   //
   Eigen::MatrixXd generatecirclepoints(double _radius, double _center_x,

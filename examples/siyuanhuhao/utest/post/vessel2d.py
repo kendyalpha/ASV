@@ -183,6 +183,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         ax2.legend()
         ax2.grid(True)
 
+        ax3.plot(state_u, color='tab:gray',
+                 lineStyle='-', lw=2, label='u')
+        ax3.legend()
+        ax3.grid(True)
+
         area = 15.0  # animation area length [m]
         # plt.xlim(doubles_sequence[0] - area, doubles_sequence[0] + area)
         # plt.ylim(doubles_sequence[1] - area, doubles_sequence[1] + area)
@@ -191,5 +196,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         ax1.clear()
         ax2.clear()
         ax3.clear()
+        ax4.clear()
 
     plt.show()
