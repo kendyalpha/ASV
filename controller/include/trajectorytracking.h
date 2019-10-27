@@ -150,8 +150,7 @@ class trajectorytracking final : public lineofsight {
   // }
 
   // follow a set of points like grid using LOS
-  void Grid_LOS(double _curvature, double _desired_u,
-                const Eigen::Vector2d &_vesselposition) {
+  void Grid_LOS(double _desired_u, const Eigen::Vector2d &_vesselposition) {
     if (lineofsight::judgewaypoint(_vesselposition,
                                    grid_points.col(grid_points_index + 1))) {
       // switch waypoints
@@ -162,7 +161,7 @@ class trajectorytracking final : public lineofsight {
       } else
         ++grid_points_index;
     }
-    CircularArcLOS(_curvature, _desired_u, _vesselposition,
+    CircularArcLOS(0, _desired_u, _vesselposition,
                    grid_points.col(grid_points_index),
                    grid_points.col(grid_points_index + 1));
     TrackerRTdata.trackermode = TRACKERMODE::TRACKING;

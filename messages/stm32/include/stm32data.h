@@ -12,6 +12,8 @@
 #ifndef _STM32DATA_H_
 #define _STM32DATA_H_
 
+#include <common/math/eigen/Eigen/Core>
+#include <common/math/eigen/Eigen/Dense>
 #include <string>
 #include "common/communication/include/linkdata.h"
 

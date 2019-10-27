@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import math
 
 # connect to sqlite database
-db_conn = sqlite3.connect('../data/Sat Oct 12 12:24:42 2019.db')
+db_conn = sqlite3.connect('../data/Sun Oct 27 17:31:35 2019.db')
 # create a cursor to execute SQL commands
 db_cursor = db_conn.cursor()
 

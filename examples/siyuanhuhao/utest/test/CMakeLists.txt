@@ -1,8 +1,8 @@
 # CMake 最低版本号要求
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.10)
 
 # 项目信息
-project (testbiling)
+project (experiment)
 set(CMAKE_CXX_STANDARD 17)
 
 # UNIX, WIN32, WINRT, CYGWIN, APPLE are environment 
@@ -21,6 +21,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # thread 库
 find_package(Threads REQUIRED)
+find_package(GeographicLib 1.49 REQUIRED)
+find_package(Boost 1.71.0 COMPONENTS date_time REQUIRED)
+find_library(SERIAL_LIBRARY serial HINTS ${LIBRARY_DIRECTORY})
+find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
+find_library(MOSEK8_LIBRARY mosek64 HINTS ${LIBRARY_DIRECTORY})
 
 # 添加 include 子目录
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
@@ -38,10 +43,11 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 set(SOURCE_FILES ${SOURCE_FILES} 
 	"${PROJECT_SOURCE_DIR}/../../../../common/logging/src/easylogging++.cc"                            
 	"${CMAKE_CURRENT_SOURCE_DIR}/run.cc")
-add_executable (testlos ${SOURCE_FILES})
-target_include_directories(testlos PRIVATE ${HEADER_DIRECTORY})
-find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
-find_library(MOSEK8_LIBRARY mosek64 HINTS ${LIBRARY_DIRECTORY})
-target_link_libraries(testlos PUBLIC ${SQLITE3_LIBRARY})
-target_link_libraries(testlos PUBLIC ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(testlos PUBLIC ${MOSEK8_LIBRARY})
+add_executable (testASV ${SOURCE_FILES})
+target_include_directories(testASV PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testASV PUBLIC ${SERIAL_LIBRARY})
+target_link_libraries(testASV PUBLIC ${SQLITE3_LIBRARY})
+target_link_libraries(testASV PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(testASV PUBLIC ${MOSEK8_LIBRARY})
+target_link_libraries(testASV PUBLIC ${GeographicLib_LIBRARIES})
+target_link_libraries(testASV PUBLIC ${Boost_LIBRARIES})

@@ -1,6 +1,6 @@
 {
   "vesselname": "siyuanhuhao",
-  "project_directory":"/home/scar1et/Coding/ASV/examples/siyuanhuhao/simulation/",
+  "project_directory":"/home/scar1et/Coding/ASV/examples/siyuanhuhao/utest/",
   "dbpath": "data/",
   "property": {
     "L":3.1,

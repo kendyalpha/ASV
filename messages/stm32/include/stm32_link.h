@@ -51,6 +51,15 @@ class stm32_link {
     return *this;
   }
 
+  stm32_link& setstm32data(const std::string& _utctime,
+                           const Eigen::Vector2d& _u,
+                           const Eigen::Vector2d& _alpha) {
+    stmdata.UTC_time = _utctime;
+    stmdata.command_u1 = std::abs(_alpha(0)) < 0.5 * M_PI ? _u(0) : -_u(0);
+    stmdata.command_u2 = std::abs(_alpha(1)) < 0.5 * M_PI ? _u(1) : -_u(1);
+
+    return *this;
+  }
   stm32_link& setstm32data(const stm32data& _stm32data) {
     stmdata = _stm32data;
     return *this;
