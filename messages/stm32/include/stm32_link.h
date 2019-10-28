@@ -40,7 +40,8 @@ class stm32_link {
   stm32_link& stm32onestep() {
     checkconnection(stmdata);
     senddata2stm32(stmdata);
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(1));  // 对于单片机，最好不要sleep
     if (parsedata_from_stm32(stmdata)) {
       // parse successfully
       connection_count = std::min(connection_count + 1, 10);
@@ -51,9 +52,11 @@ class stm32_link {
     return *this;
   }
 
-  stm32_link& setstm32data(const std::string& _utctime,
+  stm32_link& setstm32data(STM32STATUS _stm32status,
+                           const std::string& _utctime,
                            const Eigen::Vector2d& _u,
                            const Eigen::Vector2d& _alpha) {
+    stmdata.command_stm32status = _stm32status;
     stmdata.UTC_time = _utctime;
     stmdata.command_u1 = std::abs(_alpha(0)) < 0.5 * M_PI ? _u(0) : -_u(0);
     stmdata.command_u2 = std::abs(_alpha(1)) < 0.5 * M_PI ? _u(1) : -_u(1);
@@ -150,7 +153,8 @@ class stm32_link {
                  &(_stm32data.RC_Mz)           // double
           );
 
-          _stm32data.stm32status = static_cast<STM32STATUS>(_stm32status);
+          _stm32data.feedback_stm32status =
+              static_cast<STM32STATUS>(_stm32status);
           return true;
 
         } else {
@@ -179,7 +183,7 @@ class stm32_link {
     _str += ",";
     _str += std::to_string(_stm32data.command_u2);
     _str += ",";
-    _str += std::to_string(static_cast<int>(_stm32data.linkstatus));
+    _str += std::to_string(static_cast<int>(_stm32data.command_stm32status));
   }  // convert2string
 
 };  // end class stm32_link

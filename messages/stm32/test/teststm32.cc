@@ -31,7 +31,8 @@ int main() {
       0,                               // voltage_b1
       0,                               // voltage_b2
       0,                               // voltage_b2
-      messages::STM32STATUS::STANDBY,  // stm32status
+      messages::STM32STATUS::STANDBY,  // feedback_stm32status
+      messages::STM32STATUS::STANDBY,  // command_stm32status
       common::LINKSTATUS::CONNECTED    // linkstatus;
   };
 
@@ -51,7 +52,7 @@ int main() {
     _stm32_link.setstm32data(_stm32data).stm32onestep();
     _stm32data = _stm32_link.getstmdata();
 
-    std::cout << "status: " << static_cast<int>(_stm32data.stm32status)
+    std::cout << "status: " << static_cast<int>(_stm32data.feedback_stm32status)
               << std::endl;
     std::cout << "voltage_b1: " << _stm32data.voltage_b1 << std::endl;
     std::cout << "voltage_b2: " << _stm32data.voltage_b2 << std::endl;

@@ -31,10 +31,13 @@ enum class GUISTATUS {
 };
 
 // real time data in gui link (岸基数据)
-template <int m>
+template <int num_thruster, int num_battery = 1>
 struct guilinkRTdata {
   // UTC
   std::string UTC_time;
+
+  GUISTATUS guistutus_PC2gui;  // send command to stm32
+  GUISTATUS guistutus_gui2PC;  // send command to stm32
 
   // link status
   common::LINKSTATUS linkstatus;
@@ -52,8 +55,10 @@ struct guilinkRTdata {
   double pitch;
 
   // controller
-  Eigen::Matrix<int, m, 1> feedback_rotation;
-  Eigen::Matrix<int, m, 1> feedback_alpha;
+  Eigen::Matrix<int, num_thruster, 1> feedback_rotation;
+  Eigen::Matrix<int, num_thruster, 1> feedback_alpha;
+  // battery
+  Eigen::Matrix<double, num_battery, 1> battery_voltage;
 
   Eigen::Vector3d setpoints;      // dp data
   double desired_speed;           // desired speed

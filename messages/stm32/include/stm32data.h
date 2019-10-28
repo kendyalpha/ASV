@@ -52,7 +52,8 @@ struct stm32data {
   double voltage_b3;
 
   // stm32status
-  STM32STATUS stm32status;
+  STM32STATUS feedback_stm32status;
+  STM32STATUS command_stm32status;
 
   // link status
   common::LINKSTATUS linkstatus;

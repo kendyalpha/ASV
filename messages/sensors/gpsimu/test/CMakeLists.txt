@@ -26,7 +26,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 set(SOURCE_FILES ${SOURCE_FILES} 
 	"${PROJECT_SOURCE_DIR}/../../../../common/logging/src/easylogging++.cc")          
 # 指定生成目标
-add_executable (testGPS testGPS.cc)
+add_executable (testGPS testGPS.cc  ${SOURCE_FILES} )
 target_include_directories(testGPS PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testGPS ${SERIAL_LIBRARY})
 target_link_libraries(testGPS ${GeographicLib_LIBRARIES})

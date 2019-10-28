@@ -519,7 +519,7 @@ class database {
     _str += ",";
     _str += std::to_string(static_cast<int>(_RTdata.linkstatus));
     _str += ",";
-    _str += std::to_string(static_cast<int>(_RTdata.stm32status));
+    _str += std::to_string(static_cast<int>(_RTdata.feedback_stm32status));
 
     // motor
     _str += ", ";

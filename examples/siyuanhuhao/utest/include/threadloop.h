@@ -35,7 +35,9 @@
 namespace ASV {
 
 // constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_LOS;
-constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_FRENET;
+// constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_FRENET;
+constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_LOS;
+// constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_FRENET;
 
 constexpr int num_thruster = 2;
 constexpr int dim_controlspace = 3;
@@ -155,14 +157,17 @@ class threadloop {
       0,                               // RC_Mz
       0,                               // voltage_b1
       0,                               // voltage_b2
-      0,                               // voltage_b2
-      messages::STM32STATUS::STANDBY,  // stm32status
+      0,                               // voltage_b3
+      messages::STM32STATUS::STANDBY,  // feedback_stm32status
+      messages::STM32STATUS::STANDBY,  // command_stm32status
       common::LINKSTATUS::CONNECTED    // linkstatus;
   };
 
   // real time gui-link data
-  messages::guilinkRTdata<num_thruster> guilink_RTdata{
+  messages::guilinkRTdata<num_thruster, 3> guilink_RTdata{
       "",                                           // UTC_time
+      messages::GUISTATUS::STANDBY,                 // guistutus_PC2gui
+      messages::GUISTATUS::STANDBY,                 // guistutus_gui2PC
       common::LINKSTATUS::DISCONNECTED,             // linkstatus
       0,                                            // indicator_autocontrolmode
       0,                                            // indicator_windstatus
@@ -173,6 +178,7 @@ class threadloop {
       0.0,                                          // pitch
       Eigen::Matrix<int, num_thruster, 1>::Zero(),  // feedback_rotation
       Eigen::Matrix<int, num_thruster, 1>::Zero(),  // feedback_alpha
+      Eigen::Matrix<double, 3, 1>::Zero(),          // battery_voltage
       Eigen::Vector3d::Zero(),                      // setpoints
       0.0,                                          // desired_speed
       Eigen::Vector2d::Zero(),                      // startingpoint
@@ -271,6 +277,18 @@ class threadloop {
         break;
       }
       case common::TESTMODE::EXPERIMENT_LOS: {
+        // trajectory generator
+        Eigen::VectorXd WX(5);
+        Eigen::VectorXd WY(5);
+
+        WX << 0.0, 10.0, 20.5, 35.0, 70.5;
+        WY << 0.0, 0, 5.0, 6.5, 0.0;
+
+        _trajectorytracking.set_grid_points(WX, WY);
+
+        planner_RTdata.speed = 2;
+        indicator_waypoint = 1;
+
         break;
       }
       case common::TESTMODE::EXPERIMENT_FRENET: {
@@ -421,6 +439,12 @@ class threadloop {
           break;
         }
         case common::TESTMODE::EXPERIMENT_LOS: {
+          _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
+          // trajectory tracking
+          _trajectorytracking.Grid_LOS(planner_RTdata.speed,
+                                       estimator_RTdata.State.head(2));
+          tracker_RTdata = _trajectorytracking.gettrackerRTdata();
+
           break;
         }
         case common::TESTMODE::EXPERIMENT_FRENET: {
@@ -618,8 +642,11 @@ class threadloop {
                                          _jsonparse.getstm32baudrate(),
                                          _jsonparse.getstm32port());
         while (1) {
+          messages::STM32STATUS _command_stm32 =
+              static_cast<messages::STM32STATUS>(
+                  guilink_RTdata.guistutus_gui2PC);
           _stm32_link
-              .setstm32data(pt_utc, controller_RTdata.u,
+              .setstm32data(_command_stm32, pt_utc, controller_RTdata.u,
                             controller_RTdata.alpha)
               .stm32onestep();
           stm32_data = _stm32_link.getstmdata();
@@ -673,13 +700,30 @@ class threadloop {
       case common::TESTMODE::EXPERIMENT_DP:
       case common::TESTMODE::EXPERIMENT_LOS:
       case common::TESTMODE::EXPERIMENT_FRENET: {
-        messages::guilink_serial<num_thruster, dim_controlspace> _gui_link(
+        messages::guilink_serial<num_thruster, 3, dim_controlspace> _gui_link(
             guilink_RTdata, _jsonparse.getguibaudrate(),
             _jsonparse.getguiport());
 
         // experiment
         while (1) {
-          _gui_link.setguilinkRTdata(guilink_RTdata).guicommunication();
+          Eigen::Vector3d batteries =
+              (Eigen::Vector3d() << stm32_data.voltage_b1,
+               stm32_data.voltage_b2, stm32_data.voltage_b3)
+                  .finished();
+          Eigen::Vector2i feedback_pwm =
+              (Eigen::Vector2i() << stm32_data.feedback_pwm1,
+               stm32_data.feedback_pwm2)
+                  .finished();
+
+          messages::GUISTATUS _guistutus_PC2gui =
+              static_cast<messages::GUISTATUS>(stm32_data.feedback_stm32status);
+          _gui_link
+              .setguilinkRTdata(_guistutus_PC2gui, gps_data.latitude,
+                                gps_data.longitude,
+                                estimator_RTdata.Measurement_6dof(3),
+                                estimator_RTdata.Measurement_6dof(4),
+                                estimator_RTdata.State, feedback_pwm, batteries)
+              .guicommunication();
           guilink_RTdata = _gui_link.getguilinkRTdata();
         }
 
@@ -696,7 +740,7 @@ class threadloop {
     common::timecounter utc_timer;
 
     while (1) {
-      std::string pt_utc = utc_timer.getUTCtime();
+      pt_utc = utc_timer.getUTCtime();
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
   }  // guiloop

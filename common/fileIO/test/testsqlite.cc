@@ -62,14 +62,17 @@ int main() {
   };
 
   control::trackerRTdata _trackRTdata{
+      control::TRACKERMODE::STARTED,              // trackermode
       (Eigen::Vector3d() << 0, 0, 1).finished(),  // setpoint
-      Eigen::Matrix<double, 3, 1>::Zero()         // v_setpoint
+      Eigen::Vector3d::Zero()                     // v_setpoint
   };
 
   planning::plannerRTdata _plannerRTdata{
-      0, 0, Eigen::Vector2d::Zero(),  // waypoint0
-      Eigen::Vector2d::Zero(),        // waypoint1
-      Eigen::Vector3d::Zero()         // command
+      0,                        // curvature
+      0,                        // speed
+      Eigen::Vector2d::Zero(),  // waypoint0
+      Eigen::Vector2d::Zero(),  // waypoint1
+      Eigen::Vector3d::Zero()   // command
   };
 
   indicators _indicators{
@@ -98,6 +101,7 @@ int main() {
       0,                               // voltage_b1
       0,                               // voltage_b2
       0,                               // voltage_b2
+      messages::STM32STATUS::STANDBY,  // stm32status
       messages::STM32STATUS::STANDBY,  // stm32status
       common::LINKSTATUS::CONNECTED    // linkstatus;
   };

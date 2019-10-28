@@ -24,12 +24,11 @@
 #include "third_party/serial/include/serial/serial.h"
 
 namespace ASV::messages {
-
-template <int m, int n = 3>
+template <int num_thruster, int num_battery, int n = 3>
 class guilink_serial {
  public:
   // constructor using serial
-  guilink_serial(const guilinkRTdata<m> &_guilinkRTdata,
+  guilink_serial(const guilinkRTdata<num_thruster, num_battery> &_guilinkRTdata,
                  unsigned long _rate = 115200,
                  const std::string &_port = "/dev/ttyUSB0")
       : guilinkrtdata(_guilinkRTdata),
@@ -63,7 +62,25 @@ class guilink_serial {
     return *this;
   }  // guicommunication
 
-  guilink_serial &setguilinkRTdata(const guilinkRTdata<m> &_guilinkRTdata) {
+  guilink_serial &setguilinkRTdata(
+      GUISTATUS _guistutus_PC2gui, double _latitude, double _longitude,
+      double _roll, double _pitch, const Eigen::Matrix<double, 6, 1> &_State,
+      const Eigen::Matrix<int, num_thruster, 1> &_feedback_rotation,
+      const Eigen::Matrix<double, num_battery, 1> &_battery_voltage) {
+    guilinkrtdata.guistutus_PC2gui = _guistutus_PC2gui;
+    guilinkrtdata.latitude = _latitude;
+    guilinkrtdata.longitude = _longitude;
+    guilinkrtdata.roll = _roll;
+    guilinkrtdata.pitch = _pitch;
+    guilinkrtdata.State = _State;
+    guilinkrtdata.feedback_rotation = _feedback_rotation;
+    guilinkrtdata.battery_voltage = _battery_voltage;
+
+    return *this;
+  }  // setguilinkRTdata
+
+  guilink_serial &setguilinkRTdata(
+      const guilinkRTdata<num_thruster, num_battery> &_guilinkRTdata) {
     guilinkrtdata = _guilinkRTdata;
     return *this;
   }  // setguilinkRTdata
@@ -72,7 +89,7 @@ class guilink_serial {
   std::string getsend_buffer() const noexcept { return send_buffer; }
 
  private:
-  guilinkRTdata<m> guilinkrtdata;
+  guilinkRTdata<num_thruster, num_battery> guilinkrtdata;
   serial::Serial gui_serial;
   std::string send_buffer;
   std::string recv_buffer;
@@ -102,7 +119,7 @@ class guilink_serial {
       CLOG(INFO, "gui-serial") << " serial port open failure!";
   }  // checkserialstatus
 
-  void checkconnection(guilinkRTdata<m> &_RTdata) {
+  void checkconnection(guilinkRTdata<num_thruster, num_battery> &_RTdata) {
     if (gui_connetion_failure_count > 20)
       _RTdata.linkstatus = common::LINKSTATUS::DISCONNECTED;
     else
@@ -110,8 +127,9 @@ class guilink_serial {
   }  // checkconnection
 
   // convert real time gui data to sql string
-  void convert2string(const guilinkRTdata<m> &_guilinkRTdata,
-                      std::string &_str) {
+  void convert2string(
+      const guilinkRTdata<num_thruster, num_battery> &_guilinkRTdata,
+      std::string &_str) {
     _str += ",";
     _str += _guilinkRTdata.UTC_time;
     _str += ",";
@@ -132,23 +150,22 @@ class guilink_serial {
     _str += ",";
     _str += common::to_string_with_precision<double>(_guilinkRTdata.pitch, 3);
 
-    for (int i = 0; i != m; ++i) {
+    for (int i = 0; i != num_thruster; ++i) {
       _str += ",";
       _str += std::to_string(_guilinkRTdata.feedback_rotation(i));
     }
-    for (int i = 0; i != m; ++i) {
+    for (int i = 0; i != num_thruster; ++i) {
       _str += ",";
       _str += std::to_string(_guilinkRTdata.feedback_alpha(i));
     }
   }  // convert2string
 
   // convert real time gui data to sql string (lightweight)
-  void convert2string_lightweight(const guilinkRTdata<m> &_guilinkRTdata,
-                                  std::string &_str) {
+  void convert2string_lightweight(
+      const guilinkRTdata<num_thruster, num_battery> &_guilinkRTdata,
+      std::string &_str) {
     _str += ",";
-    _str += _guilinkRTdata.UTC_time;
-    _str += ",";
-    _str += std::to_string(static_cast<int>(_guilinkRTdata.linkstatus));
+    _str += std::to_string(static_cast<int>(_guilinkRTdata.guistutus_PC2gui));
     _str += ",";
     _str +=
         common::to_string_with_precision<double>(_guilinkRTdata.latitude, 6);
@@ -161,21 +178,28 @@ class guilink_serial {
           common::to_string_with_precision<double>(_guilinkRTdata.State(i), 3);
     }
     _str += ",";
+    _str +=
+        common::to_string_with_precision<double>(_guilinkRTdata.State(3), 1);
+    _str += ",";
     _str += common::to_string_with_precision<double>(_guilinkRTdata.roll, 3);
     _str += ",";
     _str += common::to_string_with_precision<double>(_guilinkRTdata.pitch, 3);
 
-    for (int i = 0; i != m; ++i) {
+    for (int i = 0; i != num_thruster; ++i) {
       _str += ",";
-      if (_guilinkRTdata.feedback_alpha(i) < M_PI / 4)
-        _str += std::to_string(_guilinkRTdata.feedback_rotation(i));
-      else
-        _str += std::to_string(-_guilinkRTdata.feedback_rotation(i));
+      _str += std::to_string(_guilinkRTdata.feedback_rotation(i));
+    }
+
+    for (int i = 0; i != num_battery; ++i) {
+      _str += ",";
+      _str += common::to_string_with_precision<double>(
+          _guilinkRTdata.battery_voltage(i), 1);
     }
 
   }  // convert2string_lightweight
 
-  bool parsedata_from_gui(guilinkRTdata<m> &_guilinkRTdata) {
+  bool parsedata_from_gui(
+      guilinkRTdata<num_thruster, num_battery> &_guilinkRTdata) {
     recv_buffer = gui_serial.readline(300, "\n");
 
     std::size_t pos = recv_buffer.find("$");
@@ -190,6 +214,7 @@ class guilink_serial {
         recv_buffer = recv_buffer.substr(0, rpos);
         if (std::to_string(crc16.crcCompute(recv_buffer.c_str(), rpos)) ==
             expected_crc) {
+          int _guistutus_gui2PC = 0;
           double _heading = 0.0;
           double wp1_x = 0.0;
           double wp1_y = 0.0;
@@ -202,11 +227,13 @@ class guilink_serial {
                  ",%lf,%lf"  // waypoint1
                  ",%lf,%lf"  // waypoint2
                  ,
-                 &(_guilinkRTdata.indicator_autocontrolmode),  // int
-                 &_heading,                                    // double
-                 &wp1_x, &wp1_y,  // waypoint1_x, waypoint1_y
-                 &wp2_x, &wp2_y   // waypoint2_x, waypoint2_y
+                 &_guistutus_gui2PC,  // int
+                 &_heading,           // double
+                 &wp1_x, &wp1_y,      // waypoint1_x, waypoint1_y
+                 &wp2_x, &wp2_y       // waypoint2_x, waypoint2_y
           );
+          _guilinkRTdata.guistutus_gui2PC =
+              static_cast<GUISTATUS>(_guistutus_gui2PC);
 
           _guilinkRTdata.setpoints(0) = wp1_x;
           _guilinkRTdata.setpoints(1) = wp1_y;
@@ -228,7 +255,8 @@ class guilink_serial {
 
   }  // parsedata_from_gui
 
-  void senddata2gui(const guilinkRTdata<m> &_guilinkRTdata) {
+  void senddata2gui(
+      const guilinkRTdata<num_thruster, num_battery> &_guilinkRTdata) {
     send_buffer.clear();
     send_buffer = "GUI";
     convert2string_lightweight(_guilinkRTdata, send_buffer);

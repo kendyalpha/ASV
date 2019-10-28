@@ -15,10 +15,13 @@ using namespace ASV;
 void test_gui_serial() {
   constexpr int num_thruster = 6;
   constexpr int dim_controlspace = 3;
+  constexpr int num_battery = 3;
 
   // real time gui-link data
-  messages::guilinkRTdata<num_thruster> _guilinkRTdata{
+  messages::guilinkRTdata<num_thruster, num_battery> _guilinkRTdata{
       "",                                           // UTC_time
+      messages::GUISTATUS::STANDBY,                 // guistutus_PC2gui
+      messages::GUISTATUS::STANDBY,                 // guistutus_gui2PC
       common::LINKSTATUS::DISCONNECTED,             // linkstatus
       0,                                            // indicator_autocontrolmode
       0,                                            // indicator_windstatus
@@ -29,15 +32,16 @@ void test_gui_serial() {
       0.0,                                          // pitch
       Eigen::Matrix<int, num_thruster, 1>::Zero(),  // feedback_rotation
       Eigen::Matrix<int, num_thruster, 1>::Zero(),  // feedback_alpha
-      Eigen::Vector3d::Zero(),                      // setpoints
-      0.0,                                          // desired_speed
-      Eigen::Vector2d::Zero(),                      // startingpoint
-      Eigen::Vector2d::Zero(),                      // endingpoint
-      Eigen::Matrix<double, 2, 8>::Zero()           // waypoints
+      Eigen::Matrix<double, num_battery, 1>::Zero(),  // battery_voltage
+      Eigen::Vector3d::Zero(),                        // setpoints
+      0.0,                                            // desired_speed
+      Eigen::Vector2d::Zero(),                        // startingpoint
+      Eigen::Vector2d::Zero(),                        // endingpoint
+      Eigen::Matrix<double, 2, 8>::Zero()             // waypoints
   };
 
-  messages::guilink_serial<num_thruster, dim_controlspace> _guiserial(
-      _guilinkRTdata, 115200);
+  messages::guilink_serial<num_thruster, num_battery, dim_controlspace>
+      _guiserial(_guilinkRTdata, 115200);
   common::timecounter _timer;
   while (1) {
     std::string pt_utc = _timer.getUTCtime();
