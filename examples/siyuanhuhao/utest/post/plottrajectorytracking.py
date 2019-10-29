@@ -11,9 +11,10 @@ import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
 import math
+import numpy as np
 
 # connect to sqlite database
-db_conn = sqlite3.connect('../data/Sun Oct 27 20:13:15 2019.db')
+db_conn = sqlite3.connect('../data/Tue Oct 29 15:57:10 2019.db')
 # create a cursor to execute SQL commands
 db_cursor = db_conn.cursor()
 
@@ -37,15 +38,16 @@ db_conn.commit()
 db_conn.close()
 
 
-db_conn = sqlite3.connect('../data/wp.db')
-db_cursor = db_conn.cursor()
-db_cursor.execute("SELECT * FROM WP")
-wp_rows = db_cursor.fetchall()
-db_conn.commit()
-db_conn.close()
-wpdata = pd.DataFrame(wp_rows)
-wpdata.columns = ['ID', 'X', 'Y']
+# db_conn = sqlite3.connect('../data/wp.db')
+# db_cursor = db_conn.cursor()
+# db_cursor.execute("SELECT * FROM WP")
+# wp_rows = db_cursor.fetchall()
+# db_conn.commit()
+# db_conn.close()
+# wpdata = pd.DataFrame(wp_rows)
+# wpdata.columns = ['ID', 'X', 'Y']
 # convert lists to dataframe
+
 m = 2
 controllerdata = pd.DataFrame(controller_rows)
 namelist = ['ID', 'DATETIME', 'set_x', 'set_y', 'set_theta',
@@ -87,6 +89,19 @@ estimatordata['DATETIME'] = (estimatordata['DATETIME']-timestamp)*86400
 plannerdata['DATETIME'] = (plannerdata['DATETIME']-timestamp)*86400
 
 
+# 选择显示的时间段
+time_stamp_select = np.array([20, 150])
+
+estimatordata = estimatordata[
+    (estimatordata['DATETIME'] > time_stamp_select[0])
+    & (estimatordata['DATETIME'] < time_stamp_select[1])]
+controllerdata = controllerdata[
+    (controllerdata['DATETIME'] > time_stamp_select[0])
+    & (controllerdata['DATETIME'] < time_stamp_select[1])]
+plannerdata = plannerdata[
+    (plannerdata['DATETIME'] > time_stamp_select[0])
+    & (plannerdata['DATETIME'] < time_stamp_select[1])]
+
 # results of thrust on vessel
 plt.figure(1, figsize=(12, 10))
 plt.suptitle("Desired thrust and estimated force", fontsize=14)
@@ -120,8 +135,8 @@ plt.figure(2, figsize=(10, 8))
 plt.suptitle("Plannar trajectory of GPS", fontsize=14)
 plt.plot(estimatordata["meas_y"],
          estimatordata["meas_x"], 'ko', lw=2, markersize=1)
-plt.plot(wpdata['Y'], wpdata['X'],
-         color='tab:gray', lineStyle='-', lw=1)
+# plt.plot(wpdata['Y'], wpdata['X'],
+#          color='tab:gray', lineStyle='-', lw=1)
 plt.axis('equal')
 plt.xlabel('E (m)')
 plt.ylabel('N (m)')

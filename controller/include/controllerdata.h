@@ -54,13 +54,22 @@ struct controllerRTdata {
   // Fx, Fy, Mz (estimated generalized thrust) in the body-fixed coordinates
   Eigen::Matrix<double, n, 1> BalphaU;
   // N, estimated thrust of all propellers
-  Eigen::Matrix<double, m, 1> u;
+  Eigen::Matrix<double, m, 1> command_u;
   // rpm, rotation of all propellers
-  Eigen::Matrix<int, m, 1> rotation;
+  Eigen::Matrix<int, m, 1> command_rotation;
   // rad, angle of all propellers (compute the estimated force)
-  Eigen::Matrix<double, m, 1> alpha;
+  Eigen::Matrix<double, m, 1> command_alpha;
   // deg, angle of all propellers (sent to the actuators)
-  Eigen::Matrix<int, m, 1> alpha_deg;
+  Eigen::Matrix<int, m, 1> command_alpha_deg;
+
+  // N, estimated thrust of all propellers
+  Eigen::Matrix<double, m, 1> feedback_u;
+  // rpm, rotation of all propellers
+  Eigen::Matrix<int, m, 1> feedback_rotation;
+  // rad, angle of all propellers (compute the estimated force)
+  Eigen::Matrix<double, m, 1> feedback_alpha;
+  // deg, angle of all propellers (sent to the actuators)
+  Eigen::Matrix<int, m, 1> feedback_alpha_deg;
 };
 
 // real-time data in the trajecotry tracking

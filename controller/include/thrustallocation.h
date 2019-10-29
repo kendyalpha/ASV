@@ -85,47 +85,50 @@ class thrustallocation {
 
   // perform the thrust allocation using QP solver (one step)
   void onestepthrustallocation(controllerRTdata<m, n> &_RTdata) {
+    update_formerstep_feedback(_RTdata);
     updateTAparameters(_RTdata);
     updateMosekparameters();
     onestepmosek();
-    updateNextstep(_RTdata);
+    update_nextstep_command(_RTdata);
   }
 
   void initializapropeller(controllerRTdata<m, n> &_RTdata) {
     // alpha and thrust of each propeller
     for (int i = 0; i != num_tunnel; ++i) {
-      _RTdata.rotation(i) = 1;
-      _RTdata.u(i) = v_tunnelthrusterdata[i].K_positive;
-      _RTdata.alpha(i) = M_PI / 2;
-      _RTdata.alpha_deg(i) = 90;
+      // command
+      _RTdata.command_rotation(i) = 1;
+      _RTdata.command_u(i) = v_tunnelthrusterdata[i].K_positive;
+      _RTdata.command_alpha(i) = M_PI / 2;
+      _RTdata.command_alpha_deg(i) = 90;
     }
     for (int j = 0; j != num_azimuth; ++j) {
       int a_index = j + num_tunnel;
-      _RTdata.rotation(a_index) = v_azimuththrusterdata[j].min_rotation;
-      _RTdata.u(a_index) = v_azimuththrusterdata[j].min_thrust;
-      _RTdata.alpha(a_index) = (v_azimuththrusterdata[j].min_alpha +
-                                v_azimuththrusterdata[j].max_alpha) /
-                               2;
+      _RTdata.command_rotation(a_index) = v_azimuththrusterdata[j].min_rotation;
+      _RTdata.command_u(a_index) = v_azimuththrusterdata[j].min_thrust;
+      _RTdata.command_alpha(a_index) = (v_azimuththrusterdata[j].min_alpha +
+                                        v_azimuththrusterdata[j].max_alpha) /
+                                       2;
 
-      _RTdata.alpha_deg(a_index) =
-          static_cast<int>(_RTdata.alpha(a_index) * 180 / M_PI);
+      _RTdata.command_alpha_deg(a_index) =
+          rad2degree(_RTdata.command_alpha(a_index));
     }
     for (int k = 0; k != num_mainrudder; ++k) {
       int a_index = k + num_tunnel + num_azimuth;
-      _RTdata.rotation(a_index) = v_ruddermaindata[k].min_rotation;
-      _RTdata.u(a_index) = v_ruddermaindata[k].min_thrust;
-      _RTdata.alpha(a_index) = 0;
-      _RTdata.alpha_deg(a_index) = 0;
+      _RTdata.command_rotation(a_index) = v_ruddermaindata[k].min_rotation;
+      _RTdata.command_u(a_index) = v_ruddermaindata[k].min_thrust;
+      _RTdata.command_alpha(a_index) = 0;
+      _RTdata.command_alpha_deg(a_index) = 0;
     }
     for (int l = 0; l != num_twinfixed; ++l) {
       int a_index = l + num_tunnel + num_azimuth + num_mainrudder;
-      _RTdata.rotation(a_index) = 1;
-      _RTdata.u(a_index) = v_twinfixeddata[l].K_positive;
-      _RTdata.alpha(a_index) = 0;
-      _RTdata.alpha_deg(a_index) = 0;
+      _RTdata.command_rotation(a_index) = 1;
+      _RTdata.command_u(a_index) = v_twinfixeddata[l].K_positive;
+      _RTdata.command_alpha(a_index) = 0;
+      _RTdata.command_alpha_deg(a_index) = 0;
     }
     // update BalphaU
-    _RTdata.BalphaU = calculateBalphau(_RTdata.alpha, _RTdata.u);
+    _RTdata.BalphaU =
+        calculateBalphau(_RTdata.command_alpha, _RTdata.command_u);
   }
   // modify penality for each error (heading-only controller)
   void setQ(CONTROLMODE _cm) {
@@ -392,7 +395,7 @@ class thrustallocation {
     for (int j = 0; j != n; ++j) {
       qval[j + 2 * m] = Q(j, j);
     }
-  }
+  }  // initializemosekvariables
 
   void initializeMosekAPI() {
     /* Create the mosek environment. */
@@ -674,19 +677,32 @@ class thrustallocation {
 
   }  // calculateconstraints_twinfixed
 
-  // calculate vessel parameters at the next time step
-  void updateNextstep(controllerRTdata<m, n> &_RTdata) {
+  // calculate based on the feedback rotation and alpha_deg
+  void update_formerstep_feedback(controllerRTdata<m, n> &_RTdata) {
+    // update alpha and u
+    updateAlphaandU(_RTdata.command_u, _RTdata.command_alpha);
+    // convert the double alpha(rad) to int alpha(deg)
+    convert_alpha_int2radian(_RTdata.command_alpha, _RTdata.command_alpha_deg);
+    // update u
+    calculateu(_RTdata);
+    // update BalphaU
+    _RTdata.BalphaU =
+        calculateBalphau(_RTdata.feedback_alpha, _RTdata.feedback_u);
+  }
+
+  // calculate the command at the next time step
+  void update_nextstep_command(controllerRTdata<m, n> &_RTdata) {
     // calculate delta variable using Mosek results
     delta_u = results.head(m);
     delta_alpha = results.segment(m, m);
     // update alpha and u
-    updateAlphaandU(_RTdata.u, _RTdata.alpha);
+    updateAlphaandU(_RTdata.command_u, _RTdata.command_alpha);
     // convert the double alpha(rad) to int alpha(deg)
-    convertalpharadian2int(_RTdata.alpha, _RTdata.alpha_deg);
+    convert_alpha_radian2int(_RTdata.command_alpha, _RTdata.command_alpha_deg);
     // update rotation speed
     calculaterotation(_RTdata);
-    // update BalphaU
-    _RTdata.BalphaU = calculateBalphau(_RTdata.alpha, _RTdata.u);
+    // // update BalphaU
+    // _RTdata.BalphaU = calculateBalphau(_RTdata.alpha, _RTdata.u);
   }
 
   // update alpha and u using computed delta_alpha and delta_u
@@ -694,17 +710,18 @@ class thrustallocation {
     _u += delta_u;
     _alpha += delta_alpha;
   }
-  // convert the radian to deg, and round to integer
-  void convertalpharadian2int(const vectormd &_alpha, vectormi &_alpha_deg) {
+
+  // convert the radian to deg, and round to integer (command)
+  void convert_alpha_radian2int(const vectormd &_alpha, vectormi &_alpha_deg) {
     // round to int (deg) for tunnel and azimuth thrusters
     for (int i = 0; i != (num_tunnel + num_azimuth); ++i)
-      _alpha_deg(i) = static_cast<int>(_alpha(i) * 180 / M_PI);
+      _alpha_deg(i) = rad2degree(_alpha(i));
 
     // convert alpha to varphi (rudder angle) for thrusters with rudder
     for (int k = 0; k != num_mainrudder; ++k) {
       int r_index = num_tunnel + num_azimuth + k;
 
-      if (std::round(180 * _alpha(r_index) / M_PI) == 0) {
+      if (rad2degree(_alpha(r_index)) == 0) {
         _alpha_deg(r_index) = 0;
         continue;
       }
@@ -723,33 +740,65 @@ class thrustallocation {
     // round to int (deg) for twin fixed thruster
     for (int l = 0; l != num_twinfixed; ++l) {
       int t_index = num_tunnel + num_azimuth + num_mainrudder + l;
-      _alpha_deg(t_index) = static_cast<int>(_alpha(t_index) * 180 / M_PI);
+      _alpha_deg(t_index) = rad2degree(_alpha(t_index));
     }
-  }  // convertalpharadian2int
+  }  // convert_alpha_radian2int
 
-  // calcuate rotation speed of each thruster based on thrust
+  // convert the deg to radian (feedback)
+  void convert_alpha_int2radian(const vectormi &_alpha_deg, vectormd &_alpha) {
+    // tunnel and azimuth thrusters
+    for (int i = 0; i != (num_tunnel + num_azimuth); ++i)
+      _alpha(i) = degree2rad(_alpha_deg(i));
+
+    // convert alpha to varphi (rudder angle) for thrusters with rudder
+    for (int k = 0; k != num_mainrudder; ++k) {
+      int r_index = num_tunnel + num_azimuth + k;
+
+      if (rad2degree(_alpha(r_index)) == 0) {
+        _alpha_deg(r_index) = 0;
+        continue;
+      }
+
+      double cytan = v_ruddermaindata[k].Cy / std::tan(_alpha(r_index));
+      double sqrtterm =
+          std::sqrt(std::pow(cytan, 2) + 0.08 * v_ruddermaindata[k].Cy);
+      double varphi = 0;
+      if (_alpha(r_index) > 0)
+        varphi = 25 * (sqrtterm - cytan) / v_ruddermaindata[k].Cy;
+      else
+        varphi = 25 * (-sqrtterm - cytan) / v_ruddermaindata[k].Cy;
+      _alpha_deg(r_index) = static_cast<int>(std::round(varphi));
+    }
+
+    // round to int (deg) for twin fixed thruster
+    for (int l = 0; l != num_twinfixed; ++l) {
+      int t_index = num_tunnel + num_azimuth + num_mainrudder + l;
+      _alpha(t_index) = degree2rad(_alpha_deg(t_index));
+    }
+  }  // convert_alpha_int2radian
+  // calcuate rotation speed of each thruster based on thrust (command)
   void calculaterotation(controllerRTdata<m, n> &_RTdata) {
     // tunnel thruster
     for (int i = 0; i != num_tunnel; ++i) {
       int t_rotation = 0;
-      if (_RTdata.alpha(i) < 0) {
-        t_rotation = static_cast<int>(
-            std::sqrt(abs(_RTdata.u(i)) / v_tunnelthrusterdata[i].K_negative));
+      if (_RTdata.command_alpha(i) < 0) {
+        t_rotation = static_cast<int>(std::sqrt(
+            abs(_RTdata.command_u(i)) / v_tunnelthrusterdata[i].K_negative));
         if (t_rotation == 0) {
-          _RTdata.rotation(i) = -1;  // prevent zero
-          _RTdata.u(i) = v_tunnelthrusterdata[i].K_negative;
+          _RTdata.command_rotation(i) = -1;  // prevent zero
+          _RTdata.command_u(i) = v_tunnelthrusterdata[i].K_negative;
         } else
-          _RTdata.rotation(i) = -t_rotation;
+          _RTdata.command_rotation(i) = -t_rotation;
 
       } else {
-        t_rotation = static_cast<int>(
-            std::sqrt(abs(_RTdata.u(i)) / v_tunnelthrusterdata[i].K_positive));
+        t_rotation = static_cast<int>(std::sqrt(
+            abs(_RTdata.command_u(i)) / v_tunnelthrusterdata[i].K_positive));
 
         if (t_rotation == 0) {
-          _RTdata.rotation(i) = 1;  // prevent zero
-          _RTdata.u(i) = v_tunnelthrusterdata[i].K_positive;
+          _RTdata.command_rotation(i) = 1;  // prevent zero
+          _RTdata.command_u(i) = v_tunnelthrusterdata[i].K_positive;
         } else
-          _RTdata.rotation(i) = t_rotation;
+          _RTdata.command_rotation(i) = t_rotation;
       }
     }
 
@@ -757,13 +806,14 @@ class thrustallocation {
     for (int j = 0; j != num_azimuth; ++j) {
       int index_azimuth = j + num_tunnel;
 
-      int t_rotation = static_cast<int>(
-          sqrt(abs(_RTdata.u(index_azimuth)) / v_azimuththrusterdata[j].K));
+      int t_rotation = static_cast<int>(sqrt(
+          abs(_RTdata.command_u(index_azimuth)) / v_azimuththrusterdata[j].K));
       if (t_rotation < v_azimuththrusterdata[j].min_rotation) {
-        _RTdata.rotation(index_azimuth) = v_azimuththrusterdata[j].min_rotation;
-        _RTdata.u(index_azimuth) = v_azimuththrusterdata[j].min_thrust;
+        _RTdata.command_rotation(index_azimuth) =
+            v_azimuththrusterdata[j].min_rotation;
+        _RTdata.command_u(index_azimuth) = v_azimuththrusterdata[j].min_thrust;
       } else
-        _RTdata.rotation(index_azimuth) = t_rotation;
+        _RTdata.command_rotation(index_azimuth) = t_rotation;
     }
 
     // thruster with rudder
@@ -775,44 +825,123 @@ class thrustallocation {
       double _c = 1.0;
 
       double sqrtrootterm = std::sqrt(computeabcvalue(
-          _a, _b, _c, std::pow(_RTdata.alpha_deg(index_rudder), 2)));
+          _a, _b, _c, std::pow(_RTdata.command_alpha_deg(index_rudder), 2)));
 
       int t_rotation =
-          static_cast<int>(sqrt(abs(_RTdata.u(index_rudder)) /
+          static_cast<int>(sqrt(abs(_RTdata.command_u(index_rudder)) /
                                 (sqrtrootterm * v_ruddermaindata[k].K)));
       if (t_rotation < v_ruddermaindata[k].min_rotation) {
-        _RTdata.rotation(index_rudder) = v_ruddermaindata[k].min_rotation;
-        _RTdata.u(index_rudder) = v_ruddermaindata[k].min_thrust;
+        _RTdata.command_rotation(index_rudder) =
+            v_ruddermaindata[k].min_rotation;
+        _RTdata.command_u(index_rudder) = v_ruddermaindata[k].min_thrust;
       } else
-        _RTdata.rotation(index_rudder) = t_rotation;
+        _RTdata.command_rotation(index_rudder) = t_rotation;
     }
 
     // twin fixed thruster
     for (int l = 0; l != num_twinfixed; ++l) {
       int index_tk = l + num_tunnel + num_azimuth + num_mainrudder;
       int t_rotation = 0;
-      if (_RTdata.alpha(index_tk) > 0.5 * M_PI) {
-        t_rotation = static_cast<int>(std::sqrt(abs(_RTdata.u(index_tk)) /
-                                                v_twinfixeddata[l].K_negative));
+      if (_RTdata.command_alpha(index_tk) > 0.5 * M_PI) {
+        t_rotation = static_cast<int>(std::sqrt(
+            abs(_RTdata.command_u(index_tk)) / v_twinfixeddata[l].K_negative));
 
         if (t_rotation == 0) {
-          _RTdata.rotation(index_tk) = -1;  // prevent zero
-          _RTdata.u(index_tk) = v_twinfixeddata[l].K_negative;
+          _RTdata.command_rotation(index_tk) = -1;  // prevent zero
+          _RTdata.command_u(index_tk) = v_twinfixeddata[l].K_negative;
         } else
-          _RTdata.rotation(index_tk) = -t_rotation;
+          _RTdata.command_rotation(index_tk) = -t_rotation;
 
       } else {
-        t_rotation = static_cast<int>(std::sqrt(abs(_RTdata.u(index_tk)) /
-                                                v_twinfixeddata[l].K_positive));
+        t_rotation = static_cast<int>(std::sqrt(
+            abs(_RTdata.command_u(index_tk)) / v_twinfixeddata[l].K_positive));
 
         if (t_rotation == 0) {
-          _RTdata.rotation(index_tk) = 1;  // prevent zero
-          _RTdata.u(index_tk) = v_twinfixeddata[l].K_positive;
+          _RTdata.command_rotation(index_tk) = 1;  // prevent zero
+          _RTdata.command_u(index_tk) = v_twinfixeddata[l].K_positive;
         } else
-          _RTdata.rotation(index_tk) = t_rotation;
+          _RTdata.command_rotation(index_tk) = t_rotation;
       }
     }
   }  // calculaterotation
+
+  // calcuate thrust based on rotation speed of each thruster (feedback)
+  void calculateu(controllerRTdata<m, n> &_RTdata) {
+    // tunnel thruster
+    for (int i = 0; i != num_tunnel; ++i) {
+      if (_RTdata.feedback_rotation(i) < 0)
+        _RTdata.feedback_u(i) = v_tunnelthrusterdata[i].K_negative *
+                                _RTdata.feedback_rotation(i) *
+                                _RTdata.feedback_rotation(i);
+      else if (_RTdata.feedback_rotation(i) > 0)
+        _RTdata.feedback_u(i) = v_tunnelthrusterdata[i].K_positive *
+                                _RTdata.feedback_rotation(i) *
+                                _RTdata.feedback_rotation(i);
+      else {
+        _RTdata.feedback_rotation(i) = 1;
+        _RTdata.feedback_u(i) = v_tunnelthrusterdata[i].K_positive;
+      }
+    }
+
+    // azimuth thruster
+    for (int j = 0; j != num_azimuth; ++j) {
+      int index_azimuth = j + num_tunnel;
+
+      if (_RTdata.feedback_rotation(index_azimuth) <
+          v_azimuththrusterdata[j].min_rotation) {
+        _RTdata.feedback_rotation(index_azimuth) =
+            v_azimuththrusterdata[j].min_rotation;
+        _RTdata.feedback_u(index_azimuth) = v_azimuththrusterdata[j].min_thrust;
+      } else {
+        _RTdata.feedback_u(index_azimuth) =
+            v_azimuththrusterdata[j].K *
+            _RTdata.feedback_rotation(index_azimuth) *
+            _RTdata.feedback_rotation(index_azimuth);
+      }
+    }
+
+    // thruster with rudder
+    for (int k = 0; k != num_mainrudder; ++k) {
+      int index_rudder = k + num_tunnel + num_azimuth;
+      double Cy = v_ruddermaindata[k].Cy;
+      double _a = 0.0004 * std::pow(Cy, 2);
+      double _b = std::pow(Cy, 2) - 0.04 * Cy;
+      double _c = 1.0;
+
+      double sqrtrootterm = std::sqrt(computeabcvalue(
+          _a, _b, _c, std::pow(_RTdata.feedback_alpha_deg(index_rudder), 2)));
+
+      if (_RTdata.feedback_rotation(index_rudder) <
+          v_ruddermaindata[k].min_rotation) {
+        _RTdata.feedback_rotation(index_rudder) =
+            v_ruddermaindata[k].min_rotation;
+        _RTdata.feedback_u(index_rudder) = v_ruddermaindata[k].min_thrust;
+      } else
+        _RTdata.feedback_u(index_rudder) =
+            sqrtrootterm * v_ruddermaindata[k].K *
+            _RTdata.feedback_rotation(index_rudder) *
+            _RTdata.feedback_rotation(index_rudder);
+    }
+
+    // twin fixed thruster
+    for (int l = 0; l != num_twinfixed; ++l) {
+      int index_tk = l + num_tunnel + num_azimuth + num_mainrudder;
+      int t_rotation = 0;
+
+      if (_RTdata.feedback_rotation(index_tk) < 0)
+        _RTdata.feedback_u(index_tk) = v_twinfixeddata[l].K_negative *
+                                       _RTdata.feedback_rotation(index_tk) *
+                                       _RTdata.feedback_rotation(index_tk);
+      else if (_RTdata.feedback_rotation(index_tk) > 0)
+        _RTdata.feedback_u(index_tk) = v_twinfixeddata[l].K_positive *
+                                       _RTdata.feedback_rotation(index_tk) *
+                                       _RTdata.feedback_rotation(index_tk);
+      else {
+        _RTdata.feedback_rotation(index_tk) = 1;
+        _RTdata.feedback_u(index_tk) = v_twinfixeddata[l].K_positive;
+      }
+    }
+  }  // calculateu
 
   // calculate Balpha as function of alpha
   matrixnmd calculateBalpha(const vectormd &t_alpha) {
@@ -888,11 +1017,11 @@ class thrustallocation {
 
   // update parameters in thruster allocation for each time step
   void updateTAparameters(const controllerRTdata<m, n> &_RTdata) {
-    B_alpha = calculateBalpha(_RTdata.alpha);
+    B_alpha = calculateBalpha(_RTdata.feedback_alpha);
     if constexpr (index_actuation == ACTUATION::FULLYACTUATED)
-      calculateJocobianRhoTerm(_RTdata.alpha);
-    calculateJocobianBalphaU(_RTdata.alpha, _RTdata.u);
-    calculateDeltauQ(_RTdata.u);
+      calculateJocobianRhoTerm(_RTdata.feedback_alpha);
+    calculateJocobianBalphaU(_RTdata.feedback_alpha, _RTdata.feedback_u);
+    calculateDeltauQ(_RTdata.feedback_u);
     calculateb(_RTdata.tau, _RTdata.BalphaU);
     calculateconstraints_tunnel(_RTdata, _RTdata.tau(2));
     calculateconstraints_azimuth(_RTdata);
@@ -933,6 +1062,12 @@ class thrustallocation {
   double computeabcvalue(double a, double b, double c, double x) {
     return a * x * x + b * x + c;
   }
+
+  // convert rad to degree
+  int rad2degree(double _rad) { return std::round(_rad * 180 / M_PI); }
+  // convert degree to rad
+  double degree2rad(int _degree) { return _degree * M_PI / 180.0; }
+
   // solve QP using Mosek solver
   void onestepmosek() {
     MSKint32t i, j;

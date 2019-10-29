@@ -8,7 +8,7 @@
     "mini_turn_radius":1,
     "Mass": [244, 0, 0, 0, 244, 80, 0, 80, 102],
     "AddedMass": [27, 0, 0, 0, 68, 52, 0, 52, 40],
-    "Damping": [12, 0, 0, 0, 15, 0, 0, 0, 25],
+    "Damping": [90, 0, 0, 0, 15, 0, 0, 0, 50],
     "CoG": [0.68, 0, 0],
     "velocity_limit": {
       "surge": [-4, 6],
@@ -26,8 +26,8 @@
     "surge": {
       "position_P": 0,
       "position_I": 0.2,
-      "velocity_P": 50,
-      "velocity_I": 10,
+      "velocity_P": 500,
+      "velocity_I": 100,
       "position_allowed_error": 0.01,
       "velocity_allowed_error": 0.1,
       "min_output": -250,
@@ -44,9 +44,9 @@
       "max_output": 14
     },
     "yaw": {
-      "position_P": 30,
+      "position_P": 200,
       "position_I": 0,
-      "velocity_P": 100,
+      "velocity_P": 50,
       "velocity_I": 0,
       "position_allowed_error": 0.001,
       "velocity_allowed_error": 0.001,

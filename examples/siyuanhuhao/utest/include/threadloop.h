@@ -34,9 +34,9 @@
 
 namespace ASV {
 
-// constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_LOS;
+constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_LOS;
 // constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_FRENET;
-constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_LOS;
+// constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_LOS;
 // constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_FRENET;
 
 constexpr int num_thruster = 2;
@@ -207,11 +207,16 @@ class threadloop {
       }
       case common::TESTMODE::SIMULATION_LOS: {
         // trajectory generator
-        Eigen::VectorXd WX(5);
-        Eigen::VectorXd WY(5);
+        // Eigen::VectorXd WX(5);
+        // Eigen::VectorXd WY(5);
 
-        WX << 0.0, 10.0, 20.5, 35.0, 70.5;
-        WY << 0.0, 0, 5.0, 6.5, 0.0;
+        // WX << 0.0, 10.0, 20.5, 35.0, 70.5;
+        // WY << 0.0, 0, 5.0, 6.5, 0.0;
+
+        Eigen::VectorXd WX(2);
+        Eigen::VectorXd WY(2);
+        WX << 0.0, 0.0;
+        WY << 0.0, 10.0;
 
         _trajectorytracking.set_grid_points(WX, WY);
 
