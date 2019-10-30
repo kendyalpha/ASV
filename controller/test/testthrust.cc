@@ -94,12 +94,19 @@ void testonestepthrustallocation() {
   controllerRTdata<m, n> _controllerRTdata{
       (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),       // tau
       Eigen::Matrix<double, n, 1>::Zero(),                         // BalphaU
-      (Eigen::Matrix<double, m, 1>() << 0, 0.5, 0, 1).finished(),  // u
-      // vectormi()::Zero(),                    // rotation
+      (Eigen::Matrix<double, m, 1>() << 0, 0.5, 0, 1).finished(),  // command_u
+      // vectormi()::Zero(),
+      (Eigen::Matrix<int, m, 1>() << 100, 500, 400, 300)
+          .finished(),  // command_rotation
+      (Eigen::Matrix<double, m, 1>() << M_PI / 2, -M_PI / 2, M_PI * 2 / 3, 0)
+          .finished(),                   // command_alpha
+      Eigen::Matrix<int, m, 1>::Zero(),  // command_alpha_deg
+      (Eigen::Matrix<double, m, 1>() << 0, 0.5, 0, 1).finished(),  // feedback_u
+      // vectormi()::Zero(),                    // feedback_rotation
       (Eigen::Matrix<int, m, 1>() << 100, 500, 400, 300).finished(),
       (Eigen::Matrix<double, m, 1>() << M_PI / 2, -M_PI / 2, M_PI * 2 / 3, 0)
-          .finished(),                  // alpha
-      Eigen::Matrix<int, m, 1>::Zero()  // alpha_deg
+          .finished(),                  // feedback_alpha
+      Eigen::Matrix<int, m, 1>::Zero()  // feedback_alpha_deg
 
   };
 
@@ -108,7 +115,7 @@ void testonestepthrustallocation() {
       v_ruddermaindata, v_twinfixeddata);
   _thrustallocation.initializapropeller(_controllerRTdata);
 
-  std::cout << _controllerRTdata.alpha << std::endl;
+  std::cout << _controllerRTdata.command_alpha << std::endl;
   std::cout << "upper_delta_alpha: " << _thrustallocation.getupper_delta_alpha()
             << std::endl;
   std::cout << "lower_delta_alpha: " << _thrustallocation.getlower_delta_alpha()
@@ -195,10 +202,14 @@ void test_multiplethrusterallocation() {
   controllerRTdata<m, n> _controllerRTdata{
       Eigen::Matrix<double, n, 1>::Zero(),  // tau
       Eigen::Matrix<double, n, 1>::Zero(),  // BalphaU
-      Eigen::Matrix<double, m, 1>::Zero(),  // u
-      Eigen::Matrix<int, m, 1>::Zero(),     // rotation
-      Eigen::Matrix<double, m, 1>::Zero(),  // alpha
-      Eigen::Matrix<int, m, 1>::Zero()      // alpha_deg
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_alpha
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_alpha_deg
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // feedback_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_alpha
+      Eigen::Matrix<int, m, 1>::Zero()      // feedback_alpha_deg
   };
 
   // initialize the thrust allocation
@@ -234,11 +245,11 @@ void test_multiplethrusterallocation() {
     // thruster allocation
     _thrustallocation.onestepthrustallocation(_controllerRTdata);
     // save variables
-    save_u.col(i) = _controllerRTdata.u;
-    save_alpha.col(i) = _controllerRTdata.alpha;
-    save_alpha_deg.col(i) = _controllerRTdata.alpha_deg;
+    save_u.col(i) = _controllerRTdata.command_u;
+    save_alpha.col(i) = _controllerRTdata.command_alpha;
+    save_alpha_deg.col(i) = _controllerRTdata.command_alpha_deg;
     save_Balphau.col(i) = _controllerRTdata.BalphaU;
-    save_rotation.col(i) = _controllerRTdata.rotation;
+    save_rotation.col(i) = _controllerRTdata.command_rotation;
   }
 
   save_tau = save_tau.transpose().eval();
@@ -312,10 +323,14 @@ void test_twinfixed() {
   controllerRTdata<m, n> _controllerRTdata{
       Eigen::Matrix<double, n, 1>::Zero(),  // tau
       Eigen::Matrix<double, n, 1>::Zero(),  // BalphaU
-      Eigen::Matrix<double, m, 1>::Zero(),  // u
-      Eigen::Matrix<int, m, 1>::Zero(),     // rotation
-      Eigen::Matrix<double, m, 1>::Zero(),  // alpha
-      Eigen::Matrix<int, m, 1>::Zero()      // alpha_deg
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_alpha
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_alpha_deg
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // feedback_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_alpha
+      Eigen::Matrix<int, m, 1>::Zero()      // feedback_alpha_deg
   };
 
   // initialize the thrust allocation
@@ -351,11 +366,11 @@ void test_twinfixed() {
     // thruster allocation
     _thrustallocation.onestepthrustallocation(_controllerRTdata);
     // save variables
-    save_u.col(i) = _controllerRTdata.u;
-    save_alpha.col(i) = _controllerRTdata.alpha;
-    save_alpha_deg.col(i) = _controllerRTdata.alpha_deg;
+    save_u.col(i) = _controllerRTdata.command_u;
+    save_alpha.col(i) = _controllerRTdata.command_alpha;
+    save_alpha_deg.col(i) = _controllerRTdata.command_alpha_deg;
     save_Balphau.col(i) = _controllerRTdata.BalphaU;
-    save_rotation.col(i) = _controllerRTdata.rotation;
+    save_rotation.col(i) = _controllerRTdata.command_rotation;
   }
 
   save_tau = save_tau.transpose().eval();
@@ -442,10 +457,14 @@ void testrudder() {
   controllerRTdata<m, n> _controllerRTdata{
       Eigen::Matrix<double, n, 1>::Zero(),  // tau
       Eigen::Matrix<double, n, 1>::Zero(),  // BalphaU
-      Eigen::Matrix<double, m, 1>::Zero(),  // u
-      Eigen::Matrix<int, m, 1>::Zero(),     // rotation
-      Eigen::Matrix<double, m, 1>::Zero(),  // alpha
-      Eigen::Matrix<int, m, 1>::Zero()      // alpha_deg
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_alpha
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_alpha_deg
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // feedback_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_alpha
+      Eigen::Matrix<int, m, 1>::Zero()      // feedback_alpha_deg
   };
 
   // initialize the thrust allocation
@@ -480,11 +499,11 @@ void testrudder() {
     // thruster allocation
     _thrustallocation.onestepthrustallocation(_controllerRTdata);
     // save variables
-    save_u.col(i) = _controllerRTdata.u;
-    save_alpha.col(i) = _controllerRTdata.alpha;
-    save_alpha_deg.col(i) = _controllerRTdata.alpha_deg;
+    save_u.col(i) = _controllerRTdata.command_u;
+    save_alpha.col(i) = _controllerRTdata.command_alpha;
+    save_alpha_deg.col(i) = _controllerRTdata.command_alpha_deg;
     save_Balphau.col(i) = _controllerRTdata.BalphaU;
-    save_rotation.col(i) = _controllerRTdata.rotation;
+    save_rotation.col(i) = _controllerRTdata.command_rotation;
   }
 
   save_tau = save_tau.transpose().eval();
@@ -615,10 +634,14 @@ void testbiling() {
   controllerRTdata<m, n> _controllerRTdata{
       Eigen::Matrix<double, n, 1>::Zero(),  // tau
       Eigen::Matrix<double, n, 1>::Zero(),  // BalphaU
-      Eigen::Matrix<double, m, 1>::Zero(),  // u
-      Eigen::Matrix<int, m, 1>::Zero(),     // rotation
-      Eigen::Matrix<double, m, 1>::Zero(),  // alpha
-      Eigen::Matrix<int, m, 1>::Zero()      // alpha_deg
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_alpha
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_alpha_deg
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // feedback_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_alpha
+      Eigen::Matrix<int, m, 1>::Zero()      // feedback_alpha_deg
   };
 
   // initialize the thrust allocation
@@ -653,11 +676,11 @@ void testbiling() {
     // thruster allocation
     _thrustallocation.onestepthrustallocation(_controllerRTdata);
     // save variables
-    save_u.col(i) = _controllerRTdata.u;
-    save_alpha.col(i) = _controllerRTdata.alpha;
-    save_alpha_deg.col(i) = _controllerRTdata.alpha_deg;
+    save_u.col(i) = _controllerRTdata.command_u;
+    save_alpha.col(i) = _controllerRTdata.command_alpha;
+    save_alpha_deg.col(i) = _controllerRTdata.command_alpha_deg;
     save_Balphau.col(i) = _controllerRTdata.BalphaU;
-    save_rotation.col(i) = _controllerRTdata.rotation;
+    save_rotation.col(i) = _controllerRTdata.command_rotation;
   }
 
   save_tau = save_tau.transpose().eval();

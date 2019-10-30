@@ -75,13 +75,20 @@ void test_multiplecontroller() {
   std::vector<twinfixedthrusterdata> v_twinfixeddata;
 
   controllerRTdata<m, n> _controllerRTdata{
-      (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),         // tau
-      Eigen::Matrix<double, n, 1>::Zero(),                           // BalphaU
-      (Eigen::Matrix<double, m, 1>() << 0.01, 0.2, 0.2).finished(),  // u
-      (Eigen::Matrix<int, m, 1>() << 0, 0, 0).finished(),            // rotation
+      (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),  // tau
+      Eigen::Matrix<double, n, 1>::Zero(),                    // BalphaU
+      (Eigen::Matrix<double, m, 1>() << 0.01, 0.2, 0.2)
+          .finished(),                                     // command_u
+      (Eigen::Matrix<int, m, 1>() << 0, 0, 0).finished(),  // command_rotation
       (Eigen::Matrix<double, m, 1>() << M_PI / 2, M_PI / 10, -M_PI / 4)
-          .finished(),                  // alpha
-      Eigen::Matrix<int, m, 1>::Zero()  // alpha_deg
+          .finished(),                   // command_alpha
+      Eigen::Matrix<int, m, 1>::Zero(),  // command_alpha_deg
+      (Eigen::Matrix<double, m, 1>() << 0.01, 0.2, 0.2)
+          .finished(),                                     // feedback_u
+      (Eigen::Matrix<int, m, 1>() << 0, 0, 0).finished(),  // feedback_rotation
+      (Eigen::Matrix<double, m, 1>() << M_PI / 2, M_PI / 10, -M_PI / 4)
+          .finished(),                  // feedback_alpha
+      Eigen::Matrix<int, m, 1>::Zero()  // feedback_alpha_deg
   };
 
   vessel _vessel{
@@ -149,7 +156,7 @@ void test_multiplecontroller() {
 
     std::cout << "step " << i << std::endl;
     std::cout << _controllerRTdata.tau << std::endl;
-    std::cout << _controllerRTdata.u << std::endl;
+    std::cout << _controllerRTdata.command_u << std::endl;
   }
 }
 
