@@ -98,10 +98,14 @@ class threadloop {
   control::controllerRTdata<num_thruster, dim_controlspace> controller_RTdata{
       Eigen::Matrix<double, dim_controlspace, 1>::Zero(),  // tau
       Eigen::Matrix<double, dim_controlspace, 1>::Zero(),  // BalphaU
-      Eigen::Matrix<double, num_thruster, 1>::Zero(),      // u
-      Eigen::Matrix<int, num_thruster, 1>::Zero(),         // rotation
-      Eigen::Matrix<double, num_thruster, 1>::Zero(),      // alpha
-      Eigen::Matrix<int, num_thruster, 1>::Zero()          // alpha_deg
+      Eigen::Matrix<double, num_thruster, 1>::Zero(),      // command_u
+      Eigen::Matrix<int, num_thruster, 1>::Zero(),         // command_rotation
+      Eigen::Matrix<double, num_thruster, 1>::Zero(),      // command_alpha
+      Eigen::Matrix<int, num_thruster, 1>::Zero(),         // command_alpha_deg
+      Eigen::Matrix<double, num_thruster, 1>::Zero(),      // feedback_u
+      Eigen::Matrix<int, num_thruster, 1>::Zero(),         // feedback_rotation
+      Eigen::Matrix<double, num_thruster, 1>::Zero(),      // feedback_alpha
+      Eigen::Matrix<int, num_thruster, 1>::Zero()          // feedback_alpha_deg
   };
 
   // realtime parameters of the estimators
@@ -419,10 +423,17 @@ class threadloop {
           tracker_RTdata.setpoint = Eigen::Vector3d::Zero();
           tracker_RTdata.v_setpoint = Eigen::Vector3d::Zero();
 
+          _controller.set_thruster_feedback(
+              controller_RTdata.command_rotation,
+              controller_RTdata.command_alpha_deg);
+
           break;
         }
         case common::TESTMODE::SIMULATION_LOS: {
           _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
+          _controller.set_thruster_feedback(
+              controller_RTdata.command_rotation,
+              controller_RTdata.command_alpha_deg);
           // trajectory tracking
           _trajectorytracking.Grid_LOS(planner_RTdata.speed,
                                        estimator_RTdata.State.head(2));
@@ -432,6 +443,9 @@ class threadloop {
         }
         case common::TESTMODE::SIMULATION_FRENET: {
           _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
+          _controller.set_thruster_feedback(
+              controller_RTdata.command_rotation,
+              controller_RTdata.command_alpha_deg);
           // trajectory tracking
           tracker_RTdata = _trajectorytracking
                                .CircularArcLOS(Planning_Marine_state.kappa,
@@ -441,10 +455,32 @@ class threadloop {
           break;
         }
         case common::TESTMODE::EXPERIMENT_DP: {
+          _controller.setcontrolmode(control::CONTROLMODE::DYNAMICPOSITION);
+
           break;
         }
         case common::TESTMODE::EXPERIMENT_LOS: {
           _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
+
+          Eigen::Vector2i feedback_rotation;
+          Eigen::Vector2i feedback_alpha;
+
+          if (stm32_data.feedback_pwm1 > 0) {
+            feedback_rotation(0) = stm32_data.feedback_pwm1;
+            feedback_alpha(0) = 0;
+          } else {
+            feedback_rotation(0) = -stm32_data.feedback_pwm1;
+            feedback_alpha(0) = 180;
+          }
+
+          if (stm32_data.feedback_pwm2 > 0) {
+            feedback_rotation(1) = stm32_data.feedback_pwm2;
+            feedback_alpha(1) = 0;
+          } else {
+            feedback_rotation(1) = -stm32_data.feedback_pwm2;
+            feedback_alpha(1) = 180;
+          }
+          _controller.set_thruster_feedback(feedback_rotation, feedback_alpha);
           // trajectory tracking
           _trajectorytracking.Grid_LOS(planner_RTdata.speed,
                                        estimator_RTdata.State.head(2));
@@ -651,8 +687,8 @@ class threadloop {
               static_cast<messages::STM32STATUS>(
                   guilink_RTdata.guistutus_gui2PC);
           _stm32_link
-              .setstm32data(_command_stm32, pt_utc, controller_RTdata.u,
-                            controller_RTdata.alpha)
+              .setstm32data(_command_stm32, pt_utc, controller_RTdata.command_u,
+                            controller_RTdata.command_alpha)
               .stm32onestep();
           stm32_data = _stm32_link.getstmdata();
         }
@@ -789,7 +825,7 @@ class threadloop {
           }
           for (int i = 0; i != num_thruster; ++i) {
             _sendmsg.double_msg[12 + dim_controlspace + i] =
-                controller_RTdata.rotation(i);  // rotation
+                controller_RTdata.command_rotation(i);  // rotation
           }
           _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
                                   send_size);

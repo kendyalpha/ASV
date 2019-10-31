@@ -150,7 +150,9 @@ class thrustallocation {
           Q(2, 2) = 100;
           break;
         case CONTROLMODE::DYNAMICPOSITION:
-          for (int i = 0; i != n; ++i) Q(i, i) = 1000;
+          Q(0, 0) = 1000;
+          Q(1, 1) = 1000;
+          Q(2, 2) = 1000;
           break;
         default:
           break;
@@ -168,9 +170,9 @@ class thrustallocation {
           Q(2, 2) = 2000;
           break;
         case CONTROLMODE::MANEUVERING:
-          Q(0, 0) = 1000;
+          Q(0, 0) = 50;  // 取值与螺旋桨最大推力呈负相关
           // Q(1, 1) = 0;  The penalty for sway error is zero
-          Q(2, 2) = 100;
+          Q(2, 2) = 50;
           break;
         default:
           break;

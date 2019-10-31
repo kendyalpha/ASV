@@ -96,6 +96,14 @@ class controller {
   }
 
   // assign value to pid controller (from GUI)
+  void set_thruster_feedback(
+      const Eigen::Matrix<int, m, 1> &_feedback_rotation,
+      const Eigen::Matrix<int, m, 1> &_feedback_alpha_deg) {
+    controlRTdata.feedback_rotation = _feedback_rotation;
+    controlRTdata.feedback_alpha_deg = _feedback_alpha_deg;
+  }
+
+  // assign value to pid controller (from GUI)
   void setPIDmatrix(
       const std::vector<pidcontrollerdata> &_v_pidcontrollerdata) {
     for (int i = 0; i != n; ++i) {

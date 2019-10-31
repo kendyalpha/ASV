@@ -103,7 +103,6 @@ class threadloop {
   // loop to give real time state estimation
   void estimatorloop() {
     common::timecounter timer_estimator;
-    long int outerloop_elapsed_time = 0;
     long int innerloop_elapsed_time = 0;
     long int sample_time =
         static_cast<long int>(1000 * _estimator.getsampletime());
@@ -121,8 +120,6 @@ class threadloop {
                         gps_roti[si]      // gps_roti
     );
     while (1) {
-      outerloop_elapsed_time = timer_estimator.timeelapsed();
-
       if (si < gps_x.size()) {
         Eigen::Vector3d thrust = calculateThrust(stm32_u1[si], stm32_u2[si]);
         // std::cout << thrust << std::endl;

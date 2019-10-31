@@ -217,6 +217,7 @@ void test_multiplethrusterallocation() {
       _thrustallocationdata, v_tunnelthrusterdata, v_azimuththrusterdata,
       v_ruddermaindata, v_twinfixeddata);
   _thrustallocation.initializapropeller(_controllerRTdata);
+  _thrustallocation.setQ(CONTROLMODE::DYNAMICPOSITION);
 
   // data saved for validation and viewer
   const int totalstep = 200;
@@ -232,16 +233,21 @@ void test_multiplethrusterallocation() {
   double angle = 0;
   for (int i = 0; i != 120; ++i) {
     angle = (i + 1) * M_PI / 60;
-    save_tau(2, i + 1) = 0.5 * sin(angle) + 0.1 * std::rand() / RAND_MAX;
+    save_tau(2, i + 1) = -1.0 * sin(angle) + 0.2 * std::rand() / RAND_MAX;
   }
-  save_tau.block(1, 0, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 0.2) +
+  save_tau.block(1, 0, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 1) +
                                  0.0 * Eigen::MatrixXd::Random(1, 100);
-  save_tau.block(1, 100, 1, 100) = Eigen::MatrixXd::Constant(1, 100, -0.2) +
+  save_tau.block(1, 100, 1, 100) = Eigen::MatrixXd::Constant(1, 100, -1) +
                                    0.0 * Eigen::MatrixXd::Random(1, 100);
-  save_tau.row(0) = 0.01 * Eigen::MatrixXd::Random(1, totalstep);
+  save_tau.row(0) = 2 * Eigen::MatrixXd::Constant(1, totalstep, 1) +
+                    0.01 * Eigen::MatrixXd::Random(1, totalstep);
   for (int i = 0; i != totalstep; ++i) {
     // update tau
     _controllerRTdata.tau = save_tau.col(i);
+    // update feedback
+    _controllerRTdata.feedback_rotation = _controllerRTdata.command_rotation;
+    _controllerRTdata.feedback_alpha_deg = _controllerRTdata.command_alpha_deg;
+
     // thruster allocation
     _thrustallocation.onestepthrustallocation(_controllerRTdata);
     // save variables
@@ -363,6 +369,10 @@ void test_twinfixed() {
   for (int i = 0; i != totalstep; ++i) {
     // update tau
     _controllerRTdata.tau = save_tau.col(i);
+    // update feedback
+    _controllerRTdata.feedback_rotation = _controllerRTdata.command_rotation;
+    _controllerRTdata.feedback_alpha_deg = _controllerRTdata.command_alpha_deg;
+
     // thruster allocation
     _thrustallocation.onestepthrustallocation(_controllerRTdata);
     // save variables
@@ -472,6 +482,7 @@ void testrudder() {
       _thrustallocationdata, v_tunnelthrusterdata, v_azimuththrusterdata,
       v_ruddermaindata, v_twinfixeddata);
   _thrustallocation.initializapropeller(_controllerRTdata);
+  _thrustallocation.setQ(CONTROLMODE::MANEUVERING);
 
   const int totalstep = 200;
 
@@ -496,8 +507,13 @@ void testrudder() {
   for (int i = 0; i != totalstep; ++i) {
     // update tau
     _controllerRTdata.tau = save_tau.col(i);
+
+    // update feedback
+    _controllerRTdata.feedback_rotation = _controllerRTdata.command_rotation;
+    _controllerRTdata.feedback_alpha_deg = _controllerRTdata.command_alpha_deg;
     // thruster allocation
     _thrustallocation.onestepthrustallocation(_controllerRTdata);
+
     // save variables
     save_u.col(i) = _controllerRTdata.command_u;
     save_alpha.col(i) = _controllerRTdata.command_alpha;
@@ -649,6 +665,7 @@ void testbiling() {
       _thrustallocationdata, v_tunnelthrusterdata, v_azimuththrusterdata,
       v_ruddermaindata, v_twinfixeddata);
   _thrustallocation.initializapropeller(_controllerRTdata);
+  _thrustallocation.setQ(CONTROLMODE::DYNAMICPOSITION);
 
   const int totalstep = 200;
 
@@ -673,6 +690,9 @@ void testbiling() {
   for (int i = 0; i != totalstep; ++i) {
     // update tau
     _controllerRTdata.tau = save_tau.col(i);
+    // update feedback
+    _controllerRTdata.feedback_rotation = _controllerRTdata.command_rotation;
+    _controllerRTdata.feedback_alpha_deg = _controllerRTdata.command_alpha_deg;
     // thruster allocation
     _thrustallocation.onestepthrustallocation(_controllerRTdata);
     // save variables
@@ -702,7 +722,7 @@ void testbiling() {
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
-  test_twinfixed();
+  testbiling();
 
   LOG(INFO) << "Shutting down.";
   return 0;

@@ -117,6 +117,7 @@ class threadloop {
       0,                               // voltage_b2
       0,                               // voltage_b2
       messages::STM32STATUS::STANDBY,  // stm32status
+      messages::STM32STATUS::STANDBY,  // stm32status
       common::LINKSTATUS::CONNECTED    // linkstatus;
   };
 

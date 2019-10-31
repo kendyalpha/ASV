@@ -468,12 +468,12 @@ class database {
     // the angle of each propeller
     for (int i = 0; i != m; ++i) {
       _str += ", ";
-      _str += std::to_string(_RTdata.alpha_deg(i));
+      _str += std::to_string(_RTdata.command_alpha_deg(i));
     }
     // the speed of each propeller
     for (int i = 0; i != m; ++i) {
       _str += ", ";
-      _str += std::to_string(_RTdata.rotation(i));
+      _str += std::to_string(_RTdata.command_rotation(i));
     }
     // BalphaU: estimated force
     for (int i = 0; i != n; ++i) {

@@ -52,13 +52,18 @@ int main() {
   control::controllerRTdata<m, n> _controllerRTdata{
       (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),    // tau
       Eigen::Matrix<double, n, 1>::Zero(),                      // BalphaU
-      (Eigen::Matrix<double, m, 1>() << 0, 0.5, 0).finished(),  // u
-      // vectormi()::Zero(),                    // rotation
+      (Eigen::Matrix<double, m, 1>() << 0, 0.5, 0).finished(),  // command_u
+      // vectormi()::Zero(),                    // command_rotation
       (Eigen::Matrix<int, m, 1>() << 100, 500, 400).finished(),
       (Eigen::Matrix<double, m, 1>() << M_PI / 2, -M_PI / 2, M_PI * 2 / 3)
-          .finished(),                  // alpha
-      Eigen::Matrix<int, m, 1>::Zero()  // alpha_deg
-
+          .finished(),                   // command_alpha
+      Eigen::Matrix<int, m, 1>::Zero(),  // command_alpha_deg
+      (Eigen::Matrix<double, m, 1>() << 0, 0.5, 0).finished(),  // feedback_u
+      // vectormi()::Zero(),                    // feedback_rotation
+      (Eigen::Matrix<int, m, 1>() << 100, 500, 400).finished(),
+      (Eigen::Matrix<double, m, 1>() << M_PI / 2, -M_PI / 2, M_PI * 2 / 3)
+          .finished(),                  // feedback_alpha
+      Eigen::Matrix<int, m, 1>::Zero()  // feedback_alpha_deg
   };
 
   control::trackerRTdata _trackRTdata{
