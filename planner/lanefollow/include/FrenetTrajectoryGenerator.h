@@ -164,6 +164,7 @@ class FrenetTrajectoryGenerator {
   Eigen::VectorXd getRefKappa() const noexcept { return RefKappa; }
   Eigen::VectorXd getbestX() const noexcept { return mincost_path.x; }
   Eigen::VectorXd getbestY() const noexcept { return mincost_path.y; }
+  Eigen::VectorXd getbestSpeed() const noexcept { return mincost_path.speed; }
 
   void setobstacle(const Eigen::VectorXd &_obstacle_x,
                    const Eigen::VectorXd &_obstacle_y) noexcept {
@@ -207,9 +208,9 @@ class FrenetTrajectoryGenerator {
   // cost weights
   const double KJ = 0.1;
   const double KT = 0.1;
-  const double KD = 1.0;
-  const double KLAT = 1.0;
-  const double KLON = 1.0;
+  const double KD = 1;
+  const double KLAT = 1;
+  const double KLON = 10;
 
   void frenet_optimal_planning(double _c_d, double _c_d_dot, double _c_d_ddot,
                                double _s, double _s_dot, double _s_ddot,
@@ -243,13 +244,14 @@ class FrenetTrajectoryGenerator {
     // The results of Frenet generation at "DT"
     // TODO: adjust the "index", which is empirical; For simulation without
     // considering controller, index = 1
-    double empirical_num = 0.7;
+    double empirical_num = 0.1;
     int index = static_cast<int>(empirical_num * frenetdata.HULL_LENGTH /
                                  (_target_s_dot * frenetdata.SAMPLE_TIME));
     int max_index = mincost_path.x.size() - 1;
     if (index <= 1) index = 1;
     if (index >= max_index) index = max_index;
 
+    index = 1;
     next_cartesianstate.x = mincost_path.x(index);
     next_cartesianstate.y = mincost_path.y(index);
     next_cartesianstate.theta = mincost_path.yaw(index);
@@ -262,6 +264,7 @@ class FrenetTrajectoryGenerator {
   std::vector<Frenet_path> check_paths() {
     std::vector<Frenet_path> t_roi_paths;
     std::vector<Frenet_path> t_greedy_roi_paths;
+    std::vector<Frenet_path> tw_greedy_roi_paths;
 
     std::size_t count_max_speed = 0;
     std::size_t count_max_accel = 0;
@@ -269,11 +272,25 @@ class FrenetTrajectoryGenerator {
     std::size_t count_collsion = 0;
 
     for (std::size_t i = 0; i != frenet_paths.size(); i++) {
-      if (!check_collision(frenet_paths[i])) {
+      int results = check_collision(frenet_paths[i]);
+
+      if (results == 2) {
         count_collsion++;
         continue;  // collision occurs
+      } else if (results == 1)
+        tw_greedy_roi_paths.push_back(
+            frenet_paths[i]);  // emplace_back is better
+      else {
+        tw_greedy_roi_paths.push_back(frenet_paths[i]);
+        t_greedy_roi_paths.push_back(frenet_paths[i]);
       }
-      t_greedy_roi_paths.push_back(frenet_paths[i]);  // emplace_back is better
+    }
+    std::cout << t_greedy_roi_paths.size() << " " << tw_greedy_roi_paths.size()
+              << std::endl;
+
+    if (t_greedy_roi_paths.size() == 0) {
+      t_greedy_roi_paths = tw_greedy_roi_paths;
+      CLOG(ERROR, "Frenet") << "Collision will occur";  // TODO: Scenario switch
     }
 
     for (std::size_t i = 0; i != t_greedy_roi_paths.size(); i++) {
@@ -295,9 +312,6 @@ class FrenetTrajectoryGenerator {
       t_roi_paths.push_back(t_greedy_roi_paths[i]);
     }
 
-    if (t_greedy_roi_paths.size() == 0)
-      CLOG(ERROR, "Frenet") << "Collision will occur";  // TODO: Scenario switch
-
     if (t_roi_paths.size() == 0) t_roi_paths = t_greedy_roi_paths;
     // std::cout << frenet_paths.size() << std::endl;
     // std::cout << "Max speed: " << count_max_speed << std::endl;
@@ -307,20 +321,24 @@ class FrenetTrajectoryGenerator {
     return t_roi_paths;
   }  // check_paths
 
-  bool check_collision(const Frenet_path &_Frenet_path) {
+  int check_collision(const Frenet_path &_Frenet_path) {
     std::size_t max_n_obstacle = static_cast<std::size_t>(obstacle_x.size());
     std::size_t num_path_point =
         static_cast<std::size_t>(_Frenet_path.x.size());
 
+    double min_dist = 10000;
+    double min_radius = std::pow(frenetdata.ROBOT_RADIUS, 2);
     for (std::size_t i = 0; i != max_n_obstacle; i++) {
       for (std::size_t j = 0; j != num_path_point; j++) {
         double _dis = std::pow(_Frenet_path.x(j) - obstacle_x(i), 2) +
                       std::pow(_Frenet_path.y(j) - obstacle_y(i), 2);
-        if (_dis <= std::pow(frenetdata.ROBOT_RADIUS, 2))  // collision occurs
-          return false;
+        if (_dis < min_dist) min_dist = _dis;
       }
     }
-    return true;
+    if (min_dist <= 0.5 * min_radius) return 2;
+    if (min_dist <= min_radius)  // collision occurs
+      return 1;
+    return 0;
   }  // check_collision
 
   // assume that target_spline2d is known, we can interpolate the spline2d to
@@ -357,8 +375,6 @@ class FrenetTrajectoryGenerator {
     n_tvk = static_cast<std::size_t>(
         2 * frenetdata.MAX_SPEED_DEVIATION / frenetdata.TRAGET_SPEED_STEP + 1);
 
-    n_di = static_cast<std::size_t>(
-        2 * frenetdata.MAX_ROAD_WIDTH / frenetdata.ROAD_WIDTH_STEP + 1);
     di = Eigen::VectorXd::LinSpaced(n_di, -frenetdata.MAX_ROAD_WIDTH,
                                     frenetdata.MAX_ROAD_WIDTH);
     Tj = Eigen::VectorXd::LinSpaced(n_Tj, frenetdata.MINT, frenetdata.MAXT);
@@ -437,6 +453,12 @@ class FrenetTrajectoryGenerator {
 
           double Jp = t_d_dddot.squaredNorm();  // square of jerk
           double Js = t_s_dddot.squaredNorm();  // square of jerk
+
+          // std::cout << "Jp: " << Jp << " Js: " << Js << " Tj: " << Tj(j)
+          //           << " JD_d: " << std::pow(t_d(n_zero_Tj - 1), 2) << "
+          //           JD_s: "
+          //           << std::pow((_target_s_dot - t_s_dot(n_zero_Tj - 1)), 2)
+          //           << std::endl;
 
           // square of diff from target speed
           double _cd =

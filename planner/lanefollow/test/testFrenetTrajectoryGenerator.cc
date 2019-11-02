@@ -27,12 +27,12 @@ int main() {
   // trajectory generator
   Eigen::VectorXd marine_X(5);
   Eigen::VectorXd marine_Y(5);
-  Eigen::VectorXd ob_x(5);
-  Eigen::VectorXd ob_y(5);
+  Eigen::VectorXd ob_x(6);
+  Eigen::VectorXd ob_y(6);
   marine_X << 0.0, 10.0, 20.5, 35.0, 70.5;
   marine_Y << 0.0, 6.0, -5.0, -6.5, 0.0;
-  ob_x << 20.0, 30.0, 30.0, 35.0, 50.0;
-  ob_y << 10.0, 6.0, 8.0, 8.0, 3.0;
+  ob_x << 20.0, 30.0, 30.0, 35.0, 34.0, 50.0;
+  ob_y << 10.0, 6.0, 8.0, 8.0, 8.0, 3.0;
 
   planning::Frenetdata _frenetdata{
       0.1,         // SAMPLE_TIME
@@ -42,15 +42,15 @@ int main() {
       1.0,         // MAX_CURVATURE
       0.05,        // TARGET_COURSE_ARC_STEP
       7.0,         // MAX_ROAD_WIDTH
-      1.0,         // ROAD_WIDTH_STEP
-      5.0,         // MAXT
-      4.0,         // MINT
-      0.2,         // DT
-      1.2,         // MAX_SPEED_DEVIATION
-      0.3,         // TRAGET_SPEED_STEP
+      1,           // ROAD_WIDTH_STEP
+      7.0,         // MAXT
+      6.0,         // MINT
+      0.5,         // DT
+      0.5,         // MAX_SPEED_DEVIATION
+      0.1,         // TRAGET_SPEED_STEP
       3,           // HULL_LENGTH
       1,           // HULL_WIDTH
-      2.0          // ROBOT_RADIUS
+      2.5          // ROBOT_RADIUS
   };
 
   // real time data
@@ -89,11 +89,10 @@ int main() {
   for (int i = 0; i != 500; ++i) {
     Plan_cartesianstate =
         _trajectorygenerator
-            .trajectoryonestep(estimate_marinestate.x, estimate_marinestate.y,
-                               estimate_marinestate.theta,
-                               estimate_marinestate.kappa,
-                               estimate_marinestate.speed,
-                               estimate_marinestate.dspeed, 10 / 3.6)
+            .trajectoryonestep(
+                estimate_marinestate.x, estimate_marinestate.y,
+                estimate_marinestate.theta, estimate_marinestate.kappa,
+                estimate_marinestate.speed, estimate_marinestate.dspeed, 2)
             .getnextcartesianstate();
 
     estimate_marinestate = Plan_cartesianstate;
@@ -108,24 +107,29 @@ int main() {
     auto cart_ry = _trajectorygenerator.getCartRefY();
     auto cart_bestX = _trajectorygenerator.getbestX();
     auto cart_bestY = _trajectorygenerator.getbestY();
+    auto cart_bestspeed = _trajectorygenerator.getbestSpeed();
 
     _sendmsg.double_msg[0] = estimate_marinestate.x;      // vessel x
     _sendmsg.double_msg[1] = estimate_marinestate.y;      // vessel y
     _sendmsg.double_msg[2] = estimate_marinestate.theta;  // vessel heading
+    _sendmsg.double_msg[3] = estimate_marinestate.speed;  // vessel speed
 
-    for (int j = 0; j != 5; j++) {
-      _sendmsg.double_msg[2 * j + 3] = ob_x(j);   // obstacle x
-      _sendmsg.double_msg[2 * j + 4] = -ob_y(j);  // obstacle y
+    _sendmsg.double_msg[4] = ob_x.size();  // the length of vector
+    for (int j = 0; j != ob_x.size(); j++) {
+      _sendmsg.double_msg[2 * j + 5] = ob_x(j);   // obstacle x
+      _sendmsg.double_msg[2 * j + 6] = -ob_y(j);  // obstacle y
     }
 
-    _sendmsg.double_msg[13] = cart_bestX.size();  // the length of vector
+    int index = 2 * ob_x.size() + 5;
+    _sendmsg.double_msg[index] = cart_bestX.size();  // the length of vector
     for (int j = 0; j != cart_bestX.size(); j++) {
-      _sendmsg.double_msg[2 * j + 14] = cart_bestX(j);   // best X
-      _sendmsg.double_msg[2 * j + 15] = -cart_bestY(j);  // best Y
+      _sendmsg.double_msg[3 * j + index + 1] = cart_bestX(j);      // best X
+      _sendmsg.double_msg[3 * j + index + 2] = -cart_bestY(j);     // best Y
+      _sendmsg.double_msg[3 * j + index + 3] = cart_bestspeed(j);  // best speed
     }
 
-    // _sendmsg.double_msg[13 + 2 * _bestX.size()] =
-    //     _rx.size();  // the length of vector
+    // _sendmsg.double_msg[13 + 2 * _bestX.size()] = _rx.size();
+    // // the length of vector
     // for (int j = 0; j != _rx.size(); j++) {
     //   _sendmsg.double_msg[2 * j + 14] = _bestX(j);  // best X
     //   _sendmsg.double_msg[2 * j + 15] = _bestY(j);  // best Y
@@ -142,7 +146,7 @@ int main() {
     }
 
     long int et = _timer.timeelapsed();
-    std::cout << et << std::endl;
+    // std::cout << et << std::endl;
   }
 
   // utilityio _utilityio;

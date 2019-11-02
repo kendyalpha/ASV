@@ -34,8 +34,8 @@
 
 namespace ASV {
 
-constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_LOS;
-// constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_FRENET;
+// constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_LOS;
+constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_FRENET;
 // constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_LOS;
 // constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_FRENET;
 
@@ -249,13 +249,17 @@ class threadloop {
       }
       case common::TESTMODE::SIMULATION_FRENET: {
         // trajectory generator
-        Eigen::VectorXd WX(5);
-        Eigen::VectorXd WY(5);
-
-        WX << 0.0, 10.0, 20.5, 35.0, 70.5;
-        WY << 0.0, 0, 5.0, 6.5, 0.0;
+        Eigen::VectorXd WX(6);
+        Eigen::VectorXd WY(6);
+        Eigen::VectorXd ob_x(6);
+        Eigen::VectorXd ob_y(6);
+        WX << 0.0, 10.0, 20.5, 35.0, 70.5, 130;
+        WY << 0.0, 0, 5.0, 6.5, 0.0, 0.0;
+        ob_x << 10, 35.0, 35.0, 34.5, 35.5, 70.5;
+        ob_y << 0.0, 6.0, 7.0, 6.5, 6.5, 0.0;
 
         _trajectorygenerator.regenerate_target_course(WX, WY);
+        _trajectorygenerator.setobstacle(ob_x, ob_y);
 
         sqlite::database db("./../../data/wp.db");
         std::string str =
@@ -462,25 +466,34 @@ class threadloop {
         case common::TESTMODE::EXPERIMENT_LOS: {
           _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
 
-          Eigen::Vector2i feedback_rotation;
-          Eigen::Vector2i feedback_alpha;
+          // Eigen::Vector2i feedback_rotation;
+          // Eigen::Vector2i feedback_alpha;
+          // int rotation1 = stm32_data.feedback_pwm1 - 9250;
+          // int rotation2 = stm32_data.feedback_pwm2 - 9250;
 
-          if (stm32_data.feedback_pwm1 > 0) {
-            feedback_rotation(0) = stm32_data.feedback_pwm1;
-            feedback_alpha(0) = 0;
-          } else {
-            feedback_rotation(0) = -stm32_data.feedback_pwm1;
-            feedback_alpha(0) = 180;
-          }
+          // if (rotation1 > 0) {
+          //   feedback_rotation(0) = rotation1;
+          //   feedback_alpha(0) = 0;
+          // } else {
+          //   feedback_rotation(0) = -rotation1;
+          //   feedback_alpha(0) = 180;
+          // }
 
-          if (stm32_data.feedback_pwm2 > 0) {
-            feedback_rotation(1) = stm32_data.feedback_pwm2;
-            feedback_alpha(1) = 0;
-          } else {
-            feedback_rotation(1) = -stm32_data.feedback_pwm2;
-            feedback_alpha(1) = 180;
-          }
-          _controller.set_thruster_feedback(feedback_rotation, feedback_alpha);
+          // if (rotation2 > 0) {
+          //   feedback_rotation(1) = rotation2;
+          //   feedback_alpha(1) = 0;
+          // } else {
+          //   feedback_rotation(1) = -rotation2;
+          //   feedback_alpha(1) = 180;
+          // }
+
+          // _controller.set_thruster_feedback(feedback_rotation,
+          // feedback_alpha);
+
+          _controller.set_thruster_feedback(
+              controller_RTdata.command_rotation,
+              controller_RTdata.command_alpha_deg);
+
           // trajectory tracking
           _trajectorytracking.Grid_LOS(planner_RTdata.speed,
                                        estimator_RTdata.State.head(2));

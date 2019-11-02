@@ -170,9 +170,9 @@ class thrustallocation {
           Q(2, 2) = 2000;
           break;
         case CONTROLMODE::MANEUVERING:
-          Q(0, 0) = 50;  // 取值与螺旋桨最大推力呈负相关
+          Q(0, 0) = 10;  // 取值与螺旋桨最大推力呈负相关
           // Q(1, 1) = 0;  The penalty for sway error is zero
-          Q(2, 2) = 50;
+          Q(2, 2) = 10;
           break;
         default:
           break;
@@ -706,7 +706,8 @@ class thrustallocation {
     delta_u = results.head(m);
     delta_alpha = results.segment(m, m);
     // update alpha and u
-    updateAlphaandU(_RTdata.command_u, _RTdata.command_alpha);
+    updateAlphaandU(_RTdata.feedback_u, _RTdata.feedback_alpha,
+                    _RTdata.command_u, _RTdata.command_alpha);
     // convert the double alpha(rad) to int alpha(deg)
     convert_alpha_radian2int(_RTdata.command_alpha, _RTdata.command_alpha_deg);
     // update rotation speed
@@ -716,9 +717,11 @@ class thrustallocation {
   }
 
   // update alpha and u using computed delta_alpha and delta_u (command)
-  void updateAlphaandU(vectormd &_u, vectormd &_alpha) {
-    _u += delta_u;
-    _alpha += delta_alpha;
+  void updateAlphaandU(const vectormd &_feedback_u,
+                       const vectormd &_feedback_alpha, vectormd &_command_u,
+                       vectormd &_command_alpha) {
+    _command_u = _feedback_u + delta_u;
+    _command_alpha = _feedback_alpha + delta_alpha;
   }
 
   // convert the radian to deg, and round to integer (command)

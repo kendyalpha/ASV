@@ -27,7 +27,6 @@
 #include "planner/common/include/plannerdata.h"
 
 namespace ASV::common {
-
 template <int m, int n = 3>
 class database {
  public:
