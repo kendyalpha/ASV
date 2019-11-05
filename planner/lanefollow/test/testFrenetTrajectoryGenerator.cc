@@ -8,7 +8,7 @@
 ***********************************************************************
 */
 #include <cstdlib>
-#include "../include/FrenetTrajectoryGenerator.h"
+#include "../include/LatticePlanner.h"
 #include "common/communication/include/tcpserver.h"
 #include "common/fileIO/include/utilityio.h"
 #include "common/timer/include/timecounter.h"
@@ -34,12 +34,9 @@ int main() {
   ob_x << 20.0, 30.0, 30.0, 35.0, 34.0, 50.0;
   ob_y << 10.0, 6.0, 8.0, 8.0, 8.0, 3.0;
 
-  planning::Frenetdata _frenetdata{
+  planning::LatticeData _latticedata{
       0.1,         // SAMPLE_TIME
       50.0 / 3.6,  // MAX_SPEED
-      4.0,         // MAX_ACCEL
-      -3.0,        // MIN_ACCEL
-      1.0,         // MAX_CURVATURE
       0.05,        // TARGET_COURSE_ARC_STEP
       7.0,         // MAX_ROAD_WIDTH
       1,           // ROAD_WIDTH_STEP
@@ -47,7 +44,14 @@ int main() {
       6.0,         // MINT
       0.5,         // DT
       0.5,         // MAX_SPEED_DEVIATION
-      0.1,         // TRAGET_SPEED_STEP
+      0.1          // TRAGET_SPEED_STEP
+  };
+
+  planning::CollisionData _collisiondata{
+      50.0 / 3.6,  // MAX_SPEED
+      4.0,         // MAX_ACCEL
+      -3.0,        // MIN_ACCEL
+      1.0,         // MAX_CURVATURE
       3,           // HULL_LENGTH
       1,           // HULL_WIDTH
       2.5          // ROBOT_RADIUS
@@ -72,7 +76,7 @@ int main() {
       0,           // dspeed
   };
 
-  planning::FrenetTrajectoryGenerator _trajectorygenerator(_frenetdata);
+  planning::LatticePlanner _trajectorygenerator(_latticedata, _collisiondata);
   _trajectorygenerator.regenerate_target_course(marine_X, marine_Y);
   _trajectorygenerator.setobstacle(ob_x, ob_y);
 
@@ -128,25 +132,19 @@ int main() {
       _sendmsg.double_msg[3 * j + index + 3] = cart_bestspeed(j);  // best speed
     }
 
-    // _sendmsg.double_msg[13 + 2 * _bestX.size()] = _rx.size();
-    // // the length of vector
-    // for (int j = 0; j != _rx.size(); j++) {
-    //   _sendmsg.double_msg[2 * j + 14] = _bestX(j);  // best X
-    //   _sendmsg.double_msg[2 * j + 15] = _bestY(j);  // best Y
+    // _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
+    //                         send_size);
+
+    // if ((std::pow(estimate_marinestate.x - cart_rx(cart_rx.size() - 1), 2) +
+    //      std::pow(estimate_marinestate.y + cart_ry(cart_ry.size() - 1), 2))
+    //      <=
+    //     1.0) {
+    //   std::cout << "goal\n";
+    //   break;
     // }
 
-    _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
-                            send_size);
-
-    if ((std::pow(estimate_marinestate.x - cart_rx(cart_rx.size() - 1), 2) +
-         std::pow(estimate_marinestate.y + cart_ry(cart_ry.size() - 1), 2)) <=
-        1.0) {
-      std::cout << "goal\n";
-      break;
-    }
-
     long int et = _timer.timeelapsed();
-    // std::cout << et << std::endl;
+    std::cout << et << std::endl;
   }
 
   // utilityio _utilityio;
