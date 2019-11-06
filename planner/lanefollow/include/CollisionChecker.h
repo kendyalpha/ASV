@@ -23,62 +23,41 @@ class CollisionChecker {
 
   std::vector<Frenet_path> check_paths(
       const std::vector<Frenet_path> &_frenet_lattice) {
-    std::vector<Frenet_path> t_roi_paths;
-    std::vector<Frenet_path> t_greedy_roi_paths;
-    std::vector<Frenet_path> tw_greedy_roi_paths;
+    std::vector<Frenet_path> collision_free_roi_paths;
+    std::vector<Frenet_path> sub_collision_free_roi_paths;
+    std::vector<Frenet_path> constraint_free_paths =
+        check_constraints(_frenet_lattice);
 
-    std::size_t count_collsion = 0;
-
-    for (std::size_t i = 0; i != _frenet_lattice.size(); i++) {
-      int results = check_collision(_frenet_lattice[i]);
+    for (std::size_t i = 0; i != constraint_free_paths.size(); i++) {
+      int results = check_collision(constraint_free_paths[i]);
 
       if (results == 2) {
-        count_collsion++;
         continue;  // collision occurs
       } else if (results == 1)
-        tw_greedy_roi_paths.push_back(
-            _frenet_lattice[i]);  // emplace_back is better
+        sub_collision_free_roi_paths.emplace_back(
+            constraint_free_paths[i]);  // emplace_back is better
       else {
-        tw_greedy_roi_paths.push_back(_frenet_lattice[i]);
-        t_greedy_roi_paths.push_back(_frenet_lattice[i]);
+        sub_collision_free_roi_paths.emplace_back(constraint_free_paths[i]);
+        collision_free_roi_paths.emplace_back(constraint_free_paths[i]);
       }
     }
-    // std::cout << t_greedy_roi_paths.size() << " " <<
-    // tw_greedy_roi_paths.size()
-    //           << std::endl;
+    std::cout << collision_free_roi_paths.size() << " "
+              << sub_collision_free_roi_paths.size() << std::endl;
 
-    if (t_greedy_roi_paths.size() == 0) {
-      t_greedy_roi_paths = tw_greedy_roi_paths;
-      CLOG(ERROR, "Frenet") << "Collision will occur";  // TODO: Scenario switch
+    if (collision_free_roi_paths.size() == 0) {
+      if (sub_collision_free_roi_paths.size() != 0) {
+        collision_free_roi_paths = sub_collision_free_roi_paths;
+        CLOG(ERROR, "Frenet Lattice")
+            << "Reduce the collision radius";  // TODO: Scenario switch
+      } else {
+        collision_free_roi_paths = constraint_free_paths;
+        CLOG(ERROR, "Frenet Lattice")
+            << "Collision may occur";  // TODO: Scenario switch
+      }
     }
 
-    t_roi_paths = check_constraints(t_greedy_roi_paths);
-
-    if (t_roi_paths.size() == 0) t_roi_paths = t_greedy_roi_paths;
-
-    return t_roi_paths;
+    return collision_free_roi_paths;
   }  // check_paths
-
-  std::vector<Frenet_path> check_constraints(
-      const std::vector<Frenet_path> &_frenet_lattice) {
-    std::vector<Frenet_path> t_roi_paths;
-
-    for (std::size_t i = 0; i != _frenet_lattice.size(); i++) {
-      if (_frenet_lattice[i].speed.maxCoeff() > collisiondata.MAX_SPEED) {
-        continue;  // max speed check
-      }
-      if ((_frenet_lattice[i].dspeed.maxCoeff() > collisiondata.MAX_ACCEL) ||
-          (_frenet_lattice[i].dspeed.minCoeff() < collisiondata.MIN_ACCEL)) {
-        continue;  // Max accel check
-      }
-      if ((_frenet_lattice[i].kappa.maxCoeff() > collisiondata.MAX_CURVATURE) ||
-          (_frenet_lattice[i].kappa.minCoeff() <
-           -collisiondata.MAX_CURVATURE)) {
-        continue;  // Max curvature check
-      }
-      t_roi_paths.emplace_back(_frenet_lattice[i]);
-    }
-  }  // check_constraints
 
   void setobstacle(const Eigen::VectorXd &_obstacle_x,
                    const Eigen::VectorXd &_obstacle_y) noexcept {
@@ -106,6 +85,28 @@ class CollisionChecker {
       return 1;
     return 0;
   }  // check_collision
+
+  std::vector<Frenet_path> check_constraints(
+      const std::vector<Frenet_path> &_frenet_lattice) {
+    std::vector<Frenet_path> constraint_free_paths;
+
+    for (std::size_t i = 0; i != _frenet_lattice.size(); i++) {
+      if (_frenet_lattice[i].speed.maxCoeff() > collisiondata.MAX_SPEED) {
+        continue;  // max speed check
+      }
+      if ((_frenet_lattice[i].dspeed.maxCoeff() > collisiondata.MAX_ACCEL) ||
+          (_frenet_lattice[i].dspeed.minCoeff() < collisiondata.MIN_ACCEL)) {
+        continue;  // Max accel check
+      }
+      if ((_frenet_lattice[i].kappa.maxCoeff() > collisiondata.MAX_CURVATURE) ||
+          (_frenet_lattice[i].kappa.minCoeff() <
+           -collisiondata.MAX_CURVATURE)) {
+        continue;  // Max curvature check
+      }
+      constraint_free_paths.emplace_back(_frenet_lattice[i]);
+    }
+    return constraint_free_paths;
+  }
 
   // obstacles
   Eigen::VectorXd obstacle_x;
