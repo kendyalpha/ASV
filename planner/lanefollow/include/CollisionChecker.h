@@ -47,11 +47,11 @@ class CollisionChecker {
     if (collision_free_roi_paths.size() == 0) {
       if (sub_collision_free_roi_paths.size() != 0) {
         collision_free_roi_paths = sub_collision_free_roi_paths;
-        CLOG(ERROR, "Frenet Lattice")
+        CLOG(ERROR, "Frenet_Lattice")
             << "Reduce the collision radius";  // TODO: Scenario switch
       } else {
         collision_free_roi_paths = constraint_free_paths;
-        CLOG(ERROR, "Frenet Lattice")
+        CLOG(ERROR, "Frenet_Lattice")
             << "Collision may occur";  // TODO: Scenario switch
       }
     }

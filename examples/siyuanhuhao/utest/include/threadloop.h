@@ -28,7 +28,7 @@
 #include "messages/GUILink/include/guilink.h"
 #include "messages/sensors/gpsimu/include/gps.h"
 #include "messages/stm32/include/stm32_link.h"
-#include "planner/lanefollow/include/FrenetTrajectoryGenerator.h"
+#include "planner/lanefollow/include/LatticePlanner.h"
 #include "planner/planner.h"
 #include "simulator/include/simulator.h"
 
@@ -49,7 +49,8 @@ class threadloop {
  public:
   threadloop()
       : _jsonparse("./../../properties/property.json"),
-        _trajectorygenerator(_jsonparse.getfrenetdata()),
+        _trajectorygenerator(_jsonparse.getlatticedata(),
+                             _jsonparse.getcollisiondata()),
         _trajectorytracking(_jsonparse.getcontrollerdata(), tracker_RTdata),
         indicator_waypoint(0),
         _tcpserver("9340") {}
@@ -197,7 +198,7 @@ class threadloop {
   // json
   common::jsonparse<num_thruster, dim_controlspace> _jsonparse;
 
-  planning::FrenetTrajectoryGenerator _trajectorygenerator;
+  planning::LatticePlanner _trajectorygenerator;
   control::trajectorytracking _trajectorytracking;
 
   int indicator_waypoint;

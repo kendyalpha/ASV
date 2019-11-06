@@ -512,7 +512,7 @@ class jsonparse {
   void parsefrenetdata() {
     std::vector<double> speed_limit =
         file["property"]["velocity_limit"]["surge"].get<std::vector<double>>();
-    //
+    // Frenet Lattice Generator
     latticedata_input.SAMPLE_TIME =
         file["planner"]["sample_time"].get<double>();
     latticedata_input.MAX_SPEED = vesseldata_input.surge_v(1);
@@ -533,9 +533,7 @@ class jsonparse {
         file["planner"]["FrenetLattice"]["max_speed_deviation"].get<double>();
     latticedata_input.TRAGET_SPEED_STEP =
         file["planner"]["FrenetLattice"]["target_speed_step"].get<double>();
-
-    //
-
+    // constatnt data for collision and constraint check
     collisiondata_input.MAX_SPEED = vesseldata_input.surge_v(1);
     collisiondata_input.MAX_ACCEL =
         vesseldata_input.x_thrust[1] / vesseldata_input.Mass(0, 0);

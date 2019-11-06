@@ -131,7 +131,7 @@
       "min_planning_horizon":4,
       "planning_horizon_step":0.2,
       "max_speed_deviation":1.2,
-      "target_speed_step":0.3,
+      "target_speed_step":0.3
     },
     "FrenetCollision":{
       "robot_radius":2

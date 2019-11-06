@@ -40,8 +40,8 @@ int main() {
       0.05,        // TARGET_COURSE_ARC_STEP
       7.0,         // MAX_ROAD_WIDTH
       1,           // ROAD_WIDTH_STEP
-      7.0,         // MAXT
-      6.0,         // MINT
+      6.0,         // MAXT
+      5.0,         // MINT
       0.5,         // DT
       0.5,         // MAX_SPEED_DEVIATION
       0.1          // TRAGET_SPEED_STEP
@@ -96,7 +96,7 @@ int main() {
             .trajectoryonestep(
                 estimate_marinestate.x, estimate_marinestate.y,
                 estimate_marinestate.theta, estimate_marinestate.kappa,
-                estimate_marinestate.speed, estimate_marinestate.dspeed, 2)
+                estimate_marinestate.speed, estimate_marinestate.dspeed, 3)
             .getnextcartesianstate();
 
     estimate_marinestate = Plan_cartesianstate;
@@ -132,19 +132,18 @@ int main() {
       _sendmsg.double_msg[3 * j + index + 3] = cart_bestspeed(j);  // best speed
     }
 
-    // _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
-    //                         send_size);
+    _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
+                            send_size);
 
-    // if ((std::pow(estimate_marinestate.x - cart_rx(cart_rx.size() - 1), 2) +
-    //      std::pow(estimate_marinestate.y + cart_ry(cart_ry.size() - 1), 2))
-    //      <=
-    //     1.0) {
-    //   std::cout << "goal\n";
-    //   break;
-    // }
+    if ((std::pow(estimate_marinestate.x - cart_rx(cart_rx.size() - 1), 2) +
+         std::pow(estimate_marinestate.y + cart_ry(cart_ry.size() - 1), 2)) <=
+        1.0) {
+      std::cout << "goal\n";
+      break;
+    }
 
     long int et = _timer.timeelapsed();
-    std::cout << et << std::endl;
+    // std::cout << et << std::endl;
   }
 
   // utilityio _utilityio;

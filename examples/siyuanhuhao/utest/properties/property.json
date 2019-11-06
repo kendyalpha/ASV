@@ -78,22 +78,23 @@
     }
   },
   "planner": {
-    "sample_time": 0.1
+    "sample_time": 0.1,
+    "FrenetLattice":{
+      "target_course_arc_step":0.05,
+      "max_road_width":7,
+      "road_width_step":1,
+      "max_planning_horizon":7,  
+      "min_planning_horizon":6,
+      "planning_horizon_step":0.5,
+      "max_speed_deviation":2,
+      "target_speed_step":0.5
+    },
+    "FrenetCollision":{
+      "robot_radius":2.2
+    }
   },
   "simulator": {
     "sample_time": 0.1
-  },
-  "FrenetTrajectory":{
-    "sample_time": 0.1,
-    "target_course_arc_step":0.05,
-    "max_road_width":7,
-    "road_width_step":1,
-    "max_planning_horizon":7,  
-    "min_planning_horizon":6,
-    "planning_horizon_step":0.5,
-    "max_speed_deviation":2,
-    "target_speed_step":0.5,
-    "robot_radius":2.2
   },
   "sensors":{
     "GPS":{
