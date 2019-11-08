@@ -132,18 +132,19 @@ int main() {
       _sendmsg.double_msg[3 * j + index + 3] = cart_bestspeed(j);  // best speed
     }
 
-    _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
-                            send_size);
+    // _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
+    //                         send_size);
 
-    if ((std::pow(estimate_marinestate.x - cart_rx(cart_rx.size() - 1), 2) +
-         std::pow(estimate_marinestate.y + cart_ry(cart_ry.size() - 1), 2)) <=
-        1.0) {
-      std::cout << "goal\n";
-      break;
-    }
+    // if ((std::pow(estimate_marinestate.x - cart_rx(cart_rx.size() - 1), 2) +
+    //      std::pow(estimate_marinestate.y + cart_ry(cart_ry.size() - 1), 2))
+    //      <=
+    //     1.0) {
+    //   std::cout << "goal\n";
+    //   break;
+    // }
 
     long int et = _timer.timeelapsed();
-    // std::cout << et << std::endl;
+    std::cout << et << std::endl;
   }
 
   // utilityio _utilityio;

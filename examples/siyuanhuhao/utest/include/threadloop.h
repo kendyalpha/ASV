@@ -53,7 +53,11 @@ class threadloop {
                              _jsonparse.getcollisiondata()),
         _trajectorytracking(_jsonparse.getcontrollerdata(), tracker_RTdata),
         indicator_waypoint(0),
-        _tcpserver("9340") {}
+        _tcpserver("9340") {
+    // // write prettified JSON to another file
+    // std::ofstream o("pretty.json");
+    // o << std::setw(4) << j << std::endl;
+  }
   ~threadloop() {}
 
   void mainloop() {
@@ -250,14 +254,23 @@ class threadloop {
       }
       case common::TESTMODE::SIMULATION_FRENET: {
         // trajectory generator
-        Eigen::VectorXd WX(6);
-        Eigen::VectorXd WY(6);
-        Eigen::VectorXd ob_x(6);
-        Eigen::VectorXd ob_y(6);
-        WX << 0.0, 10.0, 20.5, 35.0, 70.5, 130;
-        WY << 0.0, 0, 5.0, 6.5, 0.0, 0.0;
-        ob_x << 10, 35.0, 35.0, 34.5, 35.5, 70.5;
-        ob_y << 0.0, 6.0, 7.0, 6.5, 6.5, 0.0;
+        // Eigen::VectorXd WX(6);
+        // Eigen::VectorXd WY(6);
+        // Eigen::VectorXd ob_x(6);
+        // Eigen::VectorXd ob_y(6);
+        // WX << 0.0, 10.0, 20.5, 35.0, 70.5, 130;
+        // WY << 0.0, 0, 5.0, 6.5, 0.0, 0.0;
+        // ob_x << 10, 35.0, 35.0, 34.5, 35.5, 70.5;
+        // ob_y << 0.0, 6.0, 7.0, 6.5, 6.5, 0.0;
+
+        Eigen::VectorXd WX(3);
+        Eigen::VectorXd WY(3);
+        Eigen::VectorXd ob_x(1);
+        Eigen::VectorXd ob_y(1);
+        WX << 3433818.79, 3433803, 3433790.52;
+        WY << 350928.72, 350964, 350986.45;
+        ob_x << 3433803;
+        ob_y << 350964;
 
         _trajectorygenerator.regenerate_target_course(WX, WY);
         _trajectorygenerator.setobstacle(ob_x, ob_y);
@@ -292,11 +305,17 @@ class threadloop {
       }
       case common::TESTMODE::EXPERIMENT_LOS: {
         // trajectory generator
-        Eigen::VectorXd WX(5);
-        Eigen::VectorXd WY(5);
+        // Eigen::VectorXd WX(5);
+        // Eigen::VectorXd WY(5);
 
-        WX << 0.0, 10.0, 20.5, 35.0, 70.5;
-        WY << 0.0, 0, 5.0, 6.5, 0.0;
+        // WX << 3433823.54, 3433803, 3433769, 3433790.37, 3433823.54;
+        // WY << 350938.7, 350928.66, 350987, 351004, 350938.7;
+
+        Eigen::VectorXd WX(2);
+        Eigen::VectorXd WY(2);
+
+        WX << 3433818.79, 3433790.52;
+        WY << 350928.72, 350986.45;
 
         _trajectorytracking.set_grid_points(WX, WY);
 
@@ -306,6 +325,21 @@ class threadloop {
         break;
       }
       case common::TESTMODE::EXPERIMENT_FRENET: {
+        // trajectory generator
+        Eigen::VectorXd WX(3);
+        Eigen::VectorXd WY(3);
+        Eigen::VectorXd ob_x(1);
+        Eigen::VectorXd ob_y(1);
+        WX << 3433818.79, 3433803, 3433790.52;
+        WY << 350928.72, 350964, 350986.45;
+        ob_x << 3433803;
+        ob_y << 350964;
+
+        _trajectorygenerator.regenerate_target_course(WX, WY);
+        // _trajectorygenerator.setobstacle(ob_x, ob_y);
+
+        CLOG(INFO, "waypoints") << "Waypoints have been generated";
+        indicator_waypoint = 1;
         break;
       }
       default:
@@ -338,6 +372,7 @@ class threadloop {
           break;
         }
         case common::TESTMODE::SIMULATION_FRENET: {
+          std::cout << estimator_RTdata.Marine_state << std::endl;
           auto Plan_cartesianstate =
               _trajectorygenerator
                   .trajectoryonestep(estimator_RTdata.Marine_state(0),
@@ -503,6 +538,17 @@ class threadloop {
           break;
         }
         case common::TESTMODE::EXPERIMENT_FRENET: {
+          _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
+          _controller.set_thruster_feedback(
+              controller_RTdata.command_rotation,
+              controller_RTdata.command_alpha_deg);
+          // trajectory tracking
+          tracker_RTdata = _trajectorytracking
+                               .CircularArcLOS(Planning_Marine_state.kappa,
+                                               Planning_Marine_state.speed,
+                                               Planning_Marine_state.theta)
+                               .gettrackerRTdata();
+
           break;
         }
         default:
@@ -529,7 +575,7 @@ class threadloop {
 
   // loop to give real time state estimation
   void estimatorloop() {
-    estimator<indicator_kalman, 1, 1, 1, 1, 1, 1> _estimator(
+    estimator<indicator_kalman, 1, 1, 1, 3, 3, 1> _estimator(
         estimator_RTdata, _jsonparse.getvessel(),
         _jsonparse.getestimatordata());
 
@@ -551,7 +597,8 @@ class threadloop {
       case common::TESTMODE::SIMULATION_LOS:
       case common::TESTMODE::SIMULATION_FRENET: {
         // simulation
-        _estimator.setvalue(0, 0, 0, 0, 0, 0, 0, 1, 0);
+
+        _estimator.setvalue(3433818.79, 350928.72, 0, 0, 0, 0, 0, 1, 0);
         _simulator.setX(estimator_RTdata.State);
         CLOG(INFO, "GPS") << "initialation successful!";
         break;

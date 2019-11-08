@@ -90,7 +90,7 @@ class thrustallocation {
     updateMosekparameters();
     onestepmosek();
     update_nextstep_command(_RTdata);
-  }
+  }  // onestepthrustallocation
 
   void initializapropeller(controllerRTdata<m, n> &_RTdata) {
     // alpha and thrust of each propeller
@@ -129,7 +129,8 @@ class thrustallocation {
     // update BalphaU
     _RTdata.BalphaU =
         calculateBalphau(_RTdata.command_alpha, _RTdata.command_u);
-  }
+  }  // initializapropeller
+
   // modify penality for each error (heading-only controller)
   void setQ(CONTROLMODE _cm) {
     if constexpr (index_actuation == ACTUATION::FULLYACTUATED) {
@@ -172,7 +173,7 @@ class thrustallocation {
         case CONTROLMODE::MANEUVERING:
           Q(0, 0) = 10;  // 取值与螺旋桨最大推力呈负相关
           // Q(1, 1) = 0;  The penalty for sway error is zero
-          Q(2, 2) = 10;
+          Q(2, 2) = 20;
           break;
         default:
           break;
@@ -182,7 +183,7 @@ class thrustallocation {
     for (int j = 0; j != n; ++j) {
       qval[j + 2 * m] = Q(j, j);
     }
-  }
+  }  // setQ
 
   //
   vectormd getlx() const { return lx; }

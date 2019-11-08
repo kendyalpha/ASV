@@ -14,6 +14,7 @@
 #ifndef _FRENETTRAJECTORYGENERATOR_H_
 #define _FRENETTRAJECTORYGENERATOR_H_
 
+#include <limits>
 #include "LatticePlannerdata.h"
 #include "common/logging/include/easylogging++.h"
 #include "planner/common/include/planner_util.h"
@@ -317,46 +318,47 @@ class FrenetTrajectoryGenerator {
   }  // calc_frenet_lattice
 
   // find the closest point on the reference spline, given a position (x, y)
-  std::size_t ClosestRefPoint(double _cart_vx, double _cart_vy,
-                              const Eigen::VectorXd &_cart_rx,
-                              const Eigen::VectorXd &_cart_ry) {
-    static std::size_t n_closestrefpoint = 0;
-    std::size_t previous_n_closestrefpoint = n_closestrefpoint;
-    double mindistance = std::pow(_cart_vx - _cart_rx(n_closestrefpoint), 2) +
-                         std::pow(_cart_vy - _cart_ry(n_closestrefpoint), 2);
+  int ClosestRefPoint(double _cart_vx, double _cart_vy,
+                      const Eigen::VectorXd &_cart_rx,
+                      const Eigen::VectorXd &_cart_ry) {
+    // static std::size_t n_closestrefpoint = 0;
+    // std::size_t previous_n_closestrefpoint = n_closestrefpoint;
+    // double mindistance = std::pow(_cart_vx - _cart_rx(n_closestrefpoint), 2)
+    // +
+    //                      std::pow(_cart_vy - _cart_ry(n_closestrefpoint), 2);
 
-    // TODO: decide iteration number
-    std::size_t max_iteration = static_cast<std::size_t>(
-        latticedata.SAMPLE_TIME * latticedata.MAX_SPEED /
-        latticedata.TARGET_COURSE_ARC_STEP);
-    std::size_t max_index = static_cast<std::size_t>(_cart_rx.size());
+    // // TODO: decide iteration number
+    // std::size_t max_iteration = static_cast<std::size_t>(
+    //     latticedata.SAMPLE_TIME * latticedata.MAX_SPEED /
+    //     latticedata.TARGET_COURSE_ARC_STEP);
+    // std::size_t max_index = static_cast<std::size_t>(_cart_rx.size());
 
-    for (std::size_t i = 0; i != max_iteration; ++i) {
-      std::size_t n_refpoint = previous_n_closestrefpoint + i;
-      if (n_refpoint < max_index) {
-        double t_distance = std::pow(_cart_vx - _cart_rx(n_refpoint), 2) +
-                            std::pow(_cart_vy - _cart_ry(n_refpoint), 2);
+    // for (std::size_t i = 0; i != max_iteration; ++i) {
+    //   std::size_t n_refpoint = previous_n_closestrefpoint + i;
+    //   if (n_refpoint < max_index) {
+    //     double t_distance = std::pow(_cart_vx - _cart_rx(n_refpoint), 2) +
+    //                         std::pow(_cart_vy - _cart_ry(n_refpoint), 2);
 
-        if (t_distance < mindistance) {
-          mindistance = t_distance;
-          n_closestrefpoint = n_refpoint;
-        }
-      } else
-        continue;
-    }
-
-    // int n_closestrefpoint = 0;
-    // double mindistance = 1e6;
-
-    // for (int i = 0; i != _cart_rx.size(); ++i) {
-    //   double t_distance = std::pow(_cart_vx - _cart_rx(i), 2) +
-    //                       std::pow(_cart_vy - _cart_ry(i), 2);
-    //   if (t_distance < mindistance) {
-    //     mindistance = t_distance;
-    //     n_closestrefpoint = i;
+    //     if (t_distance < mindistance) {
+    //       mindistance = t_distance;
+    //       n_closestrefpoint = n_refpoint;
+    //     }
     //   } else
     //     continue;
     // }
+
+    int n_closestrefpoint = 0;
+    double mindistance = std::numeric_limits<double>::max();
+
+    for (int i = 0; i != _cart_rx.size(); ++i) {
+      double t_distance = std::pow(_cart_vx - _cart_rx(i), 2) +
+                          std::pow(_cart_vy - _cart_ry(i), 2);
+      if (t_distance < mindistance) {
+        mindistance = t_distance;
+        n_closestrefpoint = i;
+      } else
+        continue;
+    }
 
     return n_closestrefpoint;
   }  // ClosestRefPoint
@@ -365,7 +367,7 @@ class FrenetTrajectoryGenerator {
   void Cart2Frenet(const CartesianState &_cartstate_v,
                    FrenetState &_frenetstate) {
     // compute the closest point on the center line
-    std::size_t n_closestrefpoint =
+    int n_closestrefpoint =
         ClosestRefPoint(_cartstate_v.x, _cartstate_v.y, cart_RefX, cart_RefY);
     // arclength on center line
     _frenetstate.s = Frenet_s(n_closestrefpoint);
