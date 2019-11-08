@@ -13,6 +13,7 @@
 
 #include "LatticePlannerdata.h"
 #include "common/logging/include/easylogging++.h"
+#include "planner/common/include/planner_util.h"
 
 namespace ASV::planning {
 class CollisionChecker {
@@ -59,10 +60,11 @@ class CollisionChecker {
     return collision_free_roi_paths;
   }  // check_paths
 
-  void setobstacle(const Eigen::VectorXd &_obstacle_x,
-                   const Eigen::VectorXd &_obstacle_y) noexcept {
-    obstacle_x = _obstacle_x;
-    obstacle_y = _obstacle_y;
+  void setobstacle(const Eigen::VectorXd &_marine_obstacle_x,
+                   const Eigen::VectorXd &_marine_obstacle_y) noexcept {
+    auto cart_obstacle_y = common::math::Marine2Cart(_marine_obstacle_y);
+    obstacle_x = _marine_obstacle_x;
+    obstacle_y = cart_obstacle_y;
   }  // setobstacle
 
  protected:
@@ -109,8 +111,8 @@ class CollisionChecker {
   }
 
   // obstacles
-  Eigen::VectorXd obstacle_x;
-  Eigen::VectorXd obstacle_y;
+  Eigen::VectorXd obstacle_x;  // in the Cartesian coordinate
+  Eigen::VectorXd obstacle_y;  // in the Cartesian coordinate
 
  private:
   CollisionData collisiondata;

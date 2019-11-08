@@ -104,20 +104,20 @@ class FrenetTrajectoryGenerator {
   std::size_t n_di;
   std::size_t n_Tj;
   std::size_t n_tvk;
-  Eigen::VectorXd di;
+  Eigen::VectorXd di;  // in the Frenet coordinate
   Eigen::VectorXd Tj;
   Eigen::VectorXd tvk;
   // center line
   Spline2D target_Spline2D;
-  Eigen::VectorXd Frenet_s;        // arclength (m)
-  Eigen::VectorXd cart_RefX;       // reference x (m)
-  Eigen::VectorXd cart_RefY;       // reference y (m)
-  Eigen::VectorXd RefHeading;      // reference yaw (rad)
-  Eigen::VectorXd RefKappa;        // reference curvature
-  Eigen::VectorXd RefKappa_prime;  // reference dk/ds
+  Eigen::VectorXd Frenet_s;    // arclength (m)
+  Eigen::VectorXd cart_RefX;   // reference x (m) in the Cartesian coordinate
+  Eigen::VectorXd cart_RefY;   // reference y (m) in the Cartesian coordinate
+  Eigen::VectorXd RefHeading;  // reference yaw (rad) in Cartesian coordinate
+  Eigen::VectorXd RefKappa;    // reference curvature in Cartesian coordinate
+  Eigen::VectorXd RefKappa_prime;  // reference dk/ds in Cartesian coordinate
 
   // real time data
-  FrenetState current_frenetstate;
+  FrenetState current_frenetstate;  // in the Frenet coordinate
   // cost weights
   const double KJ = 0.1;
   const double KT = 0.1;

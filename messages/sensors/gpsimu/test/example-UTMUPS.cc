@@ -40,6 +40,19 @@ int main() {
       int _zone = UTMUPS::StandardZone(lat, lon);
       std::cout << "zone is: " << _zone << std::endl;
     }
+
+    {
+      double x = 350926.048;
+      double y = 3433826.766;
+      // Shanghai Inverse
+      string zonestr = "51n";
+      int zone;
+      bool northp;
+      UTMUPS::DecodeZone(zonestr, zone, northp);
+      double lat, lon;
+      UTMUPS::Reverse(zone, northp, x, y, lat, lon);
+      cout << fixed << setprecision(7) << lat << " " << lon << "\n";
+    }
   } catch (const exception& e) {
     cerr << "Caught exception: " << e.what() << "\n";
     return 1;

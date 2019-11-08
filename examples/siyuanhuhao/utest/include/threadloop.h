@@ -53,6 +53,7 @@ class threadloop {
                              _jsonparse.getcollisiondata()),
         _trajectorytracking(_jsonparse.getcontrollerdata(), tracker_RTdata),
         indicator_waypoint(0),
+        indicator_estimator(0),
         _tcpserver("9340") {
     // // write prettified JSON to another file
     // std::ofstream o("pretty.json");
@@ -206,10 +207,18 @@ class threadloop {
   control::trajectorytracking _trajectorytracking;
 
   int indicator_waypoint;
+  int indicator_estimator;
 
   tcpserver _tcpserver;
 
   void generate_waypoints() {
+    while (1) {
+      if (indicator_estimator == 1)
+        break;
+      else
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP: {
         break;
@@ -263,14 +272,21 @@ class threadloop {
         // ob_x << 10, 35.0, 35.0, 34.5, 35.5, 70.5;
         // ob_y << 0.0, 6.0, 7.0, 6.5, 6.5, 0.0;
 
+        double initial_x = estimator_RTdata.State(0);
+        double initial_y = estimator_RTdata.State(1);
+        double final_x = 3433790.52;
+        double final_y = 350986.45;
+        double ox = 0.5 * (initial_x + final_x);
+        double oy = 0.5 * (initial_y + final_y);
+
         Eigen::VectorXd WX(3);
         Eigen::VectorXd WY(3);
         Eigen::VectorXd ob_x(1);
         Eigen::VectorXd ob_y(1);
-        WX << 3433818.79, 3433803, 3433790.52;
-        WY << 350928.72, 350964, 350986.45;
-        ob_x << 3433803;
-        ob_y << 350964;
+        WX << initial_x, ox, final_x;
+        WY << initial_y, oy, final_y;
+        ob_x << ox;
+        ob_y << oy;
 
         _trajectorygenerator.regenerate_target_course(WX, WY);
         _trajectorygenerator.setobstacle(ob_x, ob_y);
@@ -305,20 +321,12 @@ class threadloop {
       }
       case common::TESTMODE::EXPERIMENT_LOS: {
         // trajectory generator
-        // Eigen::VectorXd WX(5);
-        // Eigen::VectorXd WY(5);
-
-        // WX << 3433823.54, 3433803, 3433769, 3433790.37, 3433823.54;
-        // WY << 350938.7, 350928.66, 350987, 351004, 350938.7;
-
-        Eigen::VectorXd WX(2);
-        Eigen::VectorXd WY(2);
-
-        WX << 3433818.79, 3433790.52;
-        WY << 350928.72, 350986.45;
+        Eigen::VectorXd WX(5);
+        Eigen::VectorXd WY(5);
+        WX << 3433823.54, 3433803, 3433769, 3433790.37, 3433823.54;
+        WY << 350938.7, 350928.66, 350987, 351004, 350938.7;
 
         _trajectorytracking.set_grid_points(WX, WY);
-
         planner_RTdata.speed = 2;
         indicator_waypoint = 1;
 
@@ -326,15 +334,22 @@ class threadloop {
       }
       case common::TESTMODE::EXPERIMENT_FRENET: {
         // trajectory generator
+
+        double initial_x = estimator_RTdata.State(0);
+        double initial_y = estimator_RTdata.State(1);
+        double final_x = 3433790.52;
+        double final_y = 350986.45;
+        double ox = 0.5 * (initial_x + final_x);
+        double oy = 0.5 * (initial_y + final_y);
+
         Eigen::VectorXd WX(3);
         Eigen::VectorXd WY(3);
         Eigen::VectorXd ob_x(1);
         Eigen::VectorXd ob_y(1);
-        WX << 3433818.79, 3433803, 3433790.52;
-        WY << 350928.72, 350964, 350986.45;
-        ob_x << 3433803;
-        ob_y << 350964;
-
+        WX << initial_x, ox, final_x;
+        WY << initial_y, oy, final_y;
+        ob_x << ox;
+        ob_y << oy;
         _trajectorygenerator.regenerate_target_course(WX, WY);
         // _trajectorygenerator.setobstacle(ob_x, ob_y);
 
@@ -359,8 +374,12 @@ class threadloop {
         static_cast<long int>(1000 * _planner.getsampletime());
 
     while (1) {
-      if (indicator_waypoint == 1) break;
+      if (indicator_waypoint == 1)
+        break;
+      else
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
+
     while (1) {
       outerloop_elapsed_time = timer_planner.timeelapsed();
 
@@ -585,10 +604,6 @@ class threadloop {
     long int sample_time =
         static_cast<long int>(1000 * _estimator.getsampletime());
 
-    while (1) {
-      if (indicator_waypoint == 1) break;
-    }
-
     simulator _simulator(_jsonparse.getsimulatordata(), _jsonparse.getvessel());
 
     // initialization of estimator
@@ -597,10 +612,12 @@ class threadloop {
       case common::TESTMODE::SIMULATION_LOS:
       case common::TESTMODE::SIMULATION_FRENET: {
         // simulation
-
-        _estimator.setvalue(3433818.79, 350928.72, 0, 0, 0, 0, 0, 1, 0);
+        estimator_RTdata =
+            _estimator.setvalue(350928.72, 3433818.79, 0, 0, 0, 90, 0, 0, 0)
+                .getEstimatorRTData();
         _simulator.setX(estimator_RTdata.State);
         CLOG(INFO, "GPS") << "initialation successful!";
+        indicator_estimator = 1;
         break;
       }
       case common::TESTMODE::EXPERIMENT_DP:
@@ -609,18 +626,20 @@ class threadloop {
         // experiment
         while (1) {
           if (gps_data.status >= 1) {
-            _estimator.setvalue(gps_data.UTM_x,     // gps_x
-                                gps_data.UTM_y,     // gps_y
-                                gps_data.altitude,  // gps_z
-                                gps_data.roll,      // gps_roll
-                                gps_data.pitch,     // gps_pitch
-                                gps_data.heading,   // gps_heading
-                                gps_data.Ve,        // gps_Ve
-                                gps_data.Vn,        // gps_Vn
-                                gps_data.roti       // gps_roti
-            );
-
+            estimator_RTdata = _estimator
+                                   .setvalue(gps_data.UTM_x,     // gps_x
+                                             gps_data.UTM_y,     // gps_y
+                                             gps_data.altitude,  // gps_z
+                                             gps_data.roll,      // gps_roll
+                                             gps_data.pitch,     // gps_pitch
+                                             gps_data.heading,   // gps_heading
+                                             gps_data.Ve,        // gps_Ve
+                                             gps_data.Vn,        // gps_Vn
+                                             gps_data.roti       // gps_roti
+                                             )
+                                   .getEstimatorRTData();
             CLOG(INFO, "GPS") << "initialation successful!";
+            indicator_estimator = 1;
             break;
           }
         }

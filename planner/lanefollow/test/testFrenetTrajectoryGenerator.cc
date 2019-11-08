@@ -25,14 +25,14 @@ int main() {
   LOG(INFO) << "The program has started!";
 
   // trajectory generator
-  Eigen::VectorXd marine_X(5);
-  Eigen::VectorXd marine_Y(5);
-  Eigen::VectorXd ob_x(6);
-  Eigen::VectorXd ob_y(6);
-  marine_X << 0.0, 10.0, 20.5, 35.0, 70.5;
-  marine_Y << 0.0, 6.0, -5.0, -6.5, 0.0;
-  ob_x << 20.0, 30.0, 30.0, 35.0, 34.0, 50.0;
-  ob_y << 10.0, 6.0, 8.0, 8.0, 8.0, 3.0;
+  Eigen::VectorXd marine_WX(5);
+  Eigen::VectorXd marine_WY(5);
+  Eigen::VectorXd marine_ob_x(6);
+  Eigen::VectorXd marine_ob_y(6);
+  marine_WX << 0.0, 10.0, 20.5, 35.0, 70.5;
+  marine_WY << 0.0, 6.0, -5.0, -6.5, 0.0;
+  marine_ob_x << 20.0, 30.0, 30.0, 35.0, 34.0, 50.0;
+  marine_ob_y << -10.0, -6.0, -8.0, -8.0, -8.0, -3.0;
 
   planning::LatticeData _latticedata{
       0.1,         // SAMPLE_TIME
@@ -77,8 +77,8 @@ int main() {
   };
 
   planning::LatticePlanner _trajectorygenerator(_latticedata, _collisiondata);
-  _trajectorygenerator.regenerate_target_course(marine_X, marine_Y);
-  _trajectorygenerator.setobstacle(ob_x, ob_y);
+  _trajectorygenerator.regenerate_target_course(marine_WX, marine_WY);
+  _trajectorygenerator.setobstacle(marine_ob_x, marine_ob_y);
 
   // socket
   tcpserver _tcpserver("9340");
@@ -118,13 +118,13 @@ int main() {
     _sendmsg.double_msg[2] = estimate_marinestate.theta;  // vessel heading
     _sendmsg.double_msg[3] = estimate_marinestate.speed;  // vessel speed
 
-    _sendmsg.double_msg[4] = ob_x.size();  // the length of vector
-    for (int j = 0; j != ob_x.size(); j++) {
-      _sendmsg.double_msg[2 * j + 5] = ob_x(j);   // obstacle x
-      _sendmsg.double_msg[2 * j + 6] = -ob_y(j);  // obstacle y
+    _sendmsg.double_msg[4] = marine_ob_x.size();  // the length of vector
+    for (int j = 0; j != marine_ob_x.size(); j++) {
+      _sendmsg.double_msg[2 * j + 5] = marine_ob_x(j);  // obstacle x
+      _sendmsg.double_msg[2 * j + 6] = marine_ob_y(j);  // obstacle y
     }
 
-    int index = 2 * ob_x.size() + 5;
+    int index = 2 * marine_ob_x.size() + 5;
     _sendmsg.double_msg[index] = cart_bestX.size();  // the length of vector
     for (int j = 0; j != cart_bestX.size(); j++) {
       _sendmsg.double_msg[3 * j + index + 1] = cart_bestX(j);      // best X
@@ -132,19 +132,18 @@ int main() {
       _sendmsg.double_msg[3 * j + index + 3] = cart_bestspeed(j);  // best speed
     }
 
-    // _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
-    //                         send_size);
+    _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
+                            send_size);
 
-    // if ((std::pow(estimate_marinestate.x - cart_rx(cart_rx.size() - 1), 2) +
-    //      std::pow(estimate_marinestate.y + cart_ry(cart_ry.size() - 1), 2))
-    //      <=
-    //     1.0) {
-    //   std::cout << "goal\n";
-    //   break;
-    // }
+    if ((std::pow(estimate_marinestate.x - cart_rx(cart_rx.size() - 1), 2) +
+         std::pow(estimate_marinestate.y + cart_ry(cart_ry.size() - 1), 2)) <=
+        1.0) {
+      std::cout << "goal\n";
+      break;
+    }
 
     long int et = _timer.timeelapsed();
-    std::cout << et << std::endl;
+    // std::cout << et << std::endl;
   }
 
   // utilityio _utilityio;

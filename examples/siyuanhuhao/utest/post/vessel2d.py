@@ -80,7 +80,6 @@ fig.suptitle('Simulation of trajectory tracking algorithm')
 ax1.axis('equal')
 ax1.set(xlabel='E (m)', ylabel='N (m)')
 
-ax1.set(xlabel='Time (s)', ylabel='N (m)')
 
 HOST = '127.0.0.1'
 PORT = 9340                # 设置端口号
@@ -175,6 +174,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                  "oc", markersize=3, alpha=0.4)
         ax1.plot(doubles_sequence[11], doubles_sequence[10],
                  "oc", markersize=3, alpha=0.4)
+        area = 15.0  # animation area length [m]
+        ax1.set_xlim([doubles_sequence[1] - area, doubles_sequence[1] + area])
+        ax1.set_ylim([doubles_sequence[0] - area, doubles_sequence[0] + area])
 
         ax2.plot(controller_n1, color='tab:gray',
                  lineStyle='-', lw=2, label='n1')
@@ -188,9 +190,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         ax3.legend()
         ax3.grid(True)
 
-        area = 15.0  # animation area length [m]
-        # plt.xlim(doubles_sequence[0] - area, doubles_sequence[0] + area)
-        # plt.ylim(doubles_sequence[1] - area, doubles_sequence[1] + area)
         # plt.axis([-52, 52, -50, 50])
         plt.pause(0.1)
         ax1.clear()
