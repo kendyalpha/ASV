@@ -594,9 +594,19 @@ class threadloop {
 
   // loop to give real time state estimation
   void estimatorloop() {
-    estimator<indicator_kalman, 1, 1, 1, 3, 3, 1> _estimator(
-        estimator_RTdata, _jsonparse.getvessel(),
-        _jsonparse.getestimatordata());
+    estimator<indicator_kalman,  // indicator_kalman
+              1,                 // nlp_x
+              1,                 // nlp_y
+              1,                 // nlp_z
+              1,                 // nlp_heading
+              1,                 // nlp_roll
+              1,                 // nlp_pitch
+              3,                 // nlp_u
+              3,                 // nlp_v
+              1                  // nlp_roti
+              >
+        _estimator(estimator_RTdata, _jsonparse.getvessel(),
+                   _jsonparse.getestimatordata());
 
     common::timecounter timer_estimator;
     long int outerloop_elapsed_time = 0;
