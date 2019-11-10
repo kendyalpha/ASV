@@ -24,7 +24,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # thread库
 find_package(Threads MODULE REQUIRED)
 
-
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
@@ -44,7 +43,5 @@ set(SOURCE_FILES ${SOURCE_FILES}
 add_executable (testFrenetTrajectoryGenerator testFrenetTrajectoryGenerator.cc ${SOURCE_FILES} )
 target_include_directories(testFrenetTrajectoryGenerator PRIVATE ${HEADER_DIRECTORY})
 
-
 add_executable (testtransform testtransform.cc ${SOURCE_FILES} )
 target_include_directories(testtransform PRIVATE ${HEADER_DIRECTORY})
-

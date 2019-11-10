@@ -8,14 +8,10 @@
 * by Hu.ZH(CrossOcean.ai)
 ***********************************************************************
 */
-
-#include <cstdlib>
+#include <iostream>
 #include "../include/FrenetTrajectoryGenerator.h"
-#include "common/fileIO/include/utilityio.h"
-#include "common/timer/include/timecounter.h"
 
 using namespace ASV;
-
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
@@ -33,7 +29,7 @@ int main() {
       0.1          // TRAGET_SPEED_STEP
   };
 
-  planning::CartesianState cartesianstate{
+  planning::CartesianState Before_cartesianstate{
       1,            // x
       0,            // y
       -M_PI / 3.0,  // theta
@@ -41,6 +37,16 @@ int main() {
       2,            // speed
       0,            // dspeed
   };
+
+  planning::CartesianState After_cartesianstate{
+      0,   // x
+      0,   // y
+      0,   // theta
+      0.,  // kappa
+      0,   // speed
+      0,   // dspeed
+  };
+
   planning::FrenetState frenetstate{
       10,  // s
       0,   // s_dot
@@ -51,13 +57,9 @@ int main() {
       0,   // d_prime
       0    // d_pprime
   };
-  Eigen::VectorXd X(5);
-  Eigen::VectorXd Y(5);
-  X << 0.0, 10.0, 20.5, 35.0, 70.5;
-  Y << 0.0, -6.0, 5.0, 6.5, 0.0;
-  planning::FrenetTrajectoryGenerator _trajectorygenerator(_latticedata, X, Y);
 
-  transformc2f(_trajectorygenerator, frenetstate, cartesianstate);
+  planning::FrenetTrajectoryGenerator _trajectorygenerator(_latticedata);
+  transformc2f(_trajectorygenerator, frenetstate, Before_cartesianstate);
   std::cout << "Results of Transformation from Cartesian to Frenet\n";
   std::cout << "s: " << frenetstate.s << std::endl;
   std::cout << "s_dot: " << frenetstate.s_dot << std::endl;
@@ -68,14 +70,14 @@ int main() {
   std::cout << "d_prime: " << frenetstate.d_prime << std::endl;
   std::cout << "d_pprime: " << frenetstate.d_pprime << std::endl;
 
-  transformf2c(_trajectorygenerator, frenetstate, cartesianstate);
-  std::cout << "Results of Transformation from Frenet to Cartesian\n";
-  std::cout << "x: " << cartesianstate.x << std::endl;
-  std::cout << "y: " << cartesianstate.y << std::endl;
-  std::cout << "theta: " << cartesianstate.theta << std::endl;
-  std::cout << "kappa: " << cartesianstate.kappa << std::endl;
-  std::cout << "speed: " << cartesianstate.speed << std::endl;
-  std::cout << "a: " << cartesianstate.dspeed << std::endl;
+  transformf2c(_trajectorygenerator, frenetstate, After_cartesianstate);
+  std::cout << "Results of Transformation from Frenet to Cartesian \n";
+  std::cout << "x: " << After_cartesianstate.x << std::endl;
+  std::cout << "y: " << After_cartesianstate.y << std::endl;
+  std::cout << "theta: " << After_cartesianstate.theta << std::endl;
+  std::cout << "kappa: " << After_cartesianstate.kappa << std::endl;
+  std::cout << "speed: " << After_cartesianstate.speed << std::endl;
+  std::cout << "dspeed: " << After_cartesianstate.dspeed << std::endl;
 
   LOG(INFO) << "Shutting down.";
 }

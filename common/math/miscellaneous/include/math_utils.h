@@ -1,4 +1,3 @@
-
 /*
 ***********************************************************************
 * math_utils.h: Math-related util functions
@@ -11,9 +10,10 @@
 #define _MATH_UTILS_H_
 
 #include <cmath>
+#include <tuple>
+
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
-#include <tuple>
 
 namespace ASV::common::math {
 

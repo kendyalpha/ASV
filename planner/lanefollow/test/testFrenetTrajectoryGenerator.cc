@@ -7,7 +7,6 @@
 * by Hu.ZH(CrossOcean.ai)
 ***********************************************************************
 */
-#include <cstdlib>
 #include "../include/LatticePlanner.h"
 #include "common/communication/include/tcpserver.h"
 #include "common/fileIO/include/utilityio.h"

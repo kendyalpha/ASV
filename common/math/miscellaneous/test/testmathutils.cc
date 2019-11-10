@@ -1,25 +1,31 @@
+/*
+***********************************************************************
+* testmathutils.h: Test math utility function
+* This header file can be read by C++ compilers
+*
+*  by Hu.ZH(CrossOcean.ai)
+***********************************************************************
+*/
+
+#include <boost/test/included/unit_test.hpp>
 #include <iostream>
 #include "../include/math_utils.h"
 
 using namespace ASV::common::math;
 
-void testNormalizeAngle() {
-  std::cout << "Result of 3.15 is " << Normalizeheadingangle(3.15) << std::endl;
-  std::cout << "Result of 3.14 is " << Normalizeheadingangle(3.14) << std::endl;
-  std::cout << "Result of -3.14 is " << Normalizeheadingangle(-3.14)
-            << std::endl;
-  std::cout << "Result of -2Pi is " << Normalizeheadingangle(-2 * M_PI)
-            << std::endl;
-  std::cout << "Result of 5Pi is " << Normalizeheadingangle(5 * M_PI)
-            << std::endl;
+BOOST_AUTO_TEST_CASE(NormalizeAngle) {
+  BOOST_CHECK_CLOSE(Normalizeheadingangle(3.15), -3.13318, 1e-3);
+  BOOST_CHECK_CLOSE(Normalizeheadingangle(3.14), 3.14, 1e-7);
+  BOOST_CHECK_CLOSE(Normalizeheadingangle(-3.14), -3.14, 1e-7);
+  BOOST_CHECK_CLOSE(Normalizeheadingangle(-2 * M_PI), 0, 1e-7);
+  BOOST_CHECK_CLOSE(Normalizeheadingangle(5 * M_PI), -M_PI, 1e-7);
 }
 
-void testCartesian2Polar() {
+BOOST_AUTO_TEST_CASE(Cartesian2Pol) {
   double x = 1;
   double y = 3;
   auto [r, theta] = Cartesian2Polar(x, y);
-  std::cout << "r: " << r << std::endl;
-  std::cout << "theta: " << Rad2Degree(theta) << std::endl;
-}
 
-int main() { testCartesian2Polar(); }
+  BOOST_CHECK_CLOSE(r, 3.16228, 1e-4);
+  BOOST_CHECK_CLOSE(Rad2Degree(theta), 71.5651, 1e-4);
+}

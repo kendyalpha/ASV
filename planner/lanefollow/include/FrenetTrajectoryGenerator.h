@@ -495,7 +495,6 @@ class FrenetTrajectoryGenerator {
                            const CartesianState &);
 
 };  // FrenetTrajectoryGenerator
-
 void transformf2c(FrenetTrajectoryGenerator &_tg,
                   const FrenetState &_frenetstate, CartesianState &_cartstate) {
   _tg.Frenet2Cart(_frenetstate, _cartstate);
