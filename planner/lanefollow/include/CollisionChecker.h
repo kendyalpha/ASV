@@ -20,7 +20,7 @@ class CollisionChecker {
  public:
   CollisionChecker(const CollisionData &_CollisionData)
       : collisiondata(_CollisionData) {}
-  virtual ~CollisionChecker() {}
+  virtual ~CollisionChecker() = default;
 
   std::vector<Frenet_path> check_paths(
       const std::vector<Frenet_path> &_frenet_lattice) {

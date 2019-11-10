@@ -12,48 +12,17 @@
 #ifndef _THREADLOOP_H_
 #define _THREADLOOP_H_
 
-#include <pthread.h>
-#include <chrono>
-#include <thread>
-
-#include "common/communication/include/tcpserver.h"
-#include "common/fileIO/include/database.h"
-#include "common/fileIO/include/jsonparse.h"
-#include "common/logging/include/easylogging++.h"
-#include "common/property/include/priority.h"
-#include "common/timer/include/timecounter.h"
-#include "controller/include/controller.h"
-#include "controller/include/trajectorytracking.h"
-#include "estimator/include/estimator.h"
-#include "messages/GUILink/include/guilink.h"
-#include "messages/sensors/gpsimu/include/gps.h"
-#include "messages/stm32/include/stm32_link.h"
-#include "planner/lanefollow/include/LatticePlanner.h"
-#include "planner/planner.h"
-#include "simulator/include/simulator.h"
+#include "config.h"
 
 namespace ASV {
 
-// constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_LOS;
-constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_FRENET;
-// constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_LOS;
-// constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_FRENET;
-
-constexpr int num_thruster = 2;
-constexpr int dim_controlspace = 3;
-constexpr USEKALMAN indicator_kalman = USEKALMAN::KALMANOFF;
-constexpr control::ACTUATION indicator_actuation =
-    control::ACTUATION::UNDERACTUATED;
-
-class threadloop {
+class threadloop : public StateMonitor {
  public:
   threadloop()
       : _jsonparse("./../../properties/property.json"),
         _trajectorygenerator(_jsonparse.getlatticedata(),
                              _jsonparse.getcollisiondata()),
         _trajectorytracking(_jsonparse.getcontrollerdata(), tracker_RTdata),
-        indicator_waypoint(0),
-        indicator_estimator(0),
         _tcpserver("9340") {
     // // write prettified JSON to another file
     // std::ofstream o("pretty.json");
@@ -206,18 +175,10 @@ class threadloop {
   planning::LatticePlanner _trajectorygenerator;
   control::trajectorytracking _trajectorytracking;
 
-  int indicator_waypoint;
-  int indicator_estimator;
-
   tcpserver _tcpserver;
 
   void generate_waypoints() {
-    while (1) {
-      if (indicator_estimator == 1)
-        break;
-      else
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    }
+    StateMonitor::check_planner();
 
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP: {
@@ -239,25 +200,6 @@ class threadloop {
         _trajectorytracking.set_grid_points(WX, WY);
 
         planner_RTdata.speed = 2;
-
-        sqlite::database db("./../../data/wp.db");
-        std::string str =
-            "CREATE TABLE WP"
-            "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
-            " X           DOUBLE, "
-            " Y           DOUBLE); ";
-        db << str;
-
-        for (int i = 0; i != WX.size(); i++) {
-          // save to sqlite
-          std::string str =
-              "INSERT INTO WP"
-              "(X, Y) VAlUES(" +
-              std::to_string(WX(i)) + ", " + std::to_string(WY(i)) + ");";
-          db << str;
-        }
-        CLOG(INFO, "waypoints") << "Waypoints have been generated";
-        indicator_waypoint = 1;
 
         break;
       }
@@ -291,28 +233,27 @@ class threadloop {
         _trajectorygenerator.regenerate_target_course(WX, WY);
         _trajectorygenerator.setobstacle(ob_x, ob_y);
 
-        sqlite::database db("./../../data/wp.db");
-        std::string str =
-            "CREATE TABLE WP"
-            "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
-            " X           DOUBLE, "
-            " Y           DOUBLE); ";
-        db << str;
+        // sqlite::database db("./../../data/wp.db");
+        // std::string str =
+        //     "CREATE TABLE WP"
+        //     "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+        //     " X           DOUBLE, "
+        //     " Y           DOUBLE); ";
+        // db << str;
 
-        auto CartRefX = _trajectorygenerator.getCartRefX();
-        auto CartRefY = _trajectorygenerator.getCartRefY();
+        // auto CartRefX = _trajectorygenerator.getCartRefX();
+        // auto CartRefY = _trajectorygenerator.getCartRefY();
 
-        for (int i = 0; i != CartRefX.size(); i++) {
-          // save to sqlite
-          std::string str =
-              "INSERT INTO WP"
-              "(X, Y) VAlUES(" +
-              std::to_string(CartRefX(i)) + ", " +
-              std::to_string(-CartRefY(i)) + ");";
-          db << str;
-        }
-        CLOG(INFO, "waypoints") << "Waypoints have been generated";
-        indicator_waypoint = 1;
+        // for (int i = 0; i != CartRefX.size(); i++) {
+        //   // save to sqlite
+        //   std::string str =
+        //       "INSERT INTO WP"
+        //       "(X, Y) VAlUES(" +
+        //       std::to_string(CartRefX(i)) + ", " +
+        //       std::to_string(-CartRefY(i)) + ");";
+        //   db << str;
+        // }
+        // CLOG(INFO, "waypoints") << "Waypoints have been generated";
 
         break;
       }
@@ -328,8 +269,6 @@ class threadloop {
 
         _trajectorytracking.set_grid_points(WX, WY);
         planner_RTdata.speed = 2;
-        indicator_waypoint = 1;
-
         break;
       }
       case common::TESTMODE::EXPERIMENT_FRENET: {
@@ -354,7 +293,6 @@ class threadloop {
         // _trajectorygenerator.setobstacle(ob_x, ob_y);
 
         CLOG(INFO, "waypoints") << "Waypoints have been generated";
-        indicator_waypoint = 1;
         break;
       }
       default:
@@ -372,13 +310,6 @@ class threadloop {
     long int innerloop_elapsed_time = 0;
     long int sample_time_ms =
         static_cast<long int>(1000 * _planner.getsampletime());
-
-    while (1) {
-      if (indicator_waypoint == 1)
-        break;
-      else
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    }
 
     while (1) {
       outerloop_elapsed_time = timer_planner.timeelapsed();
@@ -466,9 +397,7 @@ class threadloop {
     long int sample_time =
         static_cast<long int>(1000 * _controller.getsampletime());
 
-    while (1) {
-      if (indicator_waypoint == 1) break;
-    }
+    StateMonitor::check_controller();
 
     controller_RTdata =
         _controller.initializecontroller().getcontrollerRTdata();
@@ -594,80 +523,47 @@ class threadloop {
 
   // loop to give real time state estimation
   void estimatorloop() {
-    estimator<indicator_kalman,  // indicator_kalman
-              1,                 // nlp_x
-              1,                 // nlp_y
-              1,                 // nlp_z
-              1,                 // nlp_heading
-              1,                 // nlp_roll
-              1,                 // nlp_pitch
-              3,                 // nlp_u
-              3,                 // nlp_v
-              1                  // nlp_roti
-              >
-        _estimator(estimator_RTdata, _jsonparse.getvessel(),
-                   _jsonparse.getestimatordata());
-
-    common::timecounter timer_estimator;
-    long int outerloop_elapsed_time = 0;
-    long int innerloop_elapsed_time = 0;
-    long int sample_time =
-        static_cast<long int>(1000 * _estimator.getsampletime());
-
-    simulator _simulator(_jsonparse.getsimulatordata(), _jsonparse.getvessel());
-
     // initialization of estimator
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP:
       case common::TESTMODE::SIMULATION_LOS:
       case common::TESTMODE::SIMULATION_FRENET: {
         // simulation
+        estimator<indicator_kalman,  // indicator_kalman
+                  1,                 // nlp_x
+                  1,                 // nlp_y
+                  1,                 // nlp_z
+                  1,                 // nlp_heading
+                  1,                 // nlp_roll
+                  1,                 // nlp_pitch
+                  1,                 // nlp_u
+                  1,                 // nlp_v
+                  1                  // nlp_roti
+                  >
+            _estimator(estimator_RTdata, _jsonparse.getvessel(),
+                       _jsonparse.getestimatordata());
+
+        simulator _simulator(_jsonparse.getsimulatordata(),
+                             _jsonparse.getvessel());
+
+        common::timecounter timer_estimator;
+        long int outerloop_elapsed_time = 0;
+        long int innerloop_elapsed_time = 0;
+        long int sample_time =
+            static_cast<long int>(1000 * _estimator.getsampletime());
+
+        // State monitor toggle
+        StateMonitor::check_estimator();
+
         estimator_RTdata =
             _estimator.setvalue(350928.72, 3433818.79, 0, 0, 0, 90, 0, 0, 0)
                 .getEstimatorRTData();
         _simulator.setX(estimator_RTdata.State);
-        CLOG(INFO, "GPS") << "initialation successful!";
-        indicator_estimator = 1;
-        break;
-      }
-      case common::TESTMODE::EXPERIMENT_DP:
-      case common::TESTMODE::EXPERIMENT_LOS:
-      case common::TESTMODE::EXPERIMENT_FRENET: {
-        // experiment
+
+        // real time calculation in estimator
         while (1) {
-          if (gps_data.status >= 1) {
-            estimator_RTdata = _estimator
-                                   .setvalue(gps_data.UTM_x,     // gps_x
-                                             gps_data.UTM_y,     // gps_y
-                                             gps_data.altitude,  // gps_z
-                                             gps_data.roll,      // gps_roll
-                                             gps_data.pitch,     // gps_pitch
-                                             gps_data.heading,   // gps_heading
-                                             gps_data.Ve,        // gps_Ve
-                                             gps_data.Vn,        // gps_Vn
-                                             gps_data.roti       // gps_roti
-                                             )
-                                   .getEstimatorRTData();
-            CLOG(INFO, "GPS") << "initialation successful!";
-            indicator_estimator = 1;
-            break;
-          }
-        }
-        break;
-      }
-      default:
-        break;
-    }
+          outerloop_elapsed_time = timer_estimator.timeelapsed();
 
-    // real time calculation in estimator
-    while (1) {
-      outerloop_elapsed_time = timer_estimator.timeelapsed();
-
-      switch (testmode) {
-        case common::TESTMODE::SIMULATION_DP:
-        case common::TESTMODE::SIMULATION_LOS:
-        case common::TESTMODE::SIMULATION_FRENET: {
-          // simulation
           auto x = _simulator
                        .simulator_onestep(tracker_RTdata.setpoint(2),
                                           controller_RTdata.BalphaU)
@@ -676,12 +572,67 @@ class threadloop {
               .updateestimatedforce(controller_RTdata.BalphaU,
                                     Eigen::Vector3d::Zero())
               .estimatestate(x, tracker_RTdata.setpoint(2));
-          break;
+
+          estimator_RTdata = _estimator
+                                 .estimateerror(tracker_RTdata.setpoint,
+                                                tracker_RTdata.v_setpoint)
+                                 .getEstimatorRTData();
+
+          innerloop_elapsed_time = timer_estimator.timeelapsed();
+          std::this_thread::sleep_for(
+              std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
+
+          if (outerloop_elapsed_time > 1.1 * sample_time)
+            CLOG(INFO, "estimator") << "Too much time!";
         }
-        case common::TESTMODE::EXPERIMENT_DP:
-        case common::TESTMODE::EXPERIMENT_LOS:
-        case common::TESTMODE::EXPERIMENT_FRENET: {
-          // experiment
+
+        break;
+      }
+      case common::TESTMODE::EXPERIMENT_DP:
+      case common::TESTMODE::EXPERIMENT_LOS:
+      case common::TESTMODE::EXPERIMENT_FRENET: {
+        //                  experiment                        //
+
+        // initializtion
+        estimator<indicator_kalman,  // indicator_kalman
+                  1,                 // nlp_x
+                  1,                 // nlp_y
+                  1,                 // nlp_z
+                  1,                 // nlp_heading
+                  1,                 // nlp_roll
+                  1,                 // nlp_pitch
+                  3,                 // nlp_u
+                  3,                 // nlp_v
+                  1                  // nlp_roti
+                  >
+            _estimator(estimator_RTdata, _jsonparse.getvessel(),
+                       _jsonparse.getestimatordata());
+
+        common::timecounter timer_estimator;
+        long int outerloop_elapsed_time = 0;
+        long int innerloop_elapsed_time = 0;
+        long int sample_time =
+            static_cast<long int>(1000 * _estimator.getsampletime());
+
+        // State monitor toggle
+        StateMonitor::check_estimator();
+        estimator_RTdata = _estimator
+                               .setvalue(gps_data.UTM_x,     // gps_x
+                                         gps_data.UTM_y,     // gps_y
+                                         gps_data.altitude,  // gps_z
+                                         gps_data.roll,      // gps_roll
+                                         gps_data.pitch,     // gps_pitch
+                                         gps_data.heading,   // gps_heading
+                                         gps_data.Ve,        // gps_Ve
+                                         gps_data.Vn,        // gps_Vn
+                                         gps_data.roti       // gps_roti
+                                         )
+                               .getEstimatorRTData();
+
+        // real time calculation in estimator
+        while (1) {
+          outerloop_elapsed_time = timer_estimator.timeelapsed();
+
           _estimator
               .updateestimatedforce(controller_RTdata.BalphaU,
                                     Eigen::Vector3d::Zero())
@@ -696,33 +647,30 @@ class threadloop {
                              gps_data.roti,              // gps_roti
                              tracker_RTdata.setpoint(2)  //_dheading
               );
-          break;
+
+          estimator_RTdata = _estimator
+                                 .estimateerror(tracker_RTdata.setpoint,
+                                                tracker_RTdata.v_setpoint)
+                                 .getEstimatorRTData();
+
+          innerloop_elapsed_time = timer_estimator.timeelapsed();
+          std::this_thread::sleep_for(
+              std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
+
+          if (outerloop_elapsed_time > 1.1 * sample_time)
+            CLOG(INFO, "estimator") << "Too much time!";
         }
-        default:
-          break;
-      }  // end switch
 
-      estimator_RTdata =
-          _estimator
-              .estimateerror(tracker_RTdata.setpoint, tracker_RTdata.v_setpoint)
-              .getEstimatorRTData();
-
-      innerloop_elapsed_time = timer_estimator.timeelapsed();
-      std::this_thread::sleep_for(
-          std::chrono::milliseconds(sample_time - innerloop_elapsed_time));
-
-      if (outerloop_elapsed_time > 1.1 * sample_time)
-        CLOG(INFO, "estimator") << "Too much time!";
+        break;
+      }
+      default:
+        break;
     }
 
   }  // estimatorloop()
 
   // loop to save real time data using sqlite3 and modern_sqlite3_cpp_wrapper
   void sqlloop() {
-    while (1) {
-      if (indicator_waypoint == 1) break;
-    }
-
     common::database<num_thruster, dim_controlspace> _sqlite(
         _jsonparse.getsqlitedata());
     _sqlite.initializetables();
@@ -874,7 +822,52 @@ class threadloop {
       pt_utc = utc_timer.getUTCtime();
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
-  }  // guiloop
+  }  // utc_timer_loop
+
+  void state_monitor_loop() {
+    switch (testmode) {
+      case common::TESTMODE::SIMULATION_DP:
+      case common::TESTMODE::SIMULATION_LOS:
+      case common::TESTMODE::SIMULATION_FRENET: {
+        // simulation: do nothing
+        break;
+      }
+      case common::TESTMODE::EXPERIMENT_DP:
+      case common::TESTMODE::EXPERIMENT_LOS:
+      case common::TESTMODE::EXPERIMENT_FRENET: {
+        // experiment
+
+        while (1) {
+          if (gps_data.status >= 1) {
+            if (StateMonitor::indicator_gps == STATETOGGLE::IDLE) {
+              StateMonitor::indicator_gps = STATETOGGLE::READY;
+              CLOG(INFO, "GPS") << "initialation successful!";
+            }
+          }
+
+          if (StateMonitor::indicator_gps == STATETOGGLE::READY &&
+              StateMonitor::indicator_estimator == STATETOGGLE::IDLE) {
+            StateMonitor::indicator_estimator = STATETOGGLE::READY;
+          }
+
+          if (StateMonitor::indicator_estimator == STATETOGGLE::READY &&
+              StateMonitor::indicator_planner == STATETOGGLE::IDLE) {
+            StateMonitor::indicator_planner = STATETOGGLE::READY;
+          }
+
+          if (StateMonitor::indicator_estimator == STATETOGGLE::READY &&
+              StateMonitor::indicator_planner == STATETOGGLE::READY &&
+              StateMonitor::indicator_controller == STATETOGGLE::IDLE) {
+            StateMonitor::indicator_controller = STATETOGGLE::READY;
+          }
+          std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+
+        break;
+      }
+    }
+
+  }  // state_monitor_loop
 
   // socket server
   void socket_loop() {
@@ -919,8 +912,6 @@ class threadloop {
           }
           _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
                                   send_size);
-
-          // if (_tcpserver.getconnectioncount() > 0) indicator_socket = 1;
 
           innerloop_elapsed_time = timer_socket.timeelapsed();
           std::this_thread::sleep_for(
