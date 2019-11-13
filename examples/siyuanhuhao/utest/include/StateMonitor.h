@@ -15,11 +15,6 @@
 
 namespace ASV {
 
-enum class STATETOGGLE {
-  IDLE = 0,  //
-  READY
-};
-
 class StateMonitor {
  public:
   StateMonitor()

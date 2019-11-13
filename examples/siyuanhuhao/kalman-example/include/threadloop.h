@@ -74,6 +74,7 @@ class threadloop {
 
   // realtime parameters of the estimators
   estimatorRTdata _estimatorRTdata{
+      STATETOGGLE::IDLE,                    // state_toggle
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement

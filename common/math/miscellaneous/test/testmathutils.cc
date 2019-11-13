@@ -29,3 +29,9 @@ BOOST_AUTO_TEST_CASE(Cartesian2Pol) {
   BOOST_CHECK_CLOSE(r, 3.16228, 1e-4);
   BOOST_CHECK_CLOSE(Rad2Degree(theta), 71.5651, 1e-4);
 }
+
+BOOST_AUTO_TEST_CASE(Angle2vectors) {
+  BOOST_CHECK_CLOSE(VectorAngle_2d(1, 0, -1, -1), -0.75 * M_PI, 1e-4);
+  BOOST_CHECK_CLOSE(VectorAngle_2d(1, 0, -1, 1), 0.75 * M_PI, 1e-4);
+  BOOST_CHECK_CLOSE(VectorAngle_2d(1, 1, 1, 1), 0, 1e-4);
+}

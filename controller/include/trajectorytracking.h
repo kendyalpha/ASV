@@ -19,6 +19,7 @@
 #include <common/math/eigen/Eigen/Dense>
 
 #include "common/logging/include/easylogging++.h"
+#include "common/math/miscellaneous/include/math_utils.h"
 #include "controllerdata.h"
 
 namespace ASV::control {
@@ -102,7 +103,9 @@ class trajectorytracking final : public lineofsight {
                     _controllerdata.los_capture_radius),
         TrackerRTdata(_TrackerRTdata),
         sample_time(_controllerdata.sample_time),
-        grid_points_index(0) {}
+        grid_points_index(0),
+        grid_points_x((Eigen::VectorXd(2) << 0, 1).finished()),
+        grid_points_y((Eigen::VectorXd(2) << 1, 0).finished()) {}
 
   ~trajectorytracking() = default;
 
@@ -157,6 +160,10 @@ class trajectorytracking final : public lineofsight {
         (Eigen::Vector2d() << grid_points_x(grid_points_index + 1),
          grid_points_y(grid_points_index + 1))
             .finished();
+
+    // angle
+    double abs_angle =
+        std::abs(common::math::VectorAngle_2d(wp0(0), wp0(1), wp1(0), wp1(1)));
 
     if (lineofsight::switch2next_waypoint(_vesselposition, wp1)) {
       // switch waypoints
@@ -222,6 +229,12 @@ class trajectorytracking final : public lineofsight {
   int grid_points_index;
   Eigen::VectorXd grid_points_x;  // a set of points like grid
   Eigen::VectorXd grid_points_y;
+
+  // decide the capture radius based on speed and turn angle
+  // double estimate_capture_radius(double _desiredspeed, double _turning_angle)
+  // {
+  //   _desiredspeed *;
+  // }
 
 };  // end class trajectorytracking
 }  // namespace ASV::control

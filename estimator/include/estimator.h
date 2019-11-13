@@ -63,6 +63,9 @@ class estimator {
       KalmanFilter.setState(EstimatorRTData.State);
     // compute Cartesian state
     computeCartesianState(EstimatorRTData);
+
+    // state toggle
+    EstimatorRTData.state_toggle = common::STATETOGGLE::READY;
     return *this;
   }
   // update the estimated force acting on the vessel
@@ -313,6 +316,7 @@ class estimator {
     if (_ds > (0.05 * sample_time))
       _curvature = _dtheta / _ds;  // consider the low-speed situation
 
+    // todo:save
     double _speed = std::sqrt(std::pow(_RTdata.State(3), 2) +
                               std::pow(_RTdata.State(4), 2));
     double _dspeed = (_speed - previous_speed) / sample_time;

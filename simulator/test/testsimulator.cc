@@ -41,12 +41,12 @@ int main() {
   int total_step = 5000;
   Eigen::MatrixXd save_x(total_step, 6);
 
-  simulator _simulator(0.1, _vessel, x);
+  simulation::simulator _simulator(0.1, _vessel, x);
 
   for (int i = 0; i != total_step; ++i) {
     u = -P * x.head(3);
     x = _simulator.simulator_onestep(0, u).getX();
     save_x.row(i) = x.transpose();
   }
-  ASV::common::write2csvfile("../data/x.csv", save_x);
+  common::write2csvfile("../data/x.csv", save_x);
 }

@@ -19,7 +19,8 @@ namespace ASV {
 class threadloop : public StateMonitor {
  public:
   threadloop()
-      : _jsonparse("./../../properties/property.json"),
+      : StateMonitor(),
+        _jsonparse("./../../properties/property.json"),
         _trajectorygenerator(_jsonparse.getlatticedata(),
                              _jsonparse.getcollisiondata()),
         _trajectorytracking(_jsonparse.getcontrollerdata(), tracker_RTdata),
@@ -40,6 +41,7 @@ class threadloop : public StateMonitor {
     std::thread gui_thread(&threadloop::gui_loop, this);
     std::thread stm32_thread(&threadloop::stm32loop, this);
     std::thread socket_thread(&threadloop::socket_loop, this);
+    std::thread statemonitor_thread(&threadloop::state_monitor_loop, this);
 
     planner_thread.join();
     estimator_thread.join();
@@ -50,6 +52,7 @@ class threadloop : public StateMonitor {
     gui_thread.join();
     stm32_thread.join();
     socket_thread.join();
+    statemonitor_thread.join();
   }
 
  private:
@@ -71,6 +74,7 @@ class threadloop : public StateMonitor {
 
   // real time data of controller
   control::controllerRTdata<num_thruster, dim_controlspace> controller_RTdata{
+      STATETOGGLE::IDLE,                                   // state_toggle
       Eigen::Matrix<double, dim_controlspace, 1>::Zero(),  // tau
       Eigen::Matrix<double, dim_controlspace, 1>::Zero(),  // BalphaU
       Eigen::Matrix<double, num_thruster, 1>::Zero(),      // command_u
@@ -85,6 +89,7 @@ class threadloop : public StateMonitor {
 
   // realtime parameters of the estimators
   estimatorRTdata estimator_RTdata{
+      STATETOGGLE::IDLE,                    // state_toggle
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
@@ -179,6 +184,7 @@ class threadloop : public StateMonitor {
 
   void generate_waypoints() {
     StateMonitor::check_planner();
+    CLOG(INFO, "planner") << "initialization OK!";
 
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP: {
@@ -268,7 +274,7 @@ class threadloop : public StateMonitor {
         WY << 350938.7, 350928.66, 350987, 351004, 350938.7;
 
         _trajectorytracking.set_grid_points(WX, WY);
-        planner_RTdata.speed = 2;
+        planner_RTdata.speed = 1;
         break;
       }
       case common::TESTMODE::EXPERIMENT_FRENET: {
@@ -290,7 +296,7 @@ class threadloop : public StateMonitor {
         ob_x << ox;
         ob_y << oy;
         _trajectorygenerator.regenerate_target_course(WX, WY);
-        // _trajectorygenerator.setobstacle(ob_x, ob_y);
+        _trajectorygenerator.setobstacle(ob_x, ob_y);
 
         CLOG(INFO, "waypoints") << "Waypoints have been generated";
         break;
@@ -829,7 +835,10 @@ class threadloop : public StateMonitor {
       case common::TESTMODE::SIMULATION_DP:
       case common::TESTMODE::SIMULATION_LOS:
       case common::TESTMODE::SIMULATION_FRENET: {
-        // simulation: do nothing
+        StateMonitor::indicator_gps = STATETOGGLE::READY;
+        StateMonitor::indicator_estimator = STATETOGGLE::READY;
+        StateMonitor::indicator_planner = STATETOGGLE::READY;
+        StateMonitor::indicator_controller = STATETOGGLE::READY;
         break;
       }
       case common::TESTMODE::EXPERIMENT_DP:

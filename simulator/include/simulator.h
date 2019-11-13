@@ -14,8 +14,9 @@
 #include <cmath>
 #include "common/math/miscellaneous/include/math_utils.h"
 #include "common/math/solvers/ode/include/odesolver.h"
-#include "common/property/include/vesseldata.h"
-namespace ASV {
+#include "simulatordata.h"
+
+namespace ASV::simulation {
 
 // vessel motion used in simulation
 struct vessel_simulator {
@@ -73,36 +74,38 @@ class simulator {
  public:
   simulator(double _sample_time, const common::vessel& _vessel,
             const state_type& _x = state_type::Zero())
-      : sample_time(_sample_time), sys(_vessel), x(_x) {}
+      : sample_time(_sample_time),
+        sys(_vessel),
+        simulator_rtdata({common::STATETOGGLE::READY, _x}) {}
   virtual ~simulator() = default;
 
   simulator& simulator_onestep(
       double _desired_heading, const Eigen::Vector3d& _thrust,
       const Eigen::Vector3d& _seaload = Eigen::Vector3d::Zero()) {
     double _theta = 0.0;
-    if (std::abs(common::math::Normalizeheadingangle(x(2) - _desired_heading)) <
-        M_PI / 36) {
+    if (std::abs(common::math::Normalizeheadingangle(
+            simulator_rtdata.X(2) - _desired_heading)) < M_PI / 36) {
       // use the fixed setpoint orientation to prevent measurement noise
       _theta = _desired_heading;
     } else {
       // if larger than 5 deg, we use the realtime orientation
-      _theta = x(2);
+      _theta = simulator_rtdata.X(2);
     }
 
     sys.updateA(_theta);              // update the transform matrix and A
     sys.updateu(_thrust + _seaload);  // update the input
-    rk4.do_step(sys, x, 0.0, sample_time);
+    rk4.do_step(sys, simulator_rtdata.X, 0.0, sample_time);
     return *this;
   }
 
-  void setX(const state_type& _x) { x = _x; }
-  state_type getX() const noexcept { return x; }
+  void setX(const state_type& _x) { simulator_rtdata.X = _x; }
+  state_type getX() const noexcept { return simulator_rtdata.X; }
   double getsampletime() const noexcept { return sample_time; }
 
  private:
   double sample_time;  // second
   vessel_simulator sys;
-  state_type x;  // state space
+  simulatorRTdata simulator_rtdata;
 
   // 4-order Runge-Kutta methods
   boost::numeric::odeint::runge_kutta4<
@@ -111,6 +114,6 @@ class simulator {
       rk4;
 };
 
-}  // namespace ASV
+}  // namespace ASV::simulation
 
 #endif /* _SIMULATOR_H_ */

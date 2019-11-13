@@ -88,7 +88,7 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
     // if (index <= 1) index = 1;
     // if (index >= max_index) index = max_index;
 
-    int index = 1;
+    int index = 8;
     next_cartesianstate.x = best_path.x(index);
     next_cartesianstate.y = best_path.y(index);
     next_cartesianstate.theta = best_path.yaw(index);

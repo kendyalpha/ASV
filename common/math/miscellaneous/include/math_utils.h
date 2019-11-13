@@ -69,6 +69,15 @@ std::tuple<double, double> Cartesian2Polar(const double x, const double y) {
   return {std::sqrt(x * x + y * y), std::atan2(y, x)};
 }  // Cartesian2Polar
 
+// calculate the angle between two 2d vectors
+double VectorAngle_2d(const double x1, const double y1,  // [x1, y1]
+                      const double x2, const double y2   // [x2, y2]
+) {
+  double dot = x1 * x2 + y1 * y2;  // dot product between[x1, y1] and [ x2, y2 ]
+  double det = x1 * y2 - y1 * x2;  // determinant
+  return std::atan2(det, dot);     // atan2(y, x) or atan2(sin, cos)
+}  // VectorAngle_2d
+
 }  // namespace ASV::common::math
 
 #endif /* _MATH_UTILS_H_ */

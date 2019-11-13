@@ -14,6 +14,9 @@
 
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
+
+#include "common/property/include/priority.h"
+
 namespace ASV {
 
 enum class USEKALMAN {
@@ -40,6 +43,8 @@ struct estimatordata {
 
 // real-time data in the state estimators
 struct estimatorRTdata {
+  /********************* state toggle  *********************/
+  common::STATETOGGLE state_toggle;
   /********************* transformation matrix  *********************/
   Eigen::Matrix3d CTB2G;  // body  --> global
   Eigen::Matrix3d CTG2B;  // global  --> body

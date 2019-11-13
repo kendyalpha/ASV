@@ -92,8 +92,9 @@ void testonestepthrustallocation() {
   std::vector<twinfixedthrusterdata> v_twinfixeddata;
 
   controllerRTdata<m, n> _controllerRTdata{
-      (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),       // tau
-      Eigen::Matrix<double, n, 1>::Zero(),                         // BalphaU
+      STATETOGGLE::IDLE,                                      // state_toggle
+      (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),  // tau
+      Eigen::Matrix<double, n, 1>::Zero(),                    // BalphaU
       (Eigen::Matrix<double, m, 1>() << 0, 0.5, 0, 1).finished(),  // command_u
       // vectormi()::Zero(),
       (Eigen::Matrix<int, m, 1>() << 100, 500, 400, 300)
@@ -200,6 +201,7 @@ void test_multiplethrusterallocation() {
   std::vector<twinfixedthrusterdata> v_twinfixeddata;
 
   controllerRTdata<m, n> _controllerRTdata{
+      STATETOGGLE::IDLE,                    // state_toggle
       Eigen::Matrix<double, n, 1>::Zero(),  // tau
       Eigen::Matrix<double, n, 1>::Zero(),  // BalphaU
       Eigen::Matrix<double, m, 1>::Zero(),  // command_u
@@ -327,6 +329,7 @@ void test_twinfixed() {
   });
 
   controllerRTdata<m, n> _controllerRTdata{
+      STATETOGGLE::IDLE,                    // state_toggle
       Eigen::Matrix<double, n, 1>::Zero(),  // tau
       Eigen::Matrix<double, n, 1>::Zero(),  // BalphaU
       Eigen::Matrix<double, m, 1>::Zero(),  // command_u
@@ -465,6 +468,7 @@ void testrudder() {
   std::vector<twinfixedthrusterdata> v_twinfixeddata;
 
   controllerRTdata<m, n> _controllerRTdata{
+      STATETOGGLE::IDLE,                    // state_toggle
       Eigen::Matrix<double, n, 1>::Zero(),  // tau
       Eigen::Matrix<double, n, 1>::Zero(),  // BalphaU
       Eigen::Matrix<double, m, 1>::Zero(),  // command_u
@@ -648,6 +652,7 @@ void testbiling() {
   std::vector<twinfixedthrusterdata> v_twinfixeddata;
 
   controllerRTdata<m, n> _controllerRTdata{
+      STATETOGGLE::IDLE,                    // state_toggle
       Eigen::Matrix<double, n, 1>::Zero(),  // tau
       Eigen::Matrix<double, n, 1>::Zero(),  // BalphaU
       Eigen::Matrix<double, m, 1>::Zero(),  // command_u

@@ -39,6 +39,7 @@ int main() {
   };
   // realtime parameters of the estimators
   estimatorRTdata _estimatorRTdata{
+      STATETOGGLE::IDLE,                    // state_toggle
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
@@ -50,6 +51,7 @@ int main() {
       Eigen::Vector3d::Zero()               // BalphaU
   };
   control::controllerRTdata<m, n> _controllerRTdata{
+      STATETOGGLE::IDLE,                                        // state_toggle
       (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),    // tau
       Eigen::Matrix<double, n, 1>::Zero(),                      // BalphaU
       (Eigen::Matrix<double, m, 1>() << 0, 0.5, 0).finished(),  // command_u

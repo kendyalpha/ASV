@@ -61,6 +61,7 @@ class controller {
 
   controller &initializecontroller() {
     TA.initializapropeller(controlRTdata);
+    controlRTdata.state_toggle = common::STATETOGGLE::READY;
     return *this;
   }
 

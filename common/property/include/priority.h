@@ -17,7 +17,12 @@
 // #include "motorclientdata.h"
 // #include "plannerdata.h"
 
-namespace ASV {
+namespace ASV::common {
+
+enum class STATETOGGLE {
+  IDLE = 0,  //
+  READY
+};
 
 struct indicators {
   // indicator for gui connection: 0 --> disconnect, 1 -->connect
@@ -28,6 +33,6 @@ struct indicators {
   int indicator_windstatus;
 };
 
-}  // end namespace ASV
+}  // namespace ASV::common
 
 #endif /* _PRIORITY_H_ */

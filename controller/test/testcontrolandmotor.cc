@@ -122,12 +122,17 @@ void test() {
   std::vector<twinfixedthrusterdata> v_twinfixeddata;
 
   controllerRTdata<m, n> _controllerRTdata{
+      STATETOGGLE::IDLE,                    // state_toggle
       Eigen::Matrix<double, n, 1>::Zero(),  // tau
       Eigen::Matrix<double, n, 1>::Zero(),  // BalphaU
-      Eigen::Matrix<double, m, 1>::Zero(),  // u
-      Eigen::Matrix<int, m, 1>::Zero(),     // rotation
-      Eigen::Matrix<double, m, 1>::Zero(),  // alpha
-      Eigen::Matrix<int, m, 1>::Zero()      // alpha_deg
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_alpha
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_alpha_deg
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // feedback_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_alpha
+      Eigen::Matrix<int, m, 1>::Zero()      // feedback_alpha_deg
   };
 
   motorRTdata<m> testmotorRTdata;

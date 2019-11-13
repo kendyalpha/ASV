@@ -75,6 +75,7 @@ void test_multiplecontroller() {
   std::vector<twinfixedthrusterdata> v_twinfixeddata;
 
   controllerRTdata<m, n> _controllerRTdata{
+      STATETOGGLE::IDLE,                                      // state_toggle
       (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),  // tau
       Eigen::Matrix<double, n, 1>::Zero(),                    // BalphaU
       (Eigen::Matrix<double, m, 1>() << 0.01, 0.2, 0.2)

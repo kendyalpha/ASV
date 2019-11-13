@@ -13,6 +13,9 @@
 
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
+
+#include "common/property/include/priority.h"
+
 #include <vector>
 
 namespace ASV::control {
@@ -49,6 +52,8 @@ struct controllerdata {
 // real-time data in the controller
 template <int m, int n = 3>
 struct controllerRTdata {
+  // state toggle
+  common::STATETOGGLE state_toggle;
   // Fx, Fy, Mz (desired force) in the body coordinate
   Eigen::Matrix<double, n, 1> tau;
   // Fx, Fy, Mz (estimated generalized thrust) in the body-fixed coordinates
