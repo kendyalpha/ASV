@@ -8,7 +8,7 @@
     "mini_turn_radius":1,
     "Mass": [244, 0, 0, 0, 244, 80, 0, 80, 102],
     "AddedMass": [27, 0, 0, 0, 68, 52, 0, 52, 40],
-    "Damping": [100, 0, 0, 0, 15, 0, 0, 0, 500],
+    "Damping": [120, 0, 0, 0, 300, 0, 0, 0, 500],
     "CoG": [0.68, 0, 0],
     "velocity_limit": {
       "surge": [-4, 6],
@@ -20,7 +20,7 @@
   "controller": {
     "sample_time": 0.1,
      "LOS": {   
-      "los_radius_co": 2,
+      "los_radius_co": 3,
       "capture_radius_co":1.5
     },
     "surge": {
@@ -46,7 +46,7 @@
     "yaw": {
       "position_P": 200,
       "position_I": 0,
-      "velocity_P": 400,
+      "velocity_P": 500,
       "velocity_I": 0,
       "position_allowed_error": 0.001,
       "velocity_allowed_error": 0.001,
@@ -78,14 +78,14 @@
     }
   },
   "planner": {
-    "sample_time": 0.5,
+    "sample_time": 0.2,
     "FrenetLattice":{
       "target_course_arc_step":0.05,
       "max_road_width":7,
       "road_width_step":1,
-      "max_planning_horizon":7,  
+      "max_planning_horizon":8,  
       "min_planning_horizon":6,
-      "planning_horizon_step":0.2,
+      "planning_horizon_step":2,
       "max_speed_deviation":0.5,
       "target_speed_step":0.1
     },

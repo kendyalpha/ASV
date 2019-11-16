@@ -33,7 +33,7 @@ class database {
   explicit database(const std::string &_savepath)
       : db(_savepath),
         clientset({"controller", "estimator", "planner", "GPS", "wind", "motor",
-                   "indicators", "stm32"}) {}
+                   "stm32"}) {}
 
   ~database() {}
 
@@ -44,7 +44,6 @@ class database {
     create_controller_table();
     create_estimator_table();
     create_planner_table();
-    create_indicators_table();
     create_stm32_table();
   }  // initializetables
 
@@ -106,8 +105,8 @@ class database {
           "INSERT INTO estimator"
           "(DATETIME, meas_x, meas_y, meas_theta, meas_u, meas_v, meas_r,"
           "state_x, state_y, state_theta, state_u, state_v, state_r, "
-          "perror_x, perror_y, perror_mz, verror_x, verror_y, verror_mz) "
-          "VALUES(julianday('now')";
+          "perror_x, perror_y, perror_mz, verror_x, verror_y, verror_mz, "
+          "curvature, speed, dspeed ) VALUES(julianday('now')";
       convert2string(_RTdata, str);
       str += ");";
       db << str;
@@ -130,21 +129,6 @@ class database {
       CLOG(ERROR, "sql-planner") << e.what();
     }
   }  // update_planner_table
-
-  // insert a row into estimator table
-  void update_indicators_table(const indicators &_RTdata) {
-    try {
-      std::string str =
-          "INSERT INTO indicators"
-          "(DATETIME, gui_link, joystick_link, controlmode, windstatus) "
-          "VALUES(julianday('now')";
-      convert2string(_RTdata, str);
-      str += ");";
-      db << str;
-    } catch (sqlite::sqlite_exception &e) {
-      CLOG(ERROR, "sql-indicators") << e.what();
-    }
-  }  // update_indicators_table
 
   void update_stm32_table(const messages::stm32data &_RTdata) {
     try {
@@ -321,8 +305,10 @@ class database {
           " perror_mz   DOUBLE, " /* perror */
           " verror_x    DOUBLE, "
           " verror_y    DOUBLE, "
-          " verror_mz   DOUBLE); "; /* verror */
-
+          " verror_mz   DOUBLE, " /* verror */
+          " curvature   DOUBLE, "
+          " speed       DOUBLE, "
+          " dspeed      DOUBLE); "; /* Marine state*/
       db << str;
 
     } catch (sqlite::sqlite_exception &e) {
@@ -352,24 +338,6 @@ class database {
       CLOG(ERROR, "sql") << e.what();
     }
   }  // create_planner_table
-
-  // create indicators table
-  void create_indicators_table() {
-    try {
-      std::string str =
-          "CREATE TABLE indicators"
-          "(ID               INTEGER PRIMARY KEY AUTOINCREMENT,"
-          " DATETIME         TEXT       NOT NULL,"
-          " gui_link         INT, "
-          " joystick_link    INT, "
-          " controlmode      INT, " /* setpoint */
-          " windstatus       INT); ";
-      db << str;
-
-    } catch (sqlite::sqlite_exception &e) {
-      CLOG(ERROR, "sql") << e.what();
-    }
-  }  // create_indicators_table
 
   // create wind table
   void create_wind_table() {
@@ -512,6 +480,12 @@ class database {
     // r is special
     _str += ", ";
     _str += std::to_string(_RTdata.v_error(2));
+
+    // marine state
+    for (int i = 0; i != 3; ++i) {
+      _str += ", ";
+      _str += to_string_with_precision<double>(_RTdata.Marine_state(i + 3), 2);
+    }
   }
 
   void convert2string(const messages::stm32data &_RTdata, std::string &_str) {
@@ -567,17 +541,6 @@ class database {
       _str += ", ";
       _str += to_string_with_precision<double>(_RTdata.waypoint1(i), 3);
     }
-  }
-
-  void convert2string(const indicators &_RTdata, std::string &_str) {
-    _str += ", ";
-    _str += std::to_string(_RTdata.gui_connection);
-    _str += ", ";
-    _str += std::to_string(_RTdata.joystick_connection);
-    _str += ", ";
-    _str += std::to_string(_RTdata.indicator_controlmode);
-    _str += ", ";
-    _str += std::to_string(_RTdata.indicator_windstatus);
   }
 
   void convert2string(const windRTdata &_RTdata, std::string &_str) {

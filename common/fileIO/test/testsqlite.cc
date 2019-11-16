@@ -39,7 +39,7 @@ int main() {
   };
   // realtime parameters of the estimators
   estimatorRTdata _estimatorRTdata{
-      STATETOGGLE::IDLE,                    // state_toggle
+      common::STATETOGGLE::IDLE,            // state_toggle
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
@@ -51,7 +51,7 @@ int main() {
       Eigen::Vector3d::Zero()               // BalphaU
   };
   control::controllerRTdata<m, n> _controllerRTdata{
-      STATETOGGLE::IDLE,                                        // state_toggle
+      common::STATETOGGLE::IDLE,                                // state_toggle
       (Eigen::Matrix<double, n, 1>() << 0, 0, 1).finished(),    // tau
       Eigen::Matrix<double, n, 1>::Zero(),                      // BalphaU
       (Eigen::Matrix<double, m, 1>() << 0, 0.5, 0).finished(),  // command_u
@@ -80,13 +80,6 @@ int main() {
       Eigen::Vector2d::Zero(),  // waypoint0
       Eigen::Vector2d::Zero(),  // waypoint1
       Eigen::Vector3d::Zero()   // command
-  };
-
-  indicators _indicators{
-      0,  // gui_connection
-      0,  // joystick_connection
-      0,  // indicator_controlmode
-      1,  // indicator_windstatus
   };
 
   windRTdata _windRTdata{
@@ -120,7 +113,6 @@ int main() {
     _sqlitetest.update_estimator_table(_estimatorRTdata);
     _sqlitetest.update_controller_table(_controllerRTdata, _trackRTdata);
     _sqlitetest.update_planner_table(_plannerRTdata);
-    _sqlitetest.update_indicators_table(_indicators);
     _sqlitetest.update_wind_table(_windRTdata);
     _sqlitetest.update_stm32_table(_stm32data);
   }

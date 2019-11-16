@@ -30,7 +30,7 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
             -M_PI / 3.0,  // theta
             0,            // kappa
             1,            // speed
-            0,            // dspeed
+            0             // dspeed
         }) {}
 
   LatticePlanner &trajectoryonestep(double marine_x, double marine_y,
@@ -88,7 +88,7 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
     // if (index <= 1) index = 1;
     // if (index >= max_index) index = max_index;
 
-    int index = 8;
+    int index = 1;
     next_cartesianstate.x = best_path.x(index);
     next_cartesianstate.y = best_path.y(index);
     next_cartesianstate.theta = best_path.yaw(index);

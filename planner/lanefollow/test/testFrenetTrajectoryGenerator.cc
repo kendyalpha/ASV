@@ -12,6 +12,8 @@
 #include "common/fileIO/include/utilityio.h"
 #include "common/timer/include/timecounter.h"
 
+#include <random>
+
 using namespace ASV;
 
 union trajectorymsg {
@@ -24,14 +26,23 @@ int main() {
   LOG(INFO) << "The program has started!";
 
   // trajectory generator
-  Eigen::VectorXd marine_WX(5);
-  Eigen::VectorXd marine_WY(5);
-  Eigen::VectorXd marine_ob_x(6);
-  Eigen::VectorXd marine_ob_y(6);
-  marine_WX << 0.0, 10.0, 20.5, 35.0, 70.5;
-  marine_WY << 0.0, 6.0, -5.0, -6.5, 0.0;
-  marine_ob_x << 20.0, 30.0, 30.0, 35.0, 34.0, 50.0;
-  marine_ob_y << -10.0, -6.0, -8.0, -8.0, -8.0, -3.0;
+  // Eigen::VectorXd marine_WX(5);
+  // Eigen::VectorXd marine_WY(5);
+  // Eigen::VectorXd marine_ob_x(6);
+  // Eigen::VectorXd marine_ob_y(6);
+  // marine_WX << 0.0, 10.0, 20.5, 35.0, 70.5;
+  // marine_WY << 0.0, 6.0, -5.0, -6.5, 0.0;
+  // marine_ob_x << 20.0, 30.0, 30.0, 35.0, 34.0, 50.0;
+  // marine_ob_y << -10.0, -6.0, -8.0, -8.0, -8.0, -3.0;
+
+  Eigen::VectorXd marine_WX(3);
+  Eigen::VectorXd marine_WY(3);
+  Eigen::VectorXd marine_ob_x(1);
+  Eigen::VectorXd marine_ob_y(1);
+  marine_WX << 0.0, 20.0, 40;
+  marine_WY << 0.0, 20, 40;
+  marine_ob_x << 20.0;
+  marine_ob_y << 20.0;
 
   planning::LatticeData _latticedata{
       0.1,         // SAMPLE_TIME
@@ -47,13 +58,13 @@ int main() {
   };
 
   planning::CollisionData _collisiondata{
-      50.0 / 3.6,  // MAX_SPEED
-      4.0,         // MAX_ACCEL
-      -3.0,        // MIN_ACCEL
-      1.0,         // MAX_CURVATURE
-      3,           // HULL_LENGTH
-      1,           // HULL_WIDTH
-      2.5          // ROBOT_RADIUS
+      4,     // MAX_SPEED
+      4.0,   // MAX_ACCEL
+      -3.0,  // MIN_ACCEL
+      0.2,   // MAX_CURVATURE
+      3,     // HULL_LENGTH
+      1,     // HULL_WIDTH
+      2.5    // ROBOT_RADIUS
   };
 
   // real time data
@@ -89,13 +100,22 @@ int main() {
   // timer
   common::timecounter _timer;
 
+  // random number
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
+  std::normal_distribution<> d{0, 1};
+
   for (int i = 0; i != 500; ++i) {
+    double num_normal_dis = d(gen);
+
     Plan_cartesianstate =
         _trajectorygenerator
             .trajectoryonestep(
                 estimate_marinestate.x, estimate_marinestate.y,
-                estimate_marinestate.theta, estimate_marinestate.kappa,
-                estimate_marinestate.speed, estimate_marinestate.dspeed, 3)
+                estimate_marinestate.theta + 0.01 * num_normal_dis,
+                estimate_marinestate.kappa + 0.05 * num_normal_dis,
+                estimate_marinestate.speed + 0.2 * num_normal_dis,
+                estimate_marinestate.dspeed, 3)
             .getnextcartesianstate();
 
     estimate_marinestate = Plan_cartesianstate;

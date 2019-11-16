@@ -161,18 +161,28 @@ class trajectorytracking final : public lineofsight {
          grid_points_y(grid_points_index + 1))
             .finished();
 
-    // angle
-    double abs_angle =
-        std::abs(common::math::VectorAngle_2d(wp0(0), wp0(1), wp1(0), wp1(1)));
-
+    lineofsight::setcaptureradius(8 * _desired_u);
+    // switch waypoints
     if (lineofsight::switch2next_waypoint(_vesselposition, wp1)) {
-      // switch waypoints
       if (grid_points_index == grid_points_x.size() - 2) {
         TrackerRTdata.trackermode = TRACKERMODE::FINISHED;
         CLOG(INFO, "LOS") << "reach the last waypoint!";
         return;
-      } else
+      } else {
+        // compute the turning angle
+        double abs_turning_angle = std::abs(common::math::VectorAngle_2d(
+            grid_points_x(grid_points_index + 1) -
+                grid_points_x(grid_points_index),  // x1
+            grid_points_y(grid_points_index + 1) -
+                grid_points_y(grid_points_index),  // y1
+            grid_points_x(grid_points_index + 2) -
+                grid_points_x(grid_points_index + 1),  // x2
+            grid_points_y(grid_points_index + 2) -
+                grid_points_y(grid_points_index + 1)  // y2
+            ));
+
         ++grid_points_index;
+      }
     }
     CircularArcLOS(0, _desired_u, _vesselposition, wp0, wp1);
     TrackerRTdata.trackermode = TRACKERMODE::TRACKING;
@@ -229,12 +239,6 @@ class trajectorytracking final : public lineofsight {
   int grid_points_index;
   Eigen::VectorXd grid_points_x;  // a set of points like grid
   Eigen::VectorXd grid_points_y;
-
-  // decide the capture radius based on speed and turn angle
-  // double estimate_capture_radius(double _desiredspeed, double _turning_angle)
-  // {
-  //   _desiredspeed *;
-  // }
 
 };  // end class trajectorytracking
 }  // namespace ASV::control

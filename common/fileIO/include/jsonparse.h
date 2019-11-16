@@ -536,9 +536,9 @@ class jsonparse {
     // constatnt data for collision and constraint check
     collisiondata_input.MAX_SPEED = vesseldata_input.surge_v(1);
     collisiondata_input.MAX_ACCEL =
-        vesseldata_input.x_thrust[1] / vesseldata_input.Mass(0, 0);
+        1.5 * vesseldata_input.x_thrust[1] / vesseldata_input.Mass(0, 0);
     collisiondata_input.MIN_ACCEL =
-        vesseldata_input.x_thrust[0] / vesseldata_input.Mass(0, 0);
+        1.5 * vesseldata_input.x_thrust[0] / vesseldata_input.Mass(0, 0);
     collisiondata_input.MAX_CURVATURE =
         1 / file["property"]["mini_turn_radius"].get<double>();
 

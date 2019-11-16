@@ -24,15 +24,6 @@ enum class STATETOGGLE {
   READY
 };
 
-struct indicators {
-  // indicator for gui connection: 0 --> disconnect, 1 -->connect
-  int gui_connection;
-  // indicator for joystick connection: 0 --> disconnect, 1 -->connect
-  int joystick_connection;
-  int indicator_controlmode;
-  int indicator_windstatus;
-};
-
 }  // namespace ASV::common
 
 #endif /* _PRIORITY_H_ */

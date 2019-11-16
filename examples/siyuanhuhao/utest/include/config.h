@@ -16,7 +16,6 @@
 #include "common/fileIO/include/database.h"
 #include "common/fileIO/include/jsonparse.h"
 #include "common/logging/include/easylogging++.h"
-#include "common/property/include/priority.h"
 #include "common/timer/include/timecounter.h"
 #include "controller/include/controller.h"
 #include "controller/include/trajectorytracking.h"

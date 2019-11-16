@@ -26,6 +26,7 @@ class CollisionChecker {
       const std::vector<Frenet_path> &_frenet_lattice) {
     std::vector<Frenet_path> collision_free_roi_paths;
     std::vector<Frenet_path> sub_collision_free_roi_paths;
+    // std::vector<Frenet_path> constraint_free_paths = _frenet_lattice;
     std::vector<Frenet_path> constraint_free_paths =
         check_constraints(_frenet_lattice);
 
@@ -42,7 +43,8 @@ class CollisionChecker {
         collision_free_roi_paths.emplace_back(constraint_free_paths[i]);
       }
     }
-    std::cout << collision_free_roi_paths.size() << " "
+    std::cout << constraint_free_paths.size() << " "
+              << collision_free_roi_paths.size() << " "
               << sub_collision_free_roi_paths.size() << std::endl;
 
     if (collision_free_roi_paths.size() == 0) {
@@ -92,21 +94,32 @@ class CollisionChecker {
       const std::vector<Frenet_path> &_frenet_lattice) {
     std::vector<Frenet_path> constraint_free_paths;
 
+    std::size_t count_max_speed = 0;
+    std::size_t count_max_accel = 0;
+    std::size_t count_max_curvature = 0;
+
     for (std::size_t i = 0; i != _frenet_lattice.size(); i++) {
       if (_frenet_lattice[i].speed.maxCoeff() > collisiondata.MAX_SPEED) {
+        count_max_speed++;
         continue;  // max speed check
       }
       if ((_frenet_lattice[i].dspeed.maxCoeff() > collisiondata.MAX_ACCEL) ||
           (_frenet_lattice[i].dspeed.minCoeff() < collisiondata.MIN_ACCEL)) {
+        count_max_accel++;
         continue;  // Max accel check
       }
       if ((_frenet_lattice[i].kappa.maxCoeff() > collisiondata.MAX_CURVATURE) ||
           (_frenet_lattice[i].kappa.minCoeff() <
            -collisiondata.MAX_CURVATURE)) {
+        count_max_curvature++;
         continue;  // Max curvature check
       }
       constraint_free_paths.emplace_back(_frenet_lattice[i]);
     }
+
+    // std::cout << "max_speed " << count_max_speed << "max_accel "
+    //           << count_max_accel << "MAX_CURVATURE: " << count_max_curvature
+    //           << std::endl;
     return constraint_free_paths;
   }
 

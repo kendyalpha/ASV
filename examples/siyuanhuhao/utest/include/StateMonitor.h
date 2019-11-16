@@ -13,50 +13,52 @@
 #include <chrono>
 #include <thread>
 
+#include "common/property/include/priority.h"
+
 namespace ASV {
 
 class StateMonitor {
  public:
   StateMonitor()
-      : indicator_planner(STATETOGGLE::IDLE),
-        indicator_estimator(STATETOGGLE::IDLE),
-        indicator_controller(STATETOGGLE::IDLE),
-        indicator_sql(STATETOGGLE::IDLE),
-        indicator_gps(STATETOGGLE::IDLE),
-        indicator_utc(STATETOGGLE::IDLE),
-        indicator_gui(STATETOGGLE::IDLE),
-        indicator_stm32(STATETOGGLE::IDLE),
-        indicator_socket(STATETOGGLE::IDLE) {}
+      : indicator_planner(common::STATETOGGLE::IDLE),
+        indicator_estimator(common::STATETOGGLE::IDLE),
+        indicator_controller(common::STATETOGGLE::IDLE),
+        indicator_sql(common::STATETOGGLE::IDLE),
+        indicator_gps(common::STATETOGGLE::IDLE),
+        indicator_utc(common::STATETOGGLE::IDLE),
+        indicator_gui(common::STATETOGGLE::IDLE),
+        indicator_stm32(common::STATETOGGLE::IDLE),
+        indicator_socket(common::STATETOGGLE::IDLE) {}
   virtual ~StateMonitor() = default;
 
  protected:
-  STATETOGGLE indicator_planner;
-  STATETOGGLE indicator_estimator;
-  STATETOGGLE indicator_controller;
-  STATETOGGLE indicator_sql;
-  STATETOGGLE indicator_gps;
-  STATETOGGLE indicator_utc;
-  STATETOGGLE indicator_gui;
-  STATETOGGLE indicator_stm32;
-  STATETOGGLE indicator_socket;
+  common::STATETOGGLE indicator_planner;
+  common::STATETOGGLE indicator_estimator;
+  common::STATETOGGLE indicator_controller;
+  common::STATETOGGLE indicator_sql;
+  common::STATETOGGLE indicator_gps;
+  common::STATETOGGLE indicator_utc;
+  common::STATETOGGLE indicator_gui;
+  common::STATETOGGLE indicator_stm32;
+  common::STATETOGGLE indicator_socket;
 
   void check_planner() {
     while (1) {
-      if (indicator_planner == STATETOGGLE::READY) break;
+      if (indicator_planner == common::STATETOGGLE::READY) break;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   }  // check_planner
 
   void check_estimator() {
     while (1) {
-      if (indicator_estimator == STATETOGGLE::READY) break;
+      if (indicator_estimator == common::STATETOGGLE::READY) break;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   }  // check_estimator
 
   void check_controller() {
     while (1) {
-      if (indicator_controller == STATETOGGLE::READY) break;
+      if (indicator_controller == common::STATETOGGLE::READY) break;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   }  // check_estimator

@@ -70,7 +70,7 @@ class sql:
 
 _vessel2d = vessel2d()
 _sql = sql()
-wpdata = _sql.read2pandas()
+# wpdata = _sql.read2pandas()
 
 
 fig,  ((ax1, ax2), (ax3, ax4)) = plt.subplots(
@@ -168,8 +168,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         )
         polygon = Polygon(vessel2dnew, True, color='black', alpha=0.4)
         ax1.add_patch(polygon)
-        ax1.plot(wpdata['Y'], wpdata['X'],
-                 color='tab:gray', lineStyle='-', lw=1)
+        # ax1.plot(wpdata['Y'], wpdata['X'],
+        #          color='tab:gray', lineStyle='-', lw=1)
         ax1.plot(doubles_sequence[9], doubles_sequence[8],
                  "oc", markersize=3, alpha=0.4)
         ax1.plot(doubles_sequence[11], doubles_sequence[10],

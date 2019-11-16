@@ -74,7 +74,7 @@ class threadloop : public StateMonitor {
 
   // real time data of controller
   control::controllerRTdata<num_thruster, dim_controlspace> controller_RTdata{
-      STATETOGGLE::IDLE,                                   // state_toggle
+      common::STATETOGGLE::IDLE,                           // state_toggle
       Eigen::Matrix<double, dim_controlspace, 1>::Zero(),  // tau
       Eigen::Matrix<double, dim_controlspace, 1>::Zero(),  // BalphaU
       Eigen::Matrix<double, num_thruster, 1>::Zero(),      // command_u
@@ -89,7 +89,7 @@ class threadloop : public StateMonitor {
 
   // realtime parameters of the estimators
   estimatorRTdata estimator_RTdata{
-      STATETOGGLE::IDLE,                    // state_toggle
+      common::STATETOGGLE::IDLE,            // state_toggle
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
@@ -184,7 +184,6 @@ class threadloop : public StateMonitor {
 
   void generate_waypoints() {
     StateMonitor::check_planner();
-    CLOG(INFO, "planner") << "initialization OK!";
 
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP: {
@@ -222,8 +221,8 @@ class threadloop : public StateMonitor {
 
         double initial_x = estimator_RTdata.State(0);
         double initial_y = estimator_RTdata.State(1);
-        double final_x = 3433790.52;
-        double final_y = 350986.45;
+        double final_x = 20;
+        double final_y = 20;
         double ox = 0.5 * (initial_x + final_x);
         double oy = 0.5 * (initial_y + final_y);
 
@@ -235,6 +234,8 @@ class threadloop : public StateMonitor {
         WY << initial_y, oy, final_y;
         ob_x << ox;
         ob_y << oy;
+
+        std::cout << WX;
 
         _trajectorygenerator.regenerate_target_course(WX, WY);
         _trajectorygenerator.setobstacle(ob_x, ob_y);
@@ -549,8 +550,8 @@ class threadloop : public StateMonitor {
             _estimator(estimator_RTdata, _jsonparse.getvessel(),
                        _jsonparse.getestimatordata());
 
-        simulator _simulator(_jsonparse.getsimulatordata(),
-                             _jsonparse.getvessel());
+        simulation::simulator _simulator(_jsonparse.getsimulatordata(),
+                                         _jsonparse.getvessel());
 
         common::timecounter timer_estimator;
         long int outerloop_elapsed_time = 0;
@@ -561,9 +562,8 @@ class threadloop : public StateMonitor {
         // State monitor toggle
         StateMonitor::check_estimator();
 
-        estimator_RTdata =
-            _estimator.setvalue(350928.72, 3433818.79, 0, 0, 0, 90, 0, 0, 0)
-                .getEstimatorRTData();
+        estimator_RTdata = _estimator.setvalue(0, 0, 0, 0, 0, 90, 0, 0, 0)
+                               .getEstimatorRTData();
         _simulator.setX(estimator_RTdata.State);
 
         // real time calculation in estimator
@@ -607,8 +607,8 @@ class threadloop : public StateMonitor {
                   1,                 // nlp_heading
                   1,                 // nlp_roll
                   1,                 // nlp_pitch
-                  3,                 // nlp_u
-                  3,                 // nlp_v
+                  5,                 // nlp_u
+                  5,                 // nlp_v
                   1                  // nlp_roti
                   >
             _estimator(estimator_RTdata, _jsonparse.getvessel(),
@@ -835,10 +835,26 @@ class threadloop : public StateMonitor {
       case common::TESTMODE::SIMULATION_DP:
       case common::TESTMODE::SIMULATION_LOS:
       case common::TESTMODE::SIMULATION_FRENET: {
-        StateMonitor::indicator_gps = STATETOGGLE::READY;
-        StateMonitor::indicator_estimator = STATETOGGLE::READY;
-        StateMonitor::indicator_planner = STATETOGGLE::READY;
-        StateMonitor::indicator_controller = STATETOGGLE::READY;
+        while (1) {
+          if (StateMonitor::indicator_estimator == common::STATETOGGLE::IDLE) {
+            StateMonitor::indicator_estimator = common::STATETOGGLE::READY;
+            CLOG(INFO, "estimator") << "initialation successful!";
+          }
+
+          if (StateMonitor::indicator_planner == common::STATETOGGLE::IDLE &&
+              estimator_RTdata.state_toggle == common::STATETOGGLE::READY) {
+            StateMonitor::indicator_planner = common::STATETOGGLE::READY;
+            CLOG(INFO, "planner") << "initialation successful!";
+          }
+
+          if (StateMonitor::indicator_estimator == common::STATETOGGLE::READY &&
+              StateMonitor::indicator_planner == common::STATETOGGLE::READY &&
+              StateMonitor::indicator_controller == common::STATETOGGLE::IDLE) {
+            StateMonitor::indicator_controller = common::STATETOGGLE::READY;
+          }
+          std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+
         break;
       }
       case common::TESTMODE::EXPERIMENT_DP:
@@ -848,26 +864,28 @@ class threadloop : public StateMonitor {
 
         while (1) {
           if (gps_data.status >= 1) {
-            if (StateMonitor::indicator_gps == STATETOGGLE::IDLE) {
-              StateMonitor::indicator_gps = STATETOGGLE::READY;
+            if (StateMonitor::indicator_gps == common::STATETOGGLE::IDLE) {
+              StateMonitor::indicator_gps = common::STATETOGGLE::READY;
               CLOG(INFO, "GPS") << "initialation successful!";
             }
           }
 
-          if (StateMonitor::indicator_gps == STATETOGGLE::READY &&
-              StateMonitor::indicator_estimator == STATETOGGLE::IDLE) {
-            StateMonitor::indicator_estimator = STATETOGGLE::READY;
+          if (StateMonitor::indicator_gps == common::STATETOGGLE::READY &&
+              StateMonitor::indicator_estimator == common::STATETOGGLE::IDLE) {
+            StateMonitor::indicator_estimator = common::STATETOGGLE::READY;
+            CLOG(INFO, "estimator") << "initialation successful!";
           }
 
-          if (StateMonitor::indicator_estimator == STATETOGGLE::READY &&
-              StateMonitor::indicator_planner == STATETOGGLE::IDLE) {
-            StateMonitor::indicator_planner = STATETOGGLE::READY;
+          if (StateMonitor::indicator_planner == common::STATETOGGLE::IDLE &&
+              estimator_RTdata.state_toggle == common::STATETOGGLE::READY) {
+            StateMonitor::indicator_planner = common::STATETOGGLE::READY;
+            CLOG(INFO, "planner") << "initialation successful!";
           }
 
-          if (StateMonitor::indicator_estimator == STATETOGGLE::READY &&
-              StateMonitor::indicator_planner == STATETOGGLE::READY &&
-              StateMonitor::indicator_controller == STATETOGGLE::IDLE) {
-            StateMonitor::indicator_controller = STATETOGGLE::READY;
+          if (StateMonitor::indicator_estimator == common::STATETOGGLE::READY &&
+              StateMonitor::indicator_planner == common::STATETOGGLE::READY &&
+              StateMonitor::indicator_controller == common::STATETOGGLE::IDLE) {
+            StateMonitor::indicator_controller = common::STATETOGGLE::READY;
           }
           std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
@@ -944,7 +962,7 @@ class threadloop : public StateMonitor {
 
   }  // socketloop()
 
-};  // end threadloop
+};  // namespace ASV
 
 }  // end namespace ASV
 
