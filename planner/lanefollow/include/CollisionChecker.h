@@ -26,9 +26,9 @@ class CollisionChecker {
       const std::vector<Frenet_path> &_frenet_lattice) {
     std::vector<Frenet_path> collision_free_roi_paths;
     std::vector<Frenet_path> sub_collision_free_roi_paths;
-    // std::vector<Frenet_path> constraint_free_paths = _frenet_lattice;
-    std::vector<Frenet_path> constraint_free_paths =
-        check_constraints(_frenet_lattice);
+    std::vector<Frenet_path> constraint_free_paths = _frenet_lattice;
+    // std::vector<Frenet_path> constraint_free_paths =
+    //     check_constraints(_frenet_lattice);
 
     for (std::size_t i = 0; i != constraint_free_paths.size(); i++) {
       int results = check_collision(constraint_free_paths[i]);

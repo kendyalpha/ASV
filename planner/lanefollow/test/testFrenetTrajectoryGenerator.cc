@@ -50,9 +50,9 @@ int main() {
       0.05,        // TARGET_COURSE_ARC_STEP
       7.0,         // MAX_ROAD_WIDTH
       1,           // ROAD_WIDTH_STEP
-      6.0,         // MAXT
-      5.0,         // MINT
-      0.5,         // DT
+      8.0,         // MAXT
+      6.0,         // MINT
+      2,           // DT
       0.5,         // MAX_SPEED_DEVIATION
       0.1          // TRAGET_SPEED_STEP
   };
@@ -112,8 +112,8 @@ int main() {
         _trajectorygenerator
             .trajectoryonestep(
                 estimate_marinestate.x, estimate_marinestate.y,
-                estimate_marinestate.theta + 0.01 * num_normal_dis,
-                estimate_marinestate.kappa + 0.05 * num_normal_dis,
+                estimate_marinestate.theta + 0.00 * num_normal_dis,
+                estimate_marinestate.kappa + 0.00 * num_normal_dis,
                 estimate_marinestate.speed + 0.2 * num_normal_dis,
                 estimate_marinestate.dspeed, 3)
             .getnextcartesianstate();

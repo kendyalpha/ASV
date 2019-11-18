@@ -14,7 +14,7 @@ elseif(WIN32)
     message("This is a Windows System")
 endif()
 
-set(CMAKE_BUILD_TYPE "Debug") # "Debug" or "Release" mode
+set(CMAKE_BUILD_TYPE "Release") # "Debug" or "Release" mode
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -Wextra -g -ggdb -pedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
@@ -45,3 +45,8 @@ target_include_directories(testFrenetTrajectoryGenerator PRIVATE ${HEADER_DIRECT
 
 add_executable (testtransform testtransform.cc ${SOURCE_FILES} )
 target_include_directories(testtransform PRIVATE ${HEADER_DIRECTORY})
+
+add_executable (test_experiment test_experimental.cc ${SOURCE_FILES} )
+target_include_directories(test_experiment PRIVATE ${HEADER_DIRECTORY})
+find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
+target_link_libraries(test_experiment PUBLIC ${SQLITE3_LIBRARY})

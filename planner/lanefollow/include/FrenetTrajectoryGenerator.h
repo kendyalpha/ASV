@@ -121,9 +121,9 @@ class FrenetTrajectoryGenerator {
   // cost weights
   const double KJ = 0.1;
   const double KT = 0.1;
-  const double KD = 1;
+  const double KD = 5;
   const double KLAT = 1;
-  const double KLON = 10;
+  const double KLON = 1;
 
   // assume that target_spline2d is known, we can interpolate the spline2d to
   // obtain the associated (s,x,y,theta, kappa)
