@@ -48,7 +48,7 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
     // find minimum cost path
     best_path = findmincostpath(t_frenet_paths);
 
-    updateNextCartesianStatus(_targetspeed);
+    updateNextCartesianStatus();
 
     return *this;
   }  // trajectoryonestep
@@ -77,7 +77,7 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
     return _best_path;
   }
 
-  void updateNextCartesianStatus(double _target_s_dot = 1.0) {
+  void updateNextCartesianStatus() {
     // The results of Frenet generation at "DT"
     // TODO: adjust the "index", which is empirical; For simulation without
     // considering controller, index = 1
