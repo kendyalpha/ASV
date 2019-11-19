@@ -20,10 +20,10 @@
 #include <vector>
 #include "common/fileIO/include/utilityio.h"
 #include "common/property/include/vesseldata.h"
-#include "controller/include/controllerdata.h"
-#include "estimator/include/estimatordata.h"
-#include "planner/common/include/plannerdata.h"
-#include "planner/lanefollow/include/LatticePlannerdata.h"
+#include "modules/controller/include/controllerdata.h"
+#include "modules/estimator/include/estimatordata.h"
+#include "modules/planner/common/include/plannerdata.h"
+#include "modules/planner/lanefollow/include/LatticePlannerdata.h"
 
 /*
 global coordinate (GLOBAL), which is an inertial reference frame;

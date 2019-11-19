@@ -19,12 +19,12 @@
 #include "common/fileIO/include/utilityio.h"
 #include "common/logging/include/easylogging++.h"
 #include "common/property/include/priority.h"
-#include "controller/include/controllerdata.h"
-#include "estimator/include/estimatordata.h"
-#include "messages/sensors/gpsimu/include/gpsdata.h"
-#include "messages/sensors/wind/include/winddata.h"
-#include "messages/stm32/include/stm32data.h"
-#include "planner/common/include/plannerdata.h"
+#include "modules/controller/include/controllerdata.h"
+#include "modules/estimator/include/estimatordata.h"
+#include "modules/messages/sensors/gpsimu/include/gpsdata.h"
+#include "modules/messages/sensors/wind/include/winddata.h"
+#include "modules/messages/stm32/include/stm32data.h"
+#include "modules/planner/common/include/plannerdata.h"
 
 namespace ASV::common {
 template <int m, int n = 3>
