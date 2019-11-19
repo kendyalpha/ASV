@@ -65,6 +65,9 @@ struct guilinkRTdata {
   Eigen::Vector2d startingpoint;  // path planning data
   Eigen::Vector2d endingpoint;    // path planning data
   Eigen::Matrix<double, 2, 8> waypoints;
+
+  Eigen::VectorXd WX;
+  Eigen::VectorXd WY;
 };
 
 }  //  namespace ASV::messages

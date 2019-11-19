@@ -12,3 +12,5 @@ BUILD/
 *.mat
 *.o
 ASV.tar.gz
+boost_1_71_0.tar.gz
+GeographicLib-1.50.tar.gz

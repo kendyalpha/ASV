@@ -167,7 +167,9 @@ class threadloop : public StateMonitor {
       0.0,                                          // desired_speed
       Eigen::Vector2d::Zero(),                      // startingpoint
       Eigen::Vector2d::Zero(),                      // endingpoint
-      Eigen::Matrix<double, 2, 8>::Zero()           // waypoints
+      Eigen::Matrix<double, 2, 8>::Zero(),          // waypoints
+      Eigen::VectorXd::Zero(2),                     // WX
+      Eigen::VectorXd::Zero(2)                      // WY
   };
 
   // real time utc
@@ -409,6 +411,9 @@ class threadloop : public StateMonitor {
     controller_RTdata =
         _controller.initializecontroller().getcontrollerRTdata();
 
+    _trajectorytracking.set_grid_points(guilink_RTdata.WX, guilink_RTdata.WY,
+                                        guilink_RTdata.desired_speed);
+
     while (1) {
       outerloop_elapsed_time = timer_controler.timeelapsed();
 
@@ -443,9 +448,9 @@ class threadloop : public StateMonitor {
               controller_RTdata.command_alpha_deg);
           // trajectory tracking
           tracker_RTdata = _trajectorytracking
-                               .CircularArcLOS(Planning_Marine_state.kappa,
-                                               Planning_Marine_state.speed,
-                                               Planning_Marine_state.theta)
+                               .FollowCircularArc(Planning_Marine_state.kappa,
+                                                  Planning_Marine_state.speed,
+                                                  Planning_Marine_state.theta)
                                .gettrackerRTdata();
           break;
         }
@@ -499,9 +504,9 @@ class threadloop : public StateMonitor {
               controller_RTdata.command_alpha_deg);
           // trajectory tracking
           tracker_RTdata = _trajectorytracking
-                               .CircularArcLOS(Planning_Marine_state.kappa,
-                                               Planning_Marine_state.speed,
-                                               Planning_Marine_state.theta)
+                               .FollowCircularArc(Planning_Marine_state.kappa,
+                                                  Planning_Marine_state.speed,
+                                                  Planning_Marine_state.theta)
                                .gettrackerRTdata();
 
           break;

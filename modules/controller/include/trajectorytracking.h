@@ -35,14 +35,14 @@ class lineofsight {
   lineofsight() = delete;
   virtual ~lineofsight() = default;
 
-  bool switch2next_waypoint(const Eigen::Vector2d &_vesselposition,
-                            const Eigen::Vector2d &_wp1) {
-    Eigen::Vector2d _error = _vesselposition - _wp1;
-    double _distance =
-        std::sqrt(std::pow(_error(0), 2) + std::pow(_error(1), 2));
-    if (_distance < capture_radius) return true;
+  // Does the vessel enter the capture radius of waypoint
+  bool IsEnterCaptureRadius(const Eigen::Vector2d &_vesselposition,
+                            const Eigen::Vector2d &_wp) {
+    Eigen::Vector2d _error = _vesselposition - _wp;
+    double distance_square = _error(0) * _error(0) * +_error(1) * _error(1);
+    if (distance_square <= capture_radius * capture_radius) return true;
     return false;
-  }  // switch2next_waypoint
+  }  // IsEnterCaptureRadius
 
   // compute the orientation of LOS vector and cross-track error
   void computelospoint(const Eigen::Vector2d &_vesselposition,
@@ -103,11 +103,150 @@ class trajectorytracking final : public lineofsight {
                     _controllerdata.los_capture_radius),
         TrackerRTdata(_TrackerRTdata),
         sample_time(_controllerdata.sample_time),
+        basic_capture_radius(_controllerdata.los_capture_radius),
+        desired_speed(1.0),
         grid_points_index(0),
         grid_points_x((Eigen::VectorXd(2) << 0, 1).finished()),
         grid_points_y((Eigen::VectorXd(2) << 1, 0).finished()) {}
 
   ~trajectorytracking() = default;
+
+  // follow a set of points like grid using LOS
+  void Grid_LOS(const Eigen::Vector2d &_vesselposition) {
+    Eigen::Vector2d current_wp0 =
+        (Eigen::Vector2d() << grid_points_x(grid_points_index),
+         grid_points_y(grid_points_index))
+            .finished();
+    Eigen::Vector2d current_wp1 =
+        (Eigen::Vector2d() << grid_points_x(grid_points_index + 1),
+         grid_points_y(grid_points_index + 1))
+            .finished();
+
+    if (grid_points_x.size() > 2) {  // multiple waypoints
+      // switch waypoints
+      if (lineofsight::IsEnterCaptureRadius(_vesselposition, current_wp1)) {
+        if (grid_points_index == grid_points_x.size() - 2) {
+          TrackerRTdata.trackermode = TRACKERMODE::FINISHED;
+          CLOG(INFO, "LOS") << "reach the last waypoint!";
+          return;
+        } else
+          ++grid_points_index;
+      }
+      // reduce speed based on turning angles
+      if (lineofsight::IsEnterCaptureRadius(_vesselposition, current_wp0) &&
+          (grid_points_index > 0)) {
+        double reduced_desired_speed =
+            (1 - std::abs(turning_angles(grid_points_index)) / M_PI) *
+            desired_speed;
+        CircularArcLOS(0, reduced_desired_speed, _vesselposition, current_wp0,
+                       current_wp1);
+      } else
+        CircularArcLOS(0, desired_speed, _vesselposition, current_wp0,
+                       current_wp1);
+
+    } else {  // only two waypoints
+      if (lineofsight::IsEnterCaptureRadius(_vesselposition, current_wp1)) {
+        TrackerRTdata.trackermode = TRACKERMODE::FINISHED;
+        CLOG(INFO, "LOS") << "reach the last waypoint!";
+        return;
+      }
+      CircularArcLOS(0, desired_speed, _vesselposition, current_wp0,
+                     current_wp1);
+    }
+
+    TrackerRTdata.trackermode = TRACKERMODE::TRACKING;
+    return;
+
+  }  // Grid_LOS
+
+  // follow a circular arc without LOS
+  trajectorytracking &FollowCircularArc(double _desired_curvature,
+                                        double _desired_speed,
+                                        double _desired_heading) {
+    // desired u and r
+    double _rot = _desired_curvature * _desired_speed;
+    TrackerRTdata.v_setpoint(0) = _desired_speed;
+    TrackerRTdata.v_setpoint(2) = _rot;
+
+    // desired heading
+    TrackerRTdata.setpoint(2) = _desired_heading;
+
+    return *this;
+  }  // FollowCircularArc
+
+  void set_grid_points(const Eigen::VectorXd &_grid_points_x,
+                       const Eigen::VectorXd &_grid_points_y,
+                       double _desired_speed) {
+    assert(_grid_points_x.size() == _grid_points_y.size());
+    assert(_grid_points_x.size() >= 2);
+    assert(_desired_speed > 0);
+
+    if (_grid_points_x.size() > 2) {
+      turning_angles = compute_turning_angles(_grid_points_x, _grid_points_y);
+      lineofsight::setcaptureradius(compute_capture_radius(_desired_speed));
+    }
+
+    desired_speed = _desired_speed;
+    grid_points_x = _grid_points_x;
+    grid_points_y = _grid_points_y;
+    grid_points_index = 0;  // reset the index
+
+    TrackerRTdata.trackermode = TRACKERMODE::STARTED;
+
+  }  // set_grid_points
+
+  auto gettrackerRTdata() const noexcept { return TrackerRTdata; }
+
+ private:
+  trackerRTdata TrackerRTdata;
+  const double sample_time;  // sample time of controller
+  const double basic_capture_radius;
+
+  double desired_speed;
+  int grid_points_index;
+  Eigen::VectorXd grid_points_x;  // a set of points like grid
+  Eigen::VectorXd grid_points_y;
+  Eigen::VectorXd
+      turning_angles;  // a set of turning angles based on grid points
+
+  // follow a circular arc using LOS
+  void CircularArcLOS(double _curvature, double _desired_u,
+                      const Eigen::Vector2d &_vesselposition,
+                      const Eigen::Vector2d &_rp0,
+                      const Eigen::Vector2d &_rp1) {
+    // desired u and r
+    double _rot = _curvature * _desired_u;
+    TrackerRTdata.v_setpoint(0) = _desired_u;
+    TrackerRTdata.v_setpoint(2) = _rot;
+
+    // desired heading
+    lineofsight::computelospoint(_vesselposition, _rp0, _rp1);
+    TrackerRTdata.setpoint(2) = desired_theta;
+
+  }  // CircularArcLOS
+
+  double compute_capture_radius(double _desired_speed) {
+    return std::sqrt(_desired_speed) * basic_capture_radius;
+  }  // compute_capture_radius
+
+  // compute the turning angles of each set of waypoints
+  Eigen::VectorXd compute_turning_angles(
+      const Eigen::VectorXd &_grid_points_x,
+      const Eigen::VectorXd &_grid_points_y) {
+    std::size_t num_grid_points = _grid_points_x.size();
+    Eigen::VectorXd t_turning_angles =
+        Eigen::VectorXd::Zero(num_grid_points - 2);  // assert size > 2
+
+    for (std::size_t i = 0; i != (num_grid_points - 2); ++i) {
+      t_turning_angles(i) = common::math::VectorAngle_2d(
+          _grid_points_x(i + 1) - _grid_points_x(i),      // x1
+          _grid_points_y(i + 1) - _grid_points_y(i),      // y1
+          _grid_points_x(i + 2) - _grid_points_x(i + 1),  // x2
+          _grid_points_y(i + 2) - _grid_points_y(i + 1)   // y2
+      );
+    }
+    return t_turning_angles;
+  }  // compute_turning_angles
 
   // Eigen::MatrixXd followcircle(const Eigen::Vector2d &_startposition,
   //                              const Eigen::Vector2d &_endposition,
@@ -149,96 +288,6 @@ class trajectorytracking final : public lineofsight {
   //   }
   //   return waypoints;
   // }
-
-  // follow a set of points like grid using LOS
-  void Grid_LOS(double _desired_u, const Eigen::Vector2d &_vesselposition) {
-    Eigen::Vector2d wp0 =
-        (Eigen::Vector2d() << grid_points_x(grid_points_index),
-         grid_points_y(grid_points_index))
-            .finished();
-    Eigen::Vector2d wp1 =
-        (Eigen::Vector2d() << grid_points_x(grid_points_index + 1),
-         grid_points_y(grid_points_index + 1))
-            .finished();
-
-    lineofsight::setcaptureradius(8 * _desired_u);
-    // switch waypoints
-    if (lineofsight::switch2next_waypoint(_vesselposition, wp1)) {
-      if (grid_points_index == grid_points_x.size() - 2) {
-        TrackerRTdata.trackermode = TRACKERMODE::FINISHED;
-        CLOG(INFO, "LOS") << "reach the last waypoint!";
-        return;
-      } else {
-        // compute the turning angle
-        double abs_turning_angle = std::abs(common::math::VectorAngle_2d(
-            grid_points_x(grid_points_index + 1) -
-                grid_points_x(grid_points_index),  // x1
-            grid_points_y(grid_points_index + 1) -
-                grid_points_y(grid_points_index),  // y1
-            grid_points_x(grid_points_index + 2) -
-                grid_points_x(grid_points_index + 1),  // x2
-            grid_points_y(grid_points_index + 2) -
-                grid_points_y(grid_points_index + 1)  // y2
-            ));
-
-        ++grid_points_index;
-      }
-    }
-    CircularArcLOS(0, _desired_u, _vesselposition, wp0, wp1);
-    TrackerRTdata.trackermode = TRACKERMODE::TRACKING;
-    return;
-
-  }  // Grid_LOS
-
-  // follow a circular arc using LOS
-  trajectorytracking &CircularArcLOS(double _curvature, double _desired_u,
-                                     const Eigen::Vector2d &_vesselposition,
-                                     const Eigen::Vector2d &_rp0,
-                                     const Eigen::Vector2d &_rp1) {
-    // desired u and r
-    double _rot = _curvature * _desired_u;
-    TrackerRTdata.v_setpoint(0) = _desired_u;
-    TrackerRTdata.v_setpoint(2) = _rot;
-
-    // desired heading
-    lineofsight::computelospoint(_vesselposition, _rp0, _rp1);
-    TrackerRTdata.setpoint(2) = desired_theta;
-
-    return *this;
-  }  // CircularArcLOS
-
-  // follow a circular arc without LOS
-  trajectorytracking &CircularArcLOS(double _desired_curvature,
-                                     double _desired_speed,
-                                     double _desired_heading) {
-    // desired u and r
-    double _rot = _desired_curvature * _desired_speed;
-    TrackerRTdata.v_setpoint(0) = _desired_speed;
-    TrackerRTdata.v_setpoint(2) = _rot;
-
-    // desired heading
-    TrackerRTdata.setpoint(2) = _desired_heading;
-
-    return *this;
-  }  // CircularArcLOS
-
-  auto gettrackerRTdata() const noexcept { return TrackerRTdata; }
-  void set_grid_points(const Eigen::VectorXd &_grid_points_x,
-                       const Eigen::VectorXd &_grid_points_y) {
-    assert(_grid_points_x.size() == _grid_points_y.size());
-    assert(_grid_points_x.size() >= 2);
-    TrackerRTdata.trackermode = TRACKERMODE::STARTED;
-    grid_points_x = _grid_points_x;
-    grid_points_y = _grid_points_y;
-    grid_points_index = 0;  // reset the index
-  }
-
- private:
-  trackerRTdata TrackerRTdata;
-  const double sample_time;  // sample time of controller
-  int grid_points_index;
-  Eigen::VectorXd grid_points_x;  // a set of points like grid
-  Eigen::VectorXd grid_points_y;
 
 };  // end class trajectorytracking
 }  // namespace ASV::control

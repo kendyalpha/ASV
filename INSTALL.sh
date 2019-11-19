@@ -34,8 +34,8 @@ tar xvf mosektoolslinux64x86.tar.bz2
 sudo cp -rf mosek/ /opt/
 sudo cp -rf /opt/mosek/9.0/tools/platform/linux64x86/bin/libmosek64.* /usr/lib/
 
-echo -e '# environmental variable for mosek9' >> ~/.bashrc
-echo -e 'PATH=/opt/mosek/9.0/tools/platform/linux64x86/bin:$PATH' >> ~/.bashrc
+echo '# environmental variable for mosek9' >> ~/.bashrc
+echo 'PATH=/opt/mosek/9.0/tools/platform/linux64x86/bin:$PATH' >> ~/.bashrc
 sudo source ~/.bashrc
 
 sudo mkdir -m 777 ~/mosek

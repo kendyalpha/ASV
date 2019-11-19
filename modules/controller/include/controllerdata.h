@@ -13,7 +13,6 @@
 
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
-
 #include "common/property/include/priority.h"
 
 #include <vector>
