@@ -2,43 +2,16 @@
 #include <iostream>
 #include "../include/LatticePlanner.h"
 #include "common/fileIO/include/utilityio.h"
+#include "common/timer/include/timecounter.h"
 
 using namespace ASV;
-
-template <int num_lowpass>
-class lowpass {
-  using vectorlp = Eigen::Matrix<double, num_lowpass, 1>;
-
- public:
-  lowpass() : averagevector(vectorlp::Zero()) {}
-  ~lowpass() {}
-
-  // assign the same value to all elements of "averagevector"
-  void setaveragevector(double _initialvalue) {
-    averagevector = vectorlp::Constant(_initialvalue);
-  }
-  // low pass filtering using moving average method
-  double movingaverage(double _newstep) {
-    // pop_front
-    vectorlp t_average = vectorlp::Zero();
-    t_average.head(num_lowpass - 1) = averagevector.tail(num_lowpass - 1);
-    // push back
-    t_average(num_lowpass - 1) = _newstep;
-    averagevector = t_average;
-    // calculate the mean value
-    return averagevector.mean();
-  }
-
- private:
-  vectorlp averagevector;
-};  // end class lowpass
 
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
 
-  double start_x = 3433825.73;
-  double start_y = 350927.165;
+  double start_x = 3433822.79;
+  double start_y = 350925.455;
   double end_x = 3433790.52;
   double end_y = 350986.45;
 
@@ -55,13 +28,13 @@ int main() {
       0.2,   // SAMPLE_TIME
       4,     // MAX_SPEED
       0.05,  // TARGET_COURSE_ARC_STEP
-      8,     // MAX_ROAD_WIDTH
-      2,     // ROAD_WIDTH_STEP
-      10.0,  // MAXT
-      8.0,   // MINT
+      6,     // MAX_ROAD_WIDTH
+      1,     // ROAD_WIDTH_STEP
+      8.0,   // MAXT
+      6.0,   // MINT
       0.5,   // DT
-      1,     // MAX_SPEED_DEVIATION
-      0.5    // TRAGET_SPEED_STEP
+      0.6,   // MAX_SPEED_DEVIATION
+      0.2    // TRAGET_SPEED_STEP
   };
 
   planning::CollisionData _collisiondata{
@@ -71,7 +44,7 @@ int main() {
       0.2,   // MAX_CURVATURE
       3,     // HULL_LENGTH
       1,     // HULL_WIDTH
-      2      // ROBOT_RADIUS
+      3      // ROBOT_RADIUS
   };
 
   // real time data
@@ -106,30 +79,13 @@ int main() {
       " DATETIME    TEXT       NOT NULL,"
       " theta       DOUBLE, "
       " kappa       DOUBLE, "
-      " lp_theta    DOUBLE, "
-      " lp_kappa    DOUBLE, "
       " speed       DOUBLE);";
   test_db << str;
 
-  // low pass
-  lowpass<50> lp_x;
-  lowpass<50> lp_y;
-  lowpass<10> lp_theta;
-  lowpass<50> lp_kappa;
-  lowpass<50> lp_speed;
-  lowpass<200> lp_plan_theta;
-  lowpass<200> lp_plan_kappa;
+  // timer
+  common::timecounter _timer;
 
-  lp_x.setaveragevector(start_x);
-  lp_y.setaveragevector(start_y);
-  lp_theta.setaveragevector(0);
-  lp_kappa.setaveragevector(0);
-  lp_speed.setaveragevector(0);
-  lp_plan_theta.setaveragevector(0);
-  lp_plan_kappa.setaveragevector(0);
-
-  for (int i = 10; i != 3000; i++) {
-    // read data from DB
+  for (int i = 10; i != 4000; i++) {
     std::string input_str =
         "select state_x,state_y ,state_theta ,curvature ,speed ,dspeed from "
         "estimator where ID=" +
@@ -139,37 +95,28 @@ int main() {
         std::tie(estimate_marinestate.x, estimate_marinestate.y,
                  estimate_marinestate.theta, estimate_marinestate.kappa,
                  estimate_marinestate.speed, estimate_marinestate.dspeed);
-
-    double x = lp_x.movingaverage(estimate_marinestate.x);
-    double y = lp_y.movingaverage(estimate_marinestate.y);
-    double theta = lp_theta.movingaverage(estimate_marinestate.theta);
-    double kappa = lp_kappa.movingaverage(estimate_marinestate.kappa);
-    double speed = lp_speed.movingaverage(estimate_marinestate.speed);
-
     // Lattice Planner
     Plan_cartesianstate = _trajectorygenerator
-                              .trajectoryonestep(estimate_marinestate.x,      //
-                                                 estimate_marinestate.y,      //
-                                                 estimate_marinestate.theta,  //
-                                                 estimate_marinestate.kappa,  //
-                                                 estimate_marinestate.speed,  //
-                                                 estimate_marinestate.dspeed, 2)
+                              .trajectoryonestep(estimate_marinestate.x,  //
+                                                 estimate_marinestate.y,  //
+                                                 estimate_marinestate.theta,
+                                                 estimate_marinestate.kappa,
+                                                 estimate_marinestate.speed,
+                                                 estimate_marinestate.dspeed, 3)
                               .getnextcartesianstate();
-
-    double plan_theta = lp_plan_theta.movingaverage(Plan_cartesianstate.theta);
-    double plan_kappa = lp_plan_kappa.movingaverage(Plan_cartesianstate.kappa);
 
     // write data into DB
     std::string write_str =
         "INSERT INTO PLAN"
-        "(DATETIME, theta, kappa, lp_theta, lp_kappa, speed) "
+        "(DATETIME, theta, kappa, speed) "
         " VALUES(julianday('now'), " +
-        std::to_string(-Plan_cartesianstate.theta) + ", " +
+        std::to_string(Plan_cartesianstate.theta) + ", " +
         std::to_string(Plan_cartesianstate.kappa) + ", " +
-        std::to_string(estimate_marinestate.theta) + ", " +
-        std::to_string(plan_kappa) + ", " +
         std::to_string(Plan_cartesianstate.speed) + ");";
 
     test_db << write_str;
+
+    long int et = _timer.timeelapsed();
+    // std::cout << et << std::endl;
   }
 }

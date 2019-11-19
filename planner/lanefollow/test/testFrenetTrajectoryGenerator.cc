@@ -26,23 +26,14 @@ int main() {
   LOG(INFO) << "The program has started!";
 
   // trajectory generator
-  // Eigen::VectorXd marine_WX(5);
-  // Eigen::VectorXd marine_WY(5);
-  // Eigen::VectorXd marine_ob_x(6);
-  // Eigen::VectorXd marine_ob_y(6);
-  // marine_WX << 0.0, 10.0, 20.5, 35.0, 70.5;
-  // marine_WY << 0.0, 6.0, -5.0, -6.5, 0.0;
-  // marine_ob_x << 20.0, 30.0, 30.0, 35.0, 34.0, 50.0;
-  // marine_ob_y << -10.0, -6.0, -8.0, -8.0, -8.0, -3.0;
-
-  Eigen::VectorXd marine_WX(3);
-  Eigen::VectorXd marine_WY(3);
-  Eigen::VectorXd marine_ob_x(1);
-  Eigen::VectorXd marine_ob_y(1);
-  marine_WX << 0.0, 20.0, 40;
-  marine_WY << 0.0, 20, 40;
-  marine_ob_x << 20.0;
-  marine_ob_y << 20.0;
+  Eigen::VectorXd marine_WX(5);
+  Eigen::VectorXd marine_WY(5);
+  Eigen::VectorXd marine_ob_x(6);
+  Eigen::VectorXd marine_ob_y(6);
+  marine_WX << 0.0, 10.0, 20.5, 35.0, 70.5;
+  marine_WY << 0.0, 6.0, -5.0, -6.5, 0.0;
+  marine_ob_x << 20.0, 30.0, 30.0, 35.0, 34.0, 50.0;
+  marine_ob_y << -10.0, -6.0, -8.0, -8.0, -8.0, -3.0;
 
   planning::LatticeData _latticedata{
       0.1,         // SAMPLE_TIME
@@ -50,11 +41,11 @@ int main() {
       0.05,        // TARGET_COURSE_ARC_STEP
       7.0,         // MAX_ROAD_WIDTH
       1,           // ROAD_WIDTH_STEP
-      8.0,         // MAXT
-      6.0,         // MINT
-      2,           // DT
-      0.5,         // MAX_SPEED_DEVIATION
-      0.1          // TRAGET_SPEED_STEP
+      5.0,         // MAXT
+      4.0,         // MINT
+      0.2,         // DT
+      0.4,         // MAX_SPEED_DEVIATION
+      0.2          // TRAGET_SPEED_STEP
   };
 
   planning::CollisionData _collisiondata{
@@ -100,22 +91,13 @@ int main() {
   // timer
   common::timecounter _timer;
 
-  // random number
-  std::random_device rd{};
-  std::mt19937 gen{rd()};
-  std::normal_distribution<> d{0, 1};
-
   for (int i = 0; i != 500; ++i) {
-    double num_normal_dis = d(gen);
-
     Plan_cartesianstate =
         _trajectorygenerator
             .trajectoryonestep(
                 estimate_marinestate.x, estimate_marinestate.y,
-                estimate_marinestate.theta + 0.00 * num_normal_dis,
-                estimate_marinestate.kappa + 0.00 * num_normal_dis,
-                estimate_marinestate.speed + 0.2 * num_normal_dis,
-                estimate_marinestate.dspeed, 3)
+                estimate_marinestate.theta, estimate_marinestate.kappa,
+                estimate_marinestate.speed, estimate_marinestate.dspeed, 3)
             .getnextcartesianstate();
 
     estimate_marinestate = Plan_cartesianstate;
@@ -162,7 +144,7 @@ int main() {
     }
 
     long int et = _timer.timeelapsed();
-    // std::cout << et << std::endl;
+    // std::cout << "each: " << et << std::endl;
   }
 
   // utilityio _utilityio;

@@ -16,13 +16,14 @@ endif()
 
 set(CMAKE_BUILD_TYPE "Release") # "Debug" or "Release" mode
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -Wextra -g -ggdb -pedantic")
-set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -mavx")
 
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # thread库
 find_package(Threads MODULE REQUIRED)
+find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
 
 # 添加 include 子目录
 
@@ -48,5 +49,4 @@ target_include_directories(testtransform PRIVATE ${HEADER_DIRECTORY})
 
 add_executable (test_experiment test_experimental.cc ${SOURCE_FILES} )
 target_include_directories(test_experiment PRIVATE ${HEADER_DIRECTORY})
-find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
 target_link_libraries(test_experiment PUBLIC ${SQLITE3_LIBRARY})

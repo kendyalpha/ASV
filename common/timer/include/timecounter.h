@@ -33,6 +33,14 @@ class timecounter {
     return t_elapsed.total_milliseconds();
   }
 
+  // return the elapsed duration in microseconds
+  long int micro_timeelapsed() {
+    PTIMER pt_now(PCLOCK::universal_time());
+    boost::posix_time::time_duration t_elapsed = pt_now - pt_start;
+    pt_start = pt_now;
+    return t_elapsed.total_microseconds();
+  }
+
   // return the UTC time (ISO)
   std::string getUTCtime() {
     pt_UTC = PCLOCK::universal_time();

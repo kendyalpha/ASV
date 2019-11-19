@@ -186,7 +186,7 @@ class spline {
   double operator()(double x) const {
     std::size_t idx = find_closestindex(x);
     double h = x - m_x(idx);
-    double interpol;
+    double interpol = 0.0;
     if (x < m_x(0)) {
       // extrapolation to the left
       interpol = (m_b0 * h + m_c0) * h + m_y(0);
@@ -204,9 +204,8 @@ class spline {
     assert(order > 0);
 
     std::size_t idx = find_closestindex(x);
-
     double h = x - m_x(idx);
-    double interpol;
+    double interpol = 0.0;
     if (x < m_x(0)) {
       // extrapolation to the left
       switch (order) {
@@ -278,28 +277,32 @@ class Spline2D {
   }  // compute_position
   // calculate the curvature based on the arclength
   double compute_curvature(double _arclength) const {
-    double kappa = 0.0;
     double dx = _SX.deriv(1, _arclength);
     double ddx = _SX.deriv(2, _arclength);
     double dy = _SY.deriv(1, _arclength);
     double ddy = _SY.deriv(2, _arclength);
-    kappa = (ddy * dx - ddx * dy) /
-            std::pow(std::pow(dx, 2) + std::pow(dy, 2), 1.5);
+    // kappa = (ddy * dx - ddx * dy) /
+    //         std::pow(std::pow(dx, 2) + std::pow(dy, 2), 1.5);
+    double kappa = (ddy * dx - ddx * dy) / (dx * dx + dy * dy);
     return kappa;
   }  // compute_curvature
      // calculate the derivative of curvature to arclength
   double compute_dcurvature(double _arclength) const {
-    double dkappa = 0.0;
     double dx = _SX.deriv(1, _arclength);
     double ddx = _SX.deriv(2, _arclength);
     double dddx = _SX.deriv(3, _arclength);
     double dy = _SY.deriv(1, _arclength);
     double ddy = _SY.deriv(2, _arclength);
     double dddy = _SY.deriv(3, _arclength);
-    double squareterm = std::pow(dx, 2) + std::pow(dy, 2);
-    dkappa = ((dddy * dx - dddx * dy) * squareterm -
-              3 * (ddy * dx - ddx * dy) * (dx * ddx + dy * ddy)) /
-             std::pow(squareterm, 2.5);
+
+    double squareterm = dx * dx + dy * dy;
+    // dkappa = ((dddy * dx - dddx * dy) * squareterm -
+    //           3 * (ddy * dx - ddx * dy) * (dx * ddx + dy * ddy)) /
+    //          std::pow(squareterm, 2.5);
+
+    double dkappa = ((dddy * dx - dddx * dy) * squareterm -
+                     3 * (ddy * dx - ddx * dy) * (dx * ddx + dy * ddy)) /
+                    (squareterm * squareterm);
 
     return dkappa;
   }  // compute_curvature
@@ -309,6 +312,7 @@ class Spline2D {
     double dy = _SY.deriv(1, _arclength);
     return std::atan2(dy, dx);
   }  // compute_yaw
+
   Eigen::VectorXd getarclength() const { return arclength; }
 
  private:
