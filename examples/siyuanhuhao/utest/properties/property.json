@@ -9,7 +9,7 @@
     "Mass": [244, 0, 0, 0, 244, 80, 0, 80, 102],
     "AddedMass": [27, 0, 0, 0, 68, 52, 0, 52, 40],
     "LinearDamping": [120, 0, 0, 0, 200, 0, 0, 0, 10],
-    "QuadraticDamping": [20, 0, 0, 0, 0, 0, 0, 0, 0],
+    "QuadraticDamping": [0, 0, 0, 0, 0, 0, 0, 0, 0],
     "CoG": [0.68, 0, 0],
     "velocity_limit": {
       "surge": [-4, 6],

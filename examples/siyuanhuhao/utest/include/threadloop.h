@@ -19,12 +19,7 @@ namespace ASV {
 class threadloop : public StateMonitor {
  public:
   threadloop()
-      : StateMonitor(),
-        _jsonparse("./../../properties/property.json"),
-        _trajectorygenerator(_jsonparse.getlatticedata(),
-                             _jsonparse.getcollisiondata()),
-        _trajectorytracking(_jsonparse.getcontrollerdata(), tracker_RTdata),
-        _tcpserver("9340") {
+      : StateMonitor(), _jsonparse("./../../properties/property.json") {
     // // write prettified JSON to another file
     // std::ofstream o("pretty.json");
     // o << std::setw(4) << j << std::endl;
@@ -179,146 +174,39 @@ class threadloop : public StateMonitor {
   // json
   common::jsonparse<num_thruster, dim_controlspace> _jsonparse;
 
-  planning::LatticePlanner _trajectorygenerator;
-  control::trajectorytracking _trajectorytracking;
-
-  tcpserver _tcpserver;
-
-  void generate_waypoints() {
-    StateMonitor::check_planner();
-
-    switch (testmode) {
-      case common::TESTMODE::SIMULATION_DP: {
-        break;
-      }
-      case common::TESTMODE::SIMULATION_LOS: {
-        // trajectory generator
-        // Eigen::VectorXd WX(5);
-        // Eigen::VectorXd WY(5);
-
-        // WX << 0.0, 10.0, 20.5, 35.0, 70.5;
-        // WY << 0.0, 0, 5.0, 6.5, 0.0;
-
-        Eigen::VectorXd WX(2);
-        Eigen::VectorXd WY(2);
-        WX << 0.0, 0.0;
-        WY << 0.0, 10.0;
-
-        _trajectorytracking.set_grid_points(WX, WY);
-
-        planner_RTdata.speed = 2;
-
-        break;
-      }
-      case common::TESTMODE::SIMULATION_FRENET: {
-        // trajectory generator
-        // Eigen::VectorXd WX(6);
-        // Eigen::VectorXd WY(6);
-        // Eigen::VectorXd ob_x(6);
-        // Eigen::VectorXd ob_y(6);
-        // WX << 0.0, 10.0, 20.5, 35.0, 70.5, 130;
-        // WY << 0.0, 0, 5.0, 6.5, 0.0, 0.0;
-        // ob_x << 10, 35.0, 35.0, 34.5, 35.5, 70.5;
-        // ob_y << 0.0, 6.0, 7.0, 6.5, 6.5, 0.0;
-
-        double initial_x = estimator_RTdata.State(0);
-        double initial_y = estimator_RTdata.State(1);
-        double final_x = 20;
-        double final_y = 20;
-        double ox = 0.5 * (initial_x + final_x);
-        double oy = 0.5 * (initial_y + final_y);
-
-        Eigen::VectorXd WX(3);
-        Eigen::VectorXd WY(3);
-        Eigen::VectorXd ob_x(1);
-        Eigen::VectorXd ob_y(1);
-        WX << initial_x, ox, final_x;
-        WY << initial_y, oy, final_y;
-        ob_x << ox;
-        ob_y << oy;
-
-        std::cout << WX;
-
-        _trajectorygenerator.regenerate_target_course(WX, WY);
-        _trajectorygenerator.setobstacle(ob_x, ob_y);
-
-        // sqlite::database db("./../../data/wp.db");
-        // std::string str =
-        //     "CREATE TABLE WP"
-        //     "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
-        //     " X           DOUBLE, "
-        //     " Y           DOUBLE); ";
-        // db << str;
-
-        // auto CartRefX = _trajectorygenerator.getCartRefX();
-        // auto CartRefY = _trajectorygenerator.getCartRefY();
-
-        // for (int i = 0; i != CartRefX.size(); i++) {
-        //   // save to sqlite
-        //   std::string str =
-        //       "INSERT INTO WP"
-        //       "(X, Y) VAlUES(" +
-        //       std::to_string(CartRefX(i)) + ", " +
-        //       std::to_string(-CartRefY(i)) + ");";
-        //   db << str;
-        // }
-        // CLOG(INFO, "waypoints") << "Waypoints have been generated";
-
-        break;
-      }
-      case common::TESTMODE::EXPERIMENT_DP: {
-        break;
-      }
-      case common::TESTMODE::EXPERIMENT_LOS: {
-        // trajectory generator
-        Eigen::VectorXd WX(5);
-        Eigen::VectorXd WY(5);
-        WX << 3433823.54, 3433803, 3433769, 3433790.37, 3433823.54;
-        WY << 350938.7, 350928.66, 350987, 351004, 350938.7;
-
-        _trajectorytracking.set_grid_points(WX, WY);
-        planner_RTdata.speed = 1;
-        break;
-      }
-      case common::TESTMODE::EXPERIMENT_FRENET: {
-        // trajectory generator
-
-        double initial_x = estimator_RTdata.State(0);
-        double initial_y = estimator_RTdata.State(1);
-        double final_x = 3433790.52;
-        double final_y = 350986.45;
-        double ox = 0.5 * (initial_x + final_x);
-        double oy = 0.5 * (initial_y + final_y);
-
-        Eigen::VectorXd WX(3);
-        Eigen::VectorXd WY(3);
-        Eigen::VectorXd ob_x(1);
-        Eigen::VectorXd ob_y(1);
-        WX << initial_x, ox, final_x;
-        WY << initial_y, oy, final_y;
-        ob_x << ox;
-        ob_y << oy;
-        _trajectorygenerator.regenerate_target_course(WX, WY);
-        _trajectorygenerator.setobstacle(ob_x, ob_y);
-
-        CLOG(INFO, "waypoints") << "Waypoints have been generated";
-        break;
-      }
-      default:
-        break;
-    }  // end switch
-  }
-
   void plannerloop() {
-    generate_waypoints();
-
     planning::planner _planner(_jsonparse.getplannerdata());
+    planning::LatticePlanner _trajectorygenerator(
+        _jsonparse.getlatticedata(), _jsonparse.getcollisiondata());
 
     common::timecounter timer_planner;
     long int outerloop_elapsed_time = 0;
     long int innerloop_elapsed_time = 0;
     long int sample_time_ms =
         static_cast<long int>(1000 * _planner.getsampletime());
+
+    StateMonitor::check_planner();
+
+    double initial_x = 3433823.54;
+    double initial_y = 350938.7;
+    double final_x = 3433790.52;
+    double final_y = 350986.45;
+    double ox = 0.5 * (initial_x + final_x);
+    double oy = 0.5 * (initial_y + final_y);
+
+    Eigen::VectorXd WX(3);
+    Eigen::VectorXd WY(3);
+    Eigen::VectorXd ob_x(1);
+    Eigen::VectorXd ob_y(1);
+    WX << initial_x, ox, final_x;
+    WY << initial_y, oy, final_y;
+    ob_x << ox;
+    ob_y << oy;
+
+    std::cout << WX;
+
+    _trajectorygenerator.regenerate_target_course(WX, WY);
+    _trajectorygenerator.setobstacle(ob_x, ob_y);
 
     while (1) {
       outerloop_elapsed_time = timer_planner.timeelapsed();
@@ -400,6 +288,9 @@ class threadloop : public StateMonitor {
                     _jsonparse.getmainrudderdata(),
                     _jsonparse.gettwinfixeddata());
 
+    control::trajectorytracking _trajectorytracking(
+        _jsonparse.getcontrollerdata(), tracker_RTdata);
+
     common::timecounter timer_controler;
     long int outerloop_elapsed_time = 0;
     long int innerloop_elapsed_time = 0;
@@ -435,8 +326,7 @@ class threadloop : public StateMonitor {
               controller_RTdata.command_rotation,
               controller_RTdata.command_alpha_deg);
           // trajectory tracking
-          _trajectorytracking.Grid_LOS(planner_RTdata.speed,
-                                       estimator_RTdata.State.head(2));
+          _trajectorytracking.Grid_LOS(estimator_RTdata.State.head(2));
           tracker_RTdata = _trajectorytracking.gettrackerRTdata();
 
           break;
@@ -491,8 +381,7 @@ class threadloop : public StateMonitor {
               controller_RTdata.command_alpha_deg);
 
           // trajectory tracking
-          _trajectorytracking.Grid_LOS(planner_RTdata.speed,
-                                       estimator_RTdata.State.head(2));
+          _trajectorytracking.Grid_LOS(estimator_RTdata.State.head(2));
           tracker_RTdata = _trajectorytracking.gettrackerRTdata();
 
           break;
@@ -567,8 +456,9 @@ class threadloop : public StateMonitor {
         // State monitor toggle
         StateMonitor::check_estimator();
 
-        estimator_RTdata = _estimator.setvalue(0, 0, 0, 0, 0, 90, 0, 0, 0)
-                               .getEstimatorRTData();
+        estimator_RTdata =
+            _estimator.setvalue(350938.7, 3433823.54, 0, 0, 0, 90, 0, 0, 0)
+                .getEstimatorRTData();
         _simulator.setX(estimator_RTdata.State);
 
         // real time calculation in estimator
@@ -782,13 +672,31 @@ class threadloop : public StateMonitor {
   void gui_loop() {
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP:
-      case common::TESTMODE::SIMULATION_LOS:
+      case common::TESTMODE::SIMULATION_LOS: {
+        guilink_RTdata.WX = Eigen::VectorXd::Zero(5);
+        guilink_RTdata.WY = Eigen::VectorXd::Zero(5);
+        guilink_RTdata.WX << 3433823.54, 3433803, 3433769, 3433790.37,
+            3433823.54;
+        guilink_RTdata.WY << 350938.7, 350928.66, 350987, 351004, 350938.7;
+        guilink_RTdata.desired_speed = 2;
+
+        break;
+      }
       case common::TESTMODE::SIMULATION_FRENET: {
         // simulation: do nothing
         break;
       }
       case common::TESTMODE::EXPERIMENT_DP:
-      case common::TESTMODE::EXPERIMENT_LOS:
+      case common::TESTMODE::EXPERIMENT_LOS: {
+        guilink_RTdata.WX = Eigen::VectorXd::Zero(5);
+        guilink_RTdata.WY = Eigen::VectorXd::Zero(5);
+        guilink_RTdata.WX << 3433823.54, 3433803, 3433769, 3433790.37,
+            3433823.54;
+        guilink_RTdata.WY << 350938.7, 350928.66, 350987, 351004, 350938.7;
+        guilink_RTdata.desired_speed = 1;
+
+        break;
+      }
       case common::TESTMODE::EXPERIMENT_FRENET: {
         messages::guilink_serial<num_thruster, 3, dim_controlspace> _gui_link(
             guilink_RTdata, _jsonparse.getguibaudrate(),
@@ -903,6 +811,8 @@ class threadloop : public StateMonitor {
 
   // socket server
   void socket_loop() {
+    tcpserver _tcpserver("9340");
+
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP:
       case common::TESTMODE::SIMULATION_LOS:

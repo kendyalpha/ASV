@@ -39,7 +39,7 @@ class lineofsight {
   bool IsEnterCaptureRadius(const Eigen::Vector2d &_vesselposition,
                             const Eigen::Vector2d &_wp) {
     Eigen::Vector2d _error = _vesselposition - _wp;
-    double distance_square = _error(0) * _error(0) * +_error(1) * _error(1);
+    double distance_square = _error(0) * _error(0) + _error(1) * _error(1);
     if (distance_square <= capture_radius * capture_radius) return true;
     return false;
   }  // IsEnterCaptureRadius
@@ -136,7 +136,7 @@ class trajectorytracking final : public lineofsight {
       if (lineofsight::IsEnterCaptureRadius(_vesselposition, current_wp0) &&
           (grid_points_index > 0)) {
         double reduced_desired_speed =
-            (1 - std::abs(turning_angles(grid_points_index)) / M_PI) *
+            (1 - std::abs(turning_angles(grid_points_index - 1)) / M_PI) *
             desired_speed;
         CircularArcLOS(0, reduced_desired_speed, _vesselposition, current_wp0,
                        current_wp1);

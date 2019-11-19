@@ -24,7 +24,9 @@ make
 sudo make install	
 
 # install boost 1.71
-cd ../boost_1_71_0
+cd ../
+tar xvf boost_1_71_0.tar.gz 
+cd boost_1_71_0
 ./bootstrap.sh --prefix=/usr
 sudo ./b2 install
 

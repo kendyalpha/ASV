@@ -15,10 +15,10 @@ import numpy as np
 
 
 ## 参数 ##
-DBNAME = 'Thu Nov  7 18_15_02 2019.db'
+DBNAME = 'Wed Nov 20 00:41:25 2019.db'
 num_thruster = 2
 ACTUATOR = 'underactuated'  # underactuated
-time_stamp_select = np.array([100, 230])
+time_stamp_select = np.array([0, 100])
 
 ##
 
@@ -80,7 +80,8 @@ estimatordata.columns = ['ID', 'DATETIME',
                          'state_x', 'state_y', 'state_theta',
                          'state_u', 'state_v', 'state_r',
                          'perror_x', 'perror_y', 'perror_mz',
-                         'verror_x', 'verror_y', 'verror_mz']
+                         'verror_x', 'verror_y', 'verror_mz',
+                         'curvature', 'speed', 'dspeed']
 estimatordata['DATETIME'] = estimatordata['DATETIME'].astype(float)
 
 
