@@ -20,7 +20,8 @@ int main() {
           .finished(),          // Mass
       Eigen::Matrix3d::Zero(),  // AddedMass
       (Eigen::Matrix3d() << 100, 0, 0, 0, 200, 0, 0, 0, 300)
-          .finished(),          // Damping
+          .finished(),          // LinearDamping
+      Eigen::Matrix3d::Zero(),  // QuadraticDamping
       Eigen::Vector3d::Zero(),  // cog
       Eigen::Vector2d::Zero(),  // x_thrust
       Eigen::Vector2d::Zero(),  // y_thrust

@@ -283,6 +283,7 @@ class Spline2D {
     double ddy = _SY.deriv(2, _arclength);
     // kappa = (ddy * dx - ddx * dy) /
     //         std::pow(std::pow(dx, 2) + std::pow(dy, 2), 1.5);
+    // avoid using sqrt to speed up
     double kappa = (ddy * dx - ddx * dy) / (dx * dx + dy * dy);
     return kappa;
   }  // compute_curvature
@@ -299,7 +300,7 @@ class Spline2D {
     // dkappa = ((dddy * dx - dddx * dy) * squareterm -
     //           3 * (ddy * dx - ddx * dy) * (dx * ddx + dy * ddy)) /
     //          std::pow(squareterm, 2.5);
-
+    // avoid using sqrt to speed up
     double dkappa = ((dddy * dx - dddx * dy) * squareterm -
                      3 * (ddy * dx - ddx * dy) * (dx * ddx + dy * ddy)) /
                     (squareterm * squareterm);

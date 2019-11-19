@@ -180,7 +180,7 @@ class USV_kalmanfilter : public kalmanfilter<3, 6, 6> {
   void initializekalman(const common::vessel &_vessel) {
     // copy the constant data
     Eigen::Matrix3d Mass(_vessel.Mass + _vessel.AddedMass);
-    Eigen::Matrix3d Damping(_vessel.Damping);
+    Eigen::Matrix3d Damping(_vessel.LinearDamping);
 
     // calcualte the A and B in continous equation
     matrixnld Bk = matrixnld::Zero();

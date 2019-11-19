@@ -104,7 +104,8 @@ class jsonparse {
   vessel vesseldata_input{
       Eigen::Matrix3d::Zero(),  // Mass
       Eigen::Matrix3d::Zero(),  // AddedMass
-      Eigen::Matrix3d::Zero(),  // Damping
+      Eigen::Matrix3d::Zero(),  // LinearDamping
+      Eigen::Matrix3d::Zero(),  // QuadraticDamping
       Eigen::Vector3d::Zero(),  // cog
       Eigen::Vector2d::Zero(),  // x_thrust
       Eigen::Vector2d::Zero(),  // y_thrust
@@ -181,7 +182,7 @@ class jsonparse {
     // read a JSON file
     std::ifstream in(jsonname);
     in >> file;
-  }
+  }  // parsejson
 
   void parsecontrollerdata() {
     // controller
@@ -455,8 +456,10 @@ class jsonparse {
         file["property"]["Mass"].get<std::vector<double>>());
     vesseldata_input.AddedMass = convertstdvector2EigenMat<double, 3, 3>(
         file["property"]["AddedMass"].get<std::vector<double>>());
-    vesseldata_input.Damping = convertstdvector2EigenMat<double, 3, 3>(
-        file["property"]["Damping"].get<std::vector<double>>());
+    vesseldata_input.LinearDamping = convertstdvector2EigenMat<double, 3, 3>(
+        file["property"]["LinearDamping"].get<std::vector<double>>());
+    vesseldata_input.QuadraticDamping = convertstdvector2EigenMat<double, 3, 3>(
+        file["property"]["QuadraticDamping"].get<std::vector<double>>());
     vesseldata_input.cog = convertstdvector2EigenMat<double, 3, 1>(
         file["property"]["CoG"].get<std::vector<double>>());
 
@@ -507,7 +510,7 @@ class jsonparse {
     stm32_port = file["comcenter"]["stm32"]["port"];
     stm32_baudrate =
         file["comcenter"]["stm32"]["baudrate"].get<unsigned long>();
-  }
+  }  // paresecomcenter
 
   void parsefrenetdata() {
     std::vector<double> speed_limit =
@@ -638,7 +641,8 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
   os << "Mass property:\n";
   os << _jp.vesseldata_input.Mass << std::endl;
   os << _jp.vesseldata_input.AddedMass << std::endl;
-  os << _jp.vesseldata_input.Damping << std::endl;
+  os << _jp.vesseldata_input.LinearDamping << std::endl;
+  os << _jp.vesseldata_input.QuadraticDamping << std::endl;
   os << _jp.vesseldata_input.cog << std::endl;
   os << _jp.vesseldata_input.x_thrust << std::endl;
   os << _jp.vesseldata_input.y_thrust << std::endl;

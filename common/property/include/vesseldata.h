@@ -22,7 +22,8 @@ struct vessel {
   // mass property
   Eigen::Matrix3d Mass;
   Eigen::Matrix3d AddedMass;
-  Eigen::Matrix3d Damping;
+  Eigen::Matrix3d LinearDamping;
+  Eigen::Matrix3d QuadraticDamping;
   Eigen::Vector3d cog;  // x, y, z
 
   // thrust limit

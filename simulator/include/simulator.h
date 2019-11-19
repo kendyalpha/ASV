@@ -23,7 +23,7 @@ struct vessel_simulator {
   // constructor
   vessel_simulator(const common::vessel& _vessel)
       : M(_vessel.AddedMass + _vessel.Mass),
-        D(_vessel.Damping),
+        D(_vessel.LinearDamping),
         A(Eigen::Matrix<double, 6, 6>::Zero()),
         B(Eigen::Matrix<double, 6, 3>::Zero()),
         u(Eigen::Vector3d::Zero()) {

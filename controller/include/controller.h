@@ -48,8 +48,8 @@ class controller {
         v_min_output(vectornd::Zero()),
         positionerror_integralmatrix(matrixnld::Zero()),
         velocityerror_integralmatrix(matrixnld::Zero()),
-        lineardamping(_vessel.Damping),
-        quadraticdamping(_vessel.Damping),
+        lineardamping(_vessel.LinearDamping),
+        quadraticdamping(_vessel.QuadraticDamping),
         sample_time(_controllerdata.sample_time),
         controlmode(_controllerdata.controlmode),
         TA(_thrustallocationdata, _v_tunnelthrusterdata, _v_azimuththrusterdata,
@@ -78,9 +78,9 @@ class controller {
     // velocity control
     velocityloop(d_tau, _derror);
 
-    // linear damping compensation
+    // Damping compensation
     compensatelineardamping(d_tau, _desired_speed);
-
+    compensatequadraticdamping(d_tau, _desired_speed);
     // wind compensation (TODO)
     windcompensation(d_tau, _windload);
 
@@ -309,12 +309,15 @@ class controller {
     for (int i = 0; i != n; ++i)
       _tau(i) += lineardamping(i, i) * _desired_speed(i);
   }
-  // TODO: quadratic damping
-  void compensatequadricdamping(vectornd &_tau,
-                                const vectornd &_desired_speed) {
-    for (int i = 0; i != n; ++i)
-      _tau(i) += quadraticdamping(i, i) * std::pow(_desired_speed(i), 2);
-  }
+  // quadratic damping (only for MANEUVERING mode)
+  void compensatequadraticdamping(vectornd &_tau,
+                                  const vectornd &_desired_speed) {
+    if (controlmode == CONTROLMODE::MANEUVERING) {
+      for (int i = 0; i != n; ++i)
+        _tau(i) += quadraticdamping(i, i) * std::pow(_desired_speed(i), 2);
+    }
+  }  // compensatequadraticdamping
+
 };  // end class controller
 
 }  // namespace ASV::control

@@ -8,7 +8,8 @@
     "mini_turn_radius":1,
     "Mass": [244, 0, 0, 0, 244, 80, 0, 80, 102],
     "AddedMass": [27, 0, 0, 0, 68, 52, 0, 52, 40],
-    "Damping": [120, 0, 0, 0, 300, 0, 0, 0, 500],
+    "LinearDamping": [120, 0, 0, 0, 200, 0, 0, 0, 10],
+    "QuadraticDamping": [20, 0, 0, 0, 0, 0, 0, 0, 0],
     "CoG": [0.68, 0, 0],
     "velocity_limit": {
       "surge": [-4, 6],
