@@ -326,7 +326,7 @@ class estimator {
     _RTdata.Marine_state(2) = _RTdata.State(2);
     _RTdata.Marine_state(3) = _curvature;
     _RTdata.Marine_state(4) = _speed;
-    _RTdata.Marine_state(5) = _dspeed;
+    _RTdata.Marine_state(5) = 0 * _dspeed;
 
     // update previous state
     previous_cart_x = _RTdata.State(0);

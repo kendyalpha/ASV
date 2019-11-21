@@ -121,7 +121,7 @@ class FrenetTrajectoryGenerator {
   // cost weights
   const double KJ = 0.1;
   const double KT = 0.1;
-  const double KD = 1;
+  const double KD = 4;
   const double KLAT = 1;
   const double KLON = 10;
 

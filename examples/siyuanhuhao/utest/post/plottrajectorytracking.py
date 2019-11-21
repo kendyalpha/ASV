@@ -15,7 +15,7 @@ import numpy as np
 
 
 ## 参数 ##
-DBNAME = 'Wed Nov 20 00:41:25 2019.db'
+DBNAME = 'Wed Nov 20 14:40:31 2019.db'
 num_thruster = 2
 ACTUATOR = 'underactuated'  # underactuated
 time_stamp_select = np.array([0, 100])

@@ -28,8 +28,8 @@
 #include "modules/simulator/include/simulator.h"
 
 namespace ASV {
-constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_LOS;
-// constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_FRENET;
+// constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_LOS;
+constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_FRENET;
 // constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_LOS;
 // constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_FRENET;
 

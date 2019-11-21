@@ -187,10 +187,10 @@ class threadloop : public StateMonitor {
 
     StateMonitor::check_planner();
 
-    double initial_x = 3433823.54;
-    double initial_y = 350938.7;
-    double final_x = 3433790.52;
-    double final_y = 350986.45;
+    double initial_x = 3433821;
+    double initial_y = 350916;
+    double final_x = 3433794;
+    double final_y = 350985;
     double ox = 0.5 * (initial_x + final_x);
     double oy = 0.5 * (initial_y + final_y);
 
@@ -219,7 +219,6 @@ class threadloop : public StateMonitor {
           break;
         }
         case common::TESTMODE::SIMULATION_FRENET: {
-          std::cout << estimator_RTdata.Marine_state << std::endl;
           auto Plan_cartesianstate =
               _trajectorygenerator
                   .trajectoryonestep(estimator_RTdata.Marine_state(0),
@@ -683,6 +682,8 @@ class threadloop : public StateMonitor {
         break;
       }
       case common::TESTMODE::SIMULATION_FRENET: {
+        guilink_RTdata.desired_speed = 2;
+
         // simulation: do nothing
         break;
       }
@@ -701,6 +702,8 @@ class threadloop : public StateMonitor {
         messages::guilink_serial<num_thruster, 3, dim_controlspace> _gui_link(
             guilink_RTdata, _jsonparse.getguibaudrate(),
             _jsonparse.getguiport());
+
+        guilink_RTdata.desired_speed = 2;
 
         // experiment
         while (1) {
