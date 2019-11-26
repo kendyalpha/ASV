@@ -24,7 +24,7 @@
 #include "modules/messages/sensors/gpsimu/include/gps.h"
 #include "modules/messages/stm32/include/stm32_link.h"
 #include "modules/planner/lanefollow/include/LatticePlanner.h"
-#include "modules/planner/planner.h"
+#include "modules/planner/route_planning/include/RoutePlanning.h"
 #include "modules/simulator/include/simulator.h"
 
 namespace ASV {

@@ -13,9 +13,30 @@
 
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
-#include "modules/planner/common/include/plannerdata.h"
 
 namespace ASV::planning {
+
+// state in the Cartesian coodinate
+struct CartesianState {
+  double x;
+  double y;
+  double theta;
+  double kappa;
+  double speed;   // vx
+  double dspeed;  // ax
+};
+
+// state in the Frenet coodinate
+struct FrenetState {
+  double s;         // s: longitudinal coordinate w.r.t reference line.
+  double s_dot;     // ds / dt
+  double s_ddot;    // d(s_dot) / dt
+  double d;         // d: lateral coordinate w.r.t. reference line
+  double d_dot;     // dd / dt
+  double d_ddot;    // d(d_dot) / dt
+  double d_prime;   // dd / ds
+  double d_pprime;  // d(d_prime)/ ds
+};
 
 struct Frenet_path {
   Eigen::VectorXd t;
