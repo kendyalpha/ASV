@@ -24,7 +24,7 @@
 #include "modules/messages/sensors/gpsimu/include/gpsdata.h"
 #include "modules/messages/sensors/wind/include/winddata.h"
 #include "modules/messages/stm32/include/stm32data.h"
-#include "modules/planner/common/include/plannerdata.h"
+#include "modules/planner/route_planning/include/RoutePlanning.h"
 
 namespace ASV::common {
 template <int m, int n = 3>
@@ -32,10 +32,10 @@ class database {
  public:
   explicit database(const std::string &_savepath)
       : db(_savepath),
-        clientset({"controller", "estimator", "planner", "GPS", "wind", "motor",
-                   "stm32"}) {}
+        clientset({"controller", "estimator", "route_planning", "GPS", "wind",
+                   "motor", "stm32"}) {}
 
-  ~database() {}
+  ~database() = default;
 
   void initializetables() {
     create_mastertable();
@@ -43,7 +43,7 @@ class database {
     create_wind_table();
     create_controller_table();
     create_estimator_table();
-    create_planner_table();
+    create_routeplanner_table();
     create_stm32_table();
   }  // initializetables
 
@@ -115,20 +115,35 @@ class database {
     }
   }  // update_estimator_table
 
-  // insert a bow into estimator table
-  void update_planner_table(const planning::plannerRTdata &_RTdata) {
-    try {
-      std::string str =
-          "INSERT INTO planner"
-          "(DATETIME, command_x, command_y, command_theta, wp0_x, wp0_y, "
-          "wp1_x, wp1_y) VALUES(julianday('now')";
-      convert2string(_RTdata, str);
-      str += ");";
-      db << str;
-    } catch (sqlite::sqlite_exception &e) {
-      CLOG(ERROR, "sql-planner") << e.what();
+  // insert a bow into route planner table
+  void update_routeplanner_table(const planning::RoutePlannerRTdata &_RTdata) {
+    for (int i = 0; i != _RTdata.Waypoint_X.size(); ++i) {
+      try {
+        std::string str =
+            "INSERT INTO route_planning"
+            "(DATETIME, speed, captureradius, WPX, WPY, "
+            "WPLONG, WPLAT) VALUES(julianday('now')";
+
+        str += ", ";
+        str += std::to_string(_RTdata.speed);
+        str += ", ";
+        str += std::to_string(_RTdata.los_capture_radius);
+        str += ", ";
+        str += std::to_string(_RTdata.Waypoint_X(i));
+        str += ", ";
+        str += std::to_string(_RTdata.Waypoint_Y(i));
+        str += ", ";
+        str += std::to_string(_RTdata.Waypoint_longitude(i));
+        str += ", ";
+        str += std::to_string(_RTdata.Waypoint_latitude(i));
+        str += ");";
+        db << str;
+      } catch (sqlite::sqlite_exception &e) {
+        CLOG(ERROR, "sql-routeplanner") << e.what();
+      }
     }
-  }  // update_planner_table
+
+  }  // update_routeplanner_table
 
   void update_stm32_table(const messages::stm32data &_RTdata) {
     try {
@@ -316,28 +331,27 @@ class database {
     }
   }  // create_estimator_table
 
-  // create planner table
-  void create_planner_table() {
+  // create_routeplanner_table
+  void create_routeplanner_table() {
     try {
-      // real-time data in the planner
+      // real-time data in the route planner
       std::string str =
-          "CREATE TABLE planner"
+          "CREATE TABLE route_planning"
           "(ID            INTEGER PRIMARY KEY AUTOINCREMENT,"
           " DATETIME      TEXT       NOT NULL,"
-          " command_x     DOUBLE, "
-          " command_y     DOUBLE, "
-          " command_theta DOUBLE, " /* command */
-          " wp0_x         DOUBLE, "
-          " wp0_y         DOUBLE, "
-          " wp1_x         DOUBLE, "
-          " wp1_y         DOUBLE);"; /* waypoints */
+          " speed         DOUBLE, "
+          " captureradius DOUBLE, "
+          " WPX           DOUBLE, "
+          " WPY           DOUBLE, "
+          " WPLONG        DOUBLE, "
+          " WPLAT         DOUBLE);";
 
       db << str;
 
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql") << e.what();
     }
-  }  // create_planner_table
+  }  // create_routeplanner_table
 
   // create wind table
   void create_wind_table() {
@@ -522,25 +536,6 @@ class database {
     _str += to_string_with_precision<double>(_RTdata.voltage_b2, 1);
     _str += ", ";
     _str += to_string_with_precision<double>(_RTdata.voltage_b3, 1);
-  }
-
-  void convert2string(const planning::plannerRTdata &_RTdata,
-                      std::string &_str) {
-    // command
-    for (int i = 0; i != 3; ++i) {
-      _str += ", ";
-      _str += std::to_string(_RTdata.command(i));
-    }
-    // waypoint0
-    for (int i = 0; i != 2; ++i) {
-      _str += ", ";
-      _str += to_string_with_precision<double>(_RTdata.waypoint0(i), 3);
-    }
-    // waypoint1
-    for (int i = 0; i != 2; ++i) {
-      _str += ", ";
-      _str += to_string_with_precision<double>(_RTdata.waypoint1(i), 3);
-    }
   }
 
   void convert2string(const windRTdata &_RTdata, std::string &_str) {

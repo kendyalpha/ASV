@@ -52,7 +52,6 @@ class jsonparse {
   auto gettwinfixeddata() const noexcept { return twinfixeddata_input; }
   auto getpiddata() const noexcept { return pidcontrollerdata_input; }
   auto getestimatordata() const noexcept { return estimatordata_input; }
-  auto getplannerdata() const noexcept { return plannerdata_input; }
   auto getsimulatordata() const noexcept { return simulator_sample_time; }
   auto getlatticedata() const noexcept { return latticedata_input; }
   auto getcollisiondata() const noexcept { return collisiondata_input; }
@@ -73,7 +72,6 @@ class jsonparse {
   void readjson() {
     parsejson();
     parsevesselpropertydata();
-    parseplannerdata();
     parsesimulatordata();
     parsecontrollerdata();
     parseestimatordata();
@@ -125,10 +123,6 @@ class jsonparse {
       0,                                 // los_capture_radius
       control::CONTROLMODE::MANUAL,      // controlmode
       control::ACTUATION::FULLYACTUATED  // index_actuation
-  };
-  // plannerdata
-  planning::plannerdata plannerdata_input{
-      0.1  // sample_time
   };
 
   // simulator data
@@ -444,10 +438,6 @@ class jsonparse {
         file["estimator"]["Kalman"]["R"].get<std::vector<double>>());
   }  // parseestimatordata
 
-  void parseplannerdata() {
-    plannerdata_input.sample_time =
-        file["planner"]["sample_time"].get<double>();
-  }  // parseplannerdata
   void parsesimulatordata() {
     simulator_sample_time = file["simulator"]["sample_time"].get<double>();
   }  // parsesimulatordata
@@ -635,8 +625,6 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
   os << _jp.estimatordata_input.sample_time << std::endl;
   os << _jp.estimatordata_input.Q << std::endl;
   os << _jp.estimatordata_input.R << std::endl;
-  os << "planner:\n";
-  os << _jp.plannerdata_input.sample_time << std::endl;
 
   os << "Mass property:\n";
   os << _jp.vesseldata_input.Mass << std::endl;

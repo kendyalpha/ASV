@@ -74,12 +74,13 @@ int main() {
       Eigen::Vector3d::Zero()                     // v_setpoint
   };
 
-  planning::plannerRTdata _plannerRTdata{
-      0,                        // curvature
-      0,                        // speed
-      Eigen::Vector2d::Zero(),  // waypoint0
-      Eigen::Vector2d::Zero(),  // waypoint1
-      Eigen::Vector3d::Zero()   // command
+  planning::RoutePlannerRTdata _plannerRTdata{
+      0,                         // speed
+      0,                         // los_capture_radius
+      Eigen::VectorXd::Zero(2),  // Waypoint_X
+      Eigen::VectorXd::Zero(2),  // Waypoint_Y
+      Eigen::VectorXd::Zero(2),  // Waypoint_longitude
+      Eigen::VectorXd::Zero(2)   // Waypoint_latitude
   };
 
   windRTdata _windRTdata{
@@ -112,7 +113,7 @@ int main() {
     _sqlitetest.update_gps_table(gps_data);
     _sqlitetest.update_estimator_table(_estimatorRTdata);
     _sqlitetest.update_controller_table(_controllerRTdata, _trackRTdata);
-    _sqlitetest.update_planner_table(_plannerRTdata);
+    _sqlitetest.update_routeplanner_table(_plannerRTdata);
     _sqlitetest.update_wind_table(_windRTdata);
     _sqlitetest.update_stm32_table(_stm32data);
   }

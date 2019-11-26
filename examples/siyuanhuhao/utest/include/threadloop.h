@@ -52,12 +52,13 @@ class threadloop : public StateMonitor {
 
  private:
   /********************* Real time Data  *********************/
-  planning::plannerRTdata planner_RTdata{
-      0,                        // curvature
-      0,                        // speed
-      Eigen::Vector2d::Zero(),  // waypoint0
-      Eigen::Vector2d::Zero(),  // waypoint1
-      Eigen::Vector3d::Zero()   // command
+  planning::RoutePlannerRTdata RoutePlanner_RTdata{
+      0,                         // speed
+      0,                         // los_capture_radius
+      Eigen::VectorXd::Zero(2),  // Waypoint_X
+      Eigen::VectorXd::Zero(2),  // Waypoint_Y
+      Eigen::VectorXd::Zero(2),  // Waypoint_longitude
+      Eigen::VectorXd::Zero(2)   // Waypoint_latitude
   };
 
   // real time data of tracker

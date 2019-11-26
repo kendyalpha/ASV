@@ -103,7 +103,6 @@ class trajectorytracking final : public lineofsight {
                     _controllerdata.los_capture_radius),
         TrackerRTdata(_TrackerRTdata),
         sample_time(_controllerdata.sample_time),
-        basic_capture_radius(_controllerdata.los_capture_radius),
         desired_speed(1.0),
         grid_points_index(0),
         grid_points_x((Eigen::VectorXd(2) << 0, 1).finished()),
@@ -195,12 +194,32 @@ class trajectorytracking final : public lineofsight {
 
   }  // set_grid_points
 
+  void set_grid_points(const Eigen::VectorXd &_grid_points_x,
+                       const Eigen::VectorXd &_grid_points_y,
+                       double _desired_speed, double _captureradius) {
+    assert(_grid_points_x.size() == _grid_points_y.size());
+    assert(_grid_points_x.size() >= 2);
+    assert(_desired_speed > 0);
+
+    if (_grid_points_x.size() > 2) {
+      turning_angles = compute_turning_angles(_grid_points_x, _grid_points_y);
+      lineofsight::setcaptureradius(_captureradius);
+    }
+
+    desired_speed = _desired_speed;
+    grid_points_x = _grid_points_x;
+    grid_points_y = _grid_points_y;
+    grid_points_index = 0;  // reset the index
+
+    TrackerRTdata.trackermode = TRACKERMODE::STARTED;
+
+  }  // set_grid_points
+
   auto gettrackerRTdata() const noexcept { return TrackerRTdata; }
 
  private:
   trackerRTdata TrackerRTdata;
   const double sample_time;  // sample time of controller
-  const double basic_capture_radius;
 
   double desired_speed;
   int grid_points_index;
@@ -247,47 +266,6 @@ class trajectorytracking final : public lineofsight {
     }
     return t_turning_angles;
   }  // compute_turning_angles
-
-  // Eigen::MatrixXd followcircle(const Eigen::Vector2d &_startposition,
-  //                              const Eigen::Vector2d &_endposition,
-  //                              double _radius, double _vesselheading,
-  //                              double _desiredspeed) {
-  //   Eigen::Vector2d delta_pos = _endposition - _startposition;
-  //   double length = computevectorlength(delta_pos(1), delta_pos(0));
-  //   double thetaK = computevectororientation(delta_pos(1), delta_pos(0));
-  //   Eigen::MatrixXd waypoints(2, 2);
-  //   if (length > 2 * _radius) {
-  //     waypoints.col(0) = _startposition;
-  //     waypoints.col(1) = _endposition;
-  //   } else {
-  //     double gamma = std::acos(length / (2 * _radius));
-  //     int n = static_cast<int>(std::floor((M_PI - 2 * gamma) * 6));
-  //     waypoints.resize(Eigen::NoChange, n);
-
-  //     double _clockwise_angle = thetaK + gamma;
-  //     double _anticlockwise_angle = thetaK - gamma;
-
-  //     double delta_clockwise_angle = std::abs(
-  //         restrictheadingangle(_vesselheading - _clockwise_angle + 0.5 *
-  //         M_PI));
-  //     double delta_anticlockwise_angle = std::abs(restrictheadingangle(
-  //         _vesselheading - _anticlockwise_angle - 0.5 * M_PI));
-  //     if (delta_clockwise_angle < delta_anticlockwise_angle) {
-  //       // follow the clockwise circle
-  //       waypoints = generatecirclepoints(
-  //           _startposition + _radius *
-  //           computevectorlocation(_clockwise_angle), _radius, n,
-  //           _clockwise_angle - M_PI, _anticlockwise_angle);
-  //     } else {
-  //       // follow the anti-clockwise circle
-  //       waypoints = generatecirclepoints(
-  //           _startposition +
-  //               _radius * computevectorlocation(_anticlockwise_angle),
-  //           _radius, n, _clockwise_angle, _anticlockwise_angle + M_PI);
-  //     }
-  //   }
-  //   return waypoints;
-  // }
 
 };  // end class trajectorytracking
 }  // namespace ASV::control

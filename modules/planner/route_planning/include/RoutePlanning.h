@@ -14,14 +14,63 @@
 #include <cmath>
 #include "RoutePlannerData.h"
 #include "common/logging/include/easylogging++.h"
+#include "common/math/miscellaneous/include/math_utils.h"
 
 namespace ASV::planning {
 
 class RoutePlanning {
  public:
-  explicit RoutePlanning(const RoutePlannerRTdata &_rtdata)
-      : routeplanner_RTdata(_rtdata) {}
+  explicit RoutePlanning(const RoutePlannerRTdata &_rtdata,
+                         const common::vessel &_vesseldata)
+      : routeplanner_RTdata(_rtdata), L(_vesseldata.L) {}
   virtual ~RoutePlanning() = default;
+
+  // generate a polygon-like waypoints
+  RoutePlanning &generate_Coarse_Circle(double _center_x, double _center_y,
+                                        double _initial_x, double _initial_y,
+                                        double _initial_heading,
+                                        double _desired_speed) {
+    double capture_radius = compute_capture_radius(_desired_speed);
+    double delta_X = _initial_x - _center_x;
+    double delta_Y = _initial_y - _center_y;
+    double r = std::sqrt(delta_X * delta_X + delta_Y * delta_Y);
+    double theta0 = std::atan2(delta_Y, delta_X);
+
+    // ensure the waypoints are far enough
+    if (r < 1.414 * capture_radius) r = 2 * capture_radius;
+
+    // decide the clockwise or anti-clockwise
+    double theta_clockwise = std::abs(common::math::Normalizeheadingangle(
+        theta0 + 0.75 * M_PI - _initial_heading));
+    double theta_anticlockwise = std::abs(common::math::Normalizeheadingangle(
+        theta0 - 0.75 * M_PI - _initial_heading));
+
+    double Isclockwise = theta_clockwise < theta_anticlockwise ? 1.0 : -1.0;
+
+    // generate the waypoints
+    Eigen::VectorXd Waypoint_x(5);
+    Eigen::VectorXd Waypoint_y(5);
+    for (int i = 0; i != 4; ++i) {
+      double angle = theta0 + 0.5 * M_PI * i * Isclockwise;
+      Waypoint_x(i) = _center_x + r * std::cos(angle);
+      Waypoint_y(i) = _center_y + r * std::sin(angle);
+    }
+    Waypoint_x(4) = Waypoint_x(0);
+    Waypoint_y(4) = Waypoint_y(0);
+
+    //
+    routeplanner_RTdata.speed = _desired_speed;
+    routeplanner_RTdata.los_capture_radius = capture_radius;
+    routeplanner_RTdata.Waypoint_X = Waypoint_x;
+    routeplanner_RTdata.Waypoint_Y = Waypoint_y;
+
+    return *this;
+  }  // generate_Coarse_Circle
+
+  RoutePlanning &generate_Grid_Points(double _center_x, double _center_y,
+                                      double _radius, std::size_t edges = 4) {
+    return *this;
+  }  // generate_Grid_Points
 
   // setup waypoints using UTM_N and UTM_E
   void setWaypoints_NE(const Eigen::VectorXd &_Waypoint_X,
@@ -38,46 +87,16 @@ class RoutePlanning {
   }
 
   auto getRoutePlannerRTdata() const noexcept { return routeplanner_RTdata; }
-  double getsampletime() const noexcept { return sample_time; }
 
  private:
   RoutePlannerRTdata routeplanner_RTdata;
+  const double L;  // Hull length
 
-  //
-  Eigen::MatrixXd generatecirclepoints(double _radius, double _center_x,
-                                       double _center_y, double _start_angle,
-                                       double _end_angle, int n) {
-    Eigen::VectorXd angles =
-        Eigen::VectorXd::LinSpaced(n, _start_angle, _end_angle);
-    Eigen::MatrixXd waypoints_set(2, n);
-    for (int i = 0; i != n; ++i) {
-      waypoints_set(0, i) = _center_x + _radius * std::cos(angles(i));
-      waypoints_set(1, i) = _center_y + _radius * std::sin(angles(i));
-    }
-    return waypoints_set;
-  }
-  //
-  Eigen::MatrixXd generatecirclepoints(const Eigen::Vector2d &_center,
-                                       double _radius, int n,
-                                       double _start_angle, double _end_angle) {
-    Eigen::VectorXd angles =
-        Eigen::VectorXd::LinSpaced(n, _start_angle, _end_angle);
-    Eigen::MatrixXd waypoints_set(2, n);
-    for (int i = 0; i != n; ++i) {
-      waypoints_set.col(i) =
-          _center + _radius * computevectorlocation(angles(i));
-    }
-    return waypoints_set;
-  }
+  // compute the capture radius in LOS based on Hull length and speed
+  double compute_capture_radius(double _desired_speed) {
+    return std::sqrt(_desired_speed) * L;
+  }  // compute_capture_radius
 
-  // compute the vector length
-  double computevectorlength(double _vy, double _vx) noexcept {
-    return std::sqrt(std::pow(_vy, 2) + std::pow(_vx, 2));
-  }
-  // compute the
-  Eigen::Vector2d computevectorlocation(double _angle) {
-    return (Eigen::Vector2d() << std::cos(_angle), std::sin(_angle)).finished();
-  }
 };  // end class routeplanning
 
 }  // namespace ASV::planning

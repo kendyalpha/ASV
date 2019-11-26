@@ -15,20 +15,19 @@
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
 #include <vector>
+#include "common/property/include/vesseldata.h"
 
 namespace ASV::planning {
 
 // real time data in planner
 struct RoutePlannerRTdata {
-  double speed;                        // desired speed forward
+  double speed;  // desired speed forward
+  double los_capture_radius;
+
   Eigen::VectorXd Waypoint_X;          // N in the UTM coordinate
   Eigen::VectorXd Waypoint_Y;          // E in the UTM coordinate
   Eigen::VectorXd Waypoint_longitude;  // longitude
   Eigen::VectorXd Waypoint_latitude;   // latitude
-};
-
-struct RoutePlannerdata {
-  double sample_time;
 };
 
 }  // namespace ASV::planning
