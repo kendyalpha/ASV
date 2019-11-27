@@ -54,6 +54,17 @@ std::tuple<double, double, double, double, double, double> Cart2Marine(
 
 }  // Marine2Cart
 
+// convert marine X and Y to UTM_N(y) and UTM_E(x)
+std::tuple<double, double> Marine2UTM(double marine_x,
+                                      double marine_y) noexcept {
+  return {marine_y, marine_x};
+}  // Marine2UTM
+
+// convert  UTM_N(y) and UTM_E(x) to marine X and Y
+std::tuple<double, double> UTM2Marine(double utm_x, double utm_y) noexcept {
+  return {utm_y, utm_x};
+}  // UTM2Marine
+
 // convert rad to degree
 double Rad2Degree(double _rad) noexcept {
   return 180.0 * _rad / M_PI;

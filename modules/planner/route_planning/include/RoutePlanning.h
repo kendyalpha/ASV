@@ -11,6 +11,7 @@
 #ifndef _ROUTEPLANNING_H_
 #define _ROUTEPLANNING_H_
 
+#include <GeographicLib/UTMUPS.hpp>
 #include <cmath>
 #include "RoutePlannerData.h"
 #include "common/logging/include/easylogging++.h"
@@ -30,7 +31,7 @@ class RoutePlanning {
                                         double _initial_x, double _initial_y,
                                         double _initial_heading,
                                         double _desired_speed) {
-    double capture_radius = compute_capture_radius(_desired_speed);
+    double capture_radius = compute_capture_radius(_desired_speed, L);
     double delta_X = _initial_x - _center_x;
     double delta_Y = _initial_y - _center_y;
     double r = std::sqrt(delta_X * delta_X + delta_Y * delta_Y);
@@ -72,18 +73,23 @@ class RoutePlanning {
     return *this;
   }  // generate_Grid_Points
 
-  // setup waypoints using UTM_N and UTM_E
-  void setWaypoints_NE(const Eigen::VectorXd &_Waypoint_X,
-                       const Eigen::VectorXd &_Waypoint_Y) {
-    routeplanner_RTdata.Waypoint_X = _Waypoint_X;
-    routeplanner_RTdata.Waypoint_Y = _Waypoint_Y;
-  }
   // setup waypoints using longitude and latitude
-  void setWaypoints_LL(const Eigen::VectorXd &_Waypoint_longitude,
-                       const Eigen::VectorXd &_Waypoint_latitude) {
+  void setWaypoints(const Eigen::VectorXd &_Waypoint_longitude,
+                    const Eigen::VectorXd &_Waypoint_latitude) {
     routeplanner_RTdata.Waypoint_longitude = _Waypoint_longitude;
     routeplanner_RTdata.Waypoint_latitude = _Waypoint_latitude;
     // TODO: convert longitude and latitude to UTM
+  }
+
+  // setup DP data using longitude, latitude, and heading
+  void setSetpoints(double _longitude, double _latitude, double _heading) {
+    int zone = 0;
+    bool northp = true;
+    double utm_x = 0;
+    double utm_y = 0;
+    GeographicLib::UTMUPS::Forward(_latitude, _longitude, zone, northp, utm_x,
+                                   utm_y);
+    auto [marine_x, marine_y] = common::math::UTM2Marine(utm_x, utm_y);
   }
 
   auto getRoutePlannerRTdata() const noexcept { return routeplanner_RTdata; }
@@ -93,9 +99,11 @@ class RoutePlanning {
   const double L;  // Hull length
 
   // compute the capture radius in LOS based on Hull length and speed
-  double compute_capture_radius(double _desired_speed) {
-    return std::sqrt(_desired_speed) * L;
+  double compute_capture_radius(double _desired_speed, double _basic_radius) {
+    return std::sqrt(_desired_speed) * _basic_radius;
   }  // compute_capture_radius
+
+  //
 
 };  // end class routeplanning
 

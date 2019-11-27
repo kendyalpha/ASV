@@ -254,10 +254,8 @@ class estimator {
   }  // compensateantennadeviation
 
   void convert2standardunit(motionrawdata& _motionrawdata) noexcept {
-    // project x is the east, y is the north
-    double temp = _motionrawdata.gps_x;
-    _motionrawdata.gps_x = _motionrawdata.gps_y;
-    _motionrawdata.gps_y = temp;
+    std::tie(_motionrawdata.gps_x, _motionrawdata.gps_y) =
+        common::math::UTM2Marine(_motionrawdata.gps_x, _motionrawdata.gps_y);
     _motionrawdata.gps_z *= (-1);
     _motionrawdata.gps_roll = common::math::Degree2Rad(_motionrawdata.gps_roll);
     _motionrawdata.gps_pitch =

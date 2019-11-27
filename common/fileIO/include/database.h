@@ -24,7 +24,7 @@
 #include "modules/messages/sensors/gpsimu/include/gpsdata.h"
 #include "modules/messages/sensors/wind/include/winddata.h"
 #include "modules/messages/stm32/include/stm32data.h"
-#include "modules/planner/route_planning/include/RoutePlanning.h"
+#include "modules/planner/route_planning/include/RoutePlannerData.h"
 
 namespace ASV::common {
 template <int m, int n = 3>

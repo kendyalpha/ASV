@@ -35,3 +35,17 @@ BOOST_AUTO_TEST_CASE(Angle2vectors) {
   BOOST_CHECK_CLOSE(VectorAngle_2d(1, 0, -1, 1), 0.75 * M_PI, 1e-4);
   BOOST_CHECK_CLOSE(VectorAngle_2d(1, 1, 1, 1), 0, 1e-4);
 }
+
+BOOST_AUTO_TEST_CASE(UTM2marine) {
+  struct test {
+    double x;
+    double y;
+  };
+  test _testdata{
+      1,  // x
+      4   // y
+  };
+  std::tie(_testdata.x, _testdata.y) = UTM2Marine(_testdata.x, _testdata.y);
+  BOOST_CHECK_CLOSE(_testdata.x, 4, 1e-8);
+  BOOST_CHECK_CLOSE(_testdata.y, 1, 1e-8);
+}
