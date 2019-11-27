@@ -151,7 +151,8 @@ class threadloop {
       'a',              // status
       {'a', 'b', '0'},  // check
       0,                // UTM_x
-      0                 // UTM_y
+      0,                // UTM_y
+      "0n"              // UTM_zone
   };
   // real time wind data
   windRTdata _windRTdata{

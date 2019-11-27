@@ -36,6 +36,12 @@ int main() {
   };
 
   planning::RoutePlannerRTdata _plannerRTdata{
+      0,                         // setpoints_X
+      0,                         // setpoints_Y;
+      0,                         // setpoints_heading;
+      0,                         // setpoints_longitude;
+      0,                         // setpoints_latitude;
+      "0n",                      // UTM zone
       0,                         // speed
       0,                         // los_capture_radius
       Eigen::VectorXd::Zero(2),  // Waypoint_X

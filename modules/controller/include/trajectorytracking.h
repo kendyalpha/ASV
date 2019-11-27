@@ -175,27 +175,6 @@ class trajectorytracking final : public lineofsight {
 
   void set_grid_points(const Eigen::VectorXd &_grid_points_x,
                        const Eigen::VectorXd &_grid_points_y,
-                       double _desired_speed) {
-    assert(_grid_points_x.size() == _grid_points_y.size());
-    assert(_grid_points_x.size() >= 2);
-    assert(_desired_speed > 0);
-
-    if (_grid_points_x.size() > 2) {
-      turning_angles = compute_turning_angles(_grid_points_x, _grid_points_y);
-      lineofsight::setcaptureradius(compute_capture_radius(_desired_speed));
-    }
-
-    desired_speed = _desired_speed;
-    grid_points_x = _grid_points_x;
-    grid_points_y = _grid_points_y;
-    grid_points_index = 0;  // reset the index
-
-    TrackerRTdata.trackermode = TRACKERMODE::STARTED;
-
-  }  // set_grid_points
-
-  void set_grid_points(const Eigen::VectorXd &_grid_points_x,
-                       const Eigen::VectorXd &_grid_points_y,
                        double _desired_speed, double _captureradius) {
     assert(_grid_points_x.size() == _grid_points_y.size());
     assert(_grid_points_x.size() >= 2);
@@ -243,10 +222,6 @@ class trajectorytracking final : public lineofsight {
     TrackerRTdata.setpoint(2) = desired_theta;
 
   }  // CircularArcLOS
-
-  double compute_capture_radius(double _desired_speed) {
-    return std::sqrt(_desired_speed) * basic_capture_radius;
-  }  // compute_capture_radius
 
   // compute the turning angles of each set of waypoints
   Eigen::VectorXd compute_turning_angles(

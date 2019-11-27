@@ -23,19 +23,20 @@ int main() {
   _sqlitetest.initializetables();
   // real time GPS/IMU data
   messages::gpsRTdata gps_data{
-      0,  // UTC
-      0,  // latitude
-      0,  // longitude
-      0,  // heading
-      0,  // pitch
-      0,  // roll
-      0,  // altitude
-      0,  // Ve
-      0,  // Vn
-      0,  // roti
-      0,  // status
-      0,  // UTM_x
-      0   // UTM_y
+      0,    // UTC
+      0,    // latitude
+      0,    // longitude
+      0,    // heading
+      0,    // pitch
+      0,    // roll
+      0,    // altitude
+      0,    // Ve
+      0,    // Vn
+      0,    // roti
+      0,    // status
+      0,    // UTM_x
+      0,    // UTM_y
+      "0n"  // UTM_zone
   };
   // realtime parameters of the estimators
   estimatorRTdata _estimatorRTdata{
@@ -75,6 +76,12 @@ int main() {
   };
 
   planning::RoutePlannerRTdata _plannerRTdata{
+      0,                         // setpoints_X
+      0,                         // setpoints_Y;
+      0,                         // setpoints_heading;
+      0,                         // setpoints_longitude;
+      0,                         // setpoints_latitude;
+      "0n",                      // UTM zone
       0,                         // speed
       0,                         // los_capture_radius
       Eigen::VectorXd::Zero(2),  // Waypoint_X

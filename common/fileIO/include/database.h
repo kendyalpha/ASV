@@ -53,7 +53,7 @@ class database {
       std::string str =
           "INSERT INTO GPS"
           "(DATETIME, UTC, latitude, longitude, heading, pitch, roll, "
-          " altitude, Ve, Vn, roti, status,UTM_x, UTM_y) "
+          " altitude, Ve, Vn, roti, status,UTM_x, UTM_y, UTM_zone) "
           " VALUES(julianday('now')";
       convert2string(_gpsRTdata, str);
       str += ");";
@@ -248,7 +248,8 @@ class database {
           " roti        DOUBLE, "
           " status      INT,    "
           " UTM_x       DOUBLE, "
-          " UTM_y       DOUBLE);";
+          " UTM_y       DOUBLE, "
+          " UTM_zone    TEXT);";
       db << str;
 
     } catch (sqlite::sqlite_exception &e) {
@@ -426,6 +427,9 @@ class database {
     _str += to_string_with_precision<double>(_gpsRTdata.UTM_x, 3);
     _str += ", ";
     _str += to_string_with_precision<double>(_gpsRTdata.UTM_y, 3);
+    _str += ", '";
+    _str += _gpsRTdata.UTM_zone;
+    _str += "'";
   }
 
   void convert2string(const control::controllerRTdata<m, n> &_RTdata,

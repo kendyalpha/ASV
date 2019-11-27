@@ -76,9 +76,21 @@ class RoutePlanning {
   // setup waypoints using longitude and latitude
   void setWaypoints(const Eigen::VectorXd &_Waypoint_longitude,
                     const Eigen::VectorXd &_Waypoint_latitude) {
+    assert(_Waypoint_longitude.size() == _Waypoint_latitude.size());
     routeplanner_RTdata.Waypoint_longitude = _Waypoint_longitude;
     routeplanner_RTdata.Waypoint_latitude = _Waypoint_latitude;
-    // TODO: convert longitude and latitude to UTM
+    int num_wp = _Waypoint_longitude.size();
+
+    for (int i = 0; i != num_wp; ++i) {
+      GeographicLib::UTMUPS::Forward(_latitude, _longitude, zone, northp, utm_x,
+                                     utm_y);
+      routeplanner_RTdata.utm_zone =
+          GeographicLib::UTMUPS::EncodeZone(zone, northp);
+
+      std::tie(routeplanner_RTdata.setpoints_X,
+               routeplanner_RTdata.setpoints_Y) =
+          common::math::UTM2Marine(utm_x, utm_y);
+    }
   }
 
   // setup DP data using longitude, latitude, and heading
@@ -87,10 +99,21 @@ class RoutePlanning {
     bool northp = true;
     double utm_x = 0;
     double utm_y = 0;
+
+    routeplanner_RTdata.setpoints_longitude = _longitude;
+    routeplanner_RTdata.setpoints_latitude = _latitude;
+
     GeographicLib::UTMUPS::Forward(_latitude, _longitude, zone, northp, utm_x,
                                    utm_y);
-    auto [marine_x, marine_y] = common::math::UTM2Marine(utm_x, utm_y);
-  }
+    routeplanner_RTdata.utm_zone =
+        GeographicLib::UTMUPS::EncodeZone(zone, northp);
+
+    std::tie(routeplanner_RTdata.setpoints_X, routeplanner_RTdata.setpoints_Y) =
+        common::math::UTM2Marine(utm_x, utm_y);
+
+    routeplanner_RTdata.setpoints_heading =
+        common::math::Normalizeheadingangle(common::math::Degree2Rad(_heading));
+  }  // setSetpoints
 
   auto getRoutePlannerRTdata() const noexcept { return routeplanner_RTdata; }
 

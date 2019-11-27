@@ -18,19 +18,20 @@ using namespace ASV;
 int main() {
   // real time GPS/IMU data
   messages::gpsRTdata gps_data{
-      0,  // UTC
-      0,  // latitude
-      0,  // longitude
-      0,  // heading
-      0,  // pitch
-      0,  // roll
-      0,  // altitude
-      0,  // Ve
-      0,  // Vn
-      0,  // roti
-      0,  // status
-      0,  // UTM_x
-      0   // UTM_y
+      0,    // UTC
+      0,    // latitude
+      0,    // longitude
+      0,    // heading
+      0,    // pitch
+      0,    // roll
+      0,    // altitude
+      0,    // Ve
+      0,    // Vn
+      0,    // roti
+      0,    // status
+      0,    // UTM_x
+      0,    // UTM_y
+      "0n"  // UTM_zone
   };
   try {
     common::database<3, 3> _sqlitetest("dbtest.db");

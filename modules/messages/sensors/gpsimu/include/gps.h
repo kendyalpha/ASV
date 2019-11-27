@@ -41,10 +41,17 @@ class GPS final : public nmea {
   ~GPS() {}
 
   // read serial data and transform to UTM
+  GPS& gpsonestep(const std::string& _planning_utm_zone) {
+    gpsonestep();
+    check_UTM_zone(GPSdata, _planning_utm_zone);
+    return *this;
+  }
+
+  // read serial data and transform to UTM
   GPS& gpsonestep() {
     serial_buffer = GPS_serial.readline(150);
     hemisphereV102(serial_buffer, GPSdata);
-    check_gps_tatus(GPSdata);
+    check_gps_status(GPSdata);
 
     return *this;
   }
@@ -72,9 +79,11 @@ class GPS final : public nmea {
       _gpsdata.longitude = convertlongitudeunit(gpgga.longitude, gpgga.EW);
       _gpsdata.altitude = gpgga.altitude;
       _gpsdata.status = gpgga.gps_Q;
-      auto [utm_x, utm_y] = Forward(_gpsdata.latitude, _gpsdata.longitude);
+      auto [utm_x, utm_y, utm_zone] =
+          Forward(_gpsdata.latitude, _gpsdata.longitude);
       _gpsdata.UTM_x = utm_x;
       _gpsdata.UTM_y = utm_y;
+      _gpsdata.UTM_zone = utm_zone;
 
     } else if (_serial_buffer.find("$HEROT") != std::string::npos) {
       nmea::nmea_parse(_serial_buffer, herot);
@@ -103,12 +112,12 @@ class GPS final : public nmea {
   }
 
   // check the gps status and give the warning
-  void check_gps_tatus(const gpsRTdata& _gpsdata) {
+  void check_gps_status(const gpsRTdata& _gpsdata) {
     if (_gpsdata.status == 0) CLOG(ERROR, "GPS") << "GPS no fix!";
   }
 
   // convert longitude and latitude to UTM
-  std::tuple<double, double> Forward(
+  std::tuple<double, double, std::string> Forward(
       const double lat,  // latitude of point (degrees)
       const double lon   //  longitude of point (degrees)
   ) {
@@ -117,8 +126,37 @@ class GPS final : public nmea {
     double x = 0.0;      // easting of point (meters)
     double y = 0.0;      // northing of point (meters)
     GeographicLib::UTMUPS::Forward(lat, lon, zone, northp, x, y);
-    return {x, y};
+    std::string zonestr = GeographicLib::UTMUPS::EncodeZone(zone, northp);
+    return {x, y, zonestr};
   }  // Forward
+
+  // check if the real-time UTM zone is in the planning UTM zone, and smooth
+  void check_UTM_zone(gpsRTdata& _gpsdata,
+                      const std::string& _planning_utm_zone) {
+    if (_gpsdata.UTM_zone != _planning_utm_zone) {
+      double smooth_utm_x = 0.0;
+      double smooth_utm_y = 0.0;
+
+      int zone = 0;
+      bool northp = true;
+      int zone_planning = 0;
+      bool northp_planning = true;
+      int zone_t = 0;
+      // smooth the utm projection when UTM zone is switched
+      GeographicLib::UTMUPS::DecodeZone(_gpsdata.UTM_zone, zone, northp);
+      GeographicLib::UTMUPS::DecodeZone(_planning_utm_zone, zone_planning,
+                                        northp_planning);
+
+      // transfer one zone to another
+      GeographicLib::UTMUPS::Transfer(
+          zone, northp, _gpsdata.UTM_x, _gpsdata.UTM_y, zone_planning,
+          northp_planning, smooth_utm_x, smooth_utm_y, zone_t);
+
+      _gpsdata.UTM_x = smooth_utm_x;
+      _gpsdata.UTM_y = smooth_utm_y;
+    }
+
+  }  // check_UTM_zone
 
   // convert the unit of latitude (ddmm.mmm -> dd.dddddd)
   double convertlatitudeunit(double _latitude, char _NS) {
