@@ -97,7 +97,7 @@ int main() {
   long int totaltime = 0;
 
   while (1) {
-    gps_data = _gpsimu.gpsonestep().getgpsRTdata();
+    gps_data = _gpsimu.parseGPS().getgpsRTdata();
 
     ++count;
     if (count == 4) {

@@ -40,15 +40,35 @@ class GPS final : public nmea {
   GPS() = delete;
   ~GPS() {}
 
-  // read serial data and transform to UTM
-  GPS& gpsonestep(const std::string& _planning_utm_zone) {
-    gpsonestep();
-    check_UTM_zone(GPSdata, _planning_utm_zone);
+  // check if the real-time UTM zone is in the planning UTM zone, and smooth
+  GPS& check_UTM_zone(const std::string& _planning_utm_zone) {
+    if (GPSdata.UTM_zone != _planning_utm_zone) {
+      double smooth_utm_x = 0.0;
+      double smooth_utm_y = 0.0;
+
+      int zone = 0;
+      bool northp = true;
+      int zone_planning = 0;
+      bool northp_planning = true;
+      int zone_t = 0;
+      // smooth the utm projection when UTM zone is switched
+      GeographicLib::UTMUPS::DecodeZone(GPSdata.UTM_zone, zone, northp);
+      GeographicLib::UTMUPS::DecodeZone(_planning_utm_zone, zone_planning,
+                                        northp_planning);
+
+      // transfer one zone to another
+      GeographicLib::UTMUPS::Transfer(
+          zone, northp, GPSdata.UTM_x, GPSdata.UTM_y, zone_planning,
+          northp_planning, smooth_utm_x, smooth_utm_y, zone_t);
+
+      GPSdata.UTM_x = smooth_utm_x;
+      GPSdata.UTM_y = smooth_utm_y;
+    }
     return *this;
-  }
+  }  // check_UTM_zone
 
   // read serial data and transform to UTM
-  GPS& gpsonestep() {
+  GPS& parseGPS() {
     serial_buffer = GPS_serial.readline(150);
     hemisphereV102(serial_buffer, GPSdata);
     check_gps_status(GPSdata);
@@ -129,34 +149,6 @@ class GPS final : public nmea {
     std::string zonestr = GeographicLib::UTMUPS::EncodeZone(zone, northp);
     return {x, y, zonestr};
   }  // Forward
-
-  // check if the real-time UTM zone is in the planning UTM zone, and smooth
-  void check_UTM_zone(gpsRTdata& _gpsdata,
-                      const std::string& _planning_utm_zone) {
-    if (_gpsdata.UTM_zone != _planning_utm_zone) {
-      double smooth_utm_x = 0.0;
-      double smooth_utm_y = 0.0;
-
-      int zone = 0;
-      bool northp = true;
-      int zone_planning = 0;
-      bool northp_planning = true;
-      int zone_t = 0;
-      // smooth the utm projection when UTM zone is switched
-      GeographicLib::UTMUPS::DecodeZone(_gpsdata.UTM_zone, zone, northp);
-      GeographicLib::UTMUPS::DecodeZone(_planning_utm_zone, zone_planning,
-                                        northp_planning);
-
-      // transfer one zone to another
-      GeographicLib::UTMUPS::Transfer(
-          zone, northp, _gpsdata.UTM_x, _gpsdata.UTM_y, zone_planning,
-          northp_planning, smooth_utm_x, smooth_utm_y, zone_t);
-
-      _gpsdata.UTM_x = smooth_utm_x;
-      _gpsdata.UTM_y = smooth_utm_y;
-    }
-
-  }  // check_UTM_zone
 
   // convert the unit of latitude (ddmm.mmm -> dd.dddddd)
   double convertlatitudeunit(double _latitude, char _NS) {

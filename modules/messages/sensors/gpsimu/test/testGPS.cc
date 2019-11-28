@@ -37,7 +37,7 @@ int main() {
     long int totaltime = 0;
     int count = 0;
     while (1) {
-      std::string gps_buffer = _gpsimu.gpsonestep().getserialbuffer();
+      std::string gps_buffer = _gpsimu.parseGPS().getserialbuffer();
       gps_data = _gpsimu.getgpsRTdata();
       long int et = _timer.timeelapsed();
       totaltime += et;

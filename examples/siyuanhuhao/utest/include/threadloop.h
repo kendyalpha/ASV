@@ -19,7 +19,10 @@ namespace ASV {
 class threadloop : public StateMonitor {
  public:
   threadloop()
-      : StateMonitor(), _jsonparse("./../../properties/property.json") {
+      : StateMonitor(),
+        _jsonparse("./../../properties/property.json"),
+        _sqlite(_jsonparse.getsqlitedata()) {
+    _sqlite.initializetables();
     // // write prettified JSON to another file
     // std::ofstream o("pretty.json");
     // o << std::setw(4) << j << std::endl;
@@ -27,7 +30,8 @@ class threadloop : public StateMonitor {
   ~threadloop() {}
 
   void mainloop() {
-    std::thread planner_thread(&threadloop::plannerloop, this);
+    std::thread route_planner_thread(&threadloop::route_planner_loop, this);
+    std::thread path_planner_thread(&threadloop::path_planner_loop, this);
     std::thread estimator_thread(&threadloop::estimatorloop, this);
     std::thread controller_thread(&threadloop::controllerloop, this);
     std::thread sql_thread(&threadloop::sqlloop, this);
@@ -38,7 +42,8 @@ class threadloop : public StateMonitor {
     std::thread socket_thread(&threadloop::socket_loop, this);
     std::thread statemonitor_thread(&threadloop::state_monitor_loop, this);
 
-    planner_thread.join();
+    route_planner_thread.join();
+    path_planner_thread.join();
     estimator_thread.join();
     controller_thread.join();
     sql_thread.join();
@@ -53,12 +58,19 @@ class threadloop : public StateMonitor {
  private:
   /********************* Real time Data  *********************/
   planning::RoutePlannerRTdata RoutePlanner_RTdata{
-      0,                         // speed
-      0,                         // los_capture_radius
-      Eigen::VectorXd::Zero(2),  // Waypoint_X
-      Eigen::VectorXd::Zero(2),  // Waypoint_Y
-      Eigen::VectorXd::Zero(2),  // Waypoint_longitude
-      Eigen::VectorXd::Zero(2)   // Waypoint_latitude
+      common::STATETOGGLE::IDLE,  // state_toggle
+      0,                          // setpoints_X
+      0,                          // setpoints_Y;
+      0,                          // setpoints_heading;
+      0,                          // setpoints_longitude;
+      0,                          // setpoints_latitude;
+      "0n",                       // UTM zone
+      0,                          // speed
+      0,                          // los_capture_radius
+      Eigen::VectorXd::Zero(2),   // Waypoint_X
+      Eigen::VectorXd::Zero(2),   // Waypoint_Y
+      Eigen::VectorXd::Zero(2),   // Waypoint_longitude
+      Eigen::VectorXd::Zero(2)    // Waypoint_latitude
   };
 
   // real time data of tracker
@@ -175,9 +187,36 @@ class threadloop : public StateMonitor {
   /********************* Modules  *********************/
   // json
   common::jsonparse<num_thruster, dim_controlspace> _jsonparse;
+  // sqlite
+  common::database<num_thruster, dim_controlspace> _sqlite;
 
-  void plannerloop() {
-    planning::planner _planner(_jsonparse.getplannerdata());
+  void route_planner_loop() {
+    planning::RoutePlanning _RoutePlanner(RoutePlanner_RTdata,
+                                          _jsonparse.getvessel());
+
+    while (1) {
+      if (RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::IDLE) {
+        double initial_long = 3433821;
+        double initial_lat = 350916;
+        double final_long = 3433794;
+        double final_lat = 350985;
+
+        Eigen::VectorXd W_long(2);
+        Eigen::VectorXd W_lat(2);
+        W_long << initial_long, final_long;
+        W_lat << initial_lat, final_lat;
+
+        _RoutePlanner.setWaypoints(W_long, W_lat);
+        _sqlite.update_routeplanner_table(RoutePlanner_RTdata);
+      }
+      RoutePlanner_RTdata = _RoutePlanner.getRoutePlannerRTdata();
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+  }  // route_planner_loop
+
+  void path_planner_loop() {
     planning::LatticePlanner _trajectorygenerator(
         _jsonparse.getlatticedata(), _jsonparse.getcollisiondata());
 
@@ -185,29 +224,17 @@ class threadloop : public StateMonitor {
     long int outerloop_elapsed_time = 0;
     long int innerloop_elapsed_time = 0;
     long int sample_time_ms =
-        static_cast<long int>(1000 * _planner.getsampletime());
+        static_cast<long int>(1000 * _trajectorygenerator.getsampletime());
 
     StateMonitor::check_planner();
 
-    double initial_x = 3433821;
-    double initial_y = 350916;
-    double final_x = 3433794;
-    double final_y = 350985;
-    double ox = 0.5 * (initial_x + final_x);
-    double oy = 0.5 * (initial_y + final_y);
-
-    Eigen::VectorXd WX(3);
-    Eigen::VectorXd WY(3);
     Eigen::VectorXd ob_x(1);
     Eigen::VectorXd ob_y(1);
-    WX << initial_x, ox, final_x;
-    WY << initial_y, oy, final_y;
-    ob_x << ox;
-    ob_y << oy;
+    ob_x << 3433794;
+    ob_y << 350985;
 
-    std::cout << WX;
-
-    _trajectorygenerator.regenerate_target_course(WX, WY);
+    _trajectorygenerator.regenerate_target_course(
+        RoutePlanner_RTdata.Waypoint_X, RoutePlanner_RTdata.Waypoint_Y);
     _trajectorygenerator.setobstacle(ob_x, ob_y);
 
     while (1) {
@@ -278,7 +305,7 @@ class threadloop : public StateMonitor {
         CLOG(INFO, "planner") << "Too much time!";
     }
 
-  }  // plannerloop
+  }  // path_planner_loop
 
   void controllerloop() {
     control::controller<10, num_thruster, indicator_actuation, dim_controlspace>
@@ -303,8 +330,9 @@ class threadloop : public StateMonitor {
     controller_RTdata =
         _controller.initializecontroller().getcontrollerRTdata();
 
-    _trajectorytracking.set_grid_points(guilink_RTdata.WX, guilink_RTdata.WY,
-                                        guilink_RTdata.desired_speed);
+    _trajectorytracking.set_grid_points(
+        RoutePlanner_RTdata.Waypoint_X, RoutePlanner_RTdata.Waypoint_Y,
+        RoutePlanner_RTdata.speed, RoutePlanner_RTdata.los_capture_radius);
 
     while (1) {
       outerloop_elapsed_time = timer_controler.timeelapsed();
@@ -410,7 +438,7 @@ class threadloop : public StateMonitor {
                               .controlleronestep(Eigen::Vector3d::Zero(),
                                                  estimator_RTdata.p_error,
                                                  estimator_RTdata.v_error,
-                                                 planner_RTdata.command,
+                                                 Eigen::Vector3d::Zero(),
                                                  tracker_RTdata.v_setpoint)
                               .getcontrollerRTdata();
       // std::cout << elapsed_time << std::endl;
@@ -573,17 +601,12 @@ class threadloop : public StateMonitor {
 
   // loop to save real time data using sqlite3 and modern_sqlite3_cpp_wrapper
   void sqlloop() {
-    common::database<num_thruster, dim_controlspace> _sqlite(
-        _jsonparse.getsqlitedata());
-    _sqlite.initializetables();
-
     while (1) {
       switch (testmode) {
         case common::TESTMODE::SIMULATION_DP:
         case common::TESTMODE::SIMULATION_LOS:
         case common::TESTMODE::SIMULATION_FRENET: {
           // simulation
-          _sqlite.update_planner_table(planner_RTdata);
           _sqlite.update_estimator_table(estimator_RTdata);
           _sqlite.update_controller_table(controller_RTdata, tracker_RTdata);
           break;
@@ -594,7 +617,6 @@ class threadloop : public StateMonitor {
           // experiment
           _sqlite.update_gps_table(gps_data);
           _sqlite.update_stm32_table(stm32_data);
-          _sqlite.update_planner_table(planner_RTdata);
           _sqlite.update_estimator_table(estimator_RTdata);
           _sqlite.update_controller_table(controller_RTdata, tracker_RTdata);
 
@@ -658,7 +680,9 @@ class threadloop : public StateMonitor {
 
         // experiment
         while (1) {
-          gps_data = _gpsimu.gpsonestep().getgpsRTdata();
+          gps_data = _gpsimu.parseGPS()
+                         .check_UTM_zone(RoutePlanner_RTdata.utm_zone)
+                         .getgpsRTdata();
         }
 
         break;
@@ -781,23 +805,23 @@ class threadloop : public StateMonitor {
         // experiment
 
         while (1) {
-          if (gps_data.status >= 1) {
-            if (StateMonitor::indicator_gps == common::STATETOGGLE::IDLE) {
-              StateMonitor::indicator_gps = common::STATETOGGLE::READY;
-              CLOG(INFO, "GPS") << "initialation successful!";
-            }
+          if (StateMonitor::indicator_planner == common::STATETOGGLE::IDLE &&
+              RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::READY) {
+            StateMonitor::indicator_planner = common::STATETOGGLE::READY;
+            CLOG(INFO, "planner") << "initialation successful!";
+          }
+
+          if (gps_data.status >= 1 &&
+              StateMonitor::indicator_gps == common::STATETOGGLE::IDLE &&
+              StateMonitor::indicator_planner == common::STATETOGGLE::READY) {
+            StateMonitor::indicator_gps = common::STATETOGGLE::READY;
+            CLOG(INFO, "GPS") << "initialation successful!";
           }
 
           if (StateMonitor::indicator_gps == common::STATETOGGLE::READY &&
               StateMonitor::indicator_estimator == common::STATETOGGLE::IDLE) {
             StateMonitor::indicator_estimator = common::STATETOGGLE::READY;
             CLOG(INFO, "estimator") << "initialation successful!";
-          }
-
-          if (StateMonitor::indicator_planner == common::STATETOGGLE::IDLE &&
-              estimator_RTdata.state_toggle == common::STATETOGGLE::READY) {
-            StateMonitor::indicator_planner = common::STATETOGGLE::READY;
-            CLOG(INFO, "planner") << "initialation successful!";
           }
 
           if (StateMonitor::indicator_estimator == common::STATETOGGLE::READY &&
@@ -843,12 +867,17 @@ class threadloop : public StateMonitor {
           for (int i = 0; i != 6; ++i)
             _sendmsg.double_msg[i] = estimator_RTdata.State(i);  // State
 
-          _sendmsg.double_msg[6] = planner_RTdata.curvature;      // curvature
-          _sendmsg.double_msg[7] = planner_RTdata.speed;          // speed
-          _sendmsg.double_msg[8] = planner_RTdata.waypoint0(0);   // waypoint0
-          _sendmsg.double_msg[9] = planner_RTdata.waypoint0(1);   // waypoint0
-          _sendmsg.double_msg[10] = planner_RTdata.waypoint1(0);  // waypoint1
-          _sendmsg.double_msg[11] = planner_RTdata.waypoint1(1);  // waypoint1
+          _sendmsg.double_msg[6] =
+              RoutePlanner_RTdata.los_capture_radius;          // curvature
+          _sendmsg.double_msg[7] = RoutePlanner_RTdata.speed;  // speed
+          _sendmsg.double_msg[8] =
+              RoutePlanner_RTdata.setpoints_X;  // waypoint0
+          _sendmsg.double_msg[9] =
+              RoutePlanner_RTdata.setpoints_Y;  // waypoint0
+          _sendmsg.double_msg[10] =
+              RoutePlanner_RTdata.setpoints_heading;  // waypoint1
+          _sendmsg.double_msg[11] =
+              RoutePlanner_RTdata.setpoints_longitude;  // waypoint1
 
           for (int i = 0; i != dim_controlspace; ++i) {
             _sendmsg.double_msg[12 + i] = controller_RTdata.tau(i);  // tau

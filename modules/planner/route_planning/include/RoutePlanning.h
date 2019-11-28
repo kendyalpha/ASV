@@ -64,33 +64,27 @@ class RoutePlanning {
     routeplanner_RTdata.los_capture_radius = capture_radius;
     routeplanner_RTdata.Waypoint_X = Waypoint_x;
     routeplanner_RTdata.Waypoint_Y = Waypoint_y;
+    routeplanner_RTdata.Waypoint_longitude = Waypoint_x;
+    routeplanner_RTdata.Waypoint_latitude = Waypoint_y;
+    routeplanner_RTdata.state_toggle = common::STATETOGGLE::READY;
 
     return *this;
   }  // generate_Coarse_Circle
 
-  RoutePlanning &generate_Grid_Points(double _center_x, double _center_y,
-                                      double _radius, std::size_t edges = 4) {
-    return *this;
-  }  // generate_Grid_Points
+  // RoutePlanning &generate_Grid_Points(double _center_x, double _center_y,
+  //                                     double _radius, std::size_t edges = 4)
+  //                                     {
+  //   return *this;
+  // }  // generate_Grid_Points
 
   // setup waypoints using longitude and latitude
   void setWaypoints(const Eigen::VectorXd &_Waypoint_longitude,
                     const Eigen::VectorXd &_Waypoint_latitude) {
-    assert(_Waypoint_longitude.size() == _Waypoint_latitude.size());
-    routeplanner_RTdata.Waypoint_longitude = _Waypoint_longitude;
-    routeplanner_RTdata.Waypoint_latitude = _Waypoint_latitude;
-    int num_wp = _Waypoint_longitude.size();
+    routeplanner_RTdata.utm_zone = waypoints_geo2utm(
+        _Waypoint_longitude, _Waypoint_latitude, routeplanner_RTdata.Waypoint_X,
+        routeplanner_RTdata.Waypoint_Y);
 
-    for (int i = 0; i != num_wp; ++i) {
-      GeographicLib::UTMUPS::Forward(_latitude, _longitude, zone, northp, utm_x,
-                                     utm_y);
-      routeplanner_RTdata.utm_zone =
-          GeographicLib::UTMUPS::EncodeZone(zone, northp);
-
-      std::tie(routeplanner_RTdata.setpoints_X,
-               routeplanner_RTdata.setpoints_Y) =
-          common::math::UTM2Marine(utm_x, utm_y);
-    }
+    routeplanner_RTdata.state_toggle = common::STATETOGGLE::READY;
   }
 
   // setup DP data using longitude, latitude, and heading
@@ -123,10 +117,60 @@ class RoutePlanning {
 
   // compute the capture radius in LOS based on Hull length and speed
   double compute_capture_radius(double _desired_speed, double _basic_radius) {
-    return std::sqrt(_desired_speed) * _basic_radius;
+    return 1.5 * std::sqrt(_desired_speed) * _basic_radius;
   }  // compute_capture_radius
 
-  //
+  // convert the geographic coordinate of waypoints into UTM
+  std::string waypoints_geo2utm(const Eigen::VectorXd &_Waypoint_longitude,
+                                const Eigen::VectorXd &_Waypoint_latitude,
+                                Eigen::VectorXd &_Waypoint_X,
+                                Eigen::VectorXd &_Waypoint_Y) {
+    assert(_Waypoint_longitude.size() == _Waypoint_latitude.size());
+
+    int num_wp = _Waypoint_longitude.size();
+    _Waypoint_X = Eigen::VectorXd::Zero(num_wp);
+    _Waypoint_Y = Eigen::VectorXd::Zero(num_wp);
+
+    //  decide zone using the first waypoint
+    std::string basic_zone_str;
+    int basic_zone;
+    bool basic_northp;
+    double basic_utm_x = 0;
+    double basic_utm_y = 0;
+    GeographicLib::UTMUPS::Forward(_Waypoint_latitude(0),
+                                   _Waypoint_longitude(0), basic_zone,
+                                   basic_northp, basic_utm_x, basic_utm_y);
+    basic_zone_str =
+        GeographicLib::UTMUPS::EncodeZone(basic_zone, basic_northp);
+    std::tie(_Waypoint_X(0), _Waypoint_Y(0)) =
+        common::math::UTM2Marine(basic_utm_x, basic_utm_y);
+
+    // the rest of waypoints
+    for (int i = 1; i != num_wp; ++i) {
+      int zone = 0;
+      bool northp = true;
+      double utm_x = 0;
+      double utm_y = 0;
+      GeographicLib::UTMUPS::Forward(_Waypoint_latitude(i),
+                                     _Waypoint_longitude(i), zone, northp,
+                                     utm_x, utm_y);
+      zone_str = GeographicLib::UTMUPS::EncodeZone(zone, northp);
+
+      if (zone_str != basic_zone_str) {
+        // transfer one zone to another
+        GeographicLib::UTMUPS::Transfer(
+            zone, northp, GPSdata.UTM_x, GPSdata.UTM_y, zone_planning,
+            northp_planning, smooth_utm_x, smooth_utm_y, zone_t);
+
+        GPSdata.UTM_x = smooth_utm_x;
+        GPSdata.UTM_y = smooth_utm_y;
+      }
+
+      std::tie(_Waypoint_X(i), _Waypoint_Y(i)) =
+          common::math::UTM2Marine(utm_x, utm_y);
+    }
+    return basic_zone_str;
+  }
 
 };  // end class routeplanning
 

@@ -85,6 +85,8 @@ class FrenetTrajectoryGenerator {
                                 const Eigen::VectorXd &_marine_wy) {
     auto cart_wy = common::math::Marine2Cart(_marine_wy);
     auto cart_wx = _marine_wx;
+
+    // ensure the # of waypoints is larger than 2
     if (cart_wx.size() == 2) {
       cart_wx = (Eigen::VectorXd(3) << cart_wx(0),
                  0.5 * (cart_wx(0) + cart_wx(1)), cart_wx(1))
@@ -94,7 +96,7 @@ class FrenetTrajectoryGenerator {
                  0.5 * (cart_wy(0) + cart_wy(1)), cart_wy(1))
                     .finished();
     }
-    target_Spline2D.reinterpolation(cart_wx, cart_wy);  // cart_wy=marine_wx
+    target_Spline2D.reinterpolation(cart_wx, cart_wy);
     setup_target_course();
   }  // regenerate_target_course
 

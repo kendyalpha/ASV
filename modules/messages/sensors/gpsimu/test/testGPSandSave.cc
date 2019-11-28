@@ -40,7 +40,7 @@ int main() {
     messages::GPS _gpsimu(gps_data, 115200);  // zone 51 N
     int count = 0;
     while (1) {
-      std::string gps_buffer = _gpsimu.gpsonestep().getserialbuffer();
+      std::string gps_buffer = _gpsimu.parseGPS().getserialbuffer();
       gps_data = _gpsimu.getgpsRTdata();
       long int et = _timer.timeelapsed();
 

@@ -24,6 +24,7 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
                  const CollisionData &_CollisionData)
       : FrenetTrajectoryGenerator(_Latticedata),
         CollisionChecker(_CollisionData),
+        sample_time(_Latticedata.SAMPLE_TIME),
         next_cartesianstate(CartesianState{
             0,            // x
             0,            // y
@@ -59,10 +60,12 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
   Eigen::VectorXd getbestX() const noexcept { return best_path.x; }
   Eigen::VectorXd getbestY() const noexcept { return best_path.y; }
   Eigen::VectorXd getbestSpeed() const noexcept { return best_path.speed; }
+  double getsampletime() const noexcept { return sample_time; }
 
  private:
-  Frenet_path best_path;
+  const double sample_time;
   CartesianState next_cartesianstate;
+  Frenet_path best_path;
 
   Frenet_path findmincostpath(const std::vector<Frenet_path> &_frenetpaths) {
     // find minimum cost path

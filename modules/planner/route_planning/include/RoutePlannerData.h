@@ -15,6 +15,7 @@
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
 #include <vector>
+#include "common/property/include/priority.h"
 #include "common/property/include/vesseldata.h"
 
 namespace ASV::planning {
@@ -22,6 +23,9 @@ namespace ASV::planning {
 // real time data in route planner (GUI-dependent or auto), but the these data
 // should not be modified too fast
 struct RoutePlannerRTdata {
+  /********************* state toggle  *********************/
+  common::STATETOGGLE state_toggle;
+
   // DP data
   double setpoints_X;          // X in the marine coordinate
   double setpoints_Y;          // Y in the marine coordinate
