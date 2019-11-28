@@ -37,7 +37,7 @@ int main() {
     common::database<3, 3> _sqlitetest("dbtest.db");
     _sqlitetest.initializetables();
     common::timecounter _timer;
-    messages::GPS _gpsimu(gps_data, 115200);  // zone 51 N
+    messages::GPS _gpsimu(115200);  // zone 51 N
     int count = 0;
     while (1) {
       std::string gps_buffer = _gpsimu.parseGPS().getserialbuffer();

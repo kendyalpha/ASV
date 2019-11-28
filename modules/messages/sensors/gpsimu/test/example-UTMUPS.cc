@@ -28,8 +28,8 @@ int main() {
       int zone;
       bool northp;
       UTMUPS::DecodeZone(zonestr, zone, northp);
-      double x = 350926.048;
-      double y = 3433826.766;
+      double x = 350999;
+      double y = 3433777;
       double lat, lon;
       UTMUPS::Reverse(zone, northp, x, y, lat, lon);
       std::cout << std::fixed << std::setprecision(7) << lat << " " << lon

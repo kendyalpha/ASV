@@ -121,20 +121,20 @@ class threadloop : public StateMonitor {
 
   // real time GPS/IMU data
   messages::gpsRTdata gps_data{
-      0,    // UTC
-      0,    // latitude
-      0,    // longitude
-      0,    // heading
-      0,    // pitch
-      0,    // roll
-      0,    // altitude
-      0,    // Ve
-      0,    // Vn
-      0,    // roti
-      0,    // status
-      0,    // UTM_x
-      0,    // UTM_y
-      "0n"  // UTM_zone
+      0,  // UTC
+      0,  // latitude
+      0,  // longitude
+      0,  // heading
+      0,  // pitch
+      0,  // roll
+      0,  // altitude
+      0,  // Ve
+      0,  // Vn
+      0,  // roti
+      0,  // status
+      0,  // UTM_x
+      0,  // UTM_y
+      ""  // UTM_zone
   };
   // real time stm32 data
   messages::stm32data stm32_data{
@@ -196,20 +196,22 @@ class threadloop : public StateMonitor {
 
     while (1) {
       if (RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::IDLE) {
-        double initial_long = 3433821;
-        double initial_lat = 350916;
-        double final_long = 3433794;
-        double final_lat = 350985;
+        double initial_long = 121.4378246;
+        double initial_lat = 31.0285510;
+        double final_long = 121.4388565;
+        double final_lat = 31.0282296;
 
         Eigen::VectorXd W_long(2);
         Eigen::VectorXd W_lat(2);
         W_long << initial_long, final_long;
         W_lat << initial_lat, final_lat;
 
-        _RoutePlanner.setWaypoints(W_long, W_lat);
+        RoutePlanner_RTdata = _RoutePlanner.setCruiseSpeed(1)
+                                  .setWaypoints(W_long, W_lat)
+                                  .getRoutePlannerRTdata();
+
         _sqlite.update_routeplanner_table(RoutePlanner_RTdata);
       }
-      RoutePlanner_RTdata = _RoutePlanner.getRoutePlannerRTdata();
 
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -231,7 +233,7 @@ class threadloop : public StateMonitor {
     Eigen::VectorXd ob_x(1);
     Eigen::VectorXd ob_y(1);
     ob_x << 3433794;
-    ob_y << 350985;
+    ob_y << 350955;
 
     _trajectorygenerator.regenerate_target_course(
         RoutePlanner_RTdata.Waypoint_X, RoutePlanner_RTdata.Waypoint_Y);
@@ -675,14 +677,13 @@ class threadloop : public StateMonitor {
       case common::TESTMODE::EXPERIMENT_DP:
       case common::TESTMODE::EXPERIMENT_LOS:
       case common::TESTMODE::EXPERIMENT_FRENET: {
-        messages::GPS _gpsimu(gps_data, _jsonparse.getgpsbaudrate(),
+        messages::GPS _gpsimu(_jsonparse.getgpsbaudrate(),
                               _jsonparse.getgpsport());
 
         // experiment
         while (1) {
-          gps_data = _gpsimu.parseGPS()
-                         .check_UTM_zone(RoutePlanner_RTdata.utm_zone)
-                         .getgpsRTdata();
+          gps_data =
+              _gpsimu.parseGPS(RoutePlanner_RTdata.utm_zone).getgpsRTdata();
         }
 
         break;

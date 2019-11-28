@@ -66,6 +66,7 @@ class RoutePlanning {
     routeplanner_RTdata.Waypoint_Y = Waypoint_y;
     routeplanner_RTdata.Waypoint_longitude = Waypoint_x;
     routeplanner_RTdata.Waypoint_latitude = Waypoint_y;
+
     routeplanner_RTdata.state_toggle = common::STATETOGGLE::READY;
 
     return *this;
@@ -78,14 +79,22 @@ class RoutePlanning {
   // }  // generate_Grid_Points
 
   // setup waypoints using longitude and latitude
-  void setWaypoints(const Eigen::VectorXd &_Waypoint_longitude,
-                    const Eigen::VectorXd &_Waypoint_latitude) {
+  RoutePlanning &setWaypoints(const Eigen::VectorXd &_Waypoint_longitude,
+                              const Eigen::VectorXd &_Waypoint_latitude) {
     routeplanner_RTdata.utm_zone = waypoints_geo2utm(
         _Waypoint_longitude, _Waypoint_latitude, routeplanner_RTdata.Waypoint_X,
         routeplanner_RTdata.Waypoint_Y);
 
     routeplanner_RTdata.state_toggle = common::STATETOGGLE::READY;
-  }
+    return *this;
+  }  // setWaypoints
+
+  RoutePlanning &setCruiseSpeed(double _speed) {
+    routeplanner_RTdata.speed = _speed;
+    routeplanner_RTdata.los_capture_radius = compute_capture_radius(_speed, L);
+
+    return *this;
+  }  // setCruiseSpeed
 
   // setup DP data using longitude, latitude, and heading
   void setSetpoints(double _longitude, double _latitude, double _heading) {
@@ -154,16 +163,19 @@ class RoutePlanning {
       GeographicLib::UTMUPS::Forward(_Waypoint_latitude(i),
                                      _Waypoint_longitude(i), zone, northp,
                                      utm_x, utm_y);
-      zone_str = GeographicLib::UTMUPS::EncodeZone(zone, northp);
+      std::string zone_str = GeographicLib::UTMUPS::EncodeZone(zone, northp);
 
       if (zone_str != basic_zone_str) {
         // transfer one zone to another
-        GeographicLib::UTMUPS::Transfer(
-            zone, northp, GPSdata.UTM_x, GPSdata.UTM_y, zone_planning,
-            northp_planning, smooth_utm_x, smooth_utm_y, zone_t);
+        double smooth_utm_x = 0;
+        double smooth_utm_y = 0;
+        int zone_t = 0;
+        GeographicLib::UTMUPS::Transfer(zone, northp, utm_x, utm_y, basic_zone,
+                                        basic_northp, smooth_utm_x,
+                                        smooth_utm_y, zone_t);
 
-        GPSdata.UTM_x = smooth_utm_x;
-        GPSdata.UTM_y = smooth_utm_y;
+        utm_x = smooth_utm_x;
+        utm_y = smooth_utm_y;
       }
 
       std::tie(_Waypoint_X(i), _Waypoint_Y(i)) =

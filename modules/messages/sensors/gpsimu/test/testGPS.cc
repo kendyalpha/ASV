@@ -33,7 +33,7 @@ int main() {
   };
   try {
     common::timecounter _timer;
-    messages::GPS _gpsimu(gps_data, 115200);  // zone 51 N
+    messages::GPS _gpsimu(115200, "/dev/ttyS0");  // zone 51 N
     long int totaltime = 0;
     int count = 0;
     while (1) {

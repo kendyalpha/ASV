@@ -30,47 +30,36 @@
 namespace ASV::messages {
 class GPS final : public nmea {
  public:
-  explicit GPS(const gpsRTdata& _gpsRTdata,               //
-               unsigned long _baud,                       // baudrate
+  explicit GPS(unsigned long _baud,                       // baudrate
                const std::string& _port = "/dev/ttyUSB0"  // serial port
                )
-      : GPSdata(_gpsRTdata),
+      : GPSdata({
+            0,      // UTC
+            0,      // latitude
+            0,      // longitude
+            0,      // heading
+            0,      // pitch
+            0,      // roll
+            0,      // altitude
+            0,      // Ve
+            0,      // Vn
+            0,      // roti
+            0,      // status
+            0,      // UTM_x
+            0,      // UTM_y
+            "NULL"  // UTM_zone
+        }),
         GPS_serial(_port, _baud, serial::Timeout::simpleTimeout(2000)),
         serial_buffer("") {}
   GPS() = delete;
   ~GPS() {}
 
-  // check if the real-time UTM zone is in the planning UTM zone, and smooth
-  GPS& check_UTM_zone(const std::string& _planning_utm_zone) {
-    if (GPSdata.UTM_zone != _planning_utm_zone) {
-      double smooth_utm_x = 0.0;
-      double smooth_utm_y = 0.0;
-
-      int zone = 0;
-      bool northp = true;
-      int zone_planning = 0;
-      bool northp_planning = true;
-      int zone_t = 0;
-      // smooth the utm projection when UTM zone is switched
-      GeographicLib::UTMUPS::DecodeZone(GPSdata.UTM_zone, zone, northp);
-      GeographicLib::UTMUPS::DecodeZone(_planning_utm_zone, zone_planning,
-                                        northp_planning);
-
-      // transfer one zone to another
-      GeographicLib::UTMUPS::Transfer(
-          zone, northp, GPSdata.UTM_x, GPSdata.UTM_y, zone_planning,
-          northp_planning, smooth_utm_x, smooth_utm_y, zone_t);
-
-      GPSdata.UTM_x = smooth_utm_x;
-      GPSdata.UTM_y = smooth_utm_y;
-    }
-    return *this;
-  }  // check_UTM_zone
-
   // read serial data and transform to UTM
-  GPS& parseGPS() {
+  GPS& parseGPS(const std::string& _planning_utm_zone = "OFF") {
     serial_buffer = GPS_serial.readline(150);
     hemisphereV102(serial_buffer, GPSdata);
+    if (_planning_utm_zone != "OFF")
+      check_UTM_zone(_planning_utm_zone, GPSdata);
     check_gps_status(GPSdata);
 
     return *this;
@@ -180,7 +169,37 @@ class GPS final : public nmea {
     _Ve = _speed * svalue;
     _Vn = _speed * cvalue;
   }  // decomposespeed
-};   // end class GPS
+
+  // check if the real-time UTM zone is in the planning UTM zone, and smooth
+  void check_UTM_zone(const std::string& _planning_utm_zone,
+                      gpsRTdata& _gpsdata) {
+    if (_gpsdata.UTM_zone != "NULL" &&
+        _gpsdata.UTM_zone != _planning_utm_zone) {
+      double smooth_utm_x = 0.0;
+      double smooth_utm_y = 0.0;
+
+      int zone = 0;
+      bool northp = true;
+      int zone_planning = 0;
+      bool northp_planning = true;
+      int zone_t = 0;
+      // smooth the utm projection when UTM zone is switched
+      GeographicLib::UTMUPS::DecodeZone(_gpsdata.UTM_zone, zone, northp);
+      GeographicLib::UTMUPS::DecodeZone(_planning_utm_zone, zone_planning,
+                                        northp_planning);
+
+      // transfer one zone to another
+      GeographicLib::UTMUPS::Transfer(
+          zone, northp, _gpsdata.UTM_x, _gpsdata.UTM_y, zone_planning,
+          northp_planning, smooth_utm_x, smooth_utm_y, zone_t);
+
+      _gpsdata.UTM_x = smooth_utm_x;
+      _gpsdata.UTM_y = smooth_utm_y;
+    }
+
+  }  // check_UTM_zone
+
+};  // end class GPS
 
 }  // namespace ASV::messages
 
