@@ -45,7 +45,7 @@
       "max_output": 14
     },
     "yaw": {
-      "position_P": 400,
+      "position_P": 300,
       "position_I": 0,
       "velocity_P": 400,
       "velocity_I": 0,

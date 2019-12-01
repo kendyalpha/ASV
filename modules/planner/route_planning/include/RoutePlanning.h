@@ -81,6 +81,9 @@ class RoutePlanning {
   // setup waypoints using longitude and latitude
   RoutePlanning &setWaypoints(const Eigen::VectorXd &_Waypoint_longitude,
                               const Eigen::VectorXd &_Waypoint_latitude) {
+    routeplanner_RTdata.Waypoint_longitude = _Waypoint_longitude;
+    routeplanner_RTdata.Waypoint_latitude = _Waypoint_latitude;
+
     routeplanner_RTdata.utm_zone = waypoints_geo2utm(
         _Waypoint_longitude, _Waypoint_latitude, routeplanner_RTdata.Waypoint_X,
         routeplanner_RTdata.Waypoint_Y);

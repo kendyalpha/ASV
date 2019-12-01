@@ -70,7 +70,7 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
   Frenet_path findmincostpath(const std::vector<Frenet_path> &_frenetpaths) {
     // find minimum cost path
     double mincost = 1e6;
-    Frenet_path _best_path;
+    Frenet_path _best_path = _frenetpaths[0];
     for (std::size_t i = 0; i != _frenetpaths.size(); i++) {
       if (mincost > _frenetpaths[i].cf) {
         mincost = _frenetpaths[i].cf;
