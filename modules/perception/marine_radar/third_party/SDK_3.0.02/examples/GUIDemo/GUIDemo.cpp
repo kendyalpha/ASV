@@ -71,7 +71,7 @@ QString ErrorToString( eErrors error )
 //-----------------------------------------------------------------------------
 // GUIDemo Class Implementation
 //-----------------------------------------------------------------------------
-GUIDemo::GUIDemo( QWidget* pParent, Qt::WFlags flags )
+GUIDemo::GUIDemo( QWidget* pParent, Qt::WindowFlags flags )
     : QMainWindow( pParent, flags )
     , m_pImageClient( NULL )
     , m_pMode( NULL )
@@ -308,7 +308,7 @@ int GUIDemo::ConnectImageClient( const QString& serialNumber, unsigned instance 
         m_ForceSetup = true;
         m_ForceAdvancedSTCState = true;
 
-        error = m_pImageClient->Connect( serialNumber.toAscii().data(), instance );
+        error = m_pImageClient->Connect( serialNumber.toLatin1().data(), instance );
     }
     return error;
 }
@@ -500,7 +500,7 @@ int GUIDemo::ConnectTargetClient( const QString& serialNumber, unsigned instance
         m_ForceTargetAlarmSetup = true;
         m_ForceTargetProperties = true;
 
-        error = m_pTargetClient->Connect( serialNumber.toAscii().data(), instance );
+        error = m_pTargetClient->Connect( serialNumber.toLatin1().data(), instance );
     }
     return error;
 }

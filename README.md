@@ -29,3 +29,4 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 4. Finite state machine
 5. Message broker
 6. Unit test framework (boost.test)
+7. export shared library

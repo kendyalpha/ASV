@@ -52,7 +52,7 @@ class GUIDemo
     Q_OBJECT
 
 public:
-    GUIDemo( QWidget *parent = 0, Qt::WFlags flags = 0 );
+    GUIDemo( QWidget *parent = 0, Qt::WindowFlags flags = 0 );
     ~GUIDemo();
 
 private:

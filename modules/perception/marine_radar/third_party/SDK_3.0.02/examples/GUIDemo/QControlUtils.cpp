@@ -85,7 +85,7 @@ void LinkControls( bool connect, QObject& manager, QWidget& parent )
     foreach (QSpinBox* pSpin, spins)
     {
         QString name( pSpin->objectName().mid( 4 ) );
-        Connect( connect, pSpin, SIGNAL(valueChanged(int)), &manager, Slot(name+"_valueChanged(int)").toAscii().data() );
+        Connect( connect, pSpin, SIGNAL(valueChanged(int)), &manager, Slot(name+"_valueChanged(int)").toLatin1().data() );
 
         QSlider* pSlider = parent.findChild< QSlider* >( "slider" + name );
         if (pSlider != NULL)
@@ -99,7 +99,7 @@ void LinkControls( bool connect, QObject& manager, QWidget& parent )
     foreach (QDoubleSpinBox* pSpin, dspins)
     {
         QString name( pSpin->objectName().mid( 4 ) );
-        Connect( connect, pSpin, SIGNAL(valueChanged(double)), &manager, Slot(name+"_valueChanged(double)").toAscii().data() );
+        Connect( connect, pSpin, SIGNAL(valueChanged(double)), &manager, Slot(name+"_valueChanged(double)").toLatin1().data() );
 
         QSlider* pSlider = parent.findChild< QSlider* >( "slider" + name );
         if (pSlider != NULL)
@@ -123,21 +123,21 @@ void LinkControls( bool connect, QObject& manager, QWidget& parent )
     foreach (QComboBox* pCombo, combos)
     {
         QString name( pCombo->objectName().mid( 5 ) );
-        Connect( connect, pCombo, SIGNAL(currentIndexChanged(int)), &manager, Slot(name+"_currentIndexChanged(int)").toAscii().data() );
+        Connect( connect, pCombo, SIGNAL(currentIndexChanged(int)), &manager, Slot(name+"_currentIndexChanged(int)").toLatin1().data() );
     }
 
     QList< QCheckBox* > checks( parent.findChildren< QCheckBox* >( QRegExp("^check") ) );
     foreach (QCheckBox* pCheck, checks)
     {
         QString name( pCheck->objectName().mid( 5 ) );
-        Connect( connect, pCheck, SIGNAL(clicked(bool)), &manager, Slot(name+"_clicked(bool)").toAscii().data() );
+        Connect( connect, pCheck, SIGNAL(clicked(bool)), &manager, Slot(name+"_clicked(bool)").toLatin1().data() );
     }
 
     QList< QPushButton* > pushes( parent.findChildren< QPushButton* >( QRegExp("^push") ) );
     foreach (QPushButton* pPush, pushes)
     {
         QString name( pPush->objectName().mid( 4 ) );
-        Connect( connect, pPush, SIGNAL(clicked(bool)), &manager, Slot(name+"_clicked(bool)").toAscii().data() );
+        Connect( connect, pPush, SIGNAL(clicked(bool)), &manager, Slot(name+"_clicked(bool)").toLatin1().data() );
     }
 }
 

@@ -269,7 +269,7 @@ void tMultiRadar::MultiRadarGetLockID_clicked( bool )
     QString radar( "Radar: \"" + GetRadarSerialNumber() + "\"\n\n" );
 
     char lockID[MAX_LOCKID_SIZE * 2 + 1];
-    int length = tMultiRadarClient::GetInstance()->GetLockID(lockID, GetRadarSerialNumber().toAscii().data());
+    int length = tMultiRadarClient::GetInstance()->GetLockID(lockID, GetRadarSerialNumber().toLatin1().data());
     lockID[length] = '\0';
     QWidget* pParent = dynamic_cast<QWidget*>(parent());
     QMessageBox::information( pParent, title, radar + lockID );
@@ -278,7 +278,7 @@ void tMultiRadar::MultiRadarGetLockID_clicked( bool )
 //-----------------------------------------------------------------------------
 void tMultiRadar::MultiRadarUnlock_clicked( bool )
 {
-    tMultiRadarClient::GetInstance()->UnlockRadar( GetRadarSerialNumber().toAscii().data(), 0 );
+    tMultiRadarClient::GetInstance()->UnlockRadar( GetRadarSerialNumber().toLatin1().data(), 0 );
 }
 
 //-----------------------------------------------------------------------------

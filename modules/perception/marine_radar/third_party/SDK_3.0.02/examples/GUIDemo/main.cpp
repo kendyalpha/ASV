@@ -3,7 +3,7 @@
 // Confidential and proprietary.  All rights reserved.
 //-----------------------------------------------------------------------------
 
-#include <QtGui/QApplication>
+#include <QApplication>
 #include "GUIDemo.h"
 
 

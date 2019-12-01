@@ -19,11 +19,11 @@
 namespace Navico {
 namespace Version {
 
-    enum {
-        gMajor = 3,
-        gMinor = 0,
-        gBuild = 2,
-    };
+enum {
+  gMajor = 3,
+  gMinor = 0,
+  gBuild = 2,
+};
 
 }  // namespace Version
 }  // namespace Navico
