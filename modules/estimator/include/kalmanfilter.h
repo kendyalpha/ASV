@@ -191,13 +191,13 @@ class USV_kalmanfilter : public kalmanfilter<3, 6, 6> {
     Bk.bottomRows(3) = Inv_Mass;
 
     // calculate discrete time A, B, and H
-    A = matrixnnd::Identity() + sample_time * Ak;
-    B = sample_time * Bk;
+    kalmanfilter::A = matrixnnd::Identity() + sample_time * Ak;
+    kalmanfilter::B = sample_time * Bk;
   }
 
   // real time update the Kalman filter matrix using orientation
   void updateKalmanA(const Eigen::Matrix3d &_CTB2G) {
-    A.topRightCorner(3, 3) = sample_time * _CTB2G;
+    kalmanfilter::A.topRightCorner(3, 3) = sample_time * _CTB2G;
   }  // updateKalmanA
 
 };  // end class USV_kalmanfilter

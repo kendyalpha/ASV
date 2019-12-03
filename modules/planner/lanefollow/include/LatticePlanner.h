@@ -44,7 +44,8 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
         _targetspeed);
 
     // constraints and collision check
-    auto t_frenet_paths = CollisionChecker::check_paths(frenet_paths);
+    auto t_frenet_paths =
+        CollisionChecker::check_paths(FrenetTrajectoryGenerator::frenet_paths);
 
     // find minimum cost path
     best_path = findmincostpath(t_frenet_paths);

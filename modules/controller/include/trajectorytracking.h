@@ -76,14 +76,12 @@ class lineofsight {
   }
   void setlosradius(double _radius) { los_radius = _radius; }
 
- protected:
+ private:
   double los_radius;
   double capture_radius;
   double desired_theta;
   Eigen::Vector2d trackerror;
   Eigen::Matrix2d R;
-
- private:
   // compute the rotation matrix
   void computeR(double theta) {
     double svalue = std::sin(theta);
@@ -219,7 +217,7 @@ class trajectorytracking final : public lineofsight {
 
     // desired heading
     lineofsight::computelospoint(_vesselposition, _rp0, _rp1);
-    TrackerRTdata.setpoint(2) = desired_theta;
+    TrackerRTdata.setpoint(2) = lineofsight::getdesired_theta();
 
   }  // CircularArcLOS
 

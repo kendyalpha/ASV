@@ -85,7 +85,7 @@ int main() {
   common::database<3, 3> _sqlitetest("../data/dbtest.db");
   _sqlitetest.initializetables();
   common::timecounter _timer;
-  messages::GPS _gpsimu(gps_data, 115200);  // zone 51 N
+  messages::GPS _gpsimu(115200);  // zone 51 N
   estimator<USEKALMAN::KALMANOFF> _estimator(_estimatorRTdata, _vessel,
                                              estimatordata_input);
   _estimator.setvalue(gps_data.UTM_x, gps_data.UTM_y, gps_data.altitude,

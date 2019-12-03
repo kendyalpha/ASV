@@ -2,7 +2,7 @@
 // Copyright (C) 2007-2015 Navico
 // Confidential and proprietary.  All rights reserved.
 //-----------------------------------------------------------------------------
-
+#include <QDebug>
 #include <cassert>
 #include <NavTypes.h>
 #include <FeatureManager.h>
