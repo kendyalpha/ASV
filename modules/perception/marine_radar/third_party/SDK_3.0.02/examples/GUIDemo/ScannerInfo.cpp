@@ -12,13 +12,12 @@
 // Helpers
 //-----------------------------------------------------------------------------
 
-namespace {
 inline double UnitsConvertMetersX10ToNauticalMiles_double(int metersX10) {
-  return ((double)metersX10 / 18520.0);
+  return static_cast<double>(metersX10 / 18520.0);
 }
 
 inline int UnitsConvertNauticalMilesToMeters_double(double nauticalMiles) {
-  return (int)((double)nauticalMiles * 1852.0);
+  return static_cast<int>(nauticalMiles * 1852.0);
 }
 
 QString ToString(Navico::Protocol::NRP::eRadarErrorType type) {
@@ -83,7 +82,7 @@ QString ToString(Navico::Protocol::NRP::eRadarErrorType type) {
       return QString("Radar Error #%1 (0x%2)").arg(type).arg(type, 0, 16);
   }
 }
-}  // namespace
+
 
 //-----------------------------------------------------------------------------
 // tScannerInfo Implementation

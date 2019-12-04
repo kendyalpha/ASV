@@ -28,7 +28,7 @@ tTabSectorBlanking::~tTabSectorBlanking() {
 void tTabSectorBlanking::OnConnect(
     Navico::Protocol::NRP::tImageClient* pImageClient) {
   tTabBase::OnConnect(pImageClient);
-  m_UpdateOnConfiguration = (pImageClient != 0);
+  m_UpdateOnConfiguration = (pImageClient != nullptr);
   OnUpdateFeature(Navico::Protocol::NRP::eFeatureEnum_SectorBlanking);
 }
 
@@ -47,7 +47,7 @@ static uint16_t ToDeciDegrees(double degrees) {
   return deg10 %= 360 * 10;
 }
 static uint16_t ToDegrees(double degrees) {
-  int deg = degrees;
+  int deg = static_cast<int>(degrees);
   while (deg < 0) deg += 360;
   return deg % 360;
 }

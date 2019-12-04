@@ -18,7 +18,6 @@
 #define dimensionof(a) (sizeof(a) / sizeof((a)[0]))
 #endif
 
-namespace {
 struct tTargetFieldInfo {
   const char* name;
   unsigned width;
@@ -93,7 +92,7 @@ const char* targetStateNames[] = {
     "Failed - Max Targets",      // 0x10
     "Failed - Invalid Position"  // 0x11
 };
-}  // namespace
+
 
 //-----------------------------------------------------------------------------
 QString FormatTime(uint32_t secs) {

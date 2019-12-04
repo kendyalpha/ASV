@@ -27,7 +27,6 @@ HEADERS += \
     ScannerInfo.h \
     TabBase.h \
     TabAdvanced.h \
-    TabBScan.h \
     TabGuardZone.h \
     TabImage.h \
     TabInstallation.h \
@@ -45,7 +44,6 @@ SOURCES += \
     ScannerInfo.cpp \
     TabBase.cpp \
     TabAdvanced.cpp \
-    TabBScan.cpp \
     TabGuardZone.cpp \
     TabImage.cpp \
     TabInstallation.cpp \

@@ -24,17 +24,6 @@
 #include <QTransform>
 #include "OverlayManager.h"
 
-//-----------------------------------------------------------------------------
-// Forward References
-//-----------------------------------------------------------------------------
-class QImage;
-class QMenu;
-
-//-----------------------------------------------------------------------------
-// Colour LookUp Tables
-//-----------------------------------------------------------------------------
-// extern Navico::tRadarColourLookUpTableGreen   gGreenLUT;
-extern Navico::tRadarColourLookUpTableNavico gNavicoLUT;
 
 //-----------------------------------------------------------------------------
 // Target Locations

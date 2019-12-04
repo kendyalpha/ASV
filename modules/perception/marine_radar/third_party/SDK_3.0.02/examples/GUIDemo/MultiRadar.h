@@ -10,8 +10,11 @@
 #define GUIDEMO_MULTIDEVICE_H
 
 #include <QMainWindow>
+#include <QMessageBox>
 #include <QMutex>
+#include <QString>
 #include <QTimer>
+#include <cassert>
 
 #include <MultiRadarClient.h>
 

@@ -11,13 +11,17 @@
 #ifndef GUIDEMO_TABPPI_H
 #define GUIDEMO_TABPPI_H
 
-#include <QObject>
-#include <QTimer>
+#define _USE_MATH_DEFINES
 
 #include <ImageClient.h>
 #include <PPIController.h>
-
+#include <QObject>
+#include <QPainter>
+#include <QTimer>
+#include <cassert>
+#include <cmath>
 #include "CustomFrames.h"
+#include "ImageClient.h"
 #include "OverlayManager.h"
 #include "ui_GUIDemo.h"
 
@@ -76,6 +80,57 @@ class tTabPPI : public QObject {
   Navico::Image::tPPIController* m_pController;
   QImage* m_pImage;
   QTimer m_Timer;
+  Ui::GUIDemoClass& ui;
+};
+
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+//! tQBScanFrame Helper Class
+//-----------------------------------------------------------------------------
+class tQBScanFrame : public tQCustomFrame {
+  Q_OBJECT
+
+ public:
+  tQBScanFrame(tTargetLocation* pTargets, unsigned maxTargets, QWidget* pParent,
+               QImage* pImage, tOverlayManager& overlayManager)
+      : tQCustomFrame(pTargets, maxTargets, pParent, pImage, overlayManager) {}
+
+ protected:
+  void convertXYtoSD(int x, int y, double& s, double& d);
+  void convertSDtoXY(double s, double d, int& x, int& y);
+  void DrawOverlay(QPainter& painter, const tOverlay* pOverlay);
+};
+
+//-----------------------------------------------------------------------------
+//! tTabBScan Class
+//-----------------------------------------------------------------------------
+class tTabBScan : public QObject {
+  Q_OBJECT
+
+ public:
+  tTabBScan(Ui::GUIDemoClass& ui, tTargetLocation* pTargets,
+            unsigned maxTargets, QObject* pParent,
+            tOverlayManager& overlayManager);
+  ~tTabBScan();
+
+  void OnConnect();
+  void OnDisconnect();
+
+  void OnUpdateSpoke(const Navico::Protocol::NRP::Spoke::t9174Spoke* pSpoke);
+
+ signals:
+  void AcquireTarget(double sample, double degrees);
+
+ private slots:
+  void Timer_timeout();
+
+ private:
+  tQBScanFrame* m_pFrame;
+  QTimer m_Timer;
+  QImage* m_pImage;
+  unsigned m_NumSamples;
+
   Ui::GUIDemoClass& ui;
 };
 

@@ -4,8 +4,6 @@
 //-----------------------------------------------------------------------------
 
 #include "GUIDemo.h"
-#include "QControlUtils.h"
-
 
 //-----------------------------------------------------------------------------
 // Helper Functions
@@ -69,6 +67,7 @@ QString ErrorToString(Navico::Protocol::eErrors error) {
       return "EBadUnlockLevel";
     default:
       return QString::number(error);
+
   }
 }
 
@@ -224,9 +223,11 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
     unsigned instance = m_pMultiRadar->GetRadarInstance();
 
     Navico::Protocol::eErrors imageError =
-        (Navico::Protocol::eErrors)ConnectImageClient(serialNumber, instance);
+        static_cast<Navico::Protocol::eErrors>(
+            ConnectImageClient(serialNumber, instance));
     Navico::Protocol::eErrors targetError =
-        (Navico::Protocol::eErrors)ConnectTargetClient(serialNumber, instance);
+        static_cast<Navico::Protocol::eErrors>(
+            ConnectTargetClient(serialNumber, instance));
     if (imageError != Navico::Protocol::EOK ||
         targetError != Navico::Protocol::EOK) {
       if (imageError == Navico::Protocol::EOK) DisconnectImageClient();
@@ -384,6 +385,7 @@ void GUIDemo::UpdateConfiguration(
 //-----------------------------------------------------------------------------
 void GUIDemo::UpdateSpoke(
     const Navico::Protocol::NRP::Spoke::t9174Spoke* pSpoke) {
+
   m_PixelCellSize_mm =
       Navico::Protocol::NRP::Spoke::GetPixelCellSize_mm(pSpoke->header);
   m_pTabBScan->OnUpdateSpoke(pSpoke);
@@ -562,7 +564,7 @@ void GUIDemo::UpdateNavigation(
 //-----------------------------------------------------------------------------
 void GUIDemo::UpdateTarget(
     const Navico::Protocol::NRP::tTrackedTarget* pTarget) {
-  unsigned index = std::max(0, pTarget->serverTargetID);
+  unsigned index = static_cast<unsigned>(std::max(0, pTarget->serverTargetID));
 
   if (index > cMaxTargets) index = 0;
 

@@ -3,15 +3,15 @@
 // Confidential and proprietary.  All rights reserved.
 //-----------------------------------------------------------------------------
 
-#define _USE_MATH_DEFINES
-#include <cassert>
-#include <cmath>
-
-#include "QControlUtils.h"
 #include "TabPPI.h"
+#include "QControlUtils.h"
 
+#include <QDebug>
 #include <QMenu>
 #include <QPainter>
+
+
+Navico::tRadarColourLookUpTableNavico gNavicoLUT;
 
 static float CompassToDegrees(uint16_t compass) {
   return static_cast<float>(compass) * 360.0f / 4096.0f;
@@ -124,13 +124,12 @@ tTabPPI::tTabPPI(Ui::GUIDemoClass& myUI, tTargetLocation* pTargets,
                  unsigned maxTargets, QObject* pParent,
                  tOverlayManager& overlayManager)
     : QObject(pParent),
-      m_pImage(NULL),
-      m_pFrame(new tQPPIFrame(pTargets, maxTargets, myUI.tabPPI, NULL,
+      m_pFrame(new tQPPIFrame(pTargets, maxTargets, myUI.tabPPI, nullptr,
                               overlayManager)),
       m_pController(new Navico::Image::tPPIController()),
+      m_pImage(nullptr),
       ui(myUI) {
   ui.verticalLayout_tabPPI->addWidget(m_pFrame);
-
   Connect(true, &m_Timer, SIGNAL(timeout()), this, SLOT(Timer_timeout()));
   Connect(true, m_pFrame, SIGNAL(ChangeTrailsTime(int)), this,
           SLOT(Frame_ChangeTrailsTime(int)));
@@ -171,7 +170,8 @@ void tTabPPI::Timer_timeout() {
 }
 
 //-----------------------------------------------------------------------------
-void tTabPPI::OnUpdateSpoke(const Navico::Protocol::NRP::Spoke::t9174Spoke* pSpoke) {
+void tTabPPI::OnUpdateSpoke(
+    const Navico::Protocol::NRP::Spoke::t9174Spoke* pSpoke) {
   QMutexLocker locker(tQCustomFrame::getImageMutex());
 
   if (m_pImage == nullptr) {
@@ -187,10 +187,138 @@ void tTabPPI::OnUpdateSpoke(const Navico::Protocol::NRP::Spoke::t9174Spoke* pSpo
     m_pController->SetTrailsTime(-1);
   }
 
-  m_pFrame->SetFullRange_m(Navico::Protocol::NRP::Spoke::GetSampleRange_mm(pSpoke->header) *
-                           pSpoke->header.nOfSamples * 2 / 1000);
-  m_pFrame->SetBearing_deg((pSpoke->header.compassInvalid == 0)
-                               ? CompassToDegrees(pSpoke->header.spokeCompass)
-                               : 0.0f);
+  uint32_t _fullrange_m =
+      Navico::Protocol::NRP::Spoke::GetSampleRange_mm(pSpoke->header) *
+      pSpoke->header.nOfSamples * 2 / 1000;
+  float _Bearing_deg = (pSpoke->header.compassInvalid == 0)
+                           ? CompassToDegrees(pSpoke->header.spokeCompass)
+                           : 0.0f;
+  m_pFrame->SetFullRange_m(_fullrange_m);
+  m_pFrame->SetBearing_deg(_Bearing_deg);
   m_pController->Process(pSpoke);
 }
+
+//-----------------------------------------------------------------------------
+//  tQBScanFrame Implementation
+//-----------------------------------------------------------------------------
+void tQBScanFrame::convertXYtoSD(int x, int y, double& s, double& d) {
+  s = (getImage()->height() * y) / height();
+  d = (360.0 * x) / width();
+}
+
+//-----------------------------------------------------------------------------
+void tQBScanFrame::convertSDtoXY(double s, double d, int& x, int& y) {
+  y = ((s * height()) / getImage()->height()) + 0.5;
+  x = (d * width() / 360.0) + 0.5;
+}
+
+//-----------------------------------------------------------------------------
+void tQBScanFrame::DrawOverlay(QPainter& painter, const tOverlay* pOverlay) {
+  int width = this->width();
+  int height = this->height();
+
+  double x1 = (static_cast<double>(pOverlay->startBearing_deg) / 360.0) - 0.5;
+  double x2 = (static_cast<double>(pOverlay->endBearing_deg) / 360.0) - 0.5;
+  double y1 =
+      (static_cast<double>(pOverlay->startRange_m) / m_FullRange_m) - 0.5;
+  double y2 = (static_cast<double>(pOverlay->endRange_m) / m_FullRange_m) - 0.5;
+
+  painter.setPen(pOverlay->lineColour);
+  painter.setBrush(QBrush(pOverlay->fillColour));
+
+  double leftBound = -0.5;
+  double rightBound = 0.5;
+
+  if (x2 >= x1) {
+    painter.drawRect(x1 * width, y1 * height, (x2 - x1) * width,
+                     (y2 - y1) * height);
+  } else {
+    painter.drawRect(leftBound * width, y1 * height, (x2 - leftBound) * width,
+                     (y2 - y1) * height);
+    painter.drawRect(x1 * width, y1 * height, (rightBound - x1) * width,
+                     (y2 - y1) * height);
+  }
+}
+
+//-----------------------------------------------------------------------------
+//  tTabBScan Implementation
+//-----------------------------------------------------------------------------
+tTabBScan::tTabBScan(Ui::GUIDemoClass& myUI, tTargetLocation* pTargets,
+                     unsigned maxTargets, QObject* pParent,
+                     tOverlayManager& overlayManager)
+    : QObject(pParent),
+      m_pFrame(nullptr),
+      m_pImage(nullptr),
+      m_NumSamples(0),
+      ui(myUI) {
+  m_pFrame =
+      new tQBScanFrame(pTargets, maxTargets, ui.tabBScan, nullptr, overlayManager);
+  ui.verticalLayout_tabBscan->addWidget(m_pFrame);
+
+  Connect(true, &m_Timer, SIGNAL(timeout()), this, SLOT(Timer_timeout()));
+  Connect(true, m_pFrame, SIGNAL(AcquireTarget(double, double)), this,
+          SIGNAL(AcquireTarget(double, double)));
+}
+
+//-----------------------------------------------------------------------------
+tTabBScan::~tTabBScan() {
+  m_Timer.stop();
+
+  delete m_pFrame;
+  delete m_pImage;
+}
+
+//-----------------------------------------------------------------------------
+void tTabBScan::OnConnect() {
+  ui.tabBScan->setEnabled(true);
+  m_Timer.setInterval(50);
+  m_Timer.start();
+}
+
+//-----------------------------------------------------------------------------
+void tTabBScan::OnDisconnect() {
+  m_Timer.stop();
+  ui.tabBScan->setEnabled(false);
+}
+
+//-----------------------------------------------------------------------------
+void tTabBScan::Timer_timeout() {
+  if (m_pFrame) m_pFrame->update();
+}
+
+//-----------------------------------------------------------------------------
+void tTabBScan::OnUpdateSpoke(
+    const Navico::Protocol::NRP::Spoke::t9174Spoke* pSpoke) {
+  QMutexLocker locker(tQCustomFrame::getImageMutex());
+  const uint32_t cSpokesPerRevolution = 2048;
+  if (m_pImage == nullptr) {
+    m_NumSamples = pSpoke->header.nOfSamples;
+
+    // create the correct size of the frame buffer
+    m_pImage =
+        new QImage(cSpokesPerRevolution, m_NumSamples, QImage::Format_RGB32);
+    m_pImage->fill(0);
+    m_pFrame->setImage(m_pImage);
+
+    m_NumSamples = m_NumSamples / 2;
+  }
+
+  assert(pSpoke->header.bitsPerSample ==
+         4);  // only 4 bits sample are supported
+
+  uint32_t* pRawImage = (uint32_t*)m_pImage->scanLine(0);
+  uint32_t azimuth = (pSpoke->header.spokeAzimuth >> 1) &
+                     0x7ff;  // to be sure to have a value between 0-2047
+
+  for (unsigned r = 0; r < m_NumSamples; ++r) {
+    *(pRawImage + azimuth + ((r << 1)) * cSpokesPerRevolution) =
+        gNavicoLUT.GetColour(((pSpoke->data[r]) & 0xf));
+    *(pRawImage + azimuth + ((r << 1) + 1) * cSpokesPerRevolution) =
+        gNavicoLUT.GetColour(((pSpoke->data[r] >> 4) & 0xf));
+  }
+
+  m_pFrame->SetFullRange_m(
+      Navico::Protocol::NRP::Spoke::GetSampleRange_mm(pSpoke->header) *
+      pSpoke->header.nOfSamples / 1000);
+}
+

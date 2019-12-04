@@ -26,9 +26,9 @@
 
 #include "MultiRadar.h"
 #include "OverlayManager.h"
+#include "QControlUtils.h"
 #include "ScannerInfo.h"
 #include "TabAdvanced.h"
-#include "TabBScan.h"
 #include "TabFeatures.h"
 #include "TabGuardZone.h"
 #include "TabImage.h"
@@ -64,7 +64,7 @@ class GUIDemo
   //  Observer Callbacks
   //-------------------------------------------------------------------------
  private:
-  // iImageClientSpokeObserver callbacks
+  // iImageClientSpokeObserver callbacks (real time)
   virtual void UpdateSpoke(
       const Navico::Protocol::NRP::Spoke::t9174Spoke* pSpoke);
 

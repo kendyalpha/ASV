@@ -9,7 +9,7 @@
 
 //-----------------------------------------------------------------------------
 // Navico::tRadarColourLookUpTableGreen   gGreenLUT;
-Navico::tRadarColourLookUpTableNavico gNavicoLUT;
+//Navico::tRadarColourLookUpTableNavico gNavicoLUT;
 
 QMutex tQCustomFrame::m_ImageMutex;
 
@@ -72,7 +72,7 @@ void tQCustomFrame::paintEvent(QPaintEvent* /*pEvent*/) {
     painter.setTransform(QTransform::fromTranslate(width() / 2, height() / 2));
     for (int i = 0; i < Navico::Protocol::NRP::cMaxGuardZones; ++i) {
       const tOverlay* overlay = m_OverlayManager.GetGuardZone(i);
-      if ((overlay != 0) && (overlay->enabled)) {
+      if ((overlay != nullptr) && (overlay->enabled)) {
         DrawOverlay(painter, overlay);
       }
     }
@@ -102,7 +102,7 @@ void tQCustomFrame::contextMenuEvent(QContextMenuEvent* pEvent) {
     }
 
     QAction* pSelected = menu.exec(this->mapToGlobal(pEvent->pos()));
-    if (pSelected != 0) {
+    if (pSelected != nullptr) {
       if (pSelected == pAcquireAction) {
         double s, d;
         convertXYtoSD(pEvent->pos().x(), pEvent->pos().y(), s, d);

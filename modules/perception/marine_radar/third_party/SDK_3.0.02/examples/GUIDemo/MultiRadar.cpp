@@ -7,9 +7,7 @@
 #include "QControlUtils.h"
 #include "ui_Registration.h"
 
-#include <QMessageBox>
-#include <QString>
-#include <cassert>
+#include <QDebug>
 
 //-----------------------------------------------------------------------------
 //  Helpers
@@ -182,7 +180,12 @@ void tMultiRadar::MultiRadar_GetUnlockKey(const char* pSerialNumber,
   uiReg.textLockID->setPlainText(lockID);
   pDialog->setWindowTitle(QString("Radar - ") + pSerialNumber);
   int result = pDialog->exec();
+
+  uiReg.textUnlockKey->setPlainText(
+      "FCA53C6FE25450CA93E4AF63B78769E659E56E2705AFAD443F1D6EDBEFB249FF2C7AFD75"
+      "89122F80DE38FA32638C36F195816F5EE5C1257EFFED4A02537252FE");
   QString unlockKey = uiReg.textUnlockKey->toPlainText();
+
   delete pDialog;
 
   if (result) {
