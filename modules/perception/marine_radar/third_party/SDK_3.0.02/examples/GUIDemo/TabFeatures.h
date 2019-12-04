@@ -10,33 +10,37 @@
 #ifndef GUIDEMO_TABFEATURES_H
 #define GUIDEMO_TABFEATURES_H
 
-#include <QObject>
-#include <NavRadarProtocol.h>
 #include <Feature.h>
+#include <FeatureManager.h>
+#include <NavRadarProtocol.h>
+#include <QObject>
+#include <cassert>
+#include "ImageClient.h"
+#include "QControlUtils.h"
 #include "TabBase.h"
+#include "ui_GUIDemo.h"
 
 //-----------------------------------------------------------------------------
 // tTabFeatures Class
 //-----------------------------------------------------------------------------
-class tTabFeatures : public tTabBase
-{
-    Q_OBJECT
+class tTabFeatures : public tTabBase {
+  Q_OBJECT
 
-public:
-    //-----------------------------------------------------------------------------
-    // Constructor, destructor and initialization
-    //-----------------------------------------------------------------------------
-    tTabFeatures( Ui::GUIDemoClass& ui, QObject* pParent, QWidget& tab );
-    ~tTabFeatures();
-    void OnConnect( Navico::Protocol::NRP::tImageClient* pImageClient );
-    void OnUpdateFeature( Navico::Protocol::NRP::tFeatureEnum featureEnum );
+ public:
+  //-----------------------------------------------------------------------------
+  // Constructor, destructor and initialization
+  //-----------------------------------------------------------------------------
+  tTabFeatures(Ui::GUIDemoClass& ui, QObject* pParent, QWidget& tab);
+  ~tTabFeatures();
+  void OnConnect(Navico::Protocol::NRP::tImageClient* pImageClient);
+  void OnUpdateFeature(Navico::Protocol::NRP::tFeatureEnum featureEnum);
 
-private:
-    void ResetToDefaults();
+ private:
+  void ResetToDefaults();
 
-    //-----------------------------------------------------------------------------
-    // Member Fields
-    //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  // Member Fields
+  //-----------------------------------------------------------------------------
 };
 
 //-----------------------------------------------------------------------------

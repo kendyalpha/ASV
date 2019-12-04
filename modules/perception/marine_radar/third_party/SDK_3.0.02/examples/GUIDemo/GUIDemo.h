@@ -20,6 +20,9 @@
 #include <NavRadarProtocol.h>
 #include <PPIController.h>
 #include <TargetTrackingClient.h>
+#include <QMessageBox>
+#include <algorithm>
+#include <cassert>
 
 #include "MultiRadar.h"
 #include "OverlayManager.h"
@@ -50,7 +53,7 @@ class GUIDemo
   Q_OBJECT
 
  public:
-  GUIDemo(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  GUIDemo(QWidget* parent = nullptr, Qt::WindowFlags flags = nullptr);
   ~GUIDemo();
 
  private:

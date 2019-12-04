@@ -6,14 +6,6 @@
 #include "GUIDemo.h"
 #include "QControlUtils.h"
 
-#include <QMessageBox>
-#include <cassert>
-
-#include <algorithm>
-
-#include <NavRadarProtocol.h>
-
-using namespace Navico::Protocol::NRP;
 
 //-----------------------------------------------------------------------------
 // Helper Functions
@@ -21,14 +13,14 @@ using namespace Navico::Protocol::NRP;
 
 template <typename Type>
 inline void InitStruct(Type*& ptr, unsigned count = 1) {
-  if (ptr == NULL) {
+  if (ptr == nullptr) {
     if (count > 1)
       ptr = new Type[count];
     else
       ptr = new Type;
   }
 
-  if (ptr != NULL) {
+  if (ptr != nullptr) {
     if (count > 1)
       memset(ptr, 0, count * sizeof(Type));
     else
@@ -39,41 +31,41 @@ inline void InitStruct(Type*& ptr, unsigned count = 1) {
 //-----------------------------------------------------------------------------
 //  Helper Functions
 //-----------------------------------------------------------------------------
-QString ErrorToString(eErrors error) {
+QString ErrorToString(Navico::Protocol::eErrors error) {
   switch (error) {
-    case EOK:
+    case Navico::Protocol::EOK:
       return "EOK";
-    case ELocked:
+    case Navico::Protocol::ELocked:
       return "ELocked";
-    case EPending:
+    case Navico::Protocol::EPending:
       return "EPending";
-    case ETimedOut:
+    case Navico::Protocol::ETimedOut:
       return "ETimedOut";
-    case EBusy:
+    case Navico::Protocol::EBusy:
       return "EBusy";
-    case EBadSerialNumber:
+    case Navico::Protocol::EBadSerialNumber:
       return "EBadSerialNumber";
-    case ENoUnlockKey:
+    case Navico::Protocol::ENoUnlockKey:
       return "ENoUnlockKey";
-    case EBadUnlockKey:
+    case Navico::Protocol::EBadUnlockKey:
       return "EBadUnlockKey";
-    case EWrongUnlockKey:
+    case Navico::Protocol::EWrongUnlockKey:
       return "EWrongUnlockKey";
-    case ENotRunning:
+    case Navico::Protocol::ENotRunning:
       return "ENotRunning";
-    case EUnknownRadar:
+    case Navico::Protocol::EUnknownRadar:
       return "EUnknownRadar";
-    case ENonStdAddress:
+    case Navico::Protocol::ENonStdAddress:
       return "ENonStdAddress";
-    case ECommsFailure:
+    case Navico::Protocol::ECommsFailure:
       return "ECommsFailure";
-    case EThreadCreation:
+    case Navico::Protocol::EThreadCreation:
       return "EThreadCreation";
-    case EBadParameter:
+    case Navico::Protocol::EBadParameter:
       return "EBadParameter";
-    case EUnused:
+    case Navico::Protocol::EUnused:
       return "EUnused";
-    case EBadUnlockLevel:
+    case Navico::Protocol::EBadUnlockLevel:
       return "EBadUnlockLevel";
     default:
       return QString::number(error);
@@ -85,23 +77,23 @@ QString ErrorToString(eErrors error) {
 //-----------------------------------------------------------------------------
 GUIDemo::GUIDemo(QWidget* pParent, Qt::WindowFlags flags)
     : QMainWindow(pParent, flags),
-      m_pImageClient(NULL),
-      m_pMode(NULL),
-      m_pSetup(NULL),
-      m_pSetupExtended(NULL),
-      m_pProperties(NULL),
-      m_pConfiguration(NULL),
-      m_pAdvancedSTCState(NULL),
-      m_pGuardZoneAlarms(NULL),
-      m_pRadarError(NULL),
+      m_pImageClient(nullptr),
+      m_pMode(nullptr),
+      m_pSetup(nullptr),
+      m_pSetupExtended(nullptr),
+      m_pProperties(nullptr),
+      m_pConfiguration(nullptr),
+      m_pAdvancedSTCState(nullptr),
+      m_pGuardZoneAlarms(nullptr),
+      m_pRadarError(nullptr),
       m_PixelCellSize_mm(0),
-      m_pTargetClient(NULL),
-      m_pTargetAlarmSetup(NULL),
-      m_pTargetProperties(NULL),
-      m_pTargets(NULL),
-      m_pTargetLocations(NULL) {
-  m_pImageClient = new tImageClient();
-  m_pTargetClient = new tTargetTrackingClient();
+      m_pTargetClient(nullptr),
+      m_pTargetAlarmSetup(nullptr),
+      m_pTargetProperties(nullptr),
+      m_pTargets(nullptr),
+      m_pTargetLocations(nullptr) {
+  m_pImageClient = new Navico::Protocol::NRP::tImageClient();
+  m_pTargetClient = new Navico::Protocol::NRP::tTargetTrackingClient();
   InitProtocolData();
 
   // setup UI
@@ -173,7 +165,7 @@ void GUIDemo::InitProtocolData() {
   InitStruct(m_pConfiguration);
   InitStruct(m_pAdvancedSTCState);
   InitStruct(m_pRadarError);
-  InitStruct(m_pGuardZoneAlarms, cMaxGuardZones);
+  InitStruct(m_pGuardZoneAlarms, Navico::Protocol::NRP::cMaxGuardZones);
 
   // setup trget-tracking protocol data structures
   InitStruct(m_pTargetAlarmSetup);
@@ -231,13 +223,17 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
     QString serialNumber = m_pMultiRadar->GetRadarSerialNumber();
     unsigned instance = m_pMultiRadar->GetRadarInstance();
 
-    eErrors imageError = (eErrors)ConnectImageClient(serialNumber, instance);
-    eErrors targetError = (eErrors)ConnectTargetClient(serialNumber, instance);
-    if (imageError != EOK || targetError != EOK) {
-      if (imageError == EOK) DisconnectImageClient();
-      if (targetError == EOK) DisconnectTargetClient();
+    Navico::Protocol::eErrors imageError =
+        (Navico::Protocol::eErrors)ConnectImageClient(serialNumber, instance);
+    Navico::Protocol::eErrors targetError =
+        (Navico::Protocol::eErrors)ConnectTargetClient(serialNumber, instance);
+    if (imageError != Navico::Protocol::EOK ||
+        targetError != Navico::Protocol::EOK) {
+      if (imageError == Navico::Protocol::EOK) DisconnectImageClient();
+      if (targetError == Navico::Protocol::EOK) DisconnectTargetClient();
 
-      if (imageError == ELocked || targetError == ELocked) {
+      if (imageError == Navico::Protocol::ELocked ||
+          targetError == Navico::Protocol::ELocked) {
         m_pMultiRadar->SetConnectState(false);
 
         if (QMessageBox::warning(
@@ -338,16 +334,17 @@ void GUIDemo::DisconnectImageClient() {
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateMode(const tMode* pMode) {
-  if (memcmp(pMode, m_pMode, sizeof(tMode)) != 0) {
+void GUIDemo::UpdateMode(const Navico::Protocol::NRP::tMode* pMode) {
+  if (memcmp(pMode, m_pMode, sizeof(Navico::Protocol::NRP::tMode)) != 0) {
     *m_pMode = *pMode;
     emit UpdateMode_signal();
   }
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateSetup(const tSetup* pSetup) {
-  if (m_ForceSetup || memcmp(pSetup, m_pSetup, sizeof(tSetup)) != 0) {
+void GUIDemo::UpdateSetup(const Navico::Protocol::NRP::tSetup* pSetup) {
+  if (m_ForceSetup ||
+      memcmp(pSetup, m_pSetup, sizeof(Navico::Protocol::NRP::tSetup)) != 0) {
     m_ForceSetup = false;
     *m_pSetup = *pSetup;
     emit UpdateSetup_signal();
@@ -355,40 +352,50 @@ void GUIDemo::UpdateSetup(const tSetup* pSetup) {
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateSetupExtended(const tSetupExtended* pSetupExtended) {
-  if (memcmp(pSetupExtended, m_pSetupExtended, sizeof(tSetupExtended)) != 0) {
+void GUIDemo::UpdateSetupExtended(
+    const Navico::Protocol::NRP::tSetupExtended* pSetupExtended) {
+  if (memcmp(pSetupExtended, m_pSetupExtended,
+             sizeof(Navico::Protocol::NRP::tSetupExtended)) != 0) {
     *m_pSetupExtended = *pSetupExtended;
     emit UpdateSetupExtended_signal();
   }
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateProperties(const tProperties* pProperties) {
-  if (memcmp(pProperties, m_pProperties, sizeof(tProperties)) != 0) {
+void GUIDemo::UpdateProperties(
+    const Navico::Protocol::NRP::tProperties* pProperties) {
+  if (memcmp(pProperties, m_pProperties,
+             sizeof(Navico::Protocol::NRP::tProperties)) != 0) {
     *m_pProperties = *pProperties;
     emit UpdateProperties_signal();
   }
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateConfiguration(const tConfiguration* pConfiguration) {
-  if (memcmp(pConfiguration, m_pConfiguration, sizeof(tConfiguration)) != 0) {
+void GUIDemo::UpdateConfiguration(
+    const Navico::Protocol::NRP::tConfiguration* pConfiguration) {
+  if (memcmp(pConfiguration, m_pConfiguration,
+             sizeof(Navico::Protocol::NRP::tConfiguration)) != 0) {
     *m_pConfiguration = *pConfiguration;
     emit UpdateConfiguration_signal();
   }
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateSpoke(const Spoke::t9174Spoke* pSpoke) {
-  m_PixelCellSize_mm = Spoke::GetPixelCellSize_mm(pSpoke->header);
+void GUIDemo::UpdateSpoke(
+    const Navico::Protocol::NRP::Spoke::t9174Spoke* pSpoke) {
+  m_PixelCellSize_mm =
+      Navico::Protocol::NRP::Spoke::GetPixelCellSize_mm(pSpoke->header);
   m_pTabBScan->OnUpdateSpoke(pSpoke);
   m_pTabPPI->OnUpdateSpoke(pSpoke);
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateAdvancedState(const tAdvancedSTCState* pState) {
+void GUIDemo::UpdateAdvancedState(
+    const Navico::Protocol::NRP::tAdvancedSTCState* pState) {
   if (m_ForceAdvancedSTCState ||
-      memcmp(pState, m_pAdvancedSTCState, sizeof(tAdvancedSTCState)) != 0) {
+      memcmp(pState, m_pAdvancedSTCState,
+             sizeof(Navico::Protocol::NRP::tAdvancedSTCState)) != 0) {
     m_ForceAdvancedSTCState = false;
     *m_pAdvancedSTCState = *pState;
     emit UpdateAdvancedState_signal();
@@ -396,23 +403,26 @@ void GUIDemo::UpdateAdvancedState(const tAdvancedSTCState* pState) {
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateFeature(const tFeatureEnum* pFeature) {
-  if (pFeature != 0) {
+void GUIDemo::UpdateFeature(
+    const Navico::Protocol::NRP::tFeatureEnum* pFeature) {
+  if (pFeature != nullptr) {
     emit UpdateFeature_signal(*pFeature);
   }
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateGuardZoneAlarm(const tGuardZoneAlarm* pAlarm) {
+void GUIDemo::UpdateGuardZoneAlarm(
+    const Navico::Protocol::NRP::tGuardZoneAlarm* pAlarm) {
   unsigned zone = pAlarm->zone;
-  if (zone < cMaxGuardZones) {
+  if (zone < Navico::Protocol::NRP::cMaxGuardZones) {
     m_pGuardZoneAlarms[zone] = *pAlarm;
     emit UpdateGuardZoneAlarm_signal(zone);
   }
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateRadarError(const tRadarError* pError) {
+void GUIDemo::UpdateRadarError(
+    const Navico::Protocol::NRP::tRadarError* pError) {
   // NOTE: this simplification may overwrite a previous error that hasn't yet
   // been reported
   *m_pRadarError = *pError;
@@ -467,10 +477,14 @@ void GUIDemo::UpdateRadarError_slot() {
 
 //-----------------------------------------------------------------------------
 void GUIDemo::UpdateFeature_slot(unsigned feature) {
-  m_pTabImage->OnUpdateFeature(static_cast<tFeatureEnum>(feature));
-  m_pTabFeatures->OnUpdateFeature(static_cast<tFeatureEnum>(feature));
-  m_pTabSectorBlanking->OnUpdateFeature(static_cast<tFeatureEnum>(feature));
-  m_pTabInstallation->OnUpdateFeature(static_cast<tFeatureEnum>(feature));
+  m_pTabImage->OnUpdateFeature(
+      static_cast<Navico::Protocol::NRP::tFeatureEnum>(feature));
+  m_pTabFeatures->OnUpdateFeature(
+      static_cast<Navico::Protocol::NRP::tFeatureEnum>(feature));
+  m_pTabSectorBlanking->OnUpdateFeature(
+      static_cast<Navico::Protocol::NRP::tFeatureEnum>(feature));
+  m_pTabInstallation->OnUpdateFeature(
+      static_cast<Navico::Protocol::NRP::tFeatureEnum>(feature));
 }
 
 //-----------------------------------------------------------------------------
@@ -504,15 +518,17 @@ void GUIDemo::DisconnectTargetClient() {
 void GUIDemo::TargetAcquire(double sample, double degrees) {
   if (m_PixelCellSize_mm > 0) {
     unsigned range = (sample * m_PixelCellSize_mm) / 1000 + 0.5;
-    m_pTargetClient->Acquire(0, range, int32_t(degrees + 0.5), NRP::eRelative);
+    m_pTargetClient->Acquire(0, range, int32_t(degrees + 0.5),
+                             Navico::Protocol::NRP::eRelative);
   }
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateAlarmSetup(const tTargetTrackingAlarmSetup* pAlarmSetup) {
+void GUIDemo::UpdateAlarmSetup(
+    const Navico::Protocol::NRP::tTargetTrackingAlarmSetup* pAlarmSetup) {
   if (m_ForceTargetAlarmSetup ||
       memcmp(pAlarmSetup, m_pTargetAlarmSetup,
-             sizeof(tTargetTrackingAlarmSetup)) != 0) {
+             sizeof(Navico::Protocol::NRP::tTargetTrackingAlarmSetup)) != 0) {
     m_ForceTargetAlarmSetup = false;
     *m_pTargetAlarmSetup = *pAlarmSetup;
     emit UpdateTargetAlarmSetup_signal();
@@ -520,10 +536,11 @@ void GUIDemo::UpdateAlarmSetup(const tTargetTrackingAlarmSetup* pAlarmSetup) {
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateProperties(const tTargetTrackingProperties* pProperties) {
+void GUIDemo::UpdateProperties(
+    const Navico::Protocol::NRP::tTargetTrackingProperties* pProperties) {
   if (m_ForceTargetProperties ||
       memcmp(pProperties, m_pTargetProperties,
-             sizeof(tTargetTrackingProperties)) != 0) {
+             sizeof(Navico::Protocol::NRP::tTargetTrackingProperties)) != 0) {
     m_ForceTargetProperties = false;
     *m_pTargetProperties = *pProperties;
     emit UpdateTargetProperties_signal();
@@ -531,9 +548,11 @@ void GUIDemo::UpdateProperties(const tTargetTrackingProperties* pProperties) {
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateNavigation(const NRP::tNavigationState* pNavigationState) {
-  if (m_ForceNavigationState || memcmp(pNavigationState, m_pNavigationState,
-                                       sizeof(tNavigationState)) != 0) {
+void GUIDemo::UpdateNavigation(
+    const Navico::Protocol::NRP::tNavigationState* pNavigationState) {
+  if (m_ForceNavigationState ||
+      memcmp(pNavigationState, m_pNavigationState,
+             sizeof(Navico::Protocol::NRP::tNavigationState)) != 0) {
     m_ForceNavigationState = false;
     *m_pNavigationState = *pNavigationState;
     emit UpdateNavigationState_signal();
@@ -541,7 +560,8 @@ void GUIDemo::UpdateNavigation(const NRP::tNavigationState* pNavigationState) {
 }
 
 //-----------------------------------------------------------------------------
-void GUIDemo::UpdateTarget(const tTrackedTarget* pTarget) {
+void GUIDemo::UpdateTarget(
+    const Navico::Protocol::NRP::tTrackedTarget* pTarget) {
   unsigned index = std::max(0, pTarget->serverTargetID);
 
   if (index > cMaxTargets) index = 0;
