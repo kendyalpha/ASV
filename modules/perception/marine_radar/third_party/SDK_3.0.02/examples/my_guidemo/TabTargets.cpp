@@ -21,17 +21,17 @@ struct tTargetFieldInfo {
 const tTargetFieldInfo targetFieldInfo[tTabTargets::cMaxTargetFields] = {
     {
         "ServerID",
-        100,
+        70,
         Qt::AlignRight | Qt::AlignVCenter,
     },
     {
         "ClientID",
-        100,
+        70,
         Qt::AlignRight | Qt::AlignVCenter,
     },
     {
         "State",
-        200,
+        180,
         Qt::AlignCenter,
     },
     {
@@ -56,12 +56,12 @@ const tTargetFieldInfo targetFieldInfo[tTabTargets::cMaxTargetFields] = {
     },
     {
         "CPA (m)",
-        100,
+        110,
         Qt::AlignRight | Qt::AlignVCenter,
     },
     {
         "TCPA",
-        100,
+        110,
         Qt::AlignRight | Qt::AlignVCenter,
     },
 };

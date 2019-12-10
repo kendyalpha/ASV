@@ -118,12 +118,12 @@ tTabPPI::tTabPPI(Ui::GUIDemoClass& myUI, tTargetLocation* pTargets,
                  unsigned maxTargets, QObject* pParent,
                  tOverlayManager& overlayManager)
     : QObject(pParent),
-      m_pFrame(new tQPPIFrame(pTargets, maxTargets, myUI.tabPPI_2, nullptr,
+      m_pFrame(new tQPPIFrame(pTargets, maxTargets, myUI.tabPPI, nullptr,
                               overlayManager)),
       m_pController(new Navico::Image::tPPIController()),
       m_pImage(nullptr),
       ui(myUI) {
-  ui.verticalLayout_tabPPI_2->addWidget(m_pFrame);
+  ui.verticalLayout_tabPPI->addWidget(m_pFrame);
   Connect(true, &m_Timer, SIGNAL(timeout()), this, SLOT(Timer_timeout()));
   Connect(true, m_pFrame, SIGNAL(ChangeTrailsTime(int)), this,
           SLOT(Frame_ChangeTrailsTime(int)));
@@ -142,7 +142,7 @@ tTabPPI::~tTabPPI() {
 
 //-----------------------------------------------------------------------------
 void tTabPPI::OnConnect() {
-  ui.tabPPI_2->setEnabled(true);
+  ui.tabPPI->setEnabled(true);
   m_Timer.setInterval(50);
   m_Timer.start();
 }
@@ -150,7 +150,7 @@ void tTabPPI::OnConnect() {
 //-----------------------------------------------------------------------------
 void tTabPPI::OnDisconnect() {
   m_Timer.stop();
-  ui.tabPPI_2->setEnabled(false);
+  ui.tabPPI->setEnabled(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -254,7 +254,6 @@ tTabBScan::tTabBScan(Ui::GUIDemoClass& myUI, tTargetLocation* pTargets,
   m_pFrame = new tQBScanFrame(pTargets, maxTargets, ui.tabBScan, nullptr,
                               overlayManager);
   ui.verticalLayout_tabBscan->addWidget(m_pFrame);
-
   Connect(true, &m_Timer, SIGNAL(timeout()), this, SLOT(Timer_timeout()));
   Connect(true, m_pFrame, SIGNAL(AcquireTarget(double, double)), this,
           SIGNAL(AcquireTarget(double, double)));

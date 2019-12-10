@@ -12,8 +12,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1385</width>
-    <height>840</height>
+    <width>2050</width>
+    <height>1050</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -30,8 +30,8 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>1800</width>
-    <height>1000</height>
+    <width>3000</width>
+    <height>2000</height>
    </size>
   </property>
   <property name="font">
@@ -62,10 +62,10 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>80</y>
-      <width>1361</width>
-      <height>731</height>
+      <x>1020</x>
+      <y>100</y>
+      <width>1000</width>
+      <height>471</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -94,42 +94,8 @@
      </font>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
-    <widget class="QWidget" name="tabPPI">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>800</width>
-       <height>16777215</height>
-      </size>
-     </property>
-     <attribute name="title">
-      <string>PPI</string>
-     </attribute>
-     <layout class="QVBoxLayout" name="verticalLayout_tabPPI">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetMinimumSize</enum>
-      </property>
-     </layout>
-    </widget>
-    <widget class="QWidget" name="tabBScan">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <attribute name="title">
-      <string>B-Scan</string>
-     </attribute>
-     <layout class="QVBoxLayout" name="verticalLayout_tabBscan"/>
-    </widget>
     <widget class="QWidget" name="tabTargets">
      <property name="enabled">
       <bool>false</bool>
@@ -142,8 +108,8 @@
        <rect>
         <x>9</x>
         <y>80</y>
-        <width>1091</width>
-        <height>421</height>
+        <width>971</width>
+        <height>341</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -156,9 +122,9 @@
      <widget class="QGroupBox" name="groupTargetsCancel">
       <property name="geometry">
        <rect>
-        <x>820</x>
+        <x>710</x>
         <y>11</y>
-        <width>268</width>
+        <width>270</width>
         <height>60</height>
        </rect>
       </property>
@@ -248,7 +214,7 @@
        <rect>
         <x>10</x>
         <y>11</y>
-        <width>301</width>
+        <width>250</width>
         <height>60</height>
        </rect>
       </property>
@@ -333,9 +299,9 @@
      <widget class="QGroupBox" name="AlaramSetupGroup">
       <property name="geometry">
        <rect>
-        <x>320</x>
+        <x>270</x>
         <y>10</y>
-        <width>491</width>
+        <width>430</width>
         <height>61</height>
        </rect>
       </property>
@@ -487,10 +453,10 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>261</width>
-      <height>63</height>
+      <x>1020</x>
+      <y>20</y>
+      <width>1001</width>
+      <height>71</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -520,10 +486,10 @@
     <widget class="QPushButton" name="pushMultiRadarConnect">
      <property name="geometry">
       <rect>
-       <x>20</x>
+       <x>30</x>
        <y>30</y>
-       <width>80</width>
-       <height>25</height>
+       <width>150</width>
+       <height>30</height>
       </rect>
      </property>
      <property name="sizePolicy">
@@ -540,7 +506,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>80</width>
+       <width>200</width>
        <height>200</height>
       </size>
      </property>
@@ -557,10 +523,10 @@
     <widget class="QPushButton" name="pushMultiRadarUnlock">
      <property name="geometry">
       <rect>
-       <x>120</x>
+       <x>200</x>
        <y>30</y>
-       <width>60</width>
-       <height>25</height>
+       <width>150</width>
+       <height>30</height>
       </rect>
      </property>
      <property name="sizePolicy">
@@ -577,7 +543,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>60</width>
+       <width>200</width>
        <height>200</height>
       </size>
      </property>
@@ -595,10 +561,76 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>470</x>
-      <y>0</y>
+      <x>5</x>
+      <y>5</y>
+      <width>1000</width>
+      <height>1020</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <horstretch>1</horstretch>
+      <verstretch>1</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="minimumSize">
+     <size>
       <width>100</width>
       <height>100</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>2000</width>
+      <height>2000</height>
+     </size>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>11</pointsize>
+      <kerning>false</kerning>
+     </font>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <widget class="QWidget" name="tabPPI">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>30000</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <attribute name="title">
+      <string>PPI</string>
+     </attribute>
+     <layout class="QVBoxLayout" name="verticalLayout_tabPPI">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetMinimumSize</enum>
+      </property>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QTabWidget" name="tabs_3">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>1020</x>
+      <y>580</y>
+      <width>1000</width>
+      <height>441</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -629,30 +661,14 @@
     <property name="currentIndex">
      <number>0</number>
     </property>
-    <widget class="QWidget" name="tabPPI_2">
+    <widget class="QWidget" name="tabBScan">
      <property name="enabled">
       <bool>false</bool>
      </property>
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>800</width>
-       <height>16777215</height>
-      </size>
-     </property>
      <attribute name="title">
-      <string>PPI</string>
+      <string>B-Scan</string>
      </attribute>
-     <layout class="QVBoxLayout" name="verticalLayout_tabPPI_2">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetMinimumSize</enum>
-      </property>
-     </layout>
+     <layout class="QVBoxLayout" name="verticalLayout_tabBscan"/>
     </widget>
    </widget>
   </widget>
