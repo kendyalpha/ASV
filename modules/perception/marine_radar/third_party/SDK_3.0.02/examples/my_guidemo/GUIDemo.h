@@ -27,7 +27,6 @@
 
 #include "MultiRadar.h"
 #include "QControlUtils.h"
-#include "TabGuardZone.h"
 #include "TabPPI.h"
 #include "TabTargets.h"
 
@@ -36,6 +35,8 @@
 //-----------------------------------------------------------------------------
 // GUIDemo Class
 //-----------------------------------------------------------------------------
+
+enum { eGuardZone1 = 0, eGuardZone2 };
 
 class GUIDemo
     : public QMainWindow,
@@ -119,14 +120,6 @@ class GUIDemo
   int ConnectImageClient(const std::string& serialNumber, unsigned instance);
   void DisconnectImageClient();
 
- signals:
-  // signals from callbacks
-  void UpdateGuardZoneAlarm_signal(unsigned zone);
-
- private slots:
-  // UI graph slots refresh
-  void UpdateGuardZoneAlarm_slot(unsigned zone);
-
  private:
   // image client protocol manager
   Navico::Protocol::NRP::tImageClient* m_pImageClient;
@@ -184,7 +177,6 @@ class GUIDemo
 
  private:
   tMultiRadar* m_pMultiRadar;
-  tTabGuardZone* m_pTabGuardZone;
   tTabTargets* m_pTabTargets;
   tTabBScan* m_pTabBScan;
   tTabPPI* m_pTabPPI;
@@ -192,6 +184,7 @@ class GUIDemo
   Ui::GUIDemoClass ui;
 
   tOverlayManager m_OverlayManager;
+  bool m_AlarmTypes[Navico::Protocol::NRP::cMaxGuardZones];
 
   const char g_Off[4] = "Off";
   const char g_On[3] = "On";

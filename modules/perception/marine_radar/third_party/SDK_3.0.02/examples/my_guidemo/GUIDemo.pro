@@ -23,7 +23,6 @@ HEADERS += \
     MultiRadar.h \
     QControlUtils.h \
     TabBase.h \
-    TabGuardZone.h \
     TabPPI.h \
     TabTargets.h \
 
@@ -33,7 +32,6 @@ SOURCES += \
     MultiRadar.cpp \
     QControlUtils.cpp \
     TabBase.cpp \
-    TabGuardZone.cpp \
     TabPPI.cpp \
     TabTargets.cpp \
     main.cpp \

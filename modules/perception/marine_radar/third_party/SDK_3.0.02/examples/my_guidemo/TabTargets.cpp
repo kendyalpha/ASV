@@ -21,47 +21,47 @@ struct tTargetFieldInfo {
 const tTargetFieldInfo targetFieldInfo[tTabTargets::cMaxTargetFields] = {
     {
         "ServerID",
-        60,
+        100,
         Qt::AlignRight | Qt::AlignVCenter,
     },
     {
         "ClientID",
-        60,
+        100,
         Qt::AlignRight | Qt::AlignVCenter,
     },
     {
         "State",
-        160,
+        200,
         Qt::AlignCenter,
     },
     {
         "Range (m)",
-        90,
+        100,
         Qt::AlignRight | Qt::AlignVCenter,
     },
     {
         "Bearing (deg)",
-        90,
+        100,
         Qt::AlignRight | Qt::AlignVCenter,
     },
     {
         "Course (deg)",
-        90,
+        100,
         Qt::AlignRight | Qt::AlignVCenter,
     },
     {
         "Speed (m/s)",
-        90,
+        100,
         Qt::AlignRight | Qt::AlignVCenter,
     },
     {
         "CPA (m)",
-        80,
+        100,
         Qt::AlignRight | Qt::AlignVCenter,
     },
     {
         "TCPA",
-        90,
+        100,
         Qt::AlignRight | Qt::AlignVCenter,
     },
 };
@@ -153,12 +153,12 @@ void tTabTargets::OnDisconnect() {
 //-----------------------------------------------------------------------------
 void tTabTargets::DangerZoneDist_valueChanged(int value) {
   if (m_pTargetTrackingClient)
-    m_pTargetTrackingClient->SetDangerDistance(value);
+    m_pTargetTrackingClient->SetDangerDistance(static_cast<uint32_t>(value));
 }
 
 //-----------------------------------------------------------------------------
 void tTabTargets::DangerZoneTime_valueChanged(int value) {
-  if (m_pTargetTrackingClient) m_pTargetTrackingClient->SetDangerTime(value);
+  if (m_pTargetTrackingClient) m_pTargetTrackingClient->SetDangerTime(static_cast<uint32_t>(value));
 }
 
 //-----------------------------------------------------------------------------

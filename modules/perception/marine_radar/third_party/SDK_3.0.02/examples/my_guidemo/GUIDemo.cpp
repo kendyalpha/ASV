@@ -31,8 +31,6 @@ GUIDemo::GUIDemo(QWidget* pParent, Qt::WindowFlags flags)
   // setup UI
   ui.setupUi(this);
   m_pMultiRadar = new tMultiRadar(ui, this);
-  m_pTabGuardZone =
-      new tTabGuardZone(ui, this, *ui.tabGuardZone, m_OverlayManager);
   m_pTabTargets = new tTabTargets(ui, this, *ui.tabTargets);
   m_pTabBScan = new tTabBScan(ui, m_pTargetLocations, cMaxTargets, this,
                               m_OverlayManager);
@@ -52,7 +50,6 @@ GUIDemo::~GUIDemo() {
   delete m_pTabPPI;
   delete m_pTabBScan;
   delete m_pTabTargets;
-  delete m_pTabGuardZone;
   delete m_pMultiRadar;
 
   // cleanup target-tracking
@@ -79,10 +76,6 @@ void GUIDemo::MakeConnections(bool connect) {
   // connections for user requested connect/disconnect
   Connect(connect, m_pMultiRadar, SIGNAL(ConnectChanged(bool)), this,
           SLOT(MultiRadar_ConnectChanged(bool)));
-
-  // connections for updated state data
-  Connect(connect, this, SIGNAL(UpdateGuardZoneAlarm_signal(unsigned)), this,
-          SLOT(UpdateGuardZoneAlarm_slot(unsigned)), Qt::QueuedConnection);
 
   // connections for updated target data
   Connect(connect, this, SIGNAL(UpdateTargetAlarmSetup_signal()), this,
@@ -157,7 +150,6 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
       m_OverlayManager.Clear();
 
       // client services connected ok - initialise all dependent user interfaces
-      m_pTabGuardZone->OnConnect(m_pImageClient);
       m_pTabTargets->OnConnect(m_pTargetClient);
       m_pTabBScan->OnConnect();
       m_pTabPPI->OnConnect();
@@ -174,7 +166,6 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
     DisconnectImageClient();
 
     // first disconnect all dependent user interfaces
-    m_pTabGuardZone->OnDisconnect();
     m_pTabTargets->OnDisconnect();
     m_pTabBScan->OnDisconnect();
     m_pTabPPI->OnDisconnect();
@@ -190,7 +181,7 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
 int GUIDemo::ConnectImageClient(const std::string& serialNumber,
                                 unsigned instance) {
   int error = Navico::Protocol::EOK + 1;
-  bool results = false;
+  bool set_results = false;
   if (m_pImageClient) {
     m_pImageClient->AddStateObserver(this);
     m_pImageClient->AddSpokeObserver(this);
@@ -208,12 +199,11 @@ int GUIDemo::ConnectImageClient(const std::string& serialNumber,
     m_pImageClient->SetUseMode(
         Navico::Protocol::NRP::eUseMode::eUseMode_Custom);
 
-
     // setup
     m_pImageClient->SetRange(400);
 
-//    results = m_pImageClient->SetScannerRPM(240u);
-    results = m_pImageClient->SetFastScanMode(
+    //    set_results = m_pImageClient->SetScannerRPM(240u);
+    set_results = m_pImageClient->SetFastScanMode(
         uint8_t(0));  // 0: fast scan mode; otherwise, normal speed
     m_pImageClient->SetLEDsLevel(0);
     m_pImageClient->SetInterferenceReject(2);
@@ -268,6 +258,46 @@ int GUIDemo::ConnectImageClient(const std::string& serialNumber,
     m_pImageClient->SetUserMinSNR(0.0);
     m_pImageClient->SetVideoAperture(4.0);
     m_pImageClient->SetMainBangSuppression(false);
+
+    // Guard zone
+    for (unsigned i = 0; i < Navico::Protocol::NRP::cMaxGuardZones; ++i) {
+      m_AlarmTypes[i] = Navico::Protocol::NRP::eGZAlarmEntry;
+    }
+    m_pImageClient->SetGuardZoneSensitivity(0);
+
+    bool gz1enables = false;
+    uint32_t gz1_startRange_m = 40;
+    uint32_t gz1_endRange_m = 60;
+    uint16_t gz1_bearing_deg = 10;
+    uint16_t gz1_width_deg = 20;
+    m_pImageClient->SetGuardZoneEnable(eGuardZone1, gz1enables);
+    // Set the guard zone in Radar
+    m_pImageClient->SetGuardZoneSetup(eGuardZone1, gz1_startRange_m,
+                                      gz1_endRange_m, gz1_bearing_deg,
+                                      gz1_width_deg);
+    m_pImageClient->SetGuardZoneAlarmSetup(
+        eGuardZone1, Navico::Protocol::NRP::eGuardZoneAlarmType::eGZAlarmEntry);
+    // Update the guard zone overlay in GUI
+    m_OverlayManager.SetGuardZone(eGuardZone1, gz1enables, gz1_startRange_m,
+                                  gz1_endRange_m, gz1_bearing_deg,
+                                  gz1_width_deg);
+
+    bool gz2enables = false;
+    uint32_t gz2_startRange_m = 0;
+    uint32_t gz2_endRange_m = 20;
+    uint16_t gz2_bearing_deg = 10;
+    uint16_t gz2_width_deg = 20;
+    m_pImageClient->SetGuardZoneEnable(eGuardZone2, gz2enables);
+    // Set the guard zone in Radar
+    m_pImageClient->SetGuardZoneSetup(eGuardZone2, gz2_startRange_m,
+                                      gz2_endRange_m, gz2_bearing_deg,
+                                      gz2_width_deg);
+    m_pImageClient->SetGuardZoneAlarmSetup(
+        eGuardZone2, Navico::Protocol::NRP::eGuardZoneAlarmType::eGZAlarmEntry);
+    // Update the guard zone overlay in GUI
+    m_OverlayManager.SetGuardZone(eGuardZone2, gz2enables, gz2_startRange_m,
+                                  gz2_endRange_m, gz2_bearing_deg,
+                                  gz2_width_deg);
   }
   return error;
 }
@@ -286,36 +316,36 @@ void GUIDemo::UpdateMode(const Navico::Protocol::NRP::tMode* pMode) {
   if (memcmp(pMode, m_pMode, sizeof(Navico::Protocol::NRP::tMode)) != 0) {
     *m_pMode = *pMode;
 
-    /*switch (m_pMode->state) {
+    switch (m_pMode->state) {
       case Navico::Protocol::NRP::eOff:
         std::cout << "state: off\n";
-        ui.checkScannerPower->setChecked(false);
-        ui.checkScannerTransmit->setChecked(false);
+        std::cout<<"Scanner Power: false\n";
+        std::cout<<"Scanner Transmit: false\n";
         break;
       case Navico::Protocol::NRP::eStandby:
         std::cout << "state: standby\n";
-        ui.checkScannerPower->setChecked(true);
-        ui.checkScannerTransmit->setChecked(false);
+        std::cout<<"Scanner Power: true\n";
+        std::cout<<"Scanner Transmit: false\n";
         break;
       case Navico::Protocol::NRP::eTransmit:
         std::cout << "state: transmit\n";
-        ui.checkScannerPower->setChecked(true);
-        ui.checkScannerTransmit->setChecked(true);
+        std::cout<<"Scanner Power: true\n";
+        std::cout<<"Scanner Transmit: true\n";
         break;
       case Navico::Protocol::NRP::eWarming:
         std::cout << "state: Warming up\n";
-        ui.checkScannerPower->setChecked(true);
-        ui.checkScannerTransmit->setChecked(false);
+        std::cout<<"Scanner Power: true\n";
+        std::cout<<"Scanner Transmit: false\n";
         break;
       case Navico::Protocol::NRP::eNoScanner:
         std::cout << "state: no scanner\n";
-        ui.checkScannerPower->setChecked(false);
-        ui.checkScannerTransmit->setChecked(false);
+        std::cout<<"Scanner Power: false\n";
+        std::cout<<"Scanner Transmit: false\n";
         break;
       case Navico::Protocol::NRP::eDetectingScanner:
         std::cout << "state: Detecting Scanner\n";
-        ui.checkScannerPower->setChecked(true);
-        ui.checkScannerTransmit->setChecked(false);
+        std::cout<<"Scanner Power: true\n";
+        std::cout<<"Scanner Transmit: false\n";
         break;
       default:
         std::cout << "state: Undefined\n";
@@ -328,7 +358,7 @@ void GUIDemo::UpdateMode(const Navico::Protocol::NRP::tMode* pMode) {
       std::cout << "Scanner Timeout = " << m_pMode->warmupTime_sec << std::endl;
     }
 
-    std::cout << "checkTimedTxMode: " << m_pMode->ttState << std::endl;*/
+    std::cout << "checkTimedTxMode: " << m_pMode->ttState << std::endl;
   }
 }
 
@@ -341,62 +371,110 @@ void GUIDemo::UpdateSetup(const Navico::Protocol::NRP::tSetup* pSetup) {
 
     std::cout << "Scanner Range: " << m_pSetup->range_dm / 10.0 << " m\n";
 
-    /* // Gain controls update
-     uint32_t gainType = m_pSetup->gain[Navico::Protocol::NRP::eSetupGain].type;
-     assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
-     std::cout << "Radar Gain: "
-               << std::to_string(
-                      m_pSetup->gain[Navico::Protocol::NRP::eSetupGain].value)
-               << std::endl;
+    // Gain controls update
+    uint32_t gainType = m_pSetup->gain[Navico::Protocol::NRP::eSetupGain].type;
+    assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
+    std::cout << "Radar Gain: "
+              << std::to_string(
+                     m_pSetup->gain[Navico::Protocol::NRP::eSetupGain].value)
+              << std::endl;
 
-     // Sea clutter controls update
-     gainType = m_pSetup->gain[Navico::Protocol::NRP::eSetupSea].type;
-     assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
-     std::cout << "SeaClutter: "
-               << std::to_string(
-                      m_pSetup->gain[Navico::Protocol::NRP::eSetupSea].value)
-               << std::endl;
+    // Sea clutter controls update
+    gainType = m_pSetup->gain[Navico::Protocol::NRP::eSetupSea].type;
+    assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
+    std::cout << "SeaClutter: "
+              << std::to_string(
+                     m_pSetup->gain[Navico::Protocol::NRP::eSetupSea].value)
+              << std::endl;
 
-     // Rain controls update
-     gainType = m_pSetup->gain[Navico::Protocol::NRP::eSetupRain].type;
-     assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
-     std::cout << "Rain: "
-               << std::to_string(
-                      m_pSetup->gain[Navico::Protocol::NRP::eSetupRain].value)
-               << std::endl;
+    // Rain controls update
+    gainType = m_pSetup->gain[Navico::Protocol::NRP::eSetupRain].type;
+    assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
+    std::cout << "Rain: "
+              << std::to_string(
+                     m_pSetup->gain[Navico::Protocol::NRP::eSetupRain].value)
+              << std::endl;
 
-     // FTC controls update
-     std::cout << "FTC: " << std::to_string(m_pSetup->ftc.value) << std::endl;
+    // FTC controls update
+    std::cout << "FTC: " << std::to_string(m_pSetup->ftc.value) << std::endl;
 
-     // Interference Reject controls update
-     std::cout << "IRLevel: " << std::to_string(m_pSetup->interferenceReject)
-               << std::endl;
+    // Interference Reject controls update
+    std::cout << "IRLevel: " << std::to_string(m_pSetup->interferenceReject)
+              << std::endl;
 
-     // Target Boost controls update
-     std::cout << "TargetBoost: " << std::to_string(m_pSetup->targetBoost)
-               << std::endl;
+    // Target Boost controls update
+    std::cout << "TargetBoost: " << std::to_string(m_pSetup->targetBoost)
+              << std::endl;
 
-     // Target Stretch controls update
-     std::cout << "TargetStretch: " << std::to_string(m_pSetup->targetStretch)
-               << std::endl;
+    // Target Stretch controls update
+    std::cout << "TargetStretch: " << std::to_string(m_pSetup->targetStretch)
+              << std::endl;
 
-     // Pulse Group
-     std::cout << "TargetStretch: " << std::to_string(m_pSetup->targetStretch)
-               << std::endl;
-     std::cout << "PulseWidth: " << std::to_string(m_pSetup->pwLength_ns)
-               << std::endl;
-     std::cout << "CoarseTune: " << std::to_string(m_pSetup->coarseTune)
-               << std::endl;
-     std::cout << "FineTune: " << std::to_string(m_pSetup->fineTune)
-               << std::endl;
-     std::cout << "UseModes: "
-               << UseModeToString(static_cast<Navico::Protocol::NRP::eUseMode>(
-                      m_pSetup->useMode))
-               << std::endl;
-     std::cout << "AutoTune: " << (m_pSetup->tuneType != 0u ? "true" : "false")
-               << std::endl;
- */
-    m_pTabGuardZone->OnSetupChanged(m_pSetup);
+    // Pulse Group
+    std::cout << "TargetStretch: " << std::to_string(m_pSetup->targetStretch)
+              << std::endl;
+    std::cout << "PulseWidth: " << std::to_string(m_pSetup->pwLength_ns)
+              << std::endl;
+    std::cout << "CoarseTune: " << std::to_string(m_pSetup->coarseTune)
+              << std::endl;
+    std::cout << "FineTune: " << std::to_string(m_pSetup->fineTune)
+              << std::endl;
+    std::cout << "UseModes: "
+              << UseModeToString(static_cast<Navico::Protocol::NRP::eUseMode>(
+                     m_pSetup->useMode))
+              << std::endl;
+    std::cout << "AutoTune: " << (m_pSetup->tuneType != 0u ? "true" : "false")
+              << std::endl;
+
+    unsigned range_m = (m_pSetup->range_dm + 5) / 10;
+    std::cout << "GuardSensitivity: " << m_pSetup->guardzones.sensitivity
+              << std::endl;
+
+    bool gz1Enabled = m_pSetup->guardzones.active[eGuardZone1];
+    std::cout << "GuardZone1: " << (gz1Enabled == true ? "true" : "false")
+              << std::endl;
+    std::cout << "Guard1Range: "
+              << m_pSetup->guardzones.zone[eGuardZone1].rangeStart_m << " - "
+              << m_pSetup->guardzones.zone[eGuardZone1].rangeEnd_m << std::endl;
+    std::cout << "Guard1Bearing: "
+              << m_pSetup->guardzones.zone[eGuardZone1].azimuth_ddeg / 10.0
+              << std::endl;
+    std::cout << "Guard1Width: "
+              << m_pSetup->guardzones.zone[eGuardZone1].width_ddeg / 10.0
+              << std::endl;
+    std::cout << "Guard1AlarmType: "
+              << m_pSetup->guardzones.alarmType[eGuardZone1].alarmType
+              << std::endl;
+
+    m_OverlayManager.SetGuardZone(
+        eGuardZone1, gz1Enabled,
+        m_pSetup->guardzones.zone[eGuardZone1].rangeStart_m,
+        m_pSetup->guardzones.zone[eGuardZone1].rangeEnd_m,
+        m_pSetup->guardzones.zone[eGuardZone1].azimuth_ddeg / 10.0,
+        m_pSetup->guardzones.zone[eGuardZone1].width_ddeg / 10.0);
+
+    bool gz2Enabled = pSetup->guardzones.active[eGuardZone2];
+    std::cout << "GuardZone2: " << (gz2Enabled == true ? "true" : "false")
+              << std::endl;
+    std::cout << "Guard2Range: "
+              << m_pSetup->guardzones.zone[eGuardZone2].rangeStart_m << " - "
+              << m_pSetup->guardzones.zone[eGuardZone2].rangeEnd_m << std::endl;
+    std::cout << "Guard2Bearing: "
+              << m_pSetup->guardzones.zone[eGuardZone2].azimuth_ddeg / 10.0
+              << std::endl;
+    std::cout << "Guard2Width: "
+              << m_pSetup->guardzones.zone[eGuardZone2].width_ddeg / 10.0
+              << std::endl;
+    std::cout << "Guard2AlarmType: "
+              << m_pSetup->guardzones.alarmType[eGuardZone2].alarmType
+              << std::endl;
+
+    m_OverlayManager.SetGuardZone(
+        eGuardZone2, gz2Enabled,
+        m_pSetup->guardzones.zone[eGuardZone2].rangeStart_m,
+        m_pSetup->guardzones.zone[eGuardZone2].rangeEnd_m,
+        m_pSetup->guardzones.zone[eGuardZone2].azimuth_ddeg / 10.0,
+        m_pSetup->guardzones.zone[eGuardZone2].width_ddeg / 10.0);
   }
 }
 
@@ -433,7 +511,7 @@ void GUIDemo::UpdateProperties(
   if (memcmp(pProperties, m_pProperties,
              sizeof(Navico::Protocol::NRP::tProperties)) != 0) {
     *m_pProperties = *pProperties;
-    /*switch (pProperties->scannerType) {
+    switch (pProperties->scannerType) {
       case Navico::Protocol::NRP::eTypeNoScanner:
         std::cout << "No Scanner\n";
         break;
@@ -484,7 +562,7 @@ void GUIDemo::UpdateProperties(
         break;
       default:
         std::cout << "Type " << pProperties->scannerId << std::endl;
-    }*/
+    }
   }
 }
 
@@ -494,7 +572,7 @@ void GUIDemo::UpdateConfiguration(
   if (memcmp(pConfiguration, m_pConfiguration,
              sizeof(Navico::Protocol::NRP::tConfiguration)) != 0) {
     *m_pConfiguration = *pConfiguration;
-    /*std::cout << "Timed Transmit: " << m_pConfiguration->timedTransmitPeriod_s
+    std::cout << "Timed Transmit: " << m_pConfiguration->timedTransmitPeriod_s
               << std::endl;
     std::cout << "Timed Standby: " << m_pConfiguration->timedStandbyPeriod_s
               << std::endl;
@@ -521,7 +599,6 @@ void GUIDemo::UpdateConfiguration(
     } else {
       std::cout << "AntennaType: unknown\n ";
     }
-    */
   }
 }
 
@@ -543,7 +620,7 @@ void GUIDemo::UpdateAdvancedState(
     m_ForceAdvancedSTCState = false;
     *m_pAdvancedSTCState = *pState;
 
-    /*std::cout << "Range Trim: " << pState->rangeSTCTrim_dB << std::endl;
+    std::cout << "Range Trim: " << pState->rangeSTCTrim_dB << std::endl;
     std::cout << "Range Rate: " << pState->rangeSTCRate_dBpDec << std::endl;
     std::cout << "SeaTrim: " << pState->seaSTCTrim_dB << std::endl;
     std::cout << "SeaRate1: " << pState->seaSTCRate1_dBpDec << std::endl;
@@ -551,7 +628,7 @@ void GUIDemo::UpdateAdvancedState(
     std::cout << "RainTrim: " << pState->rainSTCTrim_dB << std::endl;
     std::cout << "RainRate: " << pState->rainSTCRate_dBpDec << std::endl;
     std::cout << "UserMinSNR: " << pState->userMinSNR_dB << std::endl;
-    std::cout << "VideoAperture: " << pState->videoAperture_dB << std::endl;*/
+    std::cout << "VideoAperture: " << pState->videoAperture_dB << std::endl;
   }
 }
 
@@ -562,134 +639,134 @@ void GUIDemo::UpdateFeature(
     Navico::Protocol::NRP::tFeatureManager& featureManager =
         m_pImageClient->GetFeatureManager();
 
-    /* switch (static_cast<Navico::Protocol::NRP::tFeatureEnum>(*pFeature)) {
-       case Navico::Protocol::NRP::eFeatureEnum_SupportedUseModes: {
-         UpdateUseMode();
-       } break;
+    switch (static_cast<Navico::Protocol::NRP::tFeatureEnum>(*pFeature)) {
+      case Navico::Protocol::NRP::eFeatureEnum_SupportedUseModes: {
+        UpdateUseMode();
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_IRControl: {
-         const Navico::Protocol::NRP::tFeatureLevel& feature =
-             featureManager.GetFeatureIR();
-         std::cout << "IR Level Range: " << 0 << "-" << feature.maxLevel
-                   << std::endl;
-         ExtractFeatureControlEnum(feature);
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_IRControl: {
+        const Navico::Protocol::NRP::tFeatureLevel& feature =
+            featureManager.GetFeatureIR();
+        std::cout << "IR Level Range: " << 0 << "-" << feature.maxLevel
+                  << std::endl;
+        ExtractFeatureControlEnum(feature);
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_NoiseRejectControl: {
-         const Navico::Protocol::NRP::tFeatureLevel& feature =
-             featureManager.GetFeatureNoiseReject();
-         ExtractFeatureControlEnum(feature);
-         std::cout << "Noise Reject Range: " << 0 << "-" << feature.maxLevel
-                   << std::endl;
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_NoiseRejectControl: {
+        const Navico::Protocol::NRP::tFeatureLevel& feature =
+            featureManager.GetFeatureNoiseReject();
+        ExtractFeatureControlEnum(feature);
+        std::cout << "Noise Reject Range: " << 0 << "-" << feature.maxLevel
+                  << std::endl;
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_STCCurveControl: {
-         const Navico::Protocol::NRP::tFeatureLevel& feature =
-             featureManager.GetFeatureStcCurves();
-         ExtractFeatureControlEnum(feature, StcCurveStrings());
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_STCCurveControl: {
+        const Navico::Protocol::NRP::tFeatureLevel& feature =
+            featureManager.GetFeatureStcCurves();
+        ExtractFeatureControlEnum(feature, StcCurveStrings());
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_BeamSharpeningControl: {
-         const Navico::Protocol::NRP::tFeatureLevel& feature =
-             featureManager.GetFeatureBeamSharpening();
-         std::cout << "BeamSharpening Range: " << 0 << "-" << feature.maxLevel
-                   << std::endl;
-         ExtractFeatureControlEnum(feature);
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_BeamSharpeningControl: {
+        const Navico::Protocol::NRP::tFeatureLevel& feature =
+            featureManager.GetFeatureBeamSharpening();
+        std::cout << "BeamSharpening Range: " << 0 << "-" << feature.maxLevel
+                  << std::endl;
+        ExtractFeatureControlEnum(feature);
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_FastScanControl: {
-         const Navico::Protocol::NRP::tFeatureLevel& feature =
-             featureManager.GetFeatureFastScan();
-         std::cout << "Fast Scan:" << (feature.enabled == true ? "On" : "Off")
-                   << std::endl;
-         ExtractFeatureControlEnum(feature);
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_FastScanControl: {
+        const Navico::Protocol::NRP::tFeatureLevel& feature =
+            featureManager.GetFeatureFastScan();
+        std::cout << "Fast Scan:" << (feature.enabled == true ? "On" : "Off")
+                  << std::endl;
+        ExtractFeatureControlEnum(feature);
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_SidelobeGainControl: {
-         const Navico::Protocol::NRP::tFeatureRangeLimits& feature =
-             featureManager.GetFeatureSidelobeGain();
-         if (feature.supported == true) {
-           std::cout << "UserControlSidelobeGain Range: " << feature.minimum
-                     << "-" << feature.maximum << std::endl;
-         }
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_SidelobeGainControl: {
+        const Navico::Protocol::NRP::tFeatureRangeLimits& feature =
+            featureManager.GetFeatureSidelobeGain();
+        if (feature.supported == true) {
+          std::cout << "UserControlSidelobeGain Range: " << feature.minimum
+                    << "-" << feature.maximum << std::endl;
+        }
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_LocalIRControl: {
-         const Navico::Protocol::NRP::tFeatureLevel& feature =
-             featureManager.GetFeatureLocalIR();
-         std::cout << "LocalIR Range: " << 0 << "-" << feature.maxLevel
-                   << std::endl;
-         ExtractFeatureControlEnum(feature);
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_LocalIRControl: {
+        const Navico::Protocol::NRP::tFeatureLevel& feature =
+            featureManager.GetFeatureLocalIR();
+        std::cout << "LocalIR Range: " << 0 << "-" << feature.maxLevel
+                  << std::endl;
+        ExtractFeatureControlEnum(feature);
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_LEDControl: {
-         const Navico::Protocol::NRP::tFeatureLevel& feature =
-             featureManager.GetFeatureLED();
-         std::cout << "LEDs Range: " << 0 << "-" << feature.maxLevel
-                   << std::endl;
-         ExtractFeatureControlEnum(feature);
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_LEDControl: {
+        const Navico::Protocol::NRP::tFeatureLevel& feature =
+            featureManager.GetFeatureLED();
+        std::cout << "LEDs Range: " << 0 << "-" << feature.maxLevel
+                  << std::endl;
+        ExtractFeatureControlEnum(feature);
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_TargetStretchControl: {
-         const Navico::Protocol::NRP::tFeatureLevel& feature =
-             featureManager.GetFeatureTargetStretch();
-         std::cout << "TargetStretch Range: " << 0 << "-" << feature.maxLevel
-                   << std::endl;
-         ExtractFeatureControlEnum(feature);
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_TargetStretchControl: {
+        const Navico::Protocol::NRP::tFeatureLevel& feature =
+            featureManager.GetFeatureTargetStretch();
+        std::cout << "TargetStretch Range: " << 0 << "-" << feature.maxLevel
+                  << std::endl;
+        ExtractFeatureControlEnum(feature);
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_SeaUserGainLimits: {
-         const Navico::Protocol::NRP::tFeatureGainLimits& feature =
-             featureManager.GetFeatureSeaUserGainLimits();
-         if (feature.supported == true) {
-           std::cout << "SeaLimitsManual: " << feature.manualLevelMin << "-"
-                     << feature.manualLevelMax << std::endl;
-           std::cout << "SeaLimitsAuto: " << feature.autoOffsetMin << "-"
-                     << feature.autoOffsetMax << std::endl;
-         }
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_SeaUserGainLimits: {
+        const Navico::Protocol::NRP::tFeatureGainLimits& feature =
+            featureManager.GetFeatureSeaUserGainLimits();
+        if (feature.supported == true) {
+          std::cout << "SeaLimitsManual: " << feature.manualLevelMin << "-"
+                    << feature.manualLevelMax << std::endl;
+          std::cout << "SeaLimitsAuto: " << feature.autoOffsetMin << "-"
+                    << feature.autoOffsetMax << std::endl;
+        }
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_SupportedAntennas: {
-         const Navico::Protocol::NRP::tFeatureAntennaTypes& feature =
-             featureManager.GetFeatureSupportedAntennaTypes();
-         std::cout << "Antenna: " << feature.count << std::endl;
+      case Navico::Protocol::NRP::eFeatureEnum_SupportedAntennas: {
+        const Navico::Protocol::NRP::tFeatureAntennaTypes& feature =
+            featureManager.GetFeatureSupportedAntennaTypes();
+        std::cout << "Antenna: " << feature.count << std::endl;
 
-       } break;
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_CombinedNoiseIFReject: {
-         const Navico::Protocol::NRP::tFeatureBase& feature =
-             featureManager.GetFeatureCombinedNoiseIFReject();
-         if (feature.supported == true) {
-           std::cout << "CombinedNoiseIR: " << feature.enabled;
-         }
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_CombinedNoiseIFReject: {
+        const Navico::Protocol::NRP::tFeatureBase& feature =
+            featureManager.GetFeatureCombinedNoiseIFReject();
+        if (feature.supported == true) {
+          std::cout << "CombinedNoiseIR: " << feature.enabled;
+        }
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_RangeStretchControl: {
-         const Navico::Protocol::NRP::tFeatureLevel& feature =
-             featureManager.GetFeatureRangeStretch();
-         ExtractFeatureControlEnum(feature);
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_RangeStretchControl: {
+        const Navico::Protocol::NRP::tFeatureLevel& feature =
+            featureManager.GetFeatureRangeStretch();
+        ExtractFeatureControlEnum(feature);
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_InstrRangeLimits: {
-         const Navico::Protocol::NRP::tFeatureRangeLimits& feature =
-             featureManager.GetFeatureInstrRangeLimits();
-         if (feature.supported == true) {
-           std::cout << "InstrRangeMin: " << feature.minimum << " dm\n";
-           std::cout << "InstrRangeMax: " << feature.maximum << " dm\n";
-         }
-       } break;
+      case Navico::Protocol::NRP::eFeatureEnum_InstrRangeLimits: {
+        const Navico::Protocol::NRP::tFeatureRangeLimits& feature =
+            featureManager.GetFeatureInstrRangeLimits();
+        if (feature.supported == true) {
+          std::cout << "InstrRangeMin: " << feature.minimum << " dm\n";
+          std::cout << "InstrRangeMax: " << feature.maximum << " dm\n";
+        }
+      } break;
 
-       case Navico::Protocol::NRP::eFeatureEnum_SectorBlanking: {
-         const Navico::Protocol::NRP::tFeatureSectorBlanking& feature =
-             featureManager.GetFeatureSectorBlanking();
-         if (feature.supported == true) {
-           std::cout << "BlankSectors: " << feature.sectorCount << " sectors\n";
-         }
-       } break;
-       case Navico::Protocol::NRP::eFeatureEnum_PerformanceMonitor:
-       default:
-         break;
-     }*/
+      case Navico::Protocol::NRP::eFeatureEnum_SectorBlanking: {
+        const Navico::Protocol::NRP::tFeatureSectorBlanking& feature =
+            featureManager.GetFeatureSectorBlanking();
+        if (feature.supported == true) {
+          std::cout << "BlankSectors: " << feature.sectorCount << " sectors\n";
+        }
+      } break;
+      case Navico::Protocol::NRP::eFeatureEnum_PerformanceMonitor:
+      default:
+        break;
+    }
   }
 }
 
@@ -699,7 +776,35 @@ void GUIDemo::UpdateGuardZoneAlarm(
   unsigned zone = pAlarm->zone;
   if (zone < Navico::Protocol::NRP::cMaxGuardZones) {
     m_pGuardZoneAlarms[zone] = *pAlarm;
-    emit UpdateGuardZoneAlarm_signal(zone);
+    m_AlarmTypes[zone] = m_pGuardZoneAlarms[zone].type;
+    std::string gz_type = std::to_string(m_pGuardZoneAlarms[zone].type);
+    std::string gz_state;
+    switch (m_pGuardZoneAlarms[zone].state) {
+      case Navico::Protocol::NRP::eAlarmActive: {
+        gz_state = "Active";
+      } break;
+
+      case Navico::Protocol::NRP::eAlarmInactive: {
+        gz_state = "Inactive";
+      } break;
+
+      case Navico::Protocol::NRP::eAlarmCancelled: {
+        gz_state = "Cancelled";
+      } break;
+
+      default: {
+        gz_state = "Unknown " + std::to_string(m_pGuardZoneAlarms[zone].state);
+      } break;
+    }
+
+    if (zone == eGuardZone1) {
+      std::cout << "Guard1Type: " << gz_type << std::endl;
+      std::cout << "Guard1State: " << gz_state << std::endl;
+    } else {
+      std::cout << "Guard2Type: " << gz_type << std::endl;
+      std::cout << "Guard2State: " << gz_state << std::endl;
+    }
+
   }
 }
 
@@ -709,14 +814,9 @@ void GUIDemo::UpdateRadarError(
   // NOTE: this simplification may overwrite a previous error that hasn't yet
   // been reported
   *m_pRadarError = *pError;
-  /* std::cout << "Scanner error: " +
-                    ToString(Navico::Protocol::NRP::eRadarErrorType(
-                        m_pRadarError->type)); */
-}
-
-//-----------------------------------------------------------------------------
-void GUIDemo::UpdateGuardZoneAlarm_slot(unsigned zone) {
-  m_pTabGuardZone->OnGuardZoneAlarmChanged(zone, &m_pGuardZoneAlarms[zone]);
+  std::cout << "Scanner error: " +
+                   ToString(Navico::Protocol::NRP::eRadarErrorType(
+                       m_pRadarError->type));
 }
 
 //-----------------------------------------------------------------------------

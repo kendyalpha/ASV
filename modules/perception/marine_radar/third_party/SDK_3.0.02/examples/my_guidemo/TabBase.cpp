@@ -13,7 +13,6 @@ tTabBase::tTabBase(Ui::GUIDemoClass& ui, QObject* pParent, QWidget& tab)
 
 void tTabBase::OnConnect(Navico::Protocol::NRP::tImageClient* pImageClient) {
   assert(m_pImageClient == nullptr);
-
   m_pImageClient = pImageClient;
   m_Tab.setEnabled(m_pImageClient != nullptr);
 }

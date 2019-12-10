@@ -63,10 +63,12 @@ void tQPPIFrame::convertXYtoSD(int x, int y, double& s, double& d) {
 //----------------------------------------------------------
 void tQPPIFrame::convertSDtoXY(double s, double d, int& x, int& y) {
   double radians = M_PI * d / 180.0;
-  x = width() / 2 + (width() * s * std::sin(radians)) / getImage()->width() +
-      0.5;
-  y = height() / 2 - (height() * s * std::cos(radians)) / getImage()->height() +
-      0.5;
+  x = static_cast<int>(width() / 2 +
+                       (width() * s * std::sin(radians)) / getImage()->width() +
+                       0.5);
+  y = static_cast<int>(
+      height() / 2 - (height() * s * std::cos(radians)) / getImage()->height() +
+      0.5);
 }
 
 void tQPPIFrame::DrawOverlay(QPainter& painter, const tOverlay* pOverlay) {
@@ -116,12 +118,12 @@ tTabPPI::tTabPPI(Ui::GUIDemoClass& myUI, tTargetLocation* pTargets,
                  unsigned maxTargets, QObject* pParent,
                  tOverlayManager& overlayManager)
     : QObject(pParent),
-      m_pFrame(new tQPPIFrame(pTargets, maxTargets, myUI.tabPPI, nullptr,
+      m_pFrame(new tQPPIFrame(pTargets, maxTargets, myUI.tabPPI_2, nullptr,
                               overlayManager)),
       m_pController(new Navico::Image::tPPIController()),
       m_pImage(nullptr),
       ui(myUI) {
-  ui.verticalLayout_tabPPI->addWidget(m_pFrame);
+  ui.verticalLayout_tabPPI_2->addWidget(m_pFrame);
   Connect(true, &m_Timer, SIGNAL(timeout()), this, SLOT(Timer_timeout()));
   Connect(true, m_pFrame, SIGNAL(ChangeTrailsTime(int)), this,
           SLOT(Frame_ChangeTrailsTime(int)));
@@ -140,7 +142,7 @@ tTabPPI::~tTabPPI() {
 
 //-----------------------------------------------------------------------------
 void tTabPPI::OnConnect() {
-  ui.tabPPI->setEnabled(true);
+  ui.tabPPI_2->setEnabled(true);
   m_Timer.setInterval(50);
   m_Timer.start();
 }
@@ -148,7 +150,7 @@ void tTabPPI::OnConnect() {
 //-----------------------------------------------------------------------------
 void tTabPPI::OnDisconnect() {
   m_Timer.stop();
-  ui.tabPPI->setEnabled(false);
+  ui.tabPPI_2->setEnabled(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -200,8 +202,8 @@ void tQBScanFrame::convertXYtoSD(int x, int y, double& s, double& d) {
 
 //-----------------------------------------------------------------------------
 void tQBScanFrame::convertSDtoXY(double s, double d, int& x, int& y) {
-  y = ((s * height()) / getImage()->height()) + 0.5;
-  x = (d * width() / 360.0) + 0.5;
+  y = static_cast<int>(((s * height()) / getImage()->height()) + 0.5);
+  x = static_cast<int>((d * width() / 360.0) + 0.5);
 }
 
 //-----------------------------------------------------------------------------
@@ -222,13 +224,19 @@ void tQBScanFrame::DrawOverlay(QPainter& painter, const tOverlay* pOverlay) {
   double rightBound = 0.5;
 
   if (x2 >= x1) {
-    painter.drawRect(x1 * width, y1 * height, (x2 - x1) * width,
-                     (y2 - y1) * height);
+    painter.drawRect(static_cast<int>(x1 * width),
+                     static_cast<int>(y1 * height),
+                     static_cast<int>((x2 - x1) * width),
+                     static_cast<int>((y2 - y1) * height));
   } else {
-    painter.drawRect(leftBound * width, y1 * height, (x2 - leftBound) * width,
-                     (y2 - y1) * height);
-    painter.drawRect(x1 * width, y1 * height, (rightBound - x1) * width,
-                     (y2 - y1) * height);
+    painter.drawRect(static_cast<int>(leftBound * width),
+                     static_cast<int>(y1 * height),
+                     static_cast<int>((x2 - leftBound) * width),
+                     static_cast<int>((y2 - y1) * height));
+    painter.drawRect(static_cast<int>(x1 * width),
+                     static_cast<int>(y1 * height),
+                     static_cast<int>((rightBound - x1) * width),
+                     static_cast<int>((y2 - y1) * height));
   }
 }
 
@@ -287,8 +295,8 @@ void tTabBScan::OnUpdateSpoke(
     m_NumSamples = pSpoke->header.nOfSamples;
 
     // create the correct size of the frame buffer
-    m_pImage =
-        new QImage(cSpokesPerRevolution, m_NumSamples, QImage::Format_RGB32);
+    m_pImage = new QImage(cSpokesPerRevolution, static_cast<int>(m_NumSamples),
+                          QImage::Format_RGB32);
     m_pImage->fill(0);
     m_pFrame->setImage(m_pImage);
 

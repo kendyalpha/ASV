@@ -4,12 +4,6 @@
 //-----------------------------------------------------------------------------
 
 #include "CustomFrames.h"
-#include<QDebug>
-
-
-//-----------------------------------------------------------------------------
-// Navico::tRadarColourLookUpTableGreen   gGreenLUT;
-//Navico::tRadarColourLookUpTableNavico gNavicoLUT;
 
 QMutex tQCustomFrame::m_ImageMutex;
 
@@ -20,6 +14,7 @@ struct tTargetSize {
   const char* name;
   unsigned radius;
 };
+
 tTargetSize targetSizes[] = {
     {
         "Small",

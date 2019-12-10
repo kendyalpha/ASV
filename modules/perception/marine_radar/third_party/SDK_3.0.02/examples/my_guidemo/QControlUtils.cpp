@@ -5,9 +5,6 @@
 
 #include "QControlUtils.h"
 
-#include <QGroupBox>
-#include <QPushButton>
-#include <cassert>
 
 //-----------------------------------------------------------------------------
 tQDoubleIntConnector::tQDoubleIntConnector(QDoubleSpinBox* pSpin,
@@ -16,42 +13,11 @@ tQDoubleIntConnector::tQDoubleIntConnector(QDoubleSpinBox* pSpin,
     : QObject(pSlider), m_pSpin(pSpin), m_pSlider(pSlider) {
   setObjectName(name);
 }
-
-int tQDoubleIntConnector::ToSliderValue(double value, QDoubleSpinBox* pSpin,
-                                        QSlider* pSlider) {
-  double sliderMin = pSlider->minimum();
-  double spinMin = pSpin->minimum();
-  double val = sliderMin + (pSlider->maximum() - sliderMin) *
-                               (value - spinMin) / (pSpin->maximum() - spinMin);
-  return int(val);
-}
-
-double tQDoubleIntConnector::ToSpinValue(int value, QDoubleSpinBox* pSpin,
-                                         QSlider* pSlider) {
-  double sliderMin = pSlider->minimum();
-  double spinMin = pSpin->minimum();
-  double val = spinMin + (pSpin->maximum() - spinMin) * (value - sliderMin) /
-                             (pSlider->maximum() - sliderMin);
-  return val;
-}
-
-void tQDoubleIntConnector::SliderValueChanged(int value) {
-  // m_pSpin->blockSignals( true );
-  m_pSpin->setValue(ToSpinValue(value, m_pSpin, m_pSlider));
-  // m_pSpin->blockSignals( false );
-}
-
-void tQDoubleIntConnector::SpinnerValueChanged(double value) {
-  m_pSlider->blockSignals(true);
-  m_pSlider->setValue(ToSliderValue(value, m_pSpin, m_pSlider));
-  m_pSlider->blockSignals(false);
-}
-
 //-----------------------------------------------------------------------------
 QString ToItemName(unsigned value, QComboBox* pCombo) {
   return (pCombo == nullptr || value >= unsigned(pCombo->count()))
              ? QString::number(value)
-             : pCombo->itemText(value);
+             : pCombo->itemText(static_cast<int>(value));
 }
 
 //-----------------------------------------------------------------------------
@@ -151,76 +117,4 @@ void ConnectControls(QObject& manager, QWidget& parent) {
 //-----------------------------------------------------------------------------
 void DisconnectControls(QObject& manager, QWidget& parent) {
   LinkControls(false, manager, parent);
-}
-
-//-----------------------------------------------------------------------------
-void SetManualValue(QSpinBox* pSpin, int value) {
-  assert(pSpin != NULL);
-
-  QObject* pParent = pSpin->parent();
-  if (pParent != nullptr && pSpin->objectName().startsWith("spin")) {
-    QString name(pSpin->objectName().mid(4));
-    QSlider* pSlider = pParent->findChild<QSlider*>("slider" + name);
-    if (pSlider != nullptr) {
-      pSlider->blockSignals(true);
-      pSlider->setValue(value);
-      pSlider->blockSignals(false);
-    }
-  }
-  pSpin->blockSignals(true);
-  pSpin->setValue(value);
-  pSpin->blockSignals(false);
-}
-
-//-----------------------------------------------------------------------------
-void SetManualValue(QDoubleSpinBox* pSpin, double value) {
-  assert(pSpin != NULL);
-
-  QObject* pParent = pSpin->parent();
-  if (pParent != nullptr && pSpin->objectName().startsWith("spin")) {
-    QString name(pSpin->objectName().mid(4));
-    QSlider* pSlider = pParent->findChild<QSlider*>("slider" + name);
-    if (pSlider != nullptr) {
-      pSlider->blockSignals(true);
-      pSlider->setValue(
-          tQDoubleIntConnector::ToSliderValue(value, pSpin, pSlider));
-      pSlider->blockSignals(false);
-    }
-  }
-  pSpin->blockSignals(true);
-  pSpin->setValue(value);
-  pSpin->blockSignals(false);
-}
-
-//-----------------------------------------------------------------------------
-void SetManualValue(QComboBox* pCombo, int value) {
-  pCombo->blockSignals(true);
-  pCombo->setCurrentIndex(value);
-  pCombo->blockSignals(false);
-}
-
-//-----------------------------------------------------------------------------
-void SetManualValue(QCheckBox* pCheck, bool value) {
-  pCheck->blockSignals(true);
-  pCheck->setChecked(value);
-  pCheck->blockSignals(false);
-}
-
-//-----------------------------------------------------------------------------
-void SetManualRange(QSpinBox* pSpin, int minValue, int maxValue) {
-  assert(pSpin != NULL);
-
-  QObject* pParent = pSpin->parent();
-  if (pParent != nullptr && pSpin->objectName().startsWith("spin")) {
-    QString name(pSpin->objectName().mid(4));
-    QSlider* pSlider = pParent->findChild<QSlider*>("slider" + name);
-    if (pSlider != nullptr) {
-      pSlider->blockSignals(true);
-      pSlider->setRange(minValue, maxValue);
-      pSlider->blockSignals(false);
-    }
-  }
-  pSpin->blockSignals(true);
-  pSpin->setRange(minValue, maxValue);
-  pSpin->blockSignals(false);
 }

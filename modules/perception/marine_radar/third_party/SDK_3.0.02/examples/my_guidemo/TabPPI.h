@@ -4,8 +4,8 @@
 //-----------------------------------------------------------------------------
 //! \file TabPPI.h
 //!
-//! User interface for PPI display that displays spokes using a polar coordinate
-//! system.
+//! User interface for PPI display, BScan display
+//!  that displays spokes using a polar coordinate system.
 //---------------------------------------------------------------------------
 
 #ifndef GUIDEMO_TABPPI_H
