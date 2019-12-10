@@ -5,8 +5,6 @@
 
 #include "TabFeatures.h"
 
-
-
 //-----------------------------------------------------------------------------
 tTabFeatures::tTabFeatures(Ui::GUIDemoClass& ui, QObject* pParent, QWidget& tab)
     : tTabBase(ui, pParent, tab) {

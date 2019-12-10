@@ -4,13 +4,6 @@
 //-----------------------------------------------------------------------------
 
 #include "TabPPI.h"
-#include "QControlUtils.h"
-
-#include <QDebug>
-#include <QMenu>
-#include <QPainter>
-
-
 
 static float CompassToDegrees(uint16_t compass) {
   return static_cast<float>(compass) * 360.0f / 4096.0f;
@@ -250,8 +243,8 @@ tTabBScan::tTabBScan(Ui::GUIDemoClass& myUI, tTargetLocation* pTargets,
       m_pImage(nullptr),
       m_NumSamples(0),
       ui(myUI) {
-  m_pFrame =
-      new tQBScanFrame(pTargets, maxTargets, ui.tabBScan, nullptr, overlayManager);
+  m_pFrame = new tQBScanFrame(pTargets, maxTargets, ui.tabBScan, nullptr,
+                              overlayManager);
   ui.verticalLayout_tabBscan->addWidget(m_pFrame);
 
   Connect(true, &m_Timer, SIGNAL(timeout()), this, SLOT(Timer_timeout()));
@@ -320,4 +313,3 @@ void tTabBScan::OnUpdateSpoke(
       Navico::Protocol::NRP::Spoke::GetSampleRange_mm(pSpoke->header) *
       pSpoke->header.nOfSamples / 1000);
 }
-

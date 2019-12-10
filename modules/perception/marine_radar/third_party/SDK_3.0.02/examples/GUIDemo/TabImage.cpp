@@ -51,7 +51,7 @@ void tTabImage::UpdateUseMode() {
       UseModeToString(Navico::Protocol::NRP::eUseMode_Custom),
       QVariant(Navico::Protocol::NRP::eUseMode_Custom));
 
-  if (m_pImageClient != 0) {
+  if (m_pImageClient != nullptr) {
     // Check feature manager for supported use modes
     Navico::Protocol::NRP::tFeatureManager& featureManager =
         m_pImageClient->GetFeatureManager();
@@ -130,7 +130,8 @@ void tTabImage::UseMode_currentIndexChanged(int index) {
 // Group: Miscellenaous
 //-----------------------------------------------------------------------------
 void tTabImage::FastScan_currentIndexChanged(int index) {
-  m_pImageClient->SetFastScanMode(uint8_t(index));
+uint8_t t_index=static_cast<uint8_t>(index);
+  m_pImageClient->SetFastScanMode(t_index);
 }
 
 //-----------------------------------------------------------------------------

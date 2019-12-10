@@ -12,8 +12,9 @@
 #define _MULTIRADAR_H_
 
 #include <MultiRadarClient.h>
+#include <map>
 #include <string>
-
+#include <vector>
 namespace ASV::perception {
 
 class MultiRadar : public Navico::Protocol::iRadarListObserver,
@@ -34,8 +35,112 @@ class MultiRadar : public Navico::Protocol::iRadarListObserver,
   void InitiateUnlock();
   void SetConnectState(bool connected);
 
+  // iRadarListObserver, iUnlockKeySupplier, iUnlockStateObserver - multi-device
+  // callbacks
+  virtual void UpdateRadarList(const char* pSerialNumber,
+                               iRadarListObserver::eAction action) {
+    multi_radar_devices.clear();
+
+    char radars[cMaxRadars][MAX_SERIALNUMBER_SIZE];
+
+    unsigned numRadars =
+        Navico::Protocol::tMultiRadarClient::GetInstance()->GetRadars(
+            radars, cMaxRadars);
+    if (numRadars > 0) {
+      if (numRadars > cMaxRadars) numRadars = cMaxRadars;
+      for (unsigned i = 0; i < numRadars; ++i) {
+        int numImageServices =
+            Navico::Protocol::tMultiRadarClient::GetInstance()
+                ->GetImageStreamCount(radars[i]);
+        if (numImageServices > 0) {
+          std::string serialNumber(radars[i]);
+          std::vector<std::string> ImageServicesList;
+          for (int j = 0; j < numImageServices; ++j)
+            ImageServicesList.push_back(serialNumber + std::string(1, 'A' + j));
+
+          multi_radar_devices.insert(
+              std::pair<unsigned, std::vector<std::string>>(i,
+                                                            ImageServicesList));
+        }
+      }
+    } else
+      multi_radar_devices.clear();
+
+  }  // UpdateRadarList
+
+  virtual int GetUnlockKey(const char* pSerialNumber, const uint8_t* pLockID,
+                           unsigned lockIDSize, uint8_t* pUnlockKey,
+                           unsigned maxUnlockKeySize) {
+    // Create a local serial number and copy content.
+    size_t length = strlen(pSerialNumber) + 1;
+    char* pLocalSerialNumber = new char[length];  // TODO: why new???
+    memcpy(pLocalSerialNumber, pSerialNumber, length);
+
+    //
+    std::string str_LockID = uint8_to_hex_string(pLockID, lockIDSize);
+
+    // prepare the unlock key
+    uint8_t key_data[MAX_UNLOCKKEY_SIZE];
+    std::string unlockKey =
+        "FCA53C6FE25450CA93E4AF63B78769E659E56E2705AFAD443F1D6EDBEFB249FF2C7AFD"
+        "7589122F80DE38FA32638C36F195816F5EE5C1257EFFED4A02537252FE";
+    unsigned len = hexstring_to_uint8(unlockKey, key_data);
+
+    // unlock the SDK
+    if (len > 0) {
+      Navico::Protocol::tMultiRadarClient::GetInstance()->SetUnlockKey(
+          pLocalSerialNumber, key_data, len);
+    } else {
+      std::cout << "Error: Invalid unlock key entered";
+    }
+
+    // Free the local serial number
+    delete[] pLocalSerialNumber;
+
+    return -1;
+  }  // GetUnlockKey
+
+  virtual void UpdateUnlockState(const char* pSerialNumber, int lockState) {
+    std::string str_radar(pSerialNumber);
+    str_radar = "Radar " + str_radar;
+
+    if (_lockState > 0)
+      std::cout << str_radar + " unlocked (level " +
+                       std::to_string(_lockState) + ")\n";
+    else if (_lockState == 0)
+      std::cout << str_radar + " still locked\n";
+    else
+      std::cout << "Unlock of " + str_radar + " Failed\n";
+  }  // UpdateUnlockState
+
  private:
-};
+  const unsigned cMaxRadars = 8;
+
+  std::map<unsigned, std::vector<std::string>> multi_radar_devices;
+  std::string current_radar_serial_number;
+  unsigned current_radar_index = 0;
+
+  std::string uint8_to_hex_string(const uint8_t* v, const int s) {
+    std::stringstream ss;
+
+    ss << std::hex << std::setfill('0');
+
+    for (int i = 0; i < s; i++) {
+      ss << std::hex << std::setw(2) << static_cast<int>(v[i]);
+    }
+
+    return ss.str();
+  }  // uint8_to_hex_string
+
+  unsigned hexstring_to_uint8(const std::string& hexText, uint8_t* pData) {
+    std::size_t len = hexText.length();
+    for (std::size_t i = 0; i < len; i += 2) {
+      std::string byteString = hexText.substr(i, 2);
+      pData[i / 2] =
+          static_cast<uint8_t>(strtol(byteString.c_str(), nullptr, 16));
+    }
+    return static_cast<unsigned>(len / 2);
+  }
 
 }  // namespace ASV::perception
 

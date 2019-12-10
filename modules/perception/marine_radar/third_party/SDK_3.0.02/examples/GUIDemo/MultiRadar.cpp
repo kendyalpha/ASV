@@ -4,10 +4,21 @@
 //-----------------------------------------------------------------------------
 
 #include "MultiRadar.h"
+#include <QDebug>
+#include <iomanip>
+#include <iostream>
 #include "QControlUtils.h"
 #include "ui_Registration.h"
 
-#include <QDebug>
+unsigned hexstring_to_uint8(const std::string& hexText, uint8_t* pData) {
+  std::size_t len = hexText.length();
+  for (std::size_t i = 0; i < len; i += 2) {
+    std::string byteString = hexText.substr(i, 2);
+    pData[i / 2] =
+        static_cast<uint8_t>(strtol(byteString.c_str(), nullptr, 16));
+  }
+  return static_cast<unsigned>(len / 2);
+}
 
 //-----------------------------------------------------------------------------
 //  Helpers
@@ -15,22 +26,10 @@
 QString ToHexString(const void* pData, int dataSize) {
   QString str;
   for (int i = 0; i < dataSize; ++i) {
-    str += QString("%0").arg(((const uint8_t*)pData)[i], 2, 16, QChar('0'));
+    str += QString("%0").arg(static_cast<const uint8_t*>(pData)[i], 2, 16,
+                             QChar('0'));
   }
   return str;
-}
-
-//-----------------------------------------------------------------------------
-int FromHexString(const QString& hexText, void* pData, int dataSize) {
-  int len = hexText.length();
-  if (len <= 0 || (len & 1) != 0 || (len >>= 1) > dataSize) return -1;
-
-  for (int i = 0; i < len; ++i) {
-    bool ok = false;
-    ((uint8_t*)pData)[i] = hexText.mid(2 * i, 2).toInt(&ok, 16);
-    if (!ok) return -2;
-  }
-  return len;
 }
 
 //-----------------------------------------------------------------------------
@@ -190,8 +189,14 @@ void tMultiRadar::MultiRadar_GetUnlockKey(const char* pSerialNumber,
 
   if (result) {
     uint8_t data[MAX_UNLOCKKEY_SIZE];
-    unlockKey.replace("\\s+", "");
-    int len = FromHexString(unlockKey, data, sizeof(data));
+
+    unsigned len = hexstring_to_uint8(
+        "FCA53C6FE25450CA93E4AF63B78769E659E56E2705AFAD443F1D6EDBEFB249FF2C7AFD"
+        "75"
+        "89122F80DE38FA32638C36F195816F5EE5C1257EFFED4A02537252FE",
+        data);
+    //    int len = FromHexString(unlockKey, data, sizeof(data));
+
     if (len > 0) {
       Navico::Protocol::tMultiRadarClient::GetInstance()->SetUnlockKey(
           pSerialNumber, data, len);

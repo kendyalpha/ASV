@@ -15,6 +15,8 @@
 
 #include <ImageClient.h>
 #include <PPIController.h>
+#include <QDebug>
+#include <QMenu>
 #include <QObject>
 #include <QPainter>
 #include <QTimer>
@@ -22,9 +24,8 @@
 #include <cmath>
 #include "CustomFrames.h"
 #include "ImageClient.h"
-#include "OverlayManager.h"
+#include "QControlUtils.h"
 #include "ui_GUIDemo.h"
-
 
 static Navico::tRadarColourLookUpTableNavico gNavicoLUT;
 
