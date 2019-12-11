@@ -24,7 +24,7 @@
 #include <QMessageBox>
 #include <algorithm>
 #include <cassert>
-
+#include <thread>
 #include "MultiRadar.h"
 #include "QControlUtils.h"
 #include "TabPPI.h"
@@ -148,6 +148,13 @@ class GUIDemo
  private:
   int ConnectTargetClient(const std::string& serialNumber, unsigned instance);
   void DisconnectTargetClient();
+  void updateboatstate() {
+    bool set_results = m_pTargetClient->SetBoatSpeed(
+        Navico::Protocol::NRP::eSpeedType::eSpeedOverGround, 0,
+        Navico::Protocol::NRP::eDirectionType::eHeadingTrue, 0);
+    for(int i=0;i!=10000;++i)
+        std::cout<<set_results<<std::endl;
+  }
 
  signals:
   // signals from callbacks

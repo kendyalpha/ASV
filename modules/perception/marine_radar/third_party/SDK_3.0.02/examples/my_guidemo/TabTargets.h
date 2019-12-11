@@ -62,7 +62,7 @@ class tTabTargets : public tTabBase {
   void OnTTAlarmSetupChanged(
       const Navico::Protocol::NRP::tTargetTrackingAlarmSetup*);
   void OnTTPropertiesChanged(
-      const Navico::Protocol::NRP::tTargetTrackingProperties*);
+      const Navico::Protocol::NRP::tTargetTrackingProperties* pProperties);
   void OnTrackedTargetChanged(unsigned targetIndex,
                               const Navico::Protocol::NRP::tTrackedTarget*);
 

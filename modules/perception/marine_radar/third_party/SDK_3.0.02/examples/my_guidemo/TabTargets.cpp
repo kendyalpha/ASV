@@ -244,7 +244,8 @@ void tTabTargets::OnTTAlarmSetupChanged(
 
 //-----------------------------------------------------------------------------
 void tTabTargets::OnTTPropertiesChanged(
-    const Navico::Protocol::NRP::tTargetTrackingProperties*) {}
+    const Navico::Protocol::NRP::tTargetTrackingProperties* pProperties) {
+}
 
 //-----------------------------------------------------------------------------
 void tTabTargets::OnTrackedTargetChanged(
