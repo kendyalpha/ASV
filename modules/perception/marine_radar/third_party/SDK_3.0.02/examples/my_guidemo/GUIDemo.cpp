@@ -139,122 +139,117 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
     } else {
       // there is no error
 
+      // Image
+      UpdateUseMode();
 
-        // Image
-        UpdateUseMode();
+      //    m_pImageClient->SetToFactoryDefaults();
+      bool set_results = m_pImageClient->SetUseMode(
+          Navico::Protocol::NRP::eUseMode::eUseMode_Custom);
 
-        //    m_pImageClient->SetToFactoryDefaults();
-        m_pImageClient->SetUseMode(
-            Navico::Protocol::NRP::eUseMode::eUseMode_Custom);
+      // setup
+      m_pImageClient->SetRange(400);
+      set_results = m_pImageClient->SetFastScanMode(
+          uint8_t(0));  // 0: fast scan mode; otherwise, normal speed
+      m_pImageClient->SetLEDsLevel(0);
+      m_pImageClient->SetInterferenceReject(2);
+      m_pImageClient->SetLocalIR(1);
+      m_pImageClient->SetNoiseReject(2);
+      m_pImageClient->SetBeamSharpening(3);
+      m_pImageClient->SetTargetBoost(1);
+      m_pImageClient->SetTargetStretch(true);
+      m_pImageClient->SetSTCCurveType(
+          Navico::Protocol::NRP::eStcCurveType::eCalm);
+      m_pImageClient->SetGain(
+          Navico::Protocol::NRP::eUserGainManualAuto::eUserGainAuto, 0);
+      m_pImageClient->SetSeaClutter(
+          Navico::Protocol::NRP::eUserGainManualAuto::eUserGainAuto, 0);
+      m_pImageClient->SetSideLobe(
+          Navico::Protocol::NRP::eUserGainManualAuto::eUserGainAuto, 0);
+      m_pImageClient->SetRain(0);
+      m_pImageClient->SetFTC(0);
 
-        // setup
-        m_pImageClient->SetRange(400);
+      // pulse
+      m_pImageClient->SetTuneState(m_pSetup->tuneType != 0u);
+      m_pImageClient->SetTuneCoarse(0);
+      m_pImageClient->SetTuneFine(0);
 
-        //    set_results = m_pImageClient->SetScannerRPM(240u);
-        set_results = m_pImageClient->SetFastScanMode(
-            uint8_t(0));  // 0: fast scan mode; otherwise, normal speed
-        m_pImageClient->SetLEDsLevel(0);
-        m_pImageClient->SetInterferenceReject(2);
-        m_pImageClient->SetLocalIR(1);
-        m_pImageClient->SetNoiseReject(2);
-        m_pImageClient->SetBeamSharpening(3);
-        m_pImageClient->SetTargetBoost(1);
-        m_pImageClient->SetTargetStretch(true);
-        m_pImageClient->SetSTCCurveType(
-            Navico::Protocol::NRP::eStcCurveType::eCalm);
-        m_pImageClient->SetGain(
-            Navico::Protocol::NRP::eUserGainManualAuto::eUserGainAuto, 0);
-        m_pImageClient->SetSeaClutter(
-            Navico::Protocol::NRP::eUserGainManualAuto::eUserGainAuto, 0);
-        m_pImageClient->SetSideLobe(
-            Navico::Protocol::NRP::eUserGainManualAuto::eUserGainAuto, 0);
-        m_pImageClient->SetRain(0);
-        m_pImageClient->SetFTC(0);
+      // TimedTransmit
+      m_pImageClient->SetTimedTransmit(false);
+      m_pImageClient->SetTimedTransmitSetup(10, 10);
 
-        // pulse
-        m_pImageClient->SetTuneState(m_pSetup->tuneType != 0u);
-        m_pImageClient->SetTuneCoarse(0);
-        m_pImageClient->SetTuneFine(0);
+      // Installation
+      m_pImageClient->SetParkPosition(0);
+      m_pImageClient->SetAntennaHeight(4);
+      m_pImageClient->SetAntennaOffsets(0.0, 0.0);
+      m_pImageClient->SetZeroRangeOffset(0.0);
+      m_pImageClient->SetZeroBearingOffset(0);
+      m_pImageClient->SetAntennaType(0);
 
-        // TimedTransmit
-        m_pImageClient->SetTimedTransmit(false);
-        m_pImageClient->SetTimedTransmitSetup(10, 10);
+      // advanced control
+      /* STC Range */
+      m_pImageClient->SetRangeSTCTrim(0.0);
+      m_pImageClient->SetRangeSTCRate(40);
 
-        // Installation
-        m_pImageClient->SetParkPosition(0);
-        m_pImageClient->SetAntennaHeight(4);
-        m_pImageClient->SetAntennaOffsets(0.0, 0.0);
-        m_pImageClient->SetZeroRangeOffset(0.0);
-        m_pImageClient->SetZeroBearingOffset(0);
-        m_pImageClient->SetAntennaType(0);
+      /* STC Sea */
+      m_pImageClient->SetSeaSTCTrim(0.0);
+      m_pImageClient->SetSeaSTCRate1(40);
+      m_pImageClient->SetSeaSTCRate2(40);
 
-        // advanced control
-        /* STC Range */
-        m_pImageClient->SetRangeSTCTrim(0.0);
-        m_pImageClient->SetRangeSTCRate(40);
+      /* STC Rain */
+      m_pImageClient->SetRainSTCTrim(0.0);
+      m_pImageClient->SetRainSTCRate(20);
 
-        /* STC Sea */
-        m_pImageClient->SetSeaSTCTrim(0.0);
-        m_pImageClient->SetSeaSTCRate1(40);
-        m_pImageClient->SetSeaSTCRate2(40);
+      /* Miscellaneous */
+      m_pImageClient->SetUserMinSNR(0.0);
+      m_pImageClient->SetVideoAperture(4.0);
+      m_pImageClient->SetMainBangSuppression(false);
 
-        /* STC Rain */
-        m_pImageClient->SetRainSTCTrim(0.0);
-        m_pImageClient->SetRainSTCRate(20);
-
-        /* Miscellaneous */
-        m_pImageClient->SetUserMinSNR(0.0);
-        m_pImageClient->SetVideoAperture(4.0);
-        m_pImageClient->SetMainBangSuppression(false);
-
-        // Guard zone
-        for (unsigned i = 0; i < Navico::Protocol::NRP::cMaxGuardZones; ++i) {
-          m_AlarmTypes[i] = Navico::Protocol::NRP::eGZAlarmEntry;
-        }
-        m_pImageClient->SetGuardZoneSensitivity(0);
-
-        bool gz1enables = false;
-        uint32_t gz1_startRange_m = 40;
-        uint32_t gz1_endRange_m = 60;
-        uint16_t gz1_bearing_deg = 10;
-        uint16_t gz1_width_deg = 20;
-        m_pImageClient->SetGuardZoneEnable(eGuardZone1, gz1enables);
-        // Set the guard zone in Radar
-        m_pImageClient->SetGuardZoneSetup(eGuardZone1, gz1_startRange_m,
-                                          gz1_endRange_m, gz1_bearing_deg,
-                                          gz1_width_deg);
-        m_pImageClient->SetGuardZoneAlarmSetup(
-            eGuardZone1, Navico::Protocol::NRP::eGuardZoneAlarmType::eGZAlarmEntry);
-        // Update the guard zone overlay in GUI
-        m_OverlayManager.SetGuardZone(eGuardZone1, gz1enables, gz1_startRange_m,
-                                      gz1_endRange_m, gz1_bearing_deg,
-                                      gz1_width_deg);
-
-        bool gz2enables = false;
-        uint32_t gz2_startRange_m = 0;
-        uint32_t gz2_endRange_m = 20;
-        uint16_t gz2_bearing_deg = 10;
-        uint16_t gz2_width_deg = 20;
-        m_pImageClient->SetGuardZoneEnable(eGuardZone2, gz2enables);
-        // Set the guard zone in Radar
-        m_pImageClient->SetGuardZoneSetup(eGuardZone2, gz2_startRange_m,
-                                          gz2_endRange_m, gz2_bearing_deg,
-                                          gz2_width_deg);
-        m_pImageClient->SetGuardZoneAlarmSetup(
-            eGuardZone2, Navico::Protocol::NRP::eGuardZoneAlarmType::eGZAlarmEntry);
-        // Update the guard zone overlay in GUI
-        m_OverlayManager.SetGuardZone(eGuardZone2, gz2enables, gz2_startRange_m,
-                                      gz2_endRange_m, gz2_bearing_deg,
-                                      gz2_width_deg);
-
-
-
-      if (m_pImageClient) {
-        m_pImageClient->SetPower(true);
-        m_pImageClient->SetTransmit(true);
-      }
-
+      // Guard zone
       m_OverlayManager.Clear();
+      for (unsigned i = 0; i < Navico::Protocol::NRP::cMaxGuardZones; ++i) {
+        m_AlarmTypes[i] = Navico::Protocol::NRP::eGZAlarmEntry;
+      }
+      m_pImageClient->SetGuardZoneSensitivity(0);
+
+      bool gz1enables = false;
+      uint32_t gz1_startRange_m = 40;
+      uint32_t gz1_endRange_m = 60;
+      uint16_t gz1_bearing_deg = 10;
+      uint16_t gz1_width_deg = 20;
+      m_pImageClient->SetGuardZoneEnable(eGuardZone1, gz1enables);
+      // Set the guard zone in Radar
+      m_pImageClient->SetGuardZoneSetup(eGuardZone1, gz1_startRange_m,
+                                        gz1_endRange_m, gz1_bearing_deg,
+                                        gz1_width_deg);
+      m_pImageClient->SetGuardZoneAlarmSetup(
+          eGuardZone1,
+          Navico::Protocol::NRP::eGuardZoneAlarmType::eGZAlarmEntry);
+      // Update the guard zone overlay in GUI
+      m_OverlayManager.SetGuardZone(eGuardZone1, gz1enables, gz1_startRange_m,
+                                    gz1_endRange_m, gz1_bearing_deg,
+                                    gz1_width_deg);
+
+      bool gz2enables = false;
+      uint32_t gz2_startRange_m = 0;
+      uint32_t gz2_endRange_m = 20;
+      uint16_t gz2_bearing_deg = 10;
+      uint16_t gz2_width_deg = 20;
+      m_pImageClient->SetGuardZoneEnable(eGuardZone2, gz2enables);
+      // Set the guard zone in Radar
+      m_pImageClient->SetGuardZoneSetup(eGuardZone2, gz2_startRange_m,
+                                        gz2_endRange_m, gz2_bearing_deg,
+                                        gz2_width_deg);
+      m_pImageClient->SetGuardZoneAlarmSetup(
+          eGuardZone2,
+          Navico::Protocol::NRP::eGuardZoneAlarmType::eGZAlarmEntry);
+      // Update the guard zone overlay in GUI
+      m_OverlayManager.SetGuardZone(eGuardZone2, gz2enables, gz2_startRange_m,
+                                    gz2_endRange_m, gz2_bearing_deg,
+                                    gz2_width_deg);
+
+      // power on and start to transmit
+      m_pImageClient->SetPower(true);
+      m_pImageClient->SetTransmit(true);
 
       // client services connected ok - initialise all dependent user interfaces
       m_pTabTargets->OnConnect(m_pTargetClient);
@@ -288,7 +283,6 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
 int GUIDemo::ConnectImageClient(const std::string& serialNumber,
                                 unsigned instance) {
   int error = Navico::Protocol::EOK + 1;
-  bool set_results = false;
   if (m_pImageClient) {
     m_pImageClient->AddStateObserver(this);
     m_pImageClient->AddSpokeObserver(this);
@@ -298,113 +292,6 @@ int GUIDemo::ConnectImageClient(const std::string& serialNumber,
     m_ForceSetup = true;
     m_ForceAdvancedSTCState = true;
     error = m_pImageClient->Connect(serialNumber.c_str(), instance);
-
-    // Image
-    UpdateUseMode();
-
-    //    m_pImageClient->SetToFactoryDefaults();
-    m_pImageClient->SetUseMode(
-        Navico::Protocol::NRP::eUseMode::eUseMode_Custom);
-
-    // setup
-    m_pImageClient->SetRange(400);
-
-    //    set_results = m_pImageClient->SetScannerRPM(240u);
-    set_results = m_pImageClient->SetFastScanMode(
-        uint8_t(0));  // 0: fast scan mode; otherwise, normal speed
-    m_pImageClient->SetLEDsLevel(0);
-    m_pImageClient->SetInterferenceReject(2);
-    m_pImageClient->SetLocalIR(1);
-    m_pImageClient->SetNoiseReject(2);
-    m_pImageClient->SetBeamSharpening(3);
-    m_pImageClient->SetTargetBoost(1);
-    m_pImageClient->SetTargetStretch(true);
-    m_pImageClient->SetSTCCurveType(
-        Navico::Protocol::NRP::eStcCurveType::eCalm);
-    m_pImageClient->SetGain(
-        Navico::Protocol::NRP::eUserGainManualAuto::eUserGainAuto, 0);
-    m_pImageClient->SetSeaClutter(
-        Navico::Protocol::NRP::eUserGainManualAuto::eUserGainAuto, 0);
-    m_pImageClient->SetSideLobe(
-        Navico::Protocol::NRP::eUserGainManualAuto::eUserGainAuto, 0);
-    m_pImageClient->SetRain(0);
-    m_pImageClient->SetFTC(0);
-
-    // pulse
-    m_pImageClient->SetTuneState(m_pSetup->tuneType != 0u);
-    m_pImageClient->SetTuneCoarse(0);
-    m_pImageClient->SetTuneFine(0);
-
-    // TimedTransmit
-    m_pImageClient->SetTimedTransmit(false);
-    m_pImageClient->SetTimedTransmitSetup(10, 10);
-
-    // Installation
-    m_pImageClient->SetParkPosition(0);
-    m_pImageClient->SetAntennaHeight(4);
-    m_pImageClient->SetAntennaOffsets(0.0, 0.0);
-    m_pImageClient->SetZeroRangeOffset(0.0);
-    m_pImageClient->SetZeroBearingOffset(0);
-    m_pImageClient->SetAntennaType(0);
-
-    // advanced control
-    /* STC Range */
-    m_pImageClient->SetRangeSTCTrim(0.0);
-    m_pImageClient->SetRangeSTCRate(40);
-
-    /* STC Sea */
-    m_pImageClient->SetSeaSTCTrim(0.0);
-    m_pImageClient->SetSeaSTCRate1(40);
-    m_pImageClient->SetSeaSTCRate2(40);
-
-    /* STC Rain */
-    m_pImageClient->SetRainSTCTrim(0.0);
-    m_pImageClient->SetRainSTCRate(20);
-
-    /* Miscellaneous */
-    m_pImageClient->SetUserMinSNR(0.0);
-    m_pImageClient->SetVideoAperture(4.0);
-    m_pImageClient->SetMainBangSuppression(false);
-
-    // Guard zone
-    for (unsigned i = 0; i < Navico::Protocol::NRP::cMaxGuardZones; ++i) {
-      m_AlarmTypes[i] = Navico::Protocol::NRP::eGZAlarmEntry;
-    }
-    m_pImageClient->SetGuardZoneSensitivity(0);
-
-    bool gz1enables = false;
-    uint32_t gz1_startRange_m = 40;
-    uint32_t gz1_endRange_m = 60;
-    uint16_t gz1_bearing_deg = 10;
-    uint16_t gz1_width_deg = 20;
-    m_pImageClient->SetGuardZoneEnable(eGuardZone1, gz1enables);
-    // Set the guard zone in Radar
-    m_pImageClient->SetGuardZoneSetup(eGuardZone1, gz1_startRange_m,
-                                      gz1_endRange_m, gz1_bearing_deg,
-                                      gz1_width_deg);
-    m_pImageClient->SetGuardZoneAlarmSetup(
-        eGuardZone1, Navico::Protocol::NRP::eGuardZoneAlarmType::eGZAlarmEntry);
-    // Update the guard zone overlay in GUI
-    m_OverlayManager.SetGuardZone(eGuardZone1, gz1enables, gz1_startRange_m,
-                                  gz1_endRange_m, gz1_bearing_deg,
-                                  gz1_width_deg);
-
-    bool gz2enables = false;
-    uint32_t gz2_startRange_m = 0;
-    uint32_t gz2_endRange_m = 20;
-    uint16_t gz2_bearing_deg = 10;
-    uint16_t gz2_width_deg = 20;
-    m_pImageClient->SetGuardZoneEnable(eGuardZone2, gz2enables);
-    // Set the guard zone in Radar
-    m_pImageClient->SetGuardZoneSetup(eGuardZone2, gz2_startRange_m,
-                                      gz2_endRange_m, gz2_bearing_deg,
-                                      gz2_width_deg);
-    m_pImageClient->SetGuardZoneAlarmSetup(
-        eGuardZone2, Navico::Protocol::NRP::eGuardZoneAlarmType::eGZAlarmEntry);
-    // Update the guard zone overlay in GUI
-    m_OverlayManager.SetGuardZone(eGuardZone2, gz2enables, gz2_startRange_m,
-                                  gz2_endRange_m, gz2_bearing_deg,
-                                  gz2_width_deg);
   }
   return error;
 }
@@ -533,7 +420,6 @@ void GUIDemo::UpdateSetup(const Navico::Protocol::NRP::tSetup* pSetup) {
     std::cout << "AutoTune: " << (m_pSetup->tuneType != 0u ? "true" : "false")
               << std::endl;
 
-    unsigned range_m = (m_pSetup->range_dm + 5) / 10;
     std::cout << "GuardSensitivity: " << m_pSetup->guardzones.sensitivity
               << std::endl;
 
@@ -598,14 +484,23 @@ void GUIDemo::UpdateSetupExtended(
     // Side lobe controls update
     int gainType = m_pSetupExtended->sidelobe.type;
     assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
-    std::cout << "Side Lobe: " << m_pSetupExtended->sidelobe.value << std::endl;
-    std::cout << "LocalIR: " << m_pSetupExtended->localIR << std::endl;
-    std::cout << "NoiseReject: " << m_pSetupExtended->noiseReject << std::endl;
-    std::cout << "BeamSharpening: " << m_pSetupExtended->beamSharpening
+    std::cout << "Side Lobe: "
+              << static_cast<unsigned>(m_pSetupExtended->sidelobe.value)
               << std::endl;
-    std::cout << "STCCurveType: " << m_pSetupExtended->stcCurveType
+    std::cout << "LocalIR: " << static_cast<unsigned>(m_pSetupExtended->localIR)
               << std::endl;
-    std::cout << "FastScan: " << m_pSetupExtended->fastScanMode << std::endl;
+    std::cout << "NoiseReject: "
+              << static_cast<unsigned>(m_pSetupExtended->noiseReject)
+              << std::endl;
+    std::cout << "BeamSharpening: "
+              << static_cast<unsigned>(m_pSetupExtended->beamSharpening)
+              << std::endl;
+    std::cout << "STCCurveType: "
+              << static_cast<unsigned>(m_pSetupExtended->stcCurveType)
+              << std::endl;
+    std::cout << "FastScan: "
+              << static_cast<unsigned>(m_pSetupExtended->fastScanMode)
+              << std::endl;
     std::cout << "RPM: " << m_pSetupExtended->rpmX10 / 10.0 << std::endl;
     std::cout << "Sea: " << m_pSetupExtended->sea.manualValue << std::endl;
     std::cout << "SeaAuto: " << m_pSetupExtended->sea.autoOffset << std::endl;
@@ -955,7 +850,8 @@ void GUIDemo::DisconnectTargetClient() {
 //-----------------------------------------------------------------------------
 void GUIDemo::TargetAcquire(double sample, double degrees) {
   if (m_PixelCellSize_mm > 0) {
-    unsigned range = (sample * m_PixelCellSize_mm) / 1000 + 0.5;
+    unsigned range =
+        static_cast<unsigned>((sample * m_PixelCellSize_mm) / 1000 + 0.5);
     m_pTargetClient->Acquire(0, range, int32_t(degrees + 0.5),
                              Navico::Protocol::NRP::eRelative);
   }
@@ -1029,19 +925,3 @@ void GUIDemo::UpdateTargetAlarmSetup_slot() {
 void GUIDemo::UpdateTargetTarget_slot(unsigned target) {
   m_pTabTargets->OnTrackedTargetChanged(target, &m_pTargets[target]);
 }
-
-////-----------------------------------------------------------------------------
-// void GUIDemo::ScannerPower_clicked(bool checked) {
-//  if (m_pImageClient) {
-//    m_pImageClient->SetPower(checked);
-//    ui.checkScannerPower->setChecked(false);
-//  }
-//}
-
-////-----------------------------------------------------------------------------
-// void GUIDemo::ScannerTransmit_clicked(bool checked) {
-//  if (m_pImageClient) {
-//    m_pImageClient->SetTransmit(checked);
-//    ui.checkScannerTransmit->setChecked(false);
-//  }
-//}

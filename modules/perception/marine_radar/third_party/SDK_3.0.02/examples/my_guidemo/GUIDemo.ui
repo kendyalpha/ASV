@@ -62,9 +62,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>1020</x>
+      <x>1040</x>
       <y>100</y>
-      <width>1000</width>
+      <width>990</width>
       <height>471</height>
      </rect>
     </property>
@@ -453,9 +453,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>1020</x>
+      <x>1040</x>
       <y>20</y>
-      <width>1001</width>
+      <width>990</width>
       <height>71</height>
      </rect>
     </property>
@@ -563,7 +563,7 @@
      <rect>
       <x>5</x>
       <y>5</y>
-      <width>1000</width>
+      <width>1020</width>
       <height>1020</height>
      </rect>
     </property>
@@ -627,9 +627,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>1020</x>
+      <x>1040</x>
       <y>580</y>
-      <width>1000</width>
+      <width>990</width>
       <height>441</height>
      </rect>
     </property>
