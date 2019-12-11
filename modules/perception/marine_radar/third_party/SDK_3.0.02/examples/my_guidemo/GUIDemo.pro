@@ -1,10 +1,9 @@
 QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TEMPLATE = app
-
-CONFIG *= warn_on
-CONFIG(debug, debug|release): CONFIG *= console
+CONFIG += c++11
+CONFIG += warn_on
+CONFIG += console
 
 #ifndef BRPC_LIB_INCL
 DEFINES += BRPC_LIB BRPC_LIB_INCL

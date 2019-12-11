@@ -5,7 +5,6 @@
 
 #include "QControlUtils.h"
 
-
 //-----------------------------------------------------------------------------
 tQDoubleIntConnector::tQDoubleIntConnector(QDoubleSpinBox* pSpin,
                                            QSlider* pSlider,
@@ -107,11 +106,6 @@ void LinkControls(bool connect, QObject& manager, QWidget& parent) {
 //-----------------------------------------------------------------------------
 void ConnectControls(bool connect, QObject& manager, QWidget& parent) {
   LinkControls(connect, manager, parent);
-}
-
-//-----------------------------------------------------------------------------
-void ConnectControls(QObject& manager, QWidget& parent) {
-  LinkControls(true, manager, parent);
 }
 
 //-----------------------------------------------------------------------------

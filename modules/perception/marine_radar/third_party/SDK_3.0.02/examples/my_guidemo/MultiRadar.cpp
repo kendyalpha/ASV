@@ -12,29 +12,38 @@ tMultiRadar::tMultiRadar(Ui::GUIDemoClass& myUI, QObject* pParent)
     : QObject(pParent), ui(myUI) {
   ConnectControls(true, *this, *ui.groupMultiRadar);
 
-  Navico::Protocol::tMultiRadarClient* pClient =
+  Navico::Protocol::tMultiRadarClient* pMultiRadarClient =
       Navico::Protocol::tMultiRadarClient::GetInstance();
-  pClient->AddRadarListObserver(this);
-  pClient->AddUnlockStateObserver(this);
-  pClient->SetUnlockKeySupplier(this);
-  pClient->Connect();
-  pClient->QueryRadars();
+  pMultiRadarClient->AddRadarListObserver(this);
+  pMultiRadarClient->AddUnlockStateObserver(this);
+  pMultiRadarClient->SetUnlockKeySupplier(this);
+  pMultiRadarClient->Connect();
+  pMultiRadarClient->QueryRadars();
 }
 
 //-----------------------------------------------------------------------------
 tMultiRadar::~tMultiRadar() {
   ConnectControls(false, *this, *ui.groupMultiRadar);
 
-  Navico::Protocol::tMultiRadarClient* pClient =
+  Navico::Protocol::tMultiRadarClient* pMultiRadarClient =
       Navico::Protocol::tMultiRadarClient::GetInstance();
-  pClient->Disconnect();
-  pClient->SetUnlockKeySupplier(nullptr);
-  pClient->RemoveUnlockStateObserver(this);
-  pClient->RemoveRadarListObserver(this);
+  pMultiRadarClient->Disconnect();
+  pMultiRadarClient->SetUnlockKeySupplier(nullptr);
+  pMultiRadarClient->RemoveUnlockStateObserver(this);
+  pMultiRadarClient->RemoveRadarListObserver(this);
 }
 
 //-----------------------------------------------------------------------------
-void tMultiRadar::InitiateUnlock() { MultiRadarUnlock_clicked(true); }
+void tMultiRadar::InitiateUnlock() {
+  // prepare the unlock key
+  uint8_t key_data[MAX_UNLOCKKEY_SIZE];
+  std::string unlockKey =
+      "FCA53C6FE25450CA93E4AF63B78769E659E56E2705AFAD443F1D6EDBEFB249FF2C7AFD"
+      "7589122F80DE38FA32638C36F195816F5EE5C1257EFFED4A02537252FE";
+  unsigned len = hexstring_to_uint8(unlockKey, key_data);
+  Navico::Protocol::tMultiRadarClient::GetInstance()->UnlockRadar(
+      current_radar_serial_number.c_str(), key_data, len, 0);
+}
 
 //-----------------------------------------------------------------------------
 void tMultiRadar::SetConnectState(bool connected) {
@@ -115,17 +124,4 @@ void tMultiRadar::MultiRadarConnect_clicked(bool checked) {
 }
 
 //-----------------------------------------------------------------------------
-void tMultiRadar::MultiRadarUnlock_clicked(bool) {
-  //  Navico::Protocol::tMultiRadarClient::GetInstance()->UnlockRadar(
-  //      GetRadarSerialNumber().toLatin1().data(), 0);
-
-  // prepare the unlock key
-  uint8_t key_data[MAX_UNLOCKKEY_SIZE];
-  std::string unlockKey =
-      "FCA53C6FE25450CA93E4AF63B78769E659E56E2705AFAD443F1D6EDBEFB249FF2C7AFD"
-      "7589122F80DE38FA32638C36F195816F5EE5C1257EFFED4A02537252FE";
-  unsigned len = hexstring_to_uint8(unlockKey, key_data);
-
-  Navico::Protocol::tMultiRadarClient::GetInstance()->UnlockRadar(
-      current_radar_serial_number.c_str(), key_data, len, 0);
-}
+void tMultiRadar::MultiRadarUnlock_clicked(bool) { InitiateUnlock(); }

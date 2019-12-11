@@ -10,7 +10,6 @@
 #define GUIDEMO_MULTIDEVICE_H
 
 #include <MultiRadarClient.h>
-#include <QDebug>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QMutex>
@@ -69,10 +68,7 @@ class tMultiRadar : public QObject,
   void MultiRadarUnlock_clicked(bool checked);
 
  private:
-  Ui::GUIDemoClass& ui;
-
   const unsigned cMaxRadars = 8;
-
   std::map<unsigned, std::vector<std::string>> multi_radar_devices;
   std::string current_radar_serial_number;
   unsigned current_radar_index = 0;
@@ -87,9 +83,6 @@ class tMultiRadar : public QObject,
     return static_cast<unsigned>(len / 2);
   }
 
-  //-----------------------------------------------------------------------------
-  //  Helpers
-  //-----------------------------------------------------------------------------
   QString ToHexString(const void* pData, int dataSize) {
     QString str;
     for (int i = 0; i < dataSize; ++i) {
@@ -98,6 +91,8 @@ class tMultiRadar : public QObject,
     }
     return str;
   }
+
+    Ui::GUIDemoClass& ui;
 };
 
 //-----------------------------------------------------------------------------

@@ -9,9 +9,9 @@
 */
 
 #include "../include/gps.h"
+#include "common/communication/include/tcpserver.h"
 #include "common/fileIO/include/database.h"
 #include "common/timer/include/timecounter.h"
-
 using std::setprecision;
 using namespace ASV;
 
@@ -33,65 +33,70 @@ int main() {
       0,    // UTM_y
       "0n"  // UTM_zone
   };
+
+  union socketmsg {
+    double double_msg[2];
+    char char_msg[16];
+  };
+  const int recv_size = 10;
+  const int send_size = 16;
+  char recv_buffer[recv_size];
+  socketmsg _sendmsg = {0.0, 0.0};
+
   try {
     common::database<3, 3> _sqlitetest("dbtest.db");
     _sqlitetest.initializetables();
     common::timecounter _timer;
     messages::GPS _gpsimu(115200);  // zone 51 N
-    int count = 0;
+    tcpserver _tcpserver("9340");
+
     while (1) {
       std::string gps_buffer = _gpsimu.parseGPS().getserialbuffer();
       gps_data = _gpsimu.getgpsRTdata();
       long int et = _timer.timeelapsed();
 
-      ++count;
-      if (count == 4) {
-        count = 0;
-        _sqlitetest.update_gps_table(gps_data);
+      _sqlitetest.update_gps_table(gps_data);
 
-        std::cout << "UTC:      " << gps_data.UTC << std::endl;
-        std::cout << "latitude:   " << std::fixed << setprecision(7)
-                  << gps_data.latitude << std::endl;
-        std::cout << "longitude: " << std::fixed << setprecision(7)
-                  << gps_data.longitude << std::endl;
-        std::cout << "heading:   " << std::fixed << setprecision(2)
-                  << gps_data.heading << std::endl;
-        std::cout << "pitch:     " << std::fixed << setprecision(2)
-                  << gps_data.pitch << std::endl;
-        std::cout << "roll:      " << std::fixed << setprecision(2)
-                  << gps_data.roll << std::endl;
-        std::cout << "UTM_x:     " << std::fixed << setprecision(7)
-                  << gps_data.UTM_x << std::endl;
-        std::cout << "UTM_y:     " << std::fixed << setprecision(7)
-                  << gps_data.UTM_y << std::endl;
-        std::cout << "altitude:  " << std::fixed << setprecision(2)
-                  << gps_data.altitude << std::endl;
-        std::cout << "Ve:   " << std::fixed << setprecision(3) << gps_data.Ve
-                  << std::endl;
-        std::cout << "Vn:   " << std::fixed << setprecision(3) << gps_data.Vn
-                  << std::endl;
-        std::cout << "rot:   " << std::fixed << setprecision(2) << gps_data.roti
-                  << std::endl;
-        switch (gps_data.status) {
-          case 0:
-            std::cout << "GPS no fix" << std::endl;
-            break;
-          case 1:
-            std::cout << "GPS fix" << std::endl;
-            break;
-          case 2:
-            std::cout << "Diff GPX fix" << std::endl;
-            break;
-          default:
-            std::cout << "Satus:     状态未知" << std::endl;
-            break;
-        }
-        std::cout << std::endl;
+      _sendmsg.double_msg[0] = gps_data.heading;
+      _sendmsg.double_msg[1] =
+          std::sqrt(gps_data.Ve * gps_data.Ve + gps_data.Vn * gps_data.Vn);
+
+      _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
+                              send_size);
+
+      std::cout << "UTC:      " << gps_data.UTC << std::endl;
+      std::cout << "heading:   " << std::fixed << setprecision(2)
+                << gps_data.heading << std::endl;
+      std::cout << "pitch:     " << std::fixed << setprecision(2)
+                << gps_data.pitch << std::endl;
+      std::cout << "roll:      " << std::fixed << setprecision(2)
+                << gps_data.roll << std::endl;
+      std::cout << "altitude:  " << std::fixed << setprecision(2)
+                << gps_data.altitude << std::endl;
+      std::cout << "Ve:   " << std::fixed << setprecision(3) << gps_data.Ve
+                << std::endl;
+      std::cout << "Vn:   " << std::fixed << setprecision(3) << gps_data.Vn
+                << std::endl;
+      std::cout << "rot:   " << std::fixed << setprecision(2) << gps_data.roti
+                << std::endl;
+      switch (gps_data.status) {
+        case 0:
+          std::cout << "GPS no fix" << std::endl;
+          break;
+        case 1:
+          std::cout << "GPS fix" << std::endl;
+          break;
+        case 2:
+          std::cout << "Diff GPX fix" << std::endl;
+          break;
+        default:
+          std::cout << "Satus: Unknown" << std::endl;
+          break;
       }
+      std::cout << std::endl;
     }
 
   } catch (std::exception& e) {
     std::cerr << "Unhandled Exception: " << e.what() << std::endl;
   }
 }
-
