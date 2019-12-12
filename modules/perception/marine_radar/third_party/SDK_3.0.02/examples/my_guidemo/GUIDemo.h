@@ -9,9 +9,6 @@
 #ifndef GUIDEMO_H
 #define GUIDEMO_H
 
-#include <QMainWindow>
-#include <iostream>
-
 #include <ClientErrors.h>
 #include <Feature.h>
 #include <FeatureManager.h>
@@ -21,17 +18,21 @@
 #include <NavRadarProtocol.h>
 #include <PPIController.h>
 #include <TargetTrackingClient.h>
+
+#include <QMainWindow>
 #include <QMessageBox>
 #include <algorithm>
 #include <cassert>
+#include <chrono>
+#include <iostream>
 #include <thread>
 #include "MultiRadar.h"
 #include "QControlUtils.h"
 #include "TabPPI.h"
 #include "TabTargets.h"
 
+#include "common/communication/include/tcpclient.h"
 #include "ui_GUIDemo.h"
-
 //-----------------------------------------------------------------------------
 // GUIDemo Class
 //-----------------------------------------------------------------------------
@@ -148,17 +149,33 @@ class GUIDemo
  private:
   int ConnectTargetClient(const std::string& serialNumber, unsigned instance);
   void DisconnectTargetClient();
-  void updateboatstate() {
+  [[noreturn]] void updateboatstate() {
     bool set_results = m_pTargetClient->SetBoatSpeed(
         Navico::Protocol::NRP::eSpeedType::eSpeedOverGround, 0,
         Navico::Protocol::NRP::eDirectionType::eHeadingTrue, 0);
-    for(int i=0;i!=10000;++i)
-        std::cout<<set_results<<std::endl;
+
+    union socketmsg {
+      double double_msg[2];
+      char char_msg[16];
+    };
+    const int recv_size = 16;
+    const int send_size = 10;
+    socketmsg _recvmsg;
+    char send_buffer[send_size] = "socket";
+
+    tcpclient _tcpclient("127.0.0.1", "9340");
+
+    while (1) {
+      _tcpclient.senddata(_recvmsg.char_msg, send_buffer, recv_size, send_size);
+      std::cout << "gps: " << _recvmsg.double_msg[0] << " "
+                << _recvmsg.double_msg[1] << std::endl;
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
   }
 
- signals:
-  // signals from callbacks
-  void UpdateTargetAlarmSetup_signal();
+  signals :
+      // signals from callbacks
+      void UpdateTargetAlarmSetup_signal();
   void UpdateTargetTarget_signal(unsigned targetID);
 
  private slots:

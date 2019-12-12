@@ -845,7 +845,7 @@ int GUIDemo::ConnectTargetClient(const std::string& serialNumber,
     error = m_pTargetClient->Connect(serialNumber.c_str(), instance);
 
     std::thread _socketthread(&GUIDemo::updateboatstate, this);
-    _socketthread.join();
+    _socketthread.detach();
   }
   return error;
 }

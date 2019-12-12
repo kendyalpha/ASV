@@ -30,8 +30,8 @@
 namespace ASV::messages {
 class GPS final : public nmea {
  public:
-  explicit GPS(unsigned long _baud,                       // baudrate
-               const std::string& _port = "/dev/ttyUSB0"  // serial port
+  explicit GPS(unsigned long _baud,                     // baudrate
+               const std::string& _port = "/dev/ttyS0"  // serial port
                )
       : GPSdata({
             0,      // UTC
@@ -57,27 +57,7 @@ class GPS final : public nmea {
   // read serial data and transform to UTM
   GPS& parseGPS(const std::string& _planning_utm_zone = "OFF") {
     serial_buffer = GPS_serial.readline(150);
-    hemisphereV102(serial_buffer, GPSdata);
-    if (_planning_utm_zone != "OFF")
-      check_UTM_zone(_planning_utm_zone, GPSdata);
-    check_gps_status(GPSdata);
-
-    return *this;
-  }
-
-  // read serial data and transform to UTM
-  GPS& parseGPS_test(const std::string& _planning_utm_zone = "OFF") {
-    serial_buffer = GPS_serial.readline(150);
-    if (hemisphereV102_test(serial_buffer, GPSdata) == 0) {
-      for (int i = 0; i != 3; ++i) {
-        serial_buffer = GPS_serial.readline(150);
-        hemisphereV102_test(serial_buffer, GPSdata);
-      }
-      if (_planning_utm_zone != "OFF")
-        check_UTM_zone(_planning_utm_zone, GPSdata);
-      check_gps_status(GPSdata);
-    }
-
+    hemisphereV102(serial_buffer, _planning_utm_zone, GPSdata);
     return *this;
   }
 
@@ -96,8 +76,9 @@ class GPS final : public nmea {
   GPVTG gpvtg;
   GPGGA gpgga;
 
-  int hemisphereV102_test(const std::string& _serial_buffer,
-                          gpsRTdata& _gpsdata) {
+  void hemisphereV102(const std::string& _serial_buffer,
+                      const std::string& _planning_utm_zone,
+                      gpsRTdata& _gpsdata) {
     if (_serial_buffer.find("$GPGGA") != std::string::npos) {
       nmea::nmea_parse(_serial_buffer, gpgga);
       _gpsdata.UTC = gpgga.UTC;
@@ -110,40 +91,10 @@ class GPS final : public nmea {
       _gpsdata.UTM_x = utm_x;
       _gpsdata.UTM_y = utm_y;
       _gpsdata.UTM_zone = utm_zone;
-      return 3;
-    } else if (_serial_buffer.find("$HEROT") != std::string::npos) {
-      nmea::nmea_parse(_serial_buffer, herot);
-      _gpsdata.roti = herot.rateofturning;
-      return 1;
-    } else if (_serial_buffer.find("$GPVTG") != std::string::npos) {
-      nmea::nmea_parse(_serial_buffer, gpvtg);
-      decomposespeed(gpvtg.K_speed, gpvtg.TMG, _gpsdata.Ve, _gpsdata.Vn);
-      return 4;
-    } else if (_serial_buffer.find("$PSAT") != std::string::npos) {
-      nmea::nmea_parse(_serial_buffer, psat);
-      _gpsdata.heading = psat.heading;
-      _gpsdata.pitch = psat.pitch;
-      _gpsdata.roll = psat.roll;
-      return 2;
-    } else {
-      CLOG(ERROR, "GPS") << "No NMEA Data!";
-      return 0;
-    }
-  }  // hemisphereV102_test
 
-  void hemisphereV102(const std::string& _serial_buffer, gpsRTdata& _gpsdata) {
-    if (_serial_buffer.find("$GPGGA") != std::string::npos) {
-      nmea::nmea_parse(_serial_buffer, gpgga);
-      _gpsdata.UTC = gpgga.UTC;
-      _gpsdata.latitude = convertlatitudeunit(gpgga.latitude, gpgga.NS);
-      _gpsdata.longitude = convertlongitudeunit(gpgga.longitude, gpgga.EW);
-      _gpsdata.altitude = gpgga.altitude;
-      _gpsdata.status = gpgga.gps_Q;
-      auto [utm_x, utm_y, utm_zone] =
-          Forward(_gpsdata.latitude, _gpsdata.longitude);
-      _gpsdata.UTM_x = utm_x;
-      _gpsdata.UTM_y = utm_y;
-      _gpsdata.UTM_zone = utm_zone;
+      if (_planning_utm_zone != "OFF")
+        check_UTM_zone(_planning_utm_zone, _gpsdata);
+      check_gps_status(_gpsdata);
 
     } else if (_serial_buffer.find("$HEROT") != std::string::npos) {
       nmea::nmea_parse(_serial_buffer, herot);

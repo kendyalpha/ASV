@@ -33,14 +33,12 @@ int main() {
   };
   try {
     common::timecounter _timer;
-    messages::GPS _gpsimu(115200, "/dev/ttyS0");  // zone 51 N
+    messages::GPS _gpsimu(115200, "/dev/ttyUSB0");  // zone 51 N
     long int totaltime = 0;
     while (1) {
-      std::string gps_buffer = _gpsimu.parseGPS_test().getserialbuffer();
-      gps_data = _gpsimu.getgpsRTdata();
+      gps_data = _gpsimu.parseGPS().getgpsRTdata();
       long int et = _timer.timeelapsed();
       totaltime += et;
-      std::cout << "[" << totaltime << "]" << gps_buffer;
       std::cout << "UTC:      " << gps_data.UTC << std::endl;
       std::cout << "latitude:   " << std::fixed << setprecision(7)
                 << gps_data.latitude << std::endl;
@@ -56,6 +54,7 @@ int main() {
                 << gps_data.UTM_x << std::endl;
       std::cout << "UTM_y:     " << std::fixed << setprecision(7)
                 << gps_data.UTM_y << std::endl;
+      std::cout << "UTM_zone:  " << gps_data.UTM_zone << std::endl;
       std::cout << "altitude:  " << std::fixed << setprecision(2)
                 << gps_data.altitude << std::endl;
       std::cout << "Ve:   " << std::fixed << setprecision(3) << gps_data.Ve

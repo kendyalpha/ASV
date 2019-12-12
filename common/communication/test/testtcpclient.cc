@@ -8,6 +8,7 @@
 *******************************************************************************
 */
 
+#include <chrono>
 #include "../include/tcpclient.h"
 
 union lidarmsg {
@@ -26,6 +27,7 @@ void test() {
     for (int i = 0; i != 5; ++i)
       printf("The buffer recived: %lf\n", _recvmsg.double_msg[i]);
     printf("The socket status: %d\n", _tcpclient.getsocketresults());
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 }
 

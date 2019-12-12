@@ -16,6 +16,8 @@ using std::setprecision;
 using namespace ASV;
 
 int main() {
+  el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
+  LOG(INFO) << "The program has started!";
   // real time GPS/IMU data
   messages::gpsRTdata gps_data{
       0,    // UTC
@@ -44,18 +46,17 @@ int main() {
   socketmsg _sendmsg = {0.0, 0.0};
 
   try {
-    common::database<3, 3> _sqlitetest("dbtest.db");
-    _sqlitetest.initializetables();
+    // common::database<3, 3> _sqlitetest("dbtest.db");
+    // _sqlitetest.initializetables();
     common::timecounter _timer;
-    messages::GPS _gpsimu(115200);  // zone 51 N
+    messages::GPS _gpsimu(115200, "/dev/ttyUSB0");  // zone 51 N
     tcpserver _tcpserver("9340");
 
     while (1) {
-      std::string gps_buffer = _gpsimu.parseGPS().getserialbuffer();
-      gps_data = _gpsimu.getgpsRTdata();
+      gps_data = _gpsimu.parseGPS().getgpsRTdata();
       long int et = _timer.timeelapsed();
 
-      _sqlitetest.update_gps_table(gps_data);
+      // _sqlitetest.update_gps_table(gps_data);
 
       _sendmsg.double_msg[0] = gps_data.heading;
       _sendmsg.double_msg[1] =

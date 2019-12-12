@@ -41,6 +41,7 @@ SOURCES += \
 
 INCLUDES = \
     ../../include \
+    ../../../../../../../
 
 #ifndef BRPC_LIB_INCL
 INCLUDES += \
