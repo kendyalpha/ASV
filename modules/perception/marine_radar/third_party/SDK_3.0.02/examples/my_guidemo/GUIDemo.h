@@ -150,10 +150,6 @@ class GUIDemo
   int ConnectTargetClient(const std::string& serialNumber, unsigned instance);
   void DisconnectTargetClient();
   [[noreturn]] void updateboatstate() {
-    bool set_results = m_pTargetClient->SetBoatSpeed(
-        Navico::Protocol::NRP::eSpeedType::eSpeedOverGround, 0,
-        Navico::Protocol::NRP::eDirectionType::eHeadingTrue, 0);
-
     union socketmsg {
       double double_msg[2];
       char char_msg[16];
@@ -169,13 +165,26 @@ class GUIDemo
       _tcpclient.senddata(_recvmsg.char_msg, send_buffer, recv_size, send_size);
       std::cout << "gps: " << _recvmsg.double_msg[0] << " "
                 << _recvmsg.double_msg[1] << std::endl;
+
+      bool set_results = false;
+      set_results = m_pTargetClient->SetBoatSpeed(
+          Navico::Protocol::NRP::eSpeedType::eSpeedOverGround,
+          static_cast<uint32_t>(_recvmsg.double_msg[1]),
+          Navico::Protocol::NRP::eDirectionType::eHeadingTrue,
+          static_cast<uint32_t>(_recvmsg.double_msg[0]));
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+      std::cout<<"set_results: "<<(set_results==true?"true":"false")<<std::endl;
+//      if (set_results)
+//        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+//      else
+//        continue;
     }
   }
 
   signals :
       // signals from callbacks
-      void UpdateTargetAlarmSetup_signal();
+  void UpdateTargetAlarmSetup_signal();
   void UpdateTargetTarget_signal(unsigned targetID);
 
  private slots:

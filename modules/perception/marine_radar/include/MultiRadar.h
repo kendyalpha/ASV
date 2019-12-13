@@ -21,19 +21,44 @@ class MultiRadar : public Navico::Protocol::iRadarListObserver,
                    public Navico::Protocol::iUnlockStateObserver,
                    public Navico::Protocol::iUnlockKeySupplier {
  public:
-  MultiRadar() {}
-  virtual ~MultiRadar() = default;
+  MultiRadar() {
+    Navico::Protocol::tMultiRadarClient* pMultiRadarClient =
+        Navico::Protocol::tMultiRadarClient::GetInstance();
+    pMultiRadarClient->AddRadarListObserver(this);
+    pMultiRadarClient->AddUnlockStateObserver(this);
+    pMultiRadarClient->SetUnlockKeySupplier(this);
+    pMultiRadarClient->Connect();
+    pMultiRadarClient->QueryRadars();
+  }
+  ~MultiRadar() {
+    Navico::Protocol::tMultiRadarClient* pMultiRadarClient =
+        Navico::Protocol::tMultiRadarClient::GetInstance();
+    pMultiRadarClient->Disconnect();
+    pMultiRadarClient->SetUnlockKeySupplier(nullptr);
+    pMultiRadarClient->RemoveUnlockStateObserver(this);
+    pMultiRadarClient->RemoveRadarListObserver(this);
+  }
+
+  // unlock the SDK
+  void InitiateUnlock() {
+    // prepare the unlock key
+    uint8_t key_data[MAX_UNLOCKKEY_SIZE];
+    std::string unlockKey =
+        "FCA53C6FE25450CA93E4AF63B78769E659E56E2705AFAD443F1D6EDBEFB249FF2C7AFD"
+        "7589122F80DE38FA32638C36F195816F5EE5C1257EFFED4A02537252FE";
+    unsigned len = hexstring_to_uint8(unlockKey, key_data);
+    Navico::Protocol::tMultiRadarClient::GetInstance()->UnlockRadar(
+        current_radar_serial_number.c_str(), key_data, len, 0);
+  }
 
   // Return the text of the current selection
-  std::string GetRadarSelection() {}
-
+  std::string GetRadarSelection() {
+    return multi_radar_devices[current_radar_index][0];
+  }
   // Return the serial-number of the selected radar
-  std::string GetRadarSerialNumber() {}
+  std::string GetRadarSerialNumber() { return current_radar_serial_number; }
   // Return the instance/range selected
-  unsigned GetRadarInstance();
-
-  void InitiateUnlock();
-  void SetConnectState(bool connected);
+  unsigned GetRadarInstance() { return current_radar_index; }
 
   // iRadarListObserver, iUnlockKeySupplier, iUnlockStateObserver - multi-device
   // callbacks
@@ -68,35 +93,10 @@ class MultiRadar : public Navico::Protocol::iRadarListObserver,
 
   }  // UpdateRadarList
 
-  virtual int GetUnlockKey(const char* pSerialNumber, const uint8_t* pLockID,
-                           unsigned lockIDSize, uint8_t* pUnlockKey,
-                           unsigned maxUnlockKeySize) {
-    // Create a local serial number and copy content.
-    size_t length = strlen(pSerialNumber) + 1;
-    char* pLocalSerialNumber = new char[length];  // TODO: why new???
-    memcpy(pLocalSerialNumber, pSerialNumber, length);
-
-    //
-    std::string str_LockID = uint8_to_hex_string(pLockID, lockIDSize);
-
-    // prepare the unlock key
-    uint8_t key_data[MAX_UNLOCKKEY_SIZE];
-    std::string unlockKey =
-        "FCA53C6FE25450CA93E4AF63B78769E659E56E2705AFAD443F1D6EDBEFB249FF2C7AFD"
-        "7589122F80DE38FA32638C36F195816F5EE5C1257EFFED4A02537252FE";
-    unsigned len = hexstring_to_uint8(unlockKey, key_data);
-
-    // unlock the SDK
-    if (len > 0) {
-      Navico::Protocol::tMultiRadarClient::GetInstance()->SetUnlockKey(
-          pLocalSerialNumber, key_data, len);
-    } else {
-      std::cout << "Error: Invalid unlock key entered";
-    }
-
-    // Free the local serial number
-    delete[] pLocalSerialNumber;
-
+  virtual int GetUnlockKey(const char* /*pSerialNumber*/,
+                           const uint8_t* /*pLockID*/, unsigned /*lockIDSize*/,
+                           uint8_t* /*pUnlockKey*/,
+                           unsigned /*maxUnlockKeySize*/) {
     return -1;
   }  // GetUnlockKey
 
@@ -115,22 +115,9 @@ class MultiRadar : public Navico::Protocol::iRadarListObserver,
 
  private:
   const unsigned cMaxRadars = 8;
-
   std::map<unsigned, std::vector<std::string>> multi_radar_devices;
   std::string current_radar_serial_number;
   unsigned current_radar_index = 0;
-
-  std::string uint8_to_hex_string(const uint8_t* v, const int s) {
-    std::stringstream ss;
-
-    ss << std::hex << std::setfill('0');
-
-    for (int i = 0; i < s; i++) {
-      ss << std::hex << std::setw(2) << static_cast<int>(v[i]);
-    }
-
-    return ss.str();
-  }  // uint8_to_hex_string
 
   unsigned hexstring_to_uint8(const std::string& hexText, uint8_t* pData) {
     std::size_t len = hexText.length();
@@ -141,7 +128,6 @@ class MultiRadar : public Navico::Protocol::iRadarListObserver,
     }
     return static_cast<unsigned>(len / 2);
   }
-
 }  // namespace ASV::perception
 
 #endif /* _MULTIRADAR_H_ */

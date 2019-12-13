@@ -83,16 +83,7 @@ class tMultiRadar : public QObject,
     return static_cast<unsigned>(len / 2);
   }
 
-  QString ToHexString(const void* pData, int dataSize) {
-    QString str;
-    for (int i = 0; i < dataSize; ++i) {
-      str += QString("%0").arg(static_cast<const uint8_t*>(pData)[i], 2, 16,
-                               QChar('0'));
-    }
-    return str;
-  }
-
-    Ui::GUIDemoClass& ui;
+  Ui::GUIDemoClass& ui;
 };
 
 //-----------------------------------------------------------------------------

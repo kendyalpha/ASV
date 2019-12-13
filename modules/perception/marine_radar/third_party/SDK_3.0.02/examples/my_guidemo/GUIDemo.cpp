@@ -147,15 +147,15 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
           Navico::Protocol::NRP::eUseMode::eUseMode_Custom);
 
       // setup
-      m_pImageClient->SetRange(400u);
+      m_pImageClient->SetRange(300u);
       set_results = m_pImageClient->SetFastScanMode(
-          uint8_t(0));  // 0: fast scan mode; otherwise, normal speed
+          uint8_t(2));  // 0: fast scan mode; otherwise, normal speed
       m_pImageClient->SetLEDsLevel(0);
       m_pImageClient->SetInterferenceReject(2);
       m_pImageClient->SetLocalIR(1);
-      m_pImageClient->SetNoiseReject(2);
+      m_pImageClient->SetNoiseReject(3);
       m_pImageClient->SetBeamSharpening(3);
-      m_pImageClient->SetTargetBoost(1);
+      m_pImageClient->SetTargetBoost(2);
       m_pImageClient->SetTargetStretch(true);
       m_pImageClient->SetSTCCurveType(
           Navico::Protocol::NRP::eStcCurveType::eCalm);
@@ -168,6 +168,7 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
       m_pImageClient->SetRain(0);
       m_pImageClient->SetFTC(0);
 
+
       // pulse
       m_pImageClient->SetTuneState(m_pSetup->tuneType != 0u);
       m_pImageClient->SetTuneCoarse(0);
@@ -179,7 +180,7 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
 
       // Installation
       m_pImageClient->SetParkPosition(0);
-      m_pImageClient->SetAntennaHeight(4);
+      m_pImageClient->SetAntennaHeight(3000);
       m_pImageClient->SetAntennaOffsets(0.0, 0.0);
       m_pImageClient->SetZeroRangeOffset(0.0);
       m_pImageClient->SetZeroBearingOffset(0);
@@ -230,10 +231,10 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
                                     gz1_width_deg);
 
       bool gz2enables = true;
-      uint32_t gz2_startRange_m = 20;
-      uint32_t gz2_endRange_m = 40;
-      uint16_t gz2_bearing_deg = 180;
-      uint16_t gz2_width_deg = 40;
+      uint32_t gz2_startRange_m = 20u;
+      uint32_t gz2_endRange_m = 100u;
+      uint16_t gz2_bearing_deg = 180u;
+      uint16_t gz2_width_deg = 40u;
       m_pImageClient->SetGuardZoneEnable(eGuardZone2, gz2enables);
       // Set the guard zone in Radar
       m_pImageClient->SetGuardZoneSetup(eGuardZone2, gz2_startRange_m,
