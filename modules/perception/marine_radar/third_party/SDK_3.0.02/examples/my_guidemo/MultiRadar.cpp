@@ -41,6 +41,7 @@ void tMultiRadar::InitiateUnlock() {
       "FCA53C6FE25450CA93E4AF63B78769E659E56E2705AFAD443F1D6EDBEFB249FF2C7AFD"
       "7589122F80DE38FA32638C36F195816F5EE5C1257EFFED4A02537252FE";
   unsigned len = hexstring_to_uint8(unlockKey, key_data);
+  std::cout<<current_radar_serial_number<<std::endl;
   Navico::Protocol::tMultiRadarClient::GetInstance()->UnlockRadar(
       current_radar_serial_number.c_str(), key_data, len, 0);
 }

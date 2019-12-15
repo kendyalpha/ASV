@@ -168,7 +168,6 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
       m_pImageClient->SetRain(0);
       m_pImageClient->SetFTC(0);
 
-
       // pulse
       m_pImageClient->SetTuneState(m_pSetup->tuneType != 0u);
       m_pImageClient->SetTuneCoarse(0);
@@ -308,307 +307,275 @@ void GUIDemo::DisconnectImageClient() {
 
 //-----------------------------------------------------------------------------
 void GUIDemo::UpdateMode(const Navico::Protocol::NRP::tMode* pMode) {
-  if (memcmp(pMode, m_pMode, sizeof(Navico::Protocol::NRP::tMode)) != 0) {
-    *m_pMode = *pMode;
-
-    std::cout << "\n # Mode updating #.....................\n";
-    switch (m_pMode->state) {
-      case Navico::Protocol::NRP::eOff:
-        std::cout << "state: off\n";
-        std::cout << "Scanner Power: false\n";
-        std::cout << "Scanner Transmit: false\n";
-        break;
-      case Navico::Protocol::NRP::eStandby:
-        std::cout << "state: standby\n";
-        std::cout << "Scanner Power: true\n";
-        std::cout << "Scanner Transmit: false\n";
-        break;
-      case Navico::Protocol::NRP::eTransmit:
-        std::cout << "state: transmit\n";
-        std::cout << "Scanner Power: true\n";
-        std::cout << "Scanner Transmit: true\n";
-        break;
-      case Navico::Protocol::NRP::eWarming:
-        std::cout << "state: Warming up\n";
-        std::cout << "Scanner Power: true\n";
-        std::cout << "Scanner Transmit: false\n";
-        break;
-      case Navico::Protocol::NRP::eNoScanner:
-        std::cout << "state: no scanner\n";
-        std::cout << "Scanner Power: false\n";
-        std::cout << "Scanner Transmit: false\n";
-        break;
-      case Navico::Protocol::NRP::eDetectingScanner:
-        std::cout << "state: Detecting Scanner\n";
-        std::cout << "Scanner Power: true\n";
-        std::cout << "Scanner Transmit: false\n";
-        break;
-      default:
-        std::cout << "state: Undefined\n";
-        break;
-    }
-
-    if (m_pMode->warmupTime_sec == 0) {
-      std::cout << "Scanner Timeout = " << m_pMode->ttCount_sec << std::endl;
-    } else {
-      std::cout << "Scanner Timeout = " << m_pMode->warmupTime_sec << std::endl;
-    }
-
-    std::cout << "checkTimedTxMode: " << m_pMode->ttState << std::endl;
+  std::cout << "\n # Mode updating #.....................\n";
+  switch (pMode->state) {
+    case Navico::Protocol::NRP::eOff:
+      std::cout << "state: off\n";
+      std::cout << "Scanner Power: false\n";
+      std::cout << "Scanner Transmit: false\n";
+      break;
+    case Navico::Protocol::NRP::eStandby:
+      std::cout << "state: standby\n";
+      std::cout << "Scanner Power: true\n";
+      std::cout << "Scanner Transmit: false\n";
+      break;
+    case Navico::Protocol::NRP::eTransmit:
+      std::cout << "state: transmit\n";
+      std::cout << "Scanner Power: true\n";
+      std::cout << "Scanner Transmit: true\n";
+      break;
+    case Navico::Protocol::NRP::eWarming:
+      std::cout << "state: Warming up\n";
+      std::cout << "Scanner Power: true\n";
+      std::cout << "Scanner Transmit: false\n";
+      break;
+    case Navico::Protocol::NRP::eNoScanner:
+      std::cout << "state: no scanner\n";
+      std::cout << "Scanner Power: false\n";
+      std::cout << "Scanner Transmit: false\n";
+      break;
+    case Navico::Protocol::NRP::eDetectingScanner:
+      std::cout << "state: Detecting Scanner\n";
+      std::cout << "Scanner Power: true\n";
+      std::cout << "Scanner Transmit: false\n";
+      break;
+    default:
+      std::cout << "state: Undefined\n";
+      break;
   }
+
+  if (pMode->warmupTime_sec == 0) {
+    std::cout << "Scanner Timeout = " << pMode->ttCount_sec << std::endl;
+  } else {
+    std::cout << "Scanner Timeout = " << pMode->warmupTime_sec << std::endl;
+  }
+
+  std::cout << "checkTimedTxMode: " << pMode->ttState << std::endl;
 }
 
 //-----------------------------------------------------------------------------
 void GUIDemo::UpdateSetup(const Navico::Protocol::NRP::tSetup* pSetup) {
-  if (m_ForceSetup ||
-      memcmp(pSetup, m_pSetup, sizeof(Navico::Protocol::NRP::tSetup)) != 0) {
-    m_ForceSetup = false;
-    *m_pSetup = *pSetup;
+  std::cout << "\n # Setup updating #.....................\n";
+  std::cout << "Scanner Range: " << pSetup->range_dm / 10.0 << " m\n";
+  // Gain controls update
+  uint32_t gainType = pSetup->gain[Navico::Protocol::NRP::eSetupGain].type;
+  assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
+  std::cout << "Radar Gain: "
+            << std::to_string(
+                   pSetup->gain[Navico::Protocol::NRP::eSetupGain].value)
+            << std::endl;
 
-    std::cout << "\n # Setup updating #.....................\n";
-    std::cout << "Scanner Range: " << m_pSetup->range_dm / 10.0 << " m\n";
-    // Gain controls update
-    uint32_t gainType = m_pSetup->gain[Navico::Protocol::NRP::eSetupGain].type;
-    assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
-    std::cout << "Radar Gain: "
-              << std::to_string(
-                     m_pSetup->gain[Navico::Protocol::NRP::eSetupGain].value)
-              << std::endl;
+  // Sea clutter controls update
+  gainType = pSetup->gain[Navico::Protocol::NRP::eSetupSea].type;
+  assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
+  std::cout << "SeaClutter: "
+            << std::to_string(
+                   pSetup->gain[Navico::Protocol::NRP::eSetupSea].value)
+            << std::endl;
 
-    // Sea clutter controls update
-    gainType = m_pSetup->gain[Navico::Protocol::NRP::eSetupSea].type;
-    assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
-    std::cout << "SeaClutter: "
-              << std::to_string(
-                     m_pSetup->gain[Navico::Protocol::NRP::eSetupSea].value)
-              << std::endl;
+  // Rain controls update
+  gainType = pSetup->gain[Navico::Protocol::NRP::eSetupRain].type;
+  assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
+  std::cout << "Rain: "
+            << std::to_string(
+                   pSetup->gain[Navico::Protocol::NRP::eSetupRain].value)
+            << std::endl;
 
-    // Rain controls update
-    gainType = m_pSetup->gain[Navico::Protocol::NRP::eSetupRain].type;
-    assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
-    std::cout << "Rain: "
-              << std::to_string(
-                     m_pSetup->gain[Navico::Protocol::NRP::eSetupRain].value)
-              << std::endl;
+  // FTC controls update
+  std::cout << "FTC: " << std::to_string(pSetup->ftc.value) << std::endl;
 
-    // FTC controls update
-    std::cout << "FTC: " << std::to_string(m_pSetup->ftc.value) << std::endl;
+  // Interference Reject controls update
+  std::cout << "IRLevel: " << std::to_string(pSetup->interferenceReject)
+            << std::endl;
 
-    // Interference Reject controls update
-    std::cout << "IRLevel: " << std::to_string(m_pSetup->interferenceReject)
-              << std::endl;
+  // Target Boost controls update
+  std::cout << "TargetBoost: " << std::to_string(pSetup->targetBoost)
+            << std::endl;
 
-    // Target Boost controls update
-    std::cout << "TargetBoost: " << std::to_string(m_pSetup->targetBoost)
-              << std::endl;
+  // Target Stretch controls update
+  std::cout << "TargetStretch: " << std::to_string(pSetup->targetStretch)
+            << std::endl;
 
-    // Target Stretch controls update
-    std::cout << "TargetStretch: " << std::to_string(m_pSetup->targetStretch)
-              << std::endl;
+  // Pulse Group
+  std::cout << "PulseWidth: " << std::to_string(pSetup->pwLength_ns)
+            << std::endl;
+  std::cout << "CoarseTune: " << std::to_string(pSetup->coarseTune)
+            << std::endl;
+  std::cout << "FineTune: " << std::to_string(pSetup->fineTune) << std::endl;
+  std::cout << "UseModes: "
+            << UseModeToString(static_cast<Navico::Protocol::NRP::eUseMode>(
+                   pSetup->useMode))
+            << std::endl;
+  std::cout << "AutoTune: " << (pSetup->tuneType != 0u ? "true" : "false")
+            << std::endl;
 
-    // Pulse Group
-    std::cout << "PulseWidth: " << std::to_string(m_pSetup->pwLength_ns)
-              << std::endl;
-    std::cout << "CoarseTune: " << std::to_string(m_pSetup->coarseTune)
-              << std::endl;
-    std::cout << "FineTune: " << std::to_string(m_pSetup->fineTune)
-              << std::endl;
-    std::cout << "UseModes: "
-              << UseModeToString(static_cast<Navico::Protocol::NRP::eUseMode>(
-                     m_pSetup->useMode))
-              << std::endl;
-    std::cout << "AutoTune: " << (m_pSetup->tuneType != 0u ? "true" : "false")
-              << std::endl;
+  std::cout << "\n # Guard Zone updating #.....................\n";
+  std::cout << "GuardSensitivity: "
+            << static_cast<unsigned>(pSetup->guardzones.sensitivity)
+            << std::endl;
 
-    std::cout << "\n # Guard Zone updating #.....................\n";
-    std::cout << "GuardSensitivity: "
-              << static_cast<unsigned>(m_pSetup->guardzones.sensitivity)
-              << std::endl;
+  bool gz1Enabled = pSetup->guardzones.active[eGuardZone1];
+  std::cout << "GuardZone1: " << (gz1Enabled == true ? "true" : "false")
+            << std::endl;
+  std::cout << "Guard1Range: "
+            << pSetup->guardzones.zone[eGuardZone1].rangeStart_m << " - "
+            << pSetup->guardzones.zone[eGuardZone1].rangeEnd_m << std::endl;
+  std::cout << "Guard1Bearing: "
+            << pSetup->guardzones.zone[eGuardZone1].azimuth_ddeg / 10.0
+            << std::endl;
+  std::cout << "Guard1Width: "
+            << pSetup->guardzones.zone[eGuardZone1].width_ddeg / 10.0
+            << std::endl;
+  std::cout << "Guard1AlarmType: "
+            << pSetup->guardzones.alarmType[eGuardZone1].alarmType << std::endl;
 
-    bool gz1Enabled = m_pSetup->guardzones.active[eGuardZone1];
-    std::cout << "GuardZone1: " << (gz1Enabled == true ? "true" : "false")
-              << std::endl;
-    std::cout << "Guard1Range: "
-              << m_pSetup->guardzones.zone[eGuardZone1].rangeStart_m << " - "
-              << m_pSetup->guardzones.zone[eGuardZone1].rangeEnd_m << std::endl;
-    std::cout << "Guard1Bearing: "
-              << m_pSetup->guardzones.zone[eGuardZone1].azimuth_ddeg / 10.0
-              << std::endl;
-    std::cout << "Guard1Width: "
-              << m_pSetup->guardzones.zone[eGuardZone1].width_ddeg / 10.0
-              << std::endl;
-    std::cout << "Guard1AlarmType: "
-              << m_pSetup->guardzones.alarmType[eGuardZone1].alarmType
-              << std::endl;
+  m_OverlayManager.SetGuardZone(
+      eGuardZone1, gz1Enabled,
+      pSetup->guardzones.zone[eGuardZone1].rangeStart_m,
+      pSetup->guardzones.zone[eGuardZone1].rangeEnd_m,
+      pSetup->guardzones.zone[eGuardZone1].azimuth_ddeg / 10.0,
+      pSetup->guardzones.zone[eGuardZone1].width_ddeg / 10.0);
 
-    m_OverlayManager.SetGuardZone(
-        eGuardZone1, gz1Enabled,
-        m_pSetup->guardzones.zone[eGuardZone1].rangeStart_m,
-        m_pSetup->guardzones.zone[eGuardZone1].rangeEnd_m,
-        m_pSetup->guardzones.zone[eGuardZone1].azimuth_ddeg / 10.0,
-        m_pSetup->guardzones.zone[eGuardZone1].width_ddeg / 10.0);
+  bool gz2Enabled = pSetup->guardzones.active[eGuardZone2];
+  std::cout << "GuardZone2: " << (gz2Enabled == true ? "true" : "false")
+            << std::endl;
+  std::cout << "Guard2Range: "
+            << pSetup->guardzones.zone[eGuardZone2].rangeStart_m << " - "
+            << pSetup->guardzones.zone[eGuardZone2].rangeEnd_m << std::endl;
+  std::cout << "Guard2Bearing: "
+            << pSetup->guardzones.zone[eGuardZone2].azimuth_ddeg / 10.0
+            << std::endl;
+  std::cout << "Guard2Width: "
+            << pSetup->guardzones.zone[eGuardZone2].width_ddeg / 10.0
+            << std::endl;
+  std::cout << "Guard2AlarmType: "
+            << pSetup->guardzones.alarmType[eGuardZone2].alarmType << std::endl;
 
-    bool gz2Enabled = pSetup->guardzones.active[eGuardZone2];
-    std::cout << "GuardZone2: " << (gz2Enabled == true ? "true" : "false")
-              << std::endl;
-    std::cout << "Guard2Range: "
-              << m_pSetup->guardzones.zone[eGuardZone2].rangeStart_m << " - "
-              << m_pSetup->guardzones.zone[eGuardZone2].rangeEnd_m << std::endl;
-    std::cout << "Guard2Bearing: "
-              << m_pSetup->guardzones.zone[eGuardZone2].azimuth_ddeg / 10.0
-              << std::endl;
-    std::cout << "Guard2Width: "
-              << m_pSetup->guardzones.zone[eGuardZone2].width_ddeg / 10.0
-              << std::endl;
-    std::cout << "Guard2AlarmType: "
-              << m_pSetup->guardzones.alarmType[eGuardZone2].alarmType
-              << std::endl;
-
-    m_OverlayManager.SetGuardZone(
-        eGuardZone2, gz2Enabled,
-        m_pSetup->guardzones.zone[eGuardZone2].rangeStart_m,
-        m_pSetup->guardzones.zone[eGuardZone2].rangeEnd_m,
-        m_pSetup->guardzones.zone[eGuardZone2].azimuth_ddeg / 10.0,
-        m_pSetup->guardzones.zone[eGuardZone2].width_ddeg / 10.0);
-  }
+  m_OverlayManager.SetGuardZone(
+      eGuardZone2, gz2Enabled,
+      pSetup->guardzones.zone[eGuardZone2].rangeStart_m,
+      pSetup->guardzones.zone[eGuardZone2].rangeEnd_m,
+      pSetup->guardzones.zone[eGuardZone2].azimuth_ddeg / 10.0,
+      pSetup->guardzones.zone[eGuardZone2].width_ddeg / 10.0);
 }
 
 //-----------------------------------------------------------------------------
 void GUIDemo::UpdateSetupExtended(
     const Navico::Protocol::NRP::tSetupExtended* pSetupExtended) {
-  if (memcmp(pSetupExtended, m_pSetupExtended,
-             sizeof(Navico::Protocol::NRP::tSetupExtended)) != 0) {
-    *m_pSetupExtended = *pSetupExtended;
+  std::cout << "\n # Setup Extended updating #.....................\n";
+  std::string output_str =
+      pSetupExtended->suppressMainBang != 0 ? "true" : "false";
+  std::cout << "MainBangSuppression: " << output_str << std::endl;
 
-    std::cout << "\n # Setup Extended updating #.....................\n";
-    std::string output_str =
-        pSetupExtended->suppressMainBang != 0 ? "true" : "false";
-    std::cout << "MainBangSuppression: " << output_str << std::endl;
-
-    // Side lobe controls update
-    int gainType = m_pSetupExtended->sidelobe.type;
-    assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
-    std::cout << "Side Lobe: "
-              << static_cast<unsigned>(m_pSetupExtended->sidelobe.value)
-              << std::endl;
-    std::cout << "LocalIR: " << static_cast<unsigned>(m_pSetupExtended->localIR)
-              << std::endl;
-    std::cout << "NoiseReject: "
-              << static_cast<unsigned>(m_pSetupExtended->noiseReject)
-              << std::endl;
-    std::cout << "BeamSharpening: "
-              << static_cast<unsigned>(m_pSetupExtended->beamSharpening)
-              << std::endl;
-    std::cout << "STCCurveType: "
-              << static_cast<unsigned>(m_pSetupExtended->stcCurveType)
-              << std::endl;
-    std::cout << "FastScan: "
-              << static_cast<unsigned>(m_pSetupExtended->fastScanMode)
-              << std::endl;
-    std::cout << "RPM: " << m_pSetupExtended->rpmX10 / 10.0 << std::endl;
-    std::cout << "Sea: " << m_pSetupExtended->sea.manualValue << std::endl;
-    std::cout << "SeaAuto: " << m_pSetupExtended->sea.autoOffset << std::endl;
-  }
+  // Side lobe controls update
+  int gainType = pSetupExtended->sidelobe.type;
+  assert(gainType < Navico::Protocol::NRP::eTotalUserGains);
+  std::cout << "Side Lobe: "
+            << static_cast<unsigned>(pSetupExtended->sidelobe.value)
+            << std::endl;
+  std::cout << "LocalIR: " << static_cast<unsigned>(pSetupExtended->localIR)
+            << std::endl;
+  std::cout << "NoiseReject: "
+            << static_cast<unsigned>(pSetupExtended->noiseReject) << std::endl;
+  std::cout << "BeamSharpening: "
+            << static_cast<unsigned>(pSetupExtended->beamSharpening)
+            << std::endl;
+  std::cout << "STCCurveType: "
+            << static_cast<unsigned>(pSetupExtended->stcCurveType) << std::endl;
+  std::cout << "FastScan: "
+            << static_cast<unsigned>(pSetupExtended->fastScanMode) << std::endl;
+  std::cout << "RPM: " << pSetupExtended->rpmX10 / 10.0 << std::endl;
+  std::cout << "Sea: " << pSetupExtended->sea.manualValue << std::endl;
+  std::cout << "SeaAuto: " << pSetupExtended->sea.autoOffset << std::endl;
 }
 
 //-----------------------------------------------------------------------------
 void GUIDemo::UpdateProperties(
     const Navico::Protocol::NRP::tProperties* pProperties) {
-  if (memcmp(pProperties, m_pProperties,
-             sizeof(Navico::Protocol::NRP::tProperties)) != 0) {
-    *m_pProperties = *pProperties;
-    std::cout << "\n # Properties updating #.....................\n";
-    switch (pProperties->scannerType) {
-      case Navico::Protocol::NRP::eTypeNoScanner:
-        std::cout << "No Scanner\n";
-        break;
-      case Navico::Protocol::NRP::eNKE_1065:
-        std::cout << "JRC 2KW Radome\n";
-        break;
-      case Navico::Protocol::NRP::eNKE_249:
-        std::cout << "JRC 4KW Radome\n";
-        break;
-      case Navico::Protocol::NRP::eNKE_250_4:
-        std::cout << "JRC 6KW 4ft OA\n";
-        break;
-      case Navico::Protocol::NRP::eNKE_250_4_NAX:
-        std::cout << "JRC 6KW 4ft N OA\n";
-        break;
-      case Navico::Protocol::NRP::eNKE_2102_6:
-        std::cout << "JRC 10KW 6ft OA\n";
-        break;
-      case Navico::Protocol::NRP::eNKE_2252_7:
-        std::cout << "JRC 25KW 7ft OA\n";
-        break;
-      case Navico::Protocol::NRP::eNKE_2252_9:
-        std::cout << "JRC 25KW 9ft OA\n";
-        break;
-      case Navico::Protocol::NRP::e4kWSimulator:
-        std::cout << "4kW Simulator\n";
-        break;
-      case Navico::Protocol::NRP::eGWTestScanner:
-        std::cout << "GWTest\n";
-        break;
-      case Navico::Protocol::NRP::eFMCW400_BR24:
-        std::cout << "Navico BR-24\n";
-        break;
-      case Navico::Protocol::NRP::eFMCW400_Simulator:
-        std::cout << "Navico BR-24 Sim\n";
-        break;
-      case Navico::Protocol::NRP::eFMCW400_HD3G:
-        std::cout << "Navico BRHD-3G\n";
-        break;
-      case Navico::Protocol::NRP::eFMCW400_HD4G:
-        std::cout << "Navico BRHD-4G\n";
-        break;
-      case Navico::Protocol::NRP::ePCOMP_HALO:
-        std::cout << "Navico BRHALO\n";
-        break;
-      case Navico::Protocol::NRP::ePROP_MAGGIE:
-        std::cout << "Navico-Pro Maggie\n";
-        break;
-      default:
-        std::cout << "Type " << pProperties->scannerId << std::endl;
-    }
+  std::cout << "\n # Properties updating #.....................\n";
+  switch (pProperties->scannerType) {
+    case Navico::Protocol::NRP::eTypeNoScanner:
+      std::cout << "No Scanner\n";
+      break;
+    case Navico::Protocol::NRP::eNKE_1065:
+      std::cout << "JRC 2KW Radome\n";
+      break;
+    case Navico::Protocol::NRP::eNKE_249:
+      std::cout << "JRC 4KW Radome\n";
+      break;
+    case Navico::Protocol::NRP::eNKE_250_4:
+      std::cout << "JRC 6KW 4ft OA\n";
+      break;
+    case Navico::Protocol::NRP::eNKE_250_4_NAX:
+      std::cout << "JRC 6KW 4ft N OA\n";
+      break;
+    case Navico::Protocol::NRP::eNKE_2102_6:
+      std::cout << "JRC 10KW 6ft OA\n";
+      break;
+    case Navico::Protocol::NRP::eNKE_2252_7:
+      std::cout << "JRC 25KW 7ft OA\n";
+      break;
+    case Navico::Protocol::NRP::eNKE_2252_9:
+      std::cout << "JRC 25KW 9ft OA\n";
+      break;
+    case Navico::Protocol::NRP::e4kWSimulator:
+      std::cout << "4kW Simulator\n";
+      break;
+    case Navico::Protocol::NRP::eGWTestScanner:
+      std::cout << "GWTest\n";
+      break;
+    case Navico::Protocol::NRP::eFMCW400_BR24:
+      std::cout << "Navico BR-24\n";
+      break;
+    case Navico::Protocol::NRP::eFMCW400_Simulator:
+      std::cout << "Navico BR-24 Sim\n";
+      break;
+    case Navico::Protocol::NRP::eFMCW400_HD3G:
+      std::cout << "Navico BRHD-3G\n";
+      break;
+    case Navico::Protocol::NRP::eFMCW400_HD4G:
+      std::cout << "Navico BRHD-4G\n";
+      break;
+    case Navico::Protocol::NRP::ePCOMP_HALO:
+      std::cout << "Navico BRHALO\n";
+      break;
+    case Navico::Protocol::NRP::ePROP_MAGGIE:
+      std::cout << "Navico-Pro Maggie\n";
+      break;
+    default:
+      std::cout << "Type " << pProperties->scannerId << std::endl;
   }
 }
 
 //-----------------------------------------------------------------------------
 void GUIDemo::UpdateConfiguration(
     const Navico::Protocol::NRP::tConfiguration* pConfiguration) {
-  if (memcmp(pConfiguration, m_pConfiguration,
-             sizeof(Navico::Protocol::NRP::tConfiguration)) != 0) {
-    *m_pConfiguration = *pConfiguration;
+  std::cout << "\n # Configuration updating #.....................\n";
+  std::cout << "Timed Transmit: " << pConfiguration->timedTransmitPeriod_s
+            << std::endl;
+  std::cout << "Timed Standby: " << pConfiguration->timedStandbyPeriod_s
+            << std::endl;
+  std::cout << "LEDs: " << static_cast<unsigned>(pConfiguration->ledLevel)
+            << std::endl;
 
-    std::cout << "\n # Configuration updating #.....................\n";
-    std::cout << "Timed Transmit: " << m_pConfiguration->timedTransmitPeriod_s
-              << std::endl;
-    std::cout << "Timed Standby: " << m_pConfiguration->timedStandbyPeriod_s
-              << std::endl;
-    std::cout << "LEDs: " << static_cast<unsigned>(m_pConfiguration->ledLevel)
-              << std::endl;
+  std::cout << "ParkPosition: " << pConfiguration->parkPosition_ddeg / 10.0
+            << std::endl;
+  std::cout << "AntennaHeight: " << pConfiguration->antennaHeight_mm / 1000.0
+            << std::endl;
+  std::cout << "ZeroRange: " << pConfiguration->zeroRange_mm / 1000.0
+            << std::endl;
+  std::cout << "ZeroBearing: " << pConfiguration->zeroBearing_ddeg / 10.0
+            << std::endl;
+  std::cout << "AntennaXOffset: "
+            << pConfiguration->antennaOffsetX_mm.Get() / 1000.0 << std::endl;
+  std::cout << "AntennaYOffset: "
+            << pConfiguration->antennaOffsetY_mm.Get() / 1000.0 << std::endl;
 
-    std::cout << "ParkPosition: " << m_pConfiguration->parkPosition_ddeg / 10.0
-              << std::endl;
-    std::cout << "AntennaHeight: "
-              << m_pConfiguration->antennaHeight_mm / 1000.0 << std::endl;
-    std::cout << "ZeroRange: " << m_pConfiguration->zeroRange_mm / 1000.0
-              << std::endl;
-    std::cout << "ZeroBearing: " << m_pConfiguration->zeroBearing_ddeg / 10.0
-              << std::endl;
-    std::cout << "AntennaXOffset: "
-              << m_pConfiguration->antennaOffsetX_mm.Get() / 1000.0
-              << std::endl;
-    std::cout << "AntennaYOffset: "
-              << m_pConfiguration->antennaOffsetY_mm.Get() / 1000.0
-              << std::endl;
-
-    int m_antennaTypeIndex = m_pConfiguration->antennaType;
-    if (m_antennaTypeIndex >= 0) {
-      std::cout << "AntennaType: " << m_antennaTypeIndex << std::endl;
-    } else {
-      std::cout << "AntennaType: unknown\n ";
-    }
+  int m_antennaTypeIndex = pConfiguration->antennaType;
+  if (m_antennaTypeIndex >= 0) {
+    std::cout << "AntennaType: " << m_antennaTypeIndex << std::endl;
+  } else {
+    std::cout << "AntennaType: unknown\n ";
   }
 }
 
@@ -617,6 +584,7 @@ void GUIDemo::UpdateSpoke(
     const Navico::Protocol::NRP::Spoke::t9174Spoke* pSpoke) {
   m_PixelCellSize_mm =
       Navico::Protocol::NRP::Spoke::GetPixelCellSize_mm(pSpoke->header);
+
   m_pTabBScan->OnUpdateSpoke(pSpoke);
   m_pTabPPI->OnUpdateSpoke(pSpoke);
 }
@@ -624,23 +592,16 @@ void GUIDemo::UpdateSpoke(
 //-----------------------------------------------------------------------------
 void GUIDemo::UpdateAdvancedState(
     const Navico::Protocol::NRP::tAdvancedSTCState* pState) {
-  if (m_ForceAdvancedSTCState ||
-      memcmp(pState, m_pAdvancedSTCState,
-             sizeof(Navico::Protocol::NRP::tAdvancedSTCState)) != 0) {
-    m_ForceAdvancedSTCState = false;
-    *m_pAdvancedSTCState = *pState;
-
-    std::cout << "\n # Advanced State updating #.....................\n";
-    std::cout << "Range Trim: " << pState->rangeSTCTrim_dB << std::endl;
-    std::cout << "Range Rate: " << pState->rangeSTCRate_dBpDec << std::endl;
-    std::cout << "SeaTrim: " << pState->seaSTCTrim_dB << std::endl;
-    std::cout << "SeaRate1: " << pState->seaSTCRate1_dBpDec << std::endl;
-    std::cout << "SeaRate2: " << pState->seaSTCRate2_dBpDec << std::endl;
-    std::cout << "RainTrim: " << pState->rainSTCTrim_dB << std::endl;
-    std::cout << "RainRate: " << pState->rainSTCRate_dBpDec << std::endl;
-    std::cout << "UserMinSNR: " << pState->userMinSNR_dB << std::endl;
-    std::cout << "VideoAperture: " << pState->videoAperture_dB << std::endl;
-  }
+  std::cout << "\n # Advanced State updating #.....................\n";
+  std::cout << "Range Trim: " << pState->rangeSTCTrim_dB << std::endl;
+  std::cout << "Range Rate: " << pState->rangeSTCRate_dBpDec << std::endl;
+  std::cout << "SeaTrim: " << pState->seaSTCTrim_dB << std::endl;
+  std::cout << "SeaRate1: " << pState->seaSTCRate1_dBpDec << std::endl;
+  std::cout << "SeaRate2: " << pState->seaSTCRate2_dBpDec << std::endl;
+  std::cout << "RainTrim: " << pState->rainSTCTrim_dB << std::endl;
+  std::cout << "RainRate: " << pState->rainSTCRate_dBpDec << std::endl;
+  std::cout << "UserMinSNR: " << pState->userMinSNR_dB << std::endl;
+  std::cout << "VideoAperture: " << pState->videoAperture_dB << std::endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -824,10 +785,9 @@ void GUIDemo::UpdateRadarError(
     const Navico::Protocol::NRP::tRadarError* pError) {
   // NOTE: this simplification may overwrite a previous error that hasn't yet
   // been reported
-  *m_pRadarError = *pError;
   std::cout << "Scanner error: " +
-                   ToString(Navico::Protocol::NRP::eRadarErrorType(
-                       m_pRadarError->type));
+                   ToString(
+                       Navico::Protocol::NRP::eRadarErrorType(pError->type));
 }
 
 //-----------------------------------------------------------------------------
@@ -845,8 +805,8 @@ int GUIDemo::ConnectTargetClient(const std::string& serialNumber,
 
     error = m_pTargetClient->Connect(serialNumber.c_str(), instance);
 
-    std::thread _socketthread(&GUIDemo::updateboatstate, this);
-    _socketthread.detach();
+    //    std::thread _socketthread(&GUIDemo::updateboatstate, this);
+    //    _socketthread.detach();
   }
   return error;
 }
@@ -867,7 +827,6 @@ void GUIDemo::TargetAcquire(double sample, double degrees) {
         static_cast<unsigned>((sample * m_PixelCellSize_mm) / 1000 + 0.5);
     m_pTargetClient->Acquire(0, range, int32_t(degrees + 0.5),
                              Navico::Protocol::NRP::eRelative);
-
   }
 }
 
@@ -904,7 +863,6 @@ void GUIDemo::UpdateNavigation(
     m_ForceNavigationState = false;
     *m_pNavigationState = *pNavigationState;
     // TODO::
-
   }
 }
 
