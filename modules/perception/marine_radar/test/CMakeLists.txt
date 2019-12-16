@@ -43,6 +43,7 @@ set(SOURCE_FILES ${SOURCE_FILES}
 find_package(Threads MODULE REQUIRED)
 find_library(NRPCLIENT_LIBRARY NRPClient HINTS ${LIBRARY_DIRECTORY})
 find_library(NRPPPI_LIBRARY NRPPPI HINTS ${LIBRARY_DIRECTORY})
+find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
 
 
 # 指定生成目标
@@ -51,3 +52,4 @@ add_executable (testMarineRadar testMarineRadar.cc ${SOURCE_FILES} )
 target_include_directories(testMarineRadar PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testMarineRadar PUBLIC ${NRPCLIENT_LIBRARY})
 target_link_libraries(testMarineRadar PUBLIC ${NRPPPI_LIBRARY})
+target_link_libraries(testMarineRadar PUBLIC ${SQLITE3_LIBRARY})

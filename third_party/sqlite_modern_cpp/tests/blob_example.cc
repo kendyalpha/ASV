@@ -8,7 +8,7 @@ using namespace std;
 
 int main() {
   try {
-    database db(":memory:");
+    database db("test.db");
 
     db << "CREATE TABLE person (name TEXT, numbers BLOB);";
     db << "INSERT INTO person VALUES (?, ?)"
@@ -17,6 +17,8 @@ int main() {
        << "jack" << vector<char>{'1', '2', '3', '4'};
     db << "INSERT INTO person VALUES (?, ?)"
        << "sara" << vector<double>{1.0, 2.0, 3.0, 4.0};
+    db << "INSERT INTO person VALUES (?, ?)"
+       << "test" << vector<uint8_t>{0x01, 0x17, 0xca, 0xff};
 
     vector<int> numbers_bob;
     db << "SELECT numbers from person where name = ?;"
@@ -53,6 +55,13 @@ int main() {
       cout << "Bad result on line " << __LINE__ << endl;
       exit(EXIT_FAILURE);
     }
+
+    vector<uint8_t> numbers_test;
+    db << "SELECT numbers from person where name = ?;"
+       << "test" >>
+        numbers_test;
+
+    printf("%u", numbers_test[3]);
     // else {
     // db << "SELECT numbers from person where name = ?;" << "sara" >>
     // [](vector<double> numbers_sara){ for(auto e : numbers_sara) cout << e <<
