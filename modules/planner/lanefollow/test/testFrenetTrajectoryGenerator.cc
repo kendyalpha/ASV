@@ -26,14 +26,23 @@ int main() {
   LOG(INFO) << "The program has started!";
 
   // trajectory generator
+  // Eigen::VectorXd marine_WX(5);
+  // Eigen::VectorXd marine_WY(5);
+  // Eigen::VectorXd marine_ob_x(6);
+  // Eigen::VectorXd marine_ob_y(6);
+  // marine_WX << 0.0, 10.0, 20.5, 35.0, 70.5;
+  // marine_WY << 0.0, 6.0, -5.0, -6.5, 0.0;
+  // marine_ob_x << 20.0, 30.0, 30.0, 35.0, 34.0, 50.0;
+  // marine_ob_y << -10.0, -6.0, -8.0, -8.0, -8.0, -3.0;
+
   Eigen::VectorXd marine_WX(5);
   Eigen::VectorXd marine_WY(5);
   Eigen::VectorXd marine_ob_x(6);
   Eigen::VectorXd marine_ob_y(6);
-  marine_WX << 0.0, 10.0, 20.5, 35.0, 70.5;
-  marine_WY << 0.0, 6.0, -5.0, -6.5, 0.0;
-  marine_ob_x << 20.0, 30.0, 30.0, 35.0, 34.0, 50.0;
-  marine_ob_y << -10.0, -6.0, -8.0, -8.0, -8.0, -3.0;
+  marine_WX << 0.0, 25, 50, 75, 100;
+  marine_WY << 0.0, 0.0, 0.0, 0.0, 0.0;
+  marine_ob_x << 50, 50.0, 50.0, 50.0, 48, 50.0;
+  marine_ob_y << -2.0, -1.0, 2.0, 1, 0, 3.0;
 
   planning::LatticeData _latticedata{
       0.1,         // SAMPLE_TIME

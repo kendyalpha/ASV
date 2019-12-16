@@ -1,12 +1,11 @@
-#include <iostream>
+#include <sqlite_modern_cpp.h>
 #include <iomanip>
-#include <string>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
-#include <sqlite_modern_cpp.h>
+#include <string>
 using namespace sqlite;
 using namespace std;
-
 
 int main() {
   database db(":memory:");
@@ -18,22 +17,22 @@ int main() {
     // inserting again to produce error
     db << "INSERT INTO person (id,name) VALUES (?,?)" << 1 << "jack";
   } catch (errors::constraint_primarykey& e) {
-    cerr << e.get_code() << '/' << e.get_extended_code() << ": " << e.what() << " during "
-         << quoted(e.get_sql()) << endl;
+    cerr << e.get_code() << '/' << e.get_extended_code() << ": " << e.what()
+         << " during " << quoted(e.get_sql()) << endl;
     expception_thrown = true;
 #if SQLITE_VERSION_NUMBER >= 3014000
-    if(e.get_sql() != "INSERT INTO person (id,name) VALUES (1,'jack')") {
+    if (e.get_sql() != "INSERT INTO person (id,name) VALUES (1,'jack')") {
 #else
-    if(e.get_sql() != "INSERT INTO person (id,name) VALUES (?,?)") {
+    if (e.get_sql() != "INSERT INTO person (id,name) VALUES (?,?)") {
 #endif
       cerr << "Wrong statement failed\n";
       exit(EXIT_FAILURE);
     }
   }
 
-  if(!expception_thrown) {
+  if (!expception_thrown) {
     exit(EXIT_FAILURE);
   }
-  
+
   exit(EXIT_SUCCESS);
 }

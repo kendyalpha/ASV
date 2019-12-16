@@ -11,21 +11,12 @@
 #ifndef _MARINERADAR_H_
 #define _MARINERADAR_H_
 
-#include <ClientErrors.h>
-#include <Feature.h>
-#include <FeatureManager.h>
-#include <ImageClient.h>
-#include <ImageClientObserver.h>
-#include <MultiRadarClient.h>
-#include <NavRadarProtocol.h>
-#include <PPIController.h>
-#include <TargetTrackingClient.h>
-
-#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <iostream>
 #include <thread>
+
+#include "MarineRadarData.h"
 #include "MultiRadar.h"
 
 #include "common/communication/include/tcpserver.h"
@@ -84,8 +75,11 @@ class MarineRadar
 
   void testMarineRadar() {
     // unlock the sdk
-    while (m_pMultiRadar->InitiateUnlock() <= 0) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    while (1) {
+      if (m_pMultiRadar->InitiateUnlock() > 0)
+        break;
+      else
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
     MultiRadar_Connect(true);
