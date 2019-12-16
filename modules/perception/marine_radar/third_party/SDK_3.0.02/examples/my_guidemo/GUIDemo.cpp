@@ -147,9 +147,9 @@ void GUIDemo::MultiRadar_ConnectChanged(bool connect) {
           Navico::Protocol::NRP::eUseMode::eUseMode_Custom);
 
       // setup
-      m_pImageClient->SetRange(300u);
+      m_pImageClient->SetRange(400u);
       set_results = m_pImageClient->SetFastScanMode(
-          uint8_t(2));  // 0: fast scan mode; otherwise, normal speed
+          uint8_t(0));  // 0: fast scan mode; otherwise, normal speed
       m_pImageClient->SetLEDsLevel(0);
       m_pImageClient->SetInterferenceReject(2);
       m_pImageClient->SetLocalIR(1);

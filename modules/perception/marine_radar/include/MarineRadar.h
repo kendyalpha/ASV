@@ -89,10 +89,11 @@ class MarineRadar
     }
 
     MultiRadar_Connect(true);
+
     while (1) {
-      socketserver();
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
+    // socketserver();
   }
 
  private:
@@ -102,25 +103,33 @@ class MarineRadar
       char headerdata4[44];
     };
     const int recv_size = 10;
-    const int send_size = 45 + SAMPLES_PER_SPOKE / 2;
+    const int send_size = 44 + SAMPLES_PER_SPOKE / 2;
+    char recv_buffer[recv_size];
+    char send_buffer[send_size];
+
     ASV::tcpserver _tcpserver("9340");
     spokeheader _spokeheader;
-    char recv_buffer[recv_size];
-    _spokeheader.headerdata32[0] = m_pSpoke.header.spokeLength_bytes;
-    _spokeheader.headerdata32[1] = m_pSpoke.header.sequenceNumber;
-    _spokeheader.headerdata32[2] = m_pSpoke.header.nOfSamples;
-    _spokeheader.headerdata32[3] = m_pSpoke.header.bitsPerSample;
-    _spokeheader.headerdata32[4] = m_pSpoke.header.rangeCellSize_mm;
-    _spokeheader.headerdata32[5] = m_pSpoke.header.spokeAzimuth;
-    _spokeheader.headerdata32[6] = m_pSpoke.header.bearingZeroError;
-    _spokeheader.headerdata32[7] = m_pSpoke.header.spokeCompass;
-    _spokeheader.headerdata32[8] = m_pSpoke.header.trueNorth;
-    _spokeheader.headerdata32[9] = m_pSpoke.header.compassInvalid;
-    _spokeheader.headerdata32[10] = m_pSpoke.header.rangeCellsDiv2;
-    char* sendmsg = (char*)malloc(send_size);
-    strcpy(sendmsg, _spokeheader.headerdata4);
-    strcat(sendmsg, (char*)m_pSpoke.data);
-    _tcpserver.selectserver(recv_buffer, sendmsg, recv_size, send_size);
+
+    while (1) {
+      _spokeheader.headerdata32[0] = m_pSpoke.header.spokeLength_bytes;
+      _spokeheader.headerdata32[1] = m_pSpoke.header.sequenceNumber;
+      _spokeheader.headerdata32[2] = m_pSpoke.header.nOfSamples;
+      _spokeheader.headerdata32[3] = m_pSpoke.header.bitsPerSample;
+      _spokeheader.headerdata32[4] = m_pSpoke.header.rangeCellSize_mm;
+      _spokeheader.headerdata32[5] = m_pSpoke.header.spokeAzimuth;
+      _spokeheader.headerdata32[6] = m_pSpoke.header.bearingZeroError;
+      _spokeheader.headerdata32[7] = m_pSpoke.header.spokeCompass;
+      _spokeheader.headerdata32[8] = m_pSpoke.header.trueNorth;
+      _spokeheader.headerdata32[9] = m_pSpoke.header.compassInvalid;
+      _spokeheader.headerdata32[10] = m_pSpoke.header.rangeCellsDiv2;
+
+      for (int i = 0; i != 44; ++i)
+        send_buffer[i] = _spokeheader.headerdata4[i];
+      for (int i = 0; i != (SAMPLES_PER_SPOKE / 2); ++i)
+        send_buffer[i + 44] = static_cast<char>(m_pSpoke.data[i]);
+
+      _tcpserver.selectserver(recv_buffer, send_buffer, recv_size, send_size);
+    }
   }
 
   //-------------------------------------------------------------------------
@@ -131,11 +140,6 @@ class MarineRadar
       const Navico::Protocol::NRP::Spoke::t9174Spoke* pSpoke) {
     m_pSpoke.header = pSpoke->header;
     memcpy(m_pSpoke.data, pSpoke->data, SAMPLES_PER_SPOKE / 2);
-
-    // std::cout << "\nazimuth: " << m_pSpoke.header.spokeAzimuth << std::endl;
-    // for (int i = 0; i != (SAMPLES_PER_SPOKE / 2); ++i)
-    //   std::cout << unsigned(m_pSpoke.data[i]) << std::endl;
-    // std::cout << std::endl;
 
   }  // UpdateSpoke
 
@@ -679,9 +683,11 @@ class MarineRadar
             Navico::Protocol::NRP::eUseMode::eUseMode_Custom);
 
         // setup
-        m_pImageClient->SetRange(300u);
+        m_pImageClient->SetRange(400u);
         set_results = m_pImageClient->SetFastScanMode(
-            uint8_t(2));  // 0: fast scan mode; otherwise, normal speed
+            uint8_t(0));  // 0: fast scan mode; otherwise, normal speed
+        std::cout << "setresults: " << (set_results == true ? "true" : "false")
+                  << std::endl;
         m_pImageClient->SetLEDsLevel(0);
         m_pImageClient->SetInterferenceReject(2);
         m_pImageClient->SetLocalIR(1);

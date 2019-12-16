@@ -9,19 +9,9 @@
 #ifndef GUIDEMO_H
 #define GUIDEMO_H
 
-#include <ClientErrors.h>
-#include <Feature.h>
-#include <FeatureManager.h>
-#include <ImageClient.h>
-#include <ImageClientObserver.h>
-#include <MultiRadarClient.h>
-#include <NavRadarProtocol.h>
 #include <PPIController.h>
-#include <TargetTrackingClient.h>
 
 #include <QMainWindow>
-#include <QMessageBox>
-#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <iostream>
@@ -51,32 +41,11 @@ class GUIDemo : public QMainWindow {
     // setup trget-tracking protocol data structures
     InitStruct(m_pTargetLocations, cMaxTargets);
   }
+  void UpdatePPI();
   void UpdateSpoke();
 
- private:
   unsigned m_PixelCellSize_mm;
   static const unsigned cMaxTargets = 10;
-
- private:
-  void updateboatstate() {
-      union spokeheader {
-        uint32_t headerdata32[11];
-        char headerdata4[44];
-      };
-    const int recv_size =  45 + SAMPLES_PER_SPOKE / 2;
-    const int send_size = 10;
-    spokeheader _recvmsg;
-    char send_buffer[send_size] = "socket";
-char recv_buffer[recv_size];
-    tcpclient _tcpclient("127.0.0.1", "9340");
-
-    while (1) {
-      _tcpclient.senddata(recv_buffer, send_buffer, recv_size, send_size);
-      memcpy(_recvmsg.headerdata4, recv_buffer, 44);
-      memcpy(_recvmsg.headerdata4, recv_buffer, 44);
-
-    }
-  }
 
  private slots:
   // slots for callbacks
