@@ -694,6 +694,9 @@ class threadloop : public StateMonitor {
 
   }  // gps_loop()
 
+  // marine radar giving spoke data
+  void marine_radar_loop() {}  // marine_radar_loop
+
   // gui data link
   void gui_loop() {
     switch (testmode) {

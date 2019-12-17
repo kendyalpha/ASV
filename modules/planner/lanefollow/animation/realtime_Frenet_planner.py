@@ -59,9 +59,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
     while True:
         s.sendall(b'socket')
-        data = s.recv(800)
+        data = s.recv(1600)
         doubles_sequence = array.array('d', data)
-
+        print(len(doubles_sequence))
         # vessel profile
         vessel2dnew = _vessel2d.perform_tran(
             doubles_sequence[1],  # x
@@ -72,8 +72,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         ax1.add_patch(polygon)
 
         speed = doubles_sequence[3]  # speed
-        N_ob = int(doubles_sequence[4])  # speed
+        N_ob = int(doubles_sequence[4])  # of obstacle
         N_bp = int(doubles_sequence[2 * N_ob + 5])
+
         # circles for obstacles
         x = np.zeros(N_ob)
         y = np.zeros(N_ob)
@@ -93,6 +94,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         bestspeed = np.zeros(N_bp)
 
         for i in range(N_bp):
+            print(2 * N_ob + 3*i+8)
             bestx[i] = doubles_sequence[2 * N_ob + 3*i+6]
             besty[i] = doubles_sequence[2 * N_ob + 3*i+7]
             bestspeed[i] = doubles_sequence[2 * N_ob + 3*i+8]

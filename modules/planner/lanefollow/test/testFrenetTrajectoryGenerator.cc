@@ -17,8 +17,8 @@
 using namespace ASV;
 
 union trajectorymsg {
-  double double_msg[100];
-  char char_msg[800];
+  double double_msg[200];
+  char char_msg[1600];
 };
 
 int main() {
@@ -37,12 +37,12 @@ int main() {
 
   Eigen::VectorXd marine_WX(5);
   Eigen::VectorXd marine_WY(5);
-  Eigen::VectorXd marine_ob_x(6);
-  Eigen::VectorXd marine_ob_y(6);
+  Eigen::VectorXd marine_ob_x(10);
+  Eigen::VectorXd marine_ob_y(10);
   marine_WX << 0.0, 25, 50, 75, 100;
   marine_WY << 0.0, 0.0, 0.0, 0.0, 0.0;
-  marine_ob_x << 50, 50.0, 50.0, 50.0, 48, 50.0;
-  marine_ob_y << -2.0, -1.0, 2.0, 1, 0, 3.0;
+  marine_ob_x << 50, 50.0, 50.0, 50.0, 48, 50.0, 52, 54, 56, 58;
+  marine_ob_y << -2.0, -1.0, 2.0, 1, 0, 3.0, -2.0, -2.0, -2.0, -2.0;
 
   planning::LatticeData _latticedata{
       0.1,         // SAMPLE_TIME
@@ -93,7 +93,7 @@ int main() {
   // socket
   tcpserver _tcpserver("9340");
   const int recv_size = 10;
-  const int send_size = 800;
+  const int send_size = 1600;
   char recv_buffer[recv_size];
   trajectorymsg _sendmsg = {0.0, 0.0, 0.0, 0.0, 0.0};
 

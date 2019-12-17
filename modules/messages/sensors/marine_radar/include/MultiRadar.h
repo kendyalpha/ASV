@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace ASV::perception {
+namespace ASV::messages {
 
 class MultiRadar : public Navico::Protocol::iRadarListObserver,
                    public Navico::Protocol::iUnlockStateObserver,
@@ -130,6 +130,6 @@ class MultiRadar : public Navico::Protocol::iRadarListObserver,
     return static_cast<unsigned>(len / 2);
   }
 };
-}  // namespace ASV::perception
+}  // namespace ASV::messages
 
 #endif /* _MULTIRADAR_H_ */

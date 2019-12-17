@@ -21,7 +21,7 @@
 #include "MarineRadarData.h"
 #include "MultiRadar.h"
 
-namespace ASV::perception {
+namespace ASV::messages {
 
 class MarineRadar
     : public Navico::Protocol::NRP::iImageClientStateObserver,
@@ -87,6 +87,10 @@ class MarineRadar
     return m_pSpoke;
   }
 
+  MarineRadarRTdata getMarineRadarRTdata() const noexcept {
+    return MarineRadar_RTdata;
+  }
+
  private:
   //-------------------------------------------------------------------------
   //  Observer Callbacks
@@ -94,8 +98,17 @@ class MarineRadar
   // iImageClientSpokeObserver callbacks (real time)
   virtual void UpdateSpoke(
       const Navico::Protocol::NRP::Spoke::t9174Spoke* pSpoke) {
+    // copy pSpoke to m_pSpoke
     m_pSpoke.header = pSpoke->header;
     memcpy(m_pSpoke.data, pSpoke->data, SAMPLES_PER_SPOKE / 2);
+
+    // update MarineRadar_RTdata
+    MarineRadar_RTdata.spoke_azimuth_deg =
+        pSpoke->header.spokeAzimuth * 360 / 4096.0;
+    MarineRadar_RTdata.spoke_samplerange_m =
+        Navico::Protocol::NRP::Spoke::GetSampleRange_mm(pSpoke->header) /
+        1000.0;
+    memcpy(MarineRadar_RTdata.spokedata, pSpoke->data, SAMPLES_PER_SPOKE / 2);
 
   }  // UpdateSpoke
 
@@ -1131,9 +1144,10 @@ class MarineRadar
 
   MultiRadar* m_pMultiRadar;
   Navico::Protocol::NRP::Spoke::t9174Spoke m_pSpoke;
+  MarineRadarRTdata MarineRadar_RTdata;
   bool m_AlarmTypes[Navico::Protocol::NRP::cMaxGuardZones];
 };
 
-}  // namespace ASV::perception
+}  // namespace ASV::messages
 
 #endif /* _MARINERADAR_H_ */

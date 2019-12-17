@@ -21,7 +21,7 @@
 #include <PPIController.h>
 #include <TargetTrackingClient.h>
 
-namespace ASV::perception {
+namespace ASV::messages {
 
 enum class GUARDZONE {
   eGuardZone1 = 0,  // the first guard zone
@@ -33,9 +33,11 @@ struct MarineRadarConfig {};
 
 // real time data from marine radar
 struct MarineRadarRTdata {
-  Navico::Protocol::NRP::tMode pMode;
+  double spoke_azimuth_deg;
+  double spoke_samplerange_m;
+  uint8_t spokedata[SAMPLES_PER_SPOKE / 2];
 };
 
-}  // namespace ASV::perception
+}  // namespace ASV::messages
 
 #endif /* _MARINERADARDATA_H_ */

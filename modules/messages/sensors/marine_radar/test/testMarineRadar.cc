@@ -1,7 +1,7 @@
 /*
 ****************************************************************************
 * TestMarineRadar.cc:
-* Marine radar for target tracking
+* example for marine radar and write spoke data to sqlite3
 * This header file can be read by C++ compilers
 *
 * by Hu.ZH(CrossOcean.ai)
@@ -12,7 +12,7 @@
 #include "../include/MarineRadar.h"
 #include "common/communication/include/tcpserver.h"
 
-using namespace ASV::perception;
+using namespace ASV::messages;
 using namespace sqlite;
 
 // void socketserver() {
@@ -50,6 +50,12 @@ using namespace sqlite;
 //   }
 // }
 
+void readsqlitedata() {
+  database db("radar.db");
+  std::vector<uint8_t> numbers_test;
+  db << "SELECT numbers from person where id = ?;" << 1 >> numbers_test;
+}
+
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
@@ -65,9 +71,6 @@ int main() {
 
   while (1) {
     auto spokedata = _MarineRadar.getSpoke();
-
-    for (int i = 0; i != (SAMPLES_PER_SPOKE / 2); ++i)
-      std::cout << (unsigned)spokedata.data[i] << std::endl;
 
     db << "INSERT INTO person (angle, numbers) VALUES (?, ?)"
        << spokedata.header.spokeAzimuth
