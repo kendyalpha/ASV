@@ -17,12 +17,10 @@ int main() {
 
   Eigen::VectorXd marine_WX(3);
   Eigen::VectorXd marine_WY(3);
-  Eigen::VectorXd marine_ob_x(1);
-  Eigen::VectorXd marine_ob_y(1);
   marine_WX << start_x, 0.5 * (start_x + end_x), end_x;
   marine_WY << start_y, 0.5 * (start_y + end_y), end_y;
-  marine_ob_x << 0.5 * (start_x + end_x);
-  marine_ob_y << 0.5 * (start_y + end_y);
+  std::vector<double> marine_ob_x = {0.5 * (start_x + end_x)};
+  std::vector<double> marine_ob_y = {0.5 * (start_y + end_y)};
 
   planning::LatticeData _latticedata{
       0.2,   // SAMPLE_TIME
@@ -68,7 +66,7 @@ int main() {
 
   planning::LatticePlanner _trajectorygenerator(_latticedata, _collisiondata);
   _trajectorygenerator.regenerate_target_course(marine_WX, marine_WY);
-  _trajectorygenerator.setobstacle(marine_ob_x, marine_ob_y);
+  // _trajectorygenerator.setup_obstacle(marine_ob_x, marine_ob_y);
 
   sqlite::database read_db("experiment.db");
   sqlite::database test_db("test.db");
@@ -95,6 +93,10 @@ int main() {
         std::tie(estimate_marinestate.x, estimate_marinestate.y,
                  estimate_marinestate.theta, estimate_marinestate.kappa,
                  estimate_marinestate.speed, estimate_marinestate.dspeed);
+
+    // update obstacle
+    _trajectorygenerator.setup_obstacle(marine_ob_x, marine_ob_y);
+
     // Lattice Planner
     Plan_cartesianstate = _trajectorygenerator
                               .trajectoryonestep(estimate_marinestate.x,  //

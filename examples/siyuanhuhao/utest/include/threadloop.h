@@ -230,14 +230,13 @@ class threadloop : public StateMonitor {
 
     StateMonitor::check_planner();
 
-    Eigen::VectorXd ob_x(1);
-    Eigen::VectorXd ob_y(1);
-    ob_x << 3433794;
-    ob_y << 350955;
+    std::vector<double> ob_x(1);
+    std::vector<double> ob_y(1);
+    // ob_x << 3433794;
+    // ob_y << 350955;
 
     _trajectorygenerator.regenerate_target_course(
         RoutePlanner_RTdata.Waypoint_X, RoutePlanner_RTdata.Waypoint_Y);
-    _trajectorygenerator.setobstacle(ob_x, ob_y);
 
     while (1) {
       outerloop_elapsed_time = timer_planner.timeelapsed();
@@ -250,6 +249,8 @@ class threadloop : public StateMonitor {
           break;
         }
         case common::TESTMODE::SIMULATION_FRENET: {
+          _trajectorygenerator.setup_obstacle(ob_x, ob_y);
+
           auto Plan_cartesianstate =
               _trajectorygenerator
                   .trajectoryonestep(estimator_RTdata.Marine_state(0),
@@ -276,6 +277,8 @@ class threadloop : public StateMonitor {
           break;
         }
         case common::TESTMODE::EXPERIMENT_FRENET: {
+          _trajectorygenerator.setup_obstacle(ob_x, ob_y);
+
           auto Plan_cartesianstate =
               _trajectorygenerator
                   .trajectoryonestep(estimator_RTdata.Marine_state(0),

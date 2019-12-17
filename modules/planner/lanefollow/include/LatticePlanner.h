@@ -55,6 +55,25 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
     return *this;
   }  // trajectoryonestep
 
+  // consider the reference line and obstacle resolution
+  void setup_obstacle(
+      const std::vector<double> &_marine_surrounding_x,
+      const std::vector<double> &_marine_surrounding_y) noexcept {
+    // get the reference line
+    auto _CartRefX = FrenetTrajectoryGenerator::getCartRefX();
+    auto _CartRefY = FrenetTrajectoryGenerator::getCartRefY();
+
+    //
+    for (std::size_t i = 0; i != _marine_surrounding_x.size(); ++i) {
+      // convert to cart coordinate
+      auto [surrounding_x, surrounding_y] = common::math::Marine2Cart(
+          _marine_surrounding_x[i], _marine_surrounding_y[i]);
+      CollisionChecker::IsObstacle(surrounding_x, surrounding_y, _CartRefX,
+                                   _CartRefY);
+    }
+
+  }  // setup_obstacle
+
   CartesianState getnextcartesianstate() const noexcept {
     return next_cartesianstate;
   }

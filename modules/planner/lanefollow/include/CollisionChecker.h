@@ -62,14 +62,49 @@ class CollisionChecker {
     return collision_free_roi_paths;
   }  // check_paths
 
-  void setobstacle(const Eigen::VectorXd &_marine_obstacle_x,
-                   const Eigen::VectorXd &_marine_obstacle_y) noexcept {
-    auto cart_obstacle_y = common::math::Marine2Cart(_marine_obstacle_y);
-    obstacle_x = _marine_obstacle_x;
-    obstacle_y = cart_obstacle_y;
-  }  // setobstacle
+  std::vector<double> getobstacle_x() const noexcept { return obstacle_x; }
+  std::vector<double> getobstacle_y() const noexcept { return obstacle_y; }
 
  protected:
+  // check if the surroundings will block the reference line: if true, the
+  // surroundings will be obstacles, otherwise not.
+  void IsObstacle(double surrounding_x, double surrounding_y,
+                  const Eigen::VectorXd &_ref_x,
+                  const Eigen::VectorXd &_ref_y) {
+    // reference line
+    double max_reference_radius = 9 * std::pow(collisiondata.ROBOT_RADIUS, 2);
+    double min_dist = 100000000;
+    for (std::size_t i = 0; i != _ref_x.size(); ++i) {
+      double distance =
+          (_ref_x(i) - surrounding_x) * (_ref_x(i) - surrounding_x) +
+          (_ref_y(i) - surrounding_y) * (_ref_y(i) - surrounding_y);
+      if (distance < min_dist) min_dist = distance;
+    }
+    if (min_dist > max_reference_radius) return;
+
+    // obstacle resolution
+    double obstacle_resolution = 0.1 * std::pow(collisiondata.ROBOT_RADIUS, 2);
+    for (std::size_t i = 0; i != obstacle_x.size(); ++i) {
+      double distance =
+          (obstacle_x[i] - surrounding_x) * (obstacle_x[i] - surrounding_x) +
+          (obstacle_y[i] - surrounding_y) * (obstacle_y[i] - surrounding_y);
+      if (distance < obstacle_resolution)
+        return;
+      else
+        continue;
+    }
+
+    obstacle_x.push_back(surrounding_x);
+    obstacle_y.push_back(surrounding_y);
+
+  }  // IsObstacle
+
+ private:
+  CollisionData collisiondata;
+  // obstacles
+  std::vector<double> obstacle_x;  // in the Cartesian coordinate
+  std::vector<double> obstacle_y;  // in the Cartesian coordinate
+
   int check_collision(const Frenet_path &_Frenet_path) {
     std::size_t max_n_obstacle = static_cast<std::size_t>(obstacle_x.size());
     std::size_t num_path_point =
@@ -79,8 +114,8 @@ class CollisionChecker {
     double min_radius = std::pow(collisiondata.ROBOT_RADIUS, 2);
     for (std::size_t i = 0; i != max_n_obstacle; i++) {
       for (std::size_t j = 0; j != num_path_point; j++) {
-        double _dis = std::pow(_Frenet_path.x(j) - obstacle_x(i), 2) +
-                      std::pow(_Frenet_path.y(j) - obstacle_y(i), 2);
+        double _dis = std::pow(_Frenet_path.x(j) - obstacle_x[i], 2) +
+                      std::pow(_Frenet_path.y(j) - obstacle_y[i], 2);
         if (_dis < min_dist) min_dist = _dis;
       }
     }
@@ -121,14 +156,8 @@ class CollisionChecker {
     //           << count_max_accel << "MAX_CURVATURE: " << count_max_curvature
     //           << std::endl;
     return constraint_free_paths;
-  }
+  }  // check_constraints
 
-  // obstacles
-  Eigen::VectorXd obstacle_x;  // in the Cartesian coordinate
-  Eigen::VectorXd obstacle_y;  // in the Cartesian coordinate
-
- private:
-  CollisionData collisiondata;
 };  // end class CollisionChecker
 }  // namespace ASV::planning
 

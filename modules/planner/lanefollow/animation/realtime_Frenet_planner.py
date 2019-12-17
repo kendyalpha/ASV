@@ -61,7 +61,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.sendall(b'socket')
         data = s.recv(1600)
         doubles_sequence = array.array('d', data)
-        print(len(doubles_sequence))
         # vessel profile
         vessel2dnew = _vessel2d.perform_tran(
             doubles_sequence[1],  # x

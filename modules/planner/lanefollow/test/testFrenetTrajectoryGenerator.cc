@@ -37,12 +37,13 @@ int main() {
 
   Eigen::VectorXd marine_WX(5);
   Eigen::VectorXd marine_WY(5);
-  Eigen::VectorXd marine_ob_x(10);
-  Eigen::VectorXd marine_ob_y(10);
   marine_WX << 0.0, 25, 50, 75, 100;
   marine_WY << 0.0, 0.0, 0.0, 0.0, 0.0;
-  marine_ob_x << 50, 50.0, 50.0, 50.0, 48, 50.0, 52, 54, 56, 58;
-  marine_ob_y << -2.0, -1.0, 2.0, 1, 0, 3.0, -2.0, -2.0, -2.0, -2.0;
+
+  std::vector<double> marine_surrounding_x = {50,   50.0, 50.0, 50.0, 48,
+                                              50.0, 52,   54,   56,   58};
+  std::vector<double> marine_surrounding_y = {-2.0, -1.0, 2.0,  1,    0,
+                                              3.0,  -2.0, -2.0, -2.0, -2.0};
 
   planning::LatticeData _latticedata{
       0.1,         // SAMPLE_TIME
@@ -88,7 +89,6 @@ int main() {
 
   planning::LatticePlanner _trajectorygenerator(_latticedata, _collisiondata);
   _trajectorygenerator.regenerate_target_course(marine_WX, marine_WY);
-  _trajectorygenerator.setobstacle(marine_ob_x, marine_ob_y);
 
   // socket
   tcpserver _tcpserver("9340");
@@ -101,6 +101,9 @@ int main() {
   common::timecounter _timer;
 
   for (int i = 0; i != 500; ++i) {
+    _trajectorygenerator.setup_obstacle(marine_surrounding_x,
+                                        marine_surrounding_y);
+
     Plan_cartesianstate =
         _trajectorygenerator
             .trajectoryonestep(
@@ -128,13 +131,16 @@ int main() {
     _sendmsg.double_msg[2] = estimate_marinestate.theta;  // vessel heading
     _sendmsg.double_msg[3] = estimate_marinestate.speed;  // vessel speed
 
-    _sendmsg.double_msg[4] = marine_ob_x.size();  // the length of vector
-    for (int j = 0; j != marine_ob_x.size(); j++) {
-      _sendmsg.double_msg[2 * j + 5] = marine_ob_x(j);  // obstacle x
-      _sendmsg.double_msg[2 * j + 6] = marine_ob_y(j);  // obstacle y
+    auto cart_ob_x = _trajectorygenerator.getobstacle_x();
+    auto cart_ob_y = _trajectorygenerator.getobstacle_y();
+
+    _sendmsg.double_msg[4] = cart_ob_x.size();  // the length of vector
+    for (int j = 0; j != cart_ob_x.size(); j++) {
+      _sendmsg.double_msg[2 * j + 5] = cart_ob_x[j];   // obstacle x
+      _sendmsg.double_msg[2 * j + 6] = -cart_ob_y[j];  // obstacle y
     }
 
-    int index = 2 * marine_ob_x.size() + 5;
+    int index = 2 * cart_ob_x.size() + 5;
     _sendmsg.double_msg[index] = cart_bestX.size();  // the length of vector
     for (int j = 0; j != cart_bestX.size(); j++) {
       _sendmsg.double_msg[3 * j + index + 1] = cart_bestX(j);      // best X
