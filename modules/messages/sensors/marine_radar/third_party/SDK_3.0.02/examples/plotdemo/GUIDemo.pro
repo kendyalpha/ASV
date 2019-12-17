@@ -3,8 +3,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
 CONFIG += warn_on
-CONFIG += console
-
+#CONFIG += console
 #------------------------------------------------------------
 # Source Files
 #------------------------------------------------------------
@@ -19,7 +18,6 @@ HEADERS += \
     QControlUtils.h \
     TabBase.h \
     TabPPI.h \
-    TabTargets.h \
 
 SOURCES += \
     CustomFrames.cpp \
@@ -28,7 +26,6 @@ SOURCES += \
     QControlUtils.cpp \
     TabBase.cpp \
     TabPPI.cpp \
-    TabTargets.cpp \
     main.cpp \
 
 #------------------------------------------------------------
@@ -37,7 +34,7 @@ SOURCES += \
 
 INCLUDES = \
     ../../include \
-    ../../../../../../../
+    ../../../../../../../../
 
 #------------------------------------------------------------
 # UI Generation

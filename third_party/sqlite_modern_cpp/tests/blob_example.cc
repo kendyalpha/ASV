@@ -10,6 +10,8 @@ int main() {
   try {
     database db("test.db");
 
+    uint8_t jim[4] = {0x01, 0x17, 0xca, 0xff};
+
     db << "CREATE TABLE person (name TEXT, numbers BLOB);";
     db << "INSERT INTO person VALUES (?, ?)"
        << "bob" << vector<int>{1, 2, 3, 4};
@@ -19,6 +21,8 @@ int main() {
        << "sara" << vector<double>{1.0, 2.0, 3.0, 4.0};
     db << "INSERT INTO person VALUES (?, ?)"
        << "test" << vector<uint8_t>{0x01, 0x17, 0xca, 0xff};
+    db << "INSERT INTO person VALUES (?, ?)"
+       << "Jim" << vector<uint8_t>(&jim[0], &jim[4]);
 
     vector<int> numbers_bob;
     db << "SELECT numbers from person where name = ?;"
@@ -58,7 +62,7 @@ int main() {
 
     vector<uint8_t> numbers_test;
     db << "SELECT numbers from person where name = ?;"
-       << "test" >>
+       << "Jim" >>
         numbers_test;
 
     printf("%u", numbers_test[3]);

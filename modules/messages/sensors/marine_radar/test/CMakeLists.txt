@@ -26,7 +26,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
 	"${PROJECT_SOURCE_DIR}/../third_party/SDK_3.0.02/include/"
-	"${PROJECT_SOURCE_DIR}/../../../../"
+	"${PROJECT_SOURCE_DIR}/../../../../../"
 	)
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
@@ -34,7 +34,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
     )
 
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../../../common/logging/src/easylogging++.cc" )
+	"${PROJECT_SOURCE_DIR}/../../../../../common/logging/src/easylogging++.cc" )
 
 
 

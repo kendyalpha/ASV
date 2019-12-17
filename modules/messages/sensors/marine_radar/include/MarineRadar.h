@@ -1,7 +1,8 @@
 /*
 ****************************************************************************
 * MarineRadar.h:
-* Marine radar for target tracking
+* Marine radar for spoke updating, PPI display, target tracking
+* and guard zone alarm, etc.
 * This header file can be read by C++ compilers
 *
 * by Hu.ZH(CrossOcean.ai)
@@ -28,8 +29,6 @@ class MarineRadar
       public Navico::Protocol::NRP::iFeatureObserver,
       public Navico::Protocol::NRP::iTargetTrackingClientObserver,
       public Navico::Protocol::NRP::iTargetTrackingClientStateObserver {
-  enum GUARDZONE { eGuardZone1 = 0, eGuardZone2 };
-
  public:
   MarineRadar()
       : m_pImageClient(nullptr),
@@ -208,36 +207,68 @@ class MarineRadar
               << static_cast<unsigned>(pSetup->guardzones.sensitivity)
               << std::endl;
 
-    bool gz1Enabled = pSetup->guardzones.active[eGuardZone1];
+    bool gz1Enabled =
+        pSetup->guardzones
+            .active[static_cast<unsigned>(GUARDZONE::eGuardZone1)];
     std::cout << "GuardZone1: " << (gz1Enabled == true ? "true" : "false")
               << std::endl;
     std::cout << "Guard1Range: "
-              << pSetup->guardzones.zone[eGuardZone1].rangeStart_m << " - "
-              << pSetup->guardzones.zone[eGuardZone1].rangeEnd_m << std::endl;
+              << pSetup->guardzones
+                     .zone[static_cast<unsigned>(GUARDZONE::eGuardZone1)]
+                     .rangeStart_m
+              << " - "
+              << pSetup->guardzones
+                     .zone[static_cast<unsigned>(GUARDZONE::eGuardZone1)]
+                     .rangeEnd_m
+              << std::endl;
     std::cout << "Guard1Bearing: "
-              << pSetup->guardzones.zone[eGuardZone1].azimuth_ddeg / 10.0
+              << pSetup->guardzones
+                         .zone[static_cast<unsigned>(GUARDZONE::eGuardZone1)]
+                         .azimuth_ddeg /
+                     10.0
               << std::endl;
     std::cout << "Guard1Width: "
-              << pSetup->guardzones.zone[eGuardZone1].width_ddeg / 10.0
+              << pSetup->guardzones
+                         .zone[static_cast<unsigned>(GUARDZONE::eGuardZone1)]
+                         .width_ddeg /
+                     10.0
               << std::endl;
     std::cout << "Guard1AlarmType: "
-              << pSetup->guardzones.alarmType[eGuardZone1].alarmType
+              << pSetup->guardzones
+                     .alarmType[static_cast<unsigned>(GUARDZONE::eGuardZone1)]
+                     .alarmType
               << std::endl;
 
-    bool gz2Enabled = pSetup->guardzones.active[eGuardZone2];
+    bool gz2Enabled =
+        pSetup->guardzones
+            .active[static_cast<unsigned>(GUARDZONE::eGuardZone2)];
     std::cout << "GuardZone2: " << (gz2Enabled == true ? "true" : "false")
               << std::endl;
     std::cout << "Guard2Range: "
-              << pSetup->guardzones.zone[eGuardZone2].rangeStart_m << " - "
-              << pSetup->guardzones.zone[eGuardZone2].rangeEnd_m << std::endl;
+              << pSetup->guardzones
+                     .zone[static_cast<unsigned>(GUARDZONE::eGuardZone2)]
+                     .rangeStart_m
+              << " - "
+              << pSetup->guardzones
+                     .zone[static_cast<unsigned>(GUARDZONE::eGuardZone2)]
+                     .rangeEnd_m
+              << std::endl;
     std::cout << "Guard2Bearing: "
-              << pSetup->guardzones.zone[eGuardZone2].azimuth_ddeg / 10.0
+              << pSetup->guardzones
+                         .zone[static_cast<unsigned>(GUARDZONE::eGuardZone2)]
+                         .azimuth_ddeg /
+                     10.0
               << std::endl;
     std::cout << "Guard2Width: "
-              << pSetup->guardzones.zone[eGuardZone2].width_ddeg / 10.0
+              << pSetup->guardzones
+                         .zone[static_cast<unsigned>(GUARDZONE::eGuardZone2)]
+                         .width_ddeg /
+                     10.0
               << std::endl;
     std::cout << "Guard2AlarmType: "
-              << pSetup->guardzones.alarmType[eGuardZone2].alarmType
+              << pSetup->guardzones
+                     .alarmType[static_cast<unsigned>(GUARDZONE::eGuardZone2)]
+                     .alarmType
               << std::endl;
 
   }  // UpdateSetup
@@ -391,7 +422,7 @@ class MarineRadar
         } break;
       }
 
-      if (zone == eGuardZone1) {
+      if (zone == static_cast<unsigned>(GUARDZONE::eGuardZone1)) {
         std::cout << "Guard1Type: " << gz_type << std::endl;
         std::cout << "Guard1State: " << gz_state << std::endl;
       } else {
@@ -710,13 +741,14 @@ class MarineRadar
         uint32_t gz1_endRange_m = 200u;
         uint16_t gz1_bearing_deg = 0u;
         uint16_t gz1_width_deg = 60u;
-        m_pImageClient->SetGuardZoneEnable(GUARDZONE::eGuardZone1, gz1enables);
+        m_pImageClient->SetGuardZoneEnable(
+            static_cast<uint8_t>(GUARDZONE::eGuardZone1), gz1enables);
         // Set the guard zone in Radar
-        m_pImageClient->SetGuardZoneSetup(GUARDZONE::eGuardZone1,
-                                          gz1_startRange_m, gz1_endRange_m,
-                                          gz1_bearing_deg, gz1_width_deg);
+        m_pImageClient->SetGuardZoneSetup(
+            static_cast<uint8_t>(GUARDZONE::eGuardZone1), gz1_startRange_m,
+            gz1_endRange_m, gz1_bearing_deg, gz1_width_deg);
         m_pImageClient->SetGuardZoneAlarmSetup(
-            GUARDZONE::eGuardZone1,
+            static_cast<uint8_t>(GUARDZONE::eGuardZone1),
             Navico::Protocol::NRP::eGuardZoneAlarmType::eGZAlarmEntry);
 
         bool gz2enables = true;
@@ -724,13 +756,14 @@ class MarineRadar
         uint32_t gz2_endRange_m = 100u;
         uint16_t gz2_bearing_deg = 180u;
         uint16_t gz2_width_deg = 40u;
-        m_pImageClient->SetGuardZoneEnable(GUARDZONE::eGuardZone2, gz2enables);
+        m_pImageClient->SetGuardZoneEnable(
+            static_cast<uint8_t>(GUARDZONE::eGuardZone2), gz2enables);
         // Set the guard zone in Radar
-        m_pImageClient->SetGuardZoneSetup(GUARDZONE::eGuardZone2,
-                                          gz2_startRange_m, gz2_endRange_m,
-                                          gz2_bearing_deg, gz2_width_deg);
+        m_pImageClient->SetGuardZoneSetup(
+            static_cast<uint8_t>(GUARDZONE::eGuardZone2), gz2_startRange_m,
+            gz2_endRange_m, gz2_bearing_deg, gz2_width_deg);
         m_pImageClient->SetGuardZoneAlarmSetup(
-            GUARDZONE::eGuardZone2,
+            static_cast<uint8_t>(GUARDZONE::eGuardZone2),
             Navico::Protocol::NRP::eGuardZoneAlarmType::eGZAlarmEntry);
 
         // power on and start to transmit

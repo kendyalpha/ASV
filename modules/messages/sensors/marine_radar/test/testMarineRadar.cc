@@ -59,8 +59,9 @@ int main() {
   _MarineRadar.StartMarineRadar();
 
   // sqlite3
-  database db("test.db");
-  db << "CREATE TABLE person (name TEXT,angle INT, numbers BLOB);";
+  database db("radar.db");
+  db << "CREATE TABLE person (id integer primary key autoincrement not "
+        "null, angle INT, numbers BLOB);";
 
   while (1) {
     auto spokedata = _MarineRadar.getSpoke();
@@ -68,10 +69,10 @@ int main() {
     for (int i = 0; i != (SAMPLES_PER_SPOKE / 2); ++i)
       std::cout << (unsigned)spokedata.data[i] << std::endl;
 
-    std::vector<uint8_t> spokedata_vector(
-        &spokedata.data[0], &spokedata.data[SAMPLES_PER_SPOKE / 2]);
-    // db << "INSERT INTO person VALUES (?, ?, ?)"
-    //    << "test" << spokedata.header.spokeAzimuth << spokedata_vector;
+    db << "INSERT INTO person (angle, numbers) VALUES (?, ?)"
+       << spokedata.header.spokeAzimuth
+       << std::vector<uint8_t>(&spokedata.data[0],
+                               &spokedata.data[SAMPLES_PER_SPOKE / 2]);
 
     // std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }

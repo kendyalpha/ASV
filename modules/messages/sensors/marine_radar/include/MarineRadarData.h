@@ -23,6 +23,11 @@
 
 namespace ASV::perception {
 
+enum class GUARDZONE {
+  eGuardZone1 = 0,  // the first guard zone
+  eGuardZone2
+};
+
 // common parameter in marine radar
 struct MarineRadarConfig {};
 
