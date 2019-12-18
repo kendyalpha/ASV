@@ -59,18 +59,23 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
   void setup_obstacle(
       const std::vector<double> &_marine_surrounding_x,
       const std::vector<double> &_marine_surrounding_y) noexcept {
-    // get the reference line
-    auto _CartRefX = FrenetTrajectoryGenerator::getCartRefX();
-    auto _CartRefY = FrenetTrajectoryGenerator::getCartRefY();
+    std::size_t size_of_surroundings = _marine_surrounding_x.size();
+    if (size_of_surroundings == _marine_surrounding_y.size()) {
+      // get the reference line
+      auto _CartRefX = FrenetTrajectoryGenerator::getCartRefX();
+      auto _CartRefY = FrenetTrajectoryGenerator::getCartRefY();
 
-    //
-    for (std::size_t i = 0; i != _marine_surrounding_x.size(); ++i) {
-      // convert to cart coordinate
-      auto [surrounding_x, surrounding_y] = common::math::Marine2Cart(
-          _marine_surrounding_x[i], _marine_surrounding_y[i]);
-      CollisionChecker::IsObstacle(surrounding_x, surrounding_y, _CartRefX,
-                                   _CartRefY);
-    }
+      // check if the surroundings are obstacles
+      for (std::size_t i = 0; i != size_of_surroundings; ++i) {
+        // convert to cart coordinate
+        auto [surrounding_x, surrounding_y] = common::math::Marine2Cart(
+            _marine_surrounding_x[i], _marine_surrounding_y[i]);
+        CollisionChecker::IsObstacle(surrounding_x, surrounding_y, _CartRefX,
+                                     _CartRefY);
+      }
+
+    } else
+      return;
 
   }  // setup_obstacle
 

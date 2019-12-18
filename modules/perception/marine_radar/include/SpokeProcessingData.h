@@ -16,21 +16,26 @@
 
 namespace ASV::perception {
 
+struct RadarConfig {
+  double radar_x;  // x of radar relative to CoG, in the body-fixed coordinate
+  double radar_y;  // y of radar relative to CoG, in the body-fixed coordinate
+};
+
 struct AlarmZone {
-  uint32_t start_range_m;
-  uint32_t end_range_m;
-  uint32_t start_bearing_deg;
-  uint32_t end_bearing_deg;
+  double start_range_m;
+  double end_range_m;
+  double center_bearing_rad;
+  double width_bearing_rad;
   uint8_t sensitivity_threhold;  // min sensitivity
 };
 
 struct SpokeProcessRTdata {
-  // obstacle in the body-fixed coordinate
-  std::vector<double> obstacle_bearing_deg;
-  std::vector<double> obstacle_range_m;
-  // obstacle in the UTM
-  std::vector<double> obstacle_x_m;
-  std::vector<double> obstacle_y_m;
+  // surroundings in the body-fixed coordinate
+  std::vector<double> surroundings_bearing_rad;
+  std::vector<double> surroundings_range_m;
+  // surroundings in the marine coordinate
+  std::vector<double> surroundings_x_m;
+  std::vector<double> surroundings_y_m;
 };
 
 }  // namespace ASV::perception

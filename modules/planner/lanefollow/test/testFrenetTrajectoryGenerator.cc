@@ -40,10 +40,10 @@ int main() {
   marine_WX << 0.0, 25, 50, 75, 100;
   marine_WY << 0.0, 0.0, 0.0, 0.0, 0.0;
 
-  std::vector<double> marine_surrounding_x = {50,   50.0, 50.0, 50.0, 48,
-                                              50.0, 52,   54,   56,   58};
-  std::vector<double> marine_surrounding_y = {-2.0, -1.0, 2.0,  1,    0,
-                                              3.0,  -2.0, -2.0, -2.0, -2.0};
+  std::vector<double> marine_surrounding_x{50, 50.0, 50.0, 50.0, 48, 50.0,
+                                           53, 54,   56,   58,   58, 60};
+  std::vector<double> marine_surrounding_y{-2.0, -1.0, 2.0,  1,    0,   3.0,
+                                           -2.0, -2.0, -2.0, -2.0, -10, 10};
 
   planning::LatticeData _latticedata{
       0.1,         // SAMPLE_TIME
@@ -65,7 +65,7 @@ int main() {
       0.2,   // MAX_CURVATURE
       3,     // HULL_LENGTH
       1,     // HULL_WIDTH
-      2.5    // ROBOT_RADIUS
+      3.3    // ROBOT_RADIUS
   };
 
   // real time data

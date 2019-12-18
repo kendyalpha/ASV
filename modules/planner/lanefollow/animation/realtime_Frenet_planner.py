@@ -107,7 +107,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         ax2.plot(bestspeed)
         ax2.set(xlabel='Time (s)', ylabel='speed (m/s)')
-        plt.pause(0.5)
+        plt.pause(0.1)
         ax1.clear()
         ax2.clear()
 
