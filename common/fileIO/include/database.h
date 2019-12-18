@@ -24,6 +24,7 @@
 #include "modules/messages/sensors/gpsimu/include/gpsdata.h"
 #include "modules/messages/sensors/wind/include/winddata.h"
 #include "modules/messages/stm32/include/stm32data.h"
+#include "modules/perception/marine_radar/include/SpokeProcessingData.h"
 #include "modules/planner/route_planning/include/RoutePlannerData.h"
 
 namespace ASV::common {
@@ -33,7 +34,7 @@ class database {
   explicit database(const std::string &_savepath)
       : db(_savepath),
         clientset({"controller", "estimator", "route_planning", "GPS", "wind",
-                   "motor", "stm32"}) {}
+                   "motor", "stm32", "surroundings"}) {}
 
   ~database() = default;
 
@@ -45,6 +46,7 @@ class database {
     create_estimator_table();
     create_routeplanner_table();
     create_stm32_table();
+    create_surrounding_table();
   }  // initializetables
 
   // insert a bow into gps table
@@ -63,6 +65,20 @@ class database {
       CLOG(ERROR, "sql-GPS") << e.what();
     }
   }  // update_gps_table
+
+  // insert a bow into gps table
+  void update_surroundings_table(
+      const perception::SpokeProcessRTdata &_spokeRTdata) {
+    try {
+      db << "INSERT INTO surroundings"
+            "(bearing_rad, range_m, x_m, y_m) VALUES (?,?,?,?)"
+         << _spokeRTdata.surroundings_bearing_rad
+         << _spokeRTdata.surroundings_range_m << _spokeRTdata.surroundings_x_m
+         << _spokeRTdata.surroundings_y_m;
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-surroundings") << e.what();
+    }
+  }  // update_surroundings_table
 
   // insert a bow into controller table
   void update_controller_table(const control::controllerRTdata<m, n> &_RTdata,
@@ -227,6 +243,24 @@ class database {
       CLOG(ERROR, "sql") << e.what();
     }
   }  // create_mastertable
+
+  // create surrounding table
+  void create_surrounding_table() {
+    try {
+      std::string str =
+          "CREATE TABLE surroundings"
+          "(ID           INTEGER PRIMARY KEY AUTOINCREMENT,"
+          " bearing_rad  BLOB, "
+          " range_m      BLOB, "
+          " x_m          BLOB, "
+          " y_m          BLOB); ";
+
+      db << str;
+
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql") << e.what();
+    }
+  }  // create_surrounding_table
 
   // create GPS table
   void create_GPS_table() {

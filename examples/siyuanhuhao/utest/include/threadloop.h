@@ -698,7 +698,34 @@ class threadloop : public StateMonitor {
   }  // gps_loop()
 
   // marine radar giving spoke data
-  void marine_radar_loop() {}  // marine_radar_loop
+  void marine_radar_loop() {
+    switch (testmode) {
+      case common::TESTMODE::SIMULATION_DP:
+      case common::TESTMODE::SIMULATION_LOS:
+      case common::TESTMODE::SIMULATION_FRENET:
+      case common::TESTMODE::SIMULATION_AVOIDANCE: {
+        // simulation: do nothing
+        break;
+      }
+      case common::TESTMODE::EXPERIMENT_DP:
+      case common::TESTMODE::EXPERIMENT_LOS:
+      case common::TESTMODE::EXPERIMENT_FRENET: {
+        messages::GPS _gpsimu(_jsonparse.getgpsbaudrate(),
+                              _jsonparse.getgpsport());
+
+        // experiment
+        while (1) {
+          gps_data =
+              _gpsimu.parseGPS(RoutePlanner_RTdata.utm_zone).getgpsRTdata();
+        }
+
+        break;
+      }
+      default:
+        break;
+    }  // end switch
+
+  }  // marine_radar_loop
 
   // gui data link
   void gui_loop() {

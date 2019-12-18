@@ -31,10 +31,15 @@
 #include "modules/simulator/include/simulator.h"
 
 namespace ASV {
+// constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_DP;
 // constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_LOS;
 constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_FRENET;
+// constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_AVOIDANCE;
+
+// constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_DP;
 // constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_LOS;
 // constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_FRENET;
+// constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_AVOIDANCE;
 
 constexpr int num_thruster = 2;
 constexpr int dim_controlspace = 3;

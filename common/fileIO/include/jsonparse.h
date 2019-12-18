@@ -22,9 +22,9 @@
 #include "common/property/include/vesseldata.h"
 #include "modules/controller/include/controllerdata.h"
 #include "modules/estimator/include/estimatordata.h"
+#include "modules/perception/marine_radar/include/SpokeProcessingData.h"
 #include "modules/planner/common/include/plannerdata.h"
 #include "modules/planner/lanefollow/include/LatticePlannerdata.h"
-
 /*
 global coordinate (GLOBAL), which is an inertial reference frame;
 body-fixed coordinate (BODY); whose origin located at the stern
@@ -170,6 +170,19 @@ class jsonparse {
       3,           // HULL_LENGTH
       1,           // HULL_WIDTH
       2.5          // ROBOT_RADIUS
+  };
+
+  RadarConfig Radar_Config{
+      -1.0,  // radar_x
+      0.0    // radar_y
+  };
+
+  AlarmZone Alarm_Zone{
+      10,        // start_range_m
+      20,        // end_range_m
+      0,         // center_bearing_rad
+      M_PI / 2,  // width_bearing_rad
+      0xac       // sensitivity_threhold
   };
 
   void parsejson() {
@@ -540,6 +553,8 @@ class jsonparse {
     collisiondata_input.ROBOT_RADIUS =
         file["planner"]["FrenetCollision"]["robot_radius"].get<double>();
   }  // parsefrenetdata
+
+  void parseSpokedata() {}  // parseSpokedata
 
  public:
   template <int _m, int _n>

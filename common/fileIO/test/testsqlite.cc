@@ -115,6 +115,13 @@ int main() {
       common::LINKSTATUS::CONNECTED    // linkstatus;
   };
 
+  perception::SpokeProcessRTdata Spoke_RTdata{
+      std::vector<double>({1, 3, 4}),  // surroundings_bearing_rad
+      std::vector<double>({1, 3, 4}),  // surroundings_range_m
+      std::vector<double>({1, 3, 4}),  // surroundings_x_m
+      std::vector<double>({1, 3, 4})   // surroundings_y_m
+  };
+
   common::timecounter _timer;
 
   for (int i = 0; i != 3; ++i) {
@@ -124,6 +131,7 @@ int main() {
     _sqlitetest.update_routeplanner_table(_plannerRTdata);
     _sqlitetest.update_wind_table(_windRTdata);
     _sqlitetest.update_stm32_table(_stm32data);
+    _sqlitetest.update_surroundings_table(Spoke_RTdata);
   }
   long int et = _timer.timeelapsed();
   std::cout << "time:" << et << std::endl;

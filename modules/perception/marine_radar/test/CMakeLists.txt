@@ -34,10 +34,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 	"/usr/lib"
     )
 
-
-
 # 指定生成目标
-
 add_executable (testSpokeProcessing testSpokeProcessing.cc )
 target_include_directories(testSpokeProcessing PRIVATE ${HEADER_DIRECTORY})
 

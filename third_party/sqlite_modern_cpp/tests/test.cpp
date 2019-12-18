@@ -12,20 +12,24 @@ int main() {
 
     uint8_t jim[4] = {0x01, 0x17, 0xca, 0xff};
 
-    db << "CREATE TABLE person (_id integer primary key autoincrement not "
-          "null, angle int, numbers BLOB);";
+    std::vector<double> a{1, 2};
+    std::vector<double> b{4, 2, 3};
 
-    db << "INSERT INTO person (angle, numbers) VALUES (?,?)" << 1
-       << vector<uint8_t>(&jim[0], &jim[4]);
-    db << "INSERT INTO person (angle, numbers) VALUES (?,?)" << 2
-       << vector<uint8_t>(&jim[0], &jim[4]);
-    db << "INSERT INTO person (angle, numbers) VALUES (?,?)" << 3
-       << vector<uint8_t>(&jim[0], &jim[4]);
+    db << "CREATE TABLE person (ID integer primary key autoincrement not "
+          "null, angle int, numbers BLOB, ages BLOB, heights BLOB);";
 
-    vector<uint8_t> numbers_test;
-    db << "SELECT numbers from person where ID = ?;" << 1 >> numbers_test;
+    db << "INSERT INTO person (angle, numbers, ages, heights) VALUES (?,?,?,?)"
+       << 1 << a << a << a;
+    db << "INSERT INTO person (angle, numbers, ages, heights) VALUES (?,?,?,?)"
+       << 2 << b << b << b;
 
-    printf("%u", numbers_test[3]);
+    // db << "INSERT INTO person (angle, numbers) VALUES (?,?)" << 3
+    //    << vector<uint8_t>(&jim[0], &jim[4]);
+
+    vector<double> numbers_test;
+    db << "SELECT numbers from person where ID = ?;" << 2 >> numbers_test;
+
+    printf("%lf", numbers_test[0]);
     // else {
     // db << "SELECT numbers from person where name = ?;" << "sara" >>
     // [](vector<double> numbers_sara){ for(auto e : numbers_sara) cout << e <<
