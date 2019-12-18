@@ -30,24 +30,28 @@ class threadloop : public StateMonitor {
   ~threadloop() {}
 
   void mainloop() {
+    std::thread spokeprocess_thread(&threadloop::spoke_process_loop, this);
     std::thread route_planner_thread(&threadloop::route_planner_loop, this);
     std::thread path_planner_thread(&threadloop::path_planner_loop, this);
     std::thread estimator_thread(&threadloop::estimatorloop, this);
     std::thread controller_thread(&threadloop::controllerloop, this);
     std::thread sql_thread(&threadloop::sqlloop, this);
     std::thread gps_thread(&threadloop::gps_loop, this);
+    std::thread marine_radar_thread(&threadloop::marine_radar_loop, this);
     std::thread timer_thread(&threadloop::utc_timer_loop, this);
     std::thread gui_thread(&threadloop::gui_loop, this);
     std::thread stm32_thread(&threadloop::stm32loop, this);
     std::thread socket_thread(&threadloop::socket_loop, this);
     std::thread statemonitor_thread(&threadloop::state_monitor_loop, this);
 
+    spokeprocess_thread.join();
     route_planner_thread.join();
     path_planner_thread.join();
     estimator_thread.join();
     controller_thread.join();
     sql_thread.join();
     gps_thread.join();
+    marine_radar_thread.join();
     timer_thread.join();
     gui_thread.join();
     stm32_thread.join();
@@ -181,6 +185,16 @@ class threadloop : public StateMonitor {
       Eigen::VectorXd::Zero(2)                      // WY
   };
 
+  // real time sourroundings
+  perception::SpokeProcessRTdata SpokeProcess_RTdata;
+
+  //
+  perception::MarineRadarRTdata MarineRadar_RTdata{
+      0,                  // spoke_azimuth_deg
+      0,                  // spoke_samplerange_m
+      {0x00, 0x00, 0x00}  // spokedata
+  };
+
   // real time utc
   std::string pt_utc;
 
@@ -189,6 +203,33 @@ class threadloop : public StateMonitor {
   common::jsonparse<num_thruster, dim_controlspace> _jsonparse;
   // sqlite
   common::database<num_thruster, dim_controlspace> _sqlite;
+
+  // spoke processing
+  void spoke_process_loop() {
+    perception::SpokeProcessing Spoke_Processing(
+        _jsonparse.getalarmzonedata(), _jsonparse.getSpokeProcessdata());
+
+    common::timecounter timer_spokeprocess;
+    long int outerloop_elapsed_time = 0;
+    long int innerloop_elapsed_time = 0;
+    long int sample_time_ms =
+        static_cast<long int>(1000 * Spoke_Processing.getsampletime());
+
+    std::size_t size_spokedata = sizeof(MarineRadar_RTdata.spokedata) /
+                                 sizeof(MarineRadar_RTdata.spokedata[0]);
+
+    while (1) {
+      SpokeProcess_RTdata =
+          Spoke_Processing
+              .DetectionOnSpoke(MarineRadar_RTdata.spokedata, size_spokedata,
+                                MarineRadar_RTdata.spoke_azimuth_deg,
+                                MarineRadar_RTdata.spoke_samplerange_m,
+                                estimator_RTdata.State(0),
+                                estimator_RTdata.State(1),
+                                estimator_RTdata.State(2))
+              .getSpokeProcessRTdata();
+    }
+  }  // spoke_process_loop
 
   void route_planner_loop() {
     planning::RoutePlanning _RoutePlanner(RoutePlanner_RTdata,
@@ -710,13 +751,13 @@ class threadloop : public StateMonitor {
       case common::TESTMODE::EXPERIMENT_DP:
       case common::TESTMODE::EXPERIMENT_LOS:
       case common::TESTMODE::EXPERIMENT_FRENET: {
-        messages::GPS _gpsimu(_jsonparse.getgpsbaudrate(),
-                              _jsonparse.getgpsport());
+        perception::MarineRadar Marine_Radar;
 
+        Marine_Radar.StartMarineRadar();
         // experiment
         while (1) {
-          gps_data =
-              _gpsimu.parseGPS(RoutePlanner_RTdata.utm_zone).getgpsRTdata();
+          MarineRadar_RTdata = Marine_Radar.getMarineRadarRTdata();
+          std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
 
         break;

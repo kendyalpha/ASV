@@ -16,7 +16,8 @@
 
 namespace ASV::perception {
 
-struct RadarConfig {
+struct SpokeProcessdata {
+  double sample_time;
   double radar_x;  // x of radar relative to CoG, in the body-fixed coordinate
   double radar_y;  // y of radar relative to CoG, in the body-fixed coordinate
 };

@@ -94,6 +94,16 @@
       "robot_radius":3
     }
   },
+  "perception":{
+    "sample_time": 0.1,
+    "alarm_zone":{
+      "start_range_m": 10,
+      "end_range_m": 20,
+      "center_bearing_deg": 0,
+      "width_bearing_deg": 60,
+      "sensitivity_threhold":200
+    }
+  },
   "simulator": {
     "sample_time": 0.1
   },
@@ -106,6 +116,10 @@
       "number": 2,
       "location1":[1, 1, 2],
       "location2":[1, 1, 2]
+    },
+    "marine_radar":{
+      "number": 1,
+      "antenna":[0.0, 0.0]
     }
   },
   "comcenter":{

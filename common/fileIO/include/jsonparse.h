@@ -55,6 +55,8 @@ class jsonparse {
   auto getsimulatordata() const noexcept { return simulator_sample_time; }
   auto getlatticedata() const noexcept { return latticedata_input; }
   auto getcollisiondata() const noexcept { return collisiondata_input; }
+  auto getSpokeProcessdata() const noexcept { return SpokeProcess_data; }
+  auto getalarmzonedata() const noexcept { return Alarm_Zone; }
 
   std::string getsqlitedata() const noexcept { return dbpath; }
   std::string getgpsport() const noexcept { return gps_port; }
@@ -78,6 +80,7 @@ class jsonparse {
     parsesqlitedata();
     paresecomcenter();
     parsefrenetdata();
+    parseSpokedata();
   }
 
  private:
@@ -172,12 +175,13 @@ class jsonparse {
       2.5          // ROBOT_RADIUS
   };
 
-  RadarConfig Radar_Config{
+  perception::SpokeProcessdata SpokeProcess_data{
+      0.1,   // sampletime
       -1.0,  // radar_x
       0.0    // radar_y
   };
 
-  AlarmZone Alarm_Zone{
+  perception::AlarmZone Alarm_Zone{
       10,        // start_range_m
       20,        // end_range_m
       0,         // center_bearing_rad
@@ -554,7 +558,30 @@ class jsonparse {
         file["planner"]["FrenetCollision"]["robot_radius"].get<double>();
   }  // parsefrenetdata
 
-  void parseSpokedata() {}  // parseSpokedata
+  void parseSpokedata() {
+    std::vector<double> radar_atennna =
+        file["sensors"]["marine_radar"]["antenna"].get<std::vector<double>>();
+
+    SpokeProcess_data.radar_x = radar_atennna[0];
+    SpokeProcess_data.radar_y = radar_atennna[1];
+
+    SpokeProcess_data.sample_time =
+        file["perception"]["sample_time"].get<double>();
+    // AlarmZone
+    Alarm_Zone.start_range_m =
+        file["perception"]["alarm_zone"]["start_range_m"].get<double>();
+    Alarm_Zone.end_range_m =
+        file["perception"]["alarm_zone"]["end_range_m"].get<double>();
+    Alarm_Zone.center_bearing_rad =
+        file["perception"]["alarm_zone"]["center_bearing_deg"].get<double>() *
+        M_PI / 180.0;
+    Alarm_Zone.width_bearing_rad =
+        file["perception"]["alarm_zone"]["width_bearing_deg"].get<double>() *
+        M_PI / 180.0;
+    Alarm_Zone.sensitivity_threhold =
+        file["perception"]["alarm_zone"]["sensitivity_threhold"].get<uint8_t>();
+
+  }  // parseSpokedata
 
  public:
   template <int _m, int _n>
@@ -661,6 +688,13 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
   os << _jp.rc_port << " " << _jp.rc_baudrate << std::endl;
   os << _jp.wind_port << " " << _jp.wind_baudrate << std::endl;
   os << _jp.stm32_port << " " << _jp.stm32_baudrate << std::endl;
+
+  os << "alarm:\n";
+  os << _jp.Alarm_Zone.start_range_m << std::endl;
+  os << _jp.Alarm_Zone.end_range_m << std::endl;
+  os << _jp.Alarm_Zone.center_bearing_rad << std::endl;
+  os << _jp.Alarm_Zone.width_bearing_rad << std::endl;
+  os << (unsigned)_jp.Alarm_Zone.sensitivity_threhold << std::endl;
 
   os << "dbpath:\n";
   os << _jp.dbpath << std::endl;

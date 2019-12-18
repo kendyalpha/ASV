@@ -13,7 +13,8 @@
 using namespace ASV::perception;
 
 int main() {
-  RadarConfig Radar_Config{
+  SpokeProcessdata SpokeProcess_data{
+      0.1,   // sample_time
       -1.0,  // radar_x
       0.0    // radar_y
   };
@@ -39,7 +40,7 @@ int main() {
   double vessel_y_m = 0;
   double vessel_theta_rad = 0;
 
-  SpokeProcessing _SpokeProcessing(Alarm_Zone, Radar_Config);
+  SpokeProcessing _SpokeProcessing(Alarm_Zone, SpokeProcess_data);
   SpokeProcess_RTdata =
       _SpokeProcessing
           .DetectionOnSpoke(spokedata, size_array, spokeazimuth_deg,

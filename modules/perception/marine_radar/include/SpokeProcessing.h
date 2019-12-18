@@ -23,8 +23,8 @@ namespace ASV::perception {
 class SpokeProcessing {
  public:
   explicit SpokeProcessing(const AlarmZone &_AlarmZone,
-                           const RadarConfig &_RadarConfig)
-      : Alarm_Zone(_AlarmZone), Radar_Config(_RadarConfig) {}
+                           const SpokeProcessdata &_SpokeProcessdata)
+      : Alarm_Zone(_AlarmZone), SpokeProcess_data(_SpokeProcessdata) {}
   virtual ~SpokeProcessing() = default;
 
   SpokeProcessing &DetectionOnSpoke(const uint8_t *_spoke_array,
@@ -46,9 +46,13 @@ class SpokeProcessing {
     return SpokeProcess_RTdata;
   }  // getSpokeProcessRTdata
 
+  double getsampletime() const noexcept {
+    return SpokeProcess_data.sample_time;
+  }
+
  private:
   const AlarmZone Alarm_Zone;
-  const RadarConfig Radar_Config;
+  const SpokeProcessdata SpokeProcess_data;
   SpokeProcessRTdata SpokeProcess_RTdata;
 
   // check if the surroundings are in the alarm zone
@@ -97,12 +101,12 @@ class SpokeProcessing {
       double cvalue_plus = std::cos(_vessel_theta_rad + bearing_rad);
       double svalue_plus = std::sin(_vessel_theta_rad + bearing_rad);
 
-      double xs = cvalue * Radar_Config.radar_x -
-                  svalue * Radar_Config.radar_y + range_m * cvalue_plus +
+      double xs = cvalue * SpokeProcess_data.radar_x -
+                  svalue * SpokeProcess_data.radar_y + range_m * cvalue_plus +
                   _vessel_x_m;
 
-      double ys = svalue * Radar_Config.radar_x +
-                  cvalue * Radar_Config.radar_y + range_m * svalue_plus +
+      double ys = svalue * SpokeProcess_data.radar_x +
+                  cvalue * SpokeProcess_data.radar_y + range_m * svalue_plus +
                   _vessel_y_m;
 
       surroundings_x_m[i] = xs;
