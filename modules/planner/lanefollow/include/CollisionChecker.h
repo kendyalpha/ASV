@@ -74,7 +74,8 @@ class CollisionChecker {
     // reference line
     double max_reference_radius = 9 * std::pow(collisiondata.ROBOT_RADIUS, 2);
     double min_dist = 100000000;
-    for (std::size_t i = 0; i != _ref_x.size(); ++i) {
+
+    for (unsigned i = 0; i != _ref_x.size(); ++i) {
       double distance =
           (_ref_x(i) - surrounding_x) * (_ref_x(i) - surrounding_x) +
           (_ref_y(i) - surrounding_y) * (_ref_y(i) - surrounding_y);

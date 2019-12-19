@@ -67,16 +67,23 @@ int main() {
   // sqlite3
   database db("radar.db");
   db << "CREATE TABLE person (id integer primary key autoincrement not "
-        "null, angle INT, numbers BLOB);";
+        "null, angle real, range real, numbers BLOB);";
 
   while (1) {
-    auto spokedata = _MarineRadar.getSpoke();
+    auto MarineRadar_RTdata = _MarineRadar.getMarineRadarRTdata();
 
-    db << "INSERT INTO person (angle, numbers) VALUES (?, ?)"
-       << spokedata.header.spokeAzimuth
-       << std::vector<uint8_t>(&spokedata.data[0],
-                               &spokedata.data[SAMPLES_PER_SPOKE / 2]);
+    db << "INSERT INTO person (angle, range, numbers) VALUES (?, ?, ?)"
+       << MarineRadar_RTdata.spoke_azimuth_deg
+       << MarineRadar_RTdata.spoke_samplerange_m
+       << std::vector<uint8_t>(
+              &MarineRadar_RTdata.spokedata[0],
+              &MarineRadar_RTdata.spokedata[SAMPLES_PER_SPOKE / 2]);
 
+    std::cout << "spoke_azimuth_deg: " << MarineRadar_RTdata.spoke_azimuth_deg
+              << std::endl;
+    for (int i = 0; i != (SAMPLES_PER_SPOKE / 2); ++i) {
+      printf("%u\n", MarineRadar_RTdata.spokedata[i]);
+    }
     // std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 }

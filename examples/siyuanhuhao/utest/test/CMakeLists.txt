@@ -5,6 +5,8 @@ cmake_minimum_required (VERSION 3.10)
 project (experiment)
 set(CMAKE_CXX_STANDARD 17)
 
+
+
 # UNIX, WIN32, WINRT, CYGWIN, APPLE are environment 
 # variables as flags set by default system
 if(UNIX)

@@ -22,7 +22,8 @@ class StateMonitor {
   StateMonitor()
       : indicator_marine_radar(common::STATETOGGLE::IDLE),
         indicator_spoke_process(common::STATETOGGLE::IDLE),
-        indicator_planner(common::STATETOGGLE::IDLE),
+        indicator_routeplanner(common::STATETOGGLE::IDLE),
+        indicator_pathplanner(common::STATETOGGLE::IDLE),
         indicator_estimator(common::STATETOGGLE::IDLE),
         indicator_controller(common::STATETOGGLE::IDLE),
         indicator_sql(common::STATETOGGLE::IDLE),
@@ -36,7 +37,8 @@ class StateMonitor {
  protected:
   common::STATETOGGLE indicator_marine_radar;
   common::STATETOGGLE indicator_spoke_process;
-  common::STATETOGGLE indicator_planner;
+  common::STATETOGGLE indicator_routeplanner;
+  common::STATETOGGLE indicator_pathplanner;
   common::STATETOGGLE indicator_estimator;
   common::STATETOGGLE indicator_controller;
   common::STATETOGGLE indicator_sql;
@@ -53,12 +55,19 @@ class StateMonitor {
     }
   }  // check_spoke_process
 
-  void check_planner() {
+  void check_routeplanner() {
     while (1) {
-      if (indicator_planner == common::STATETOGGLE::READY) break;
+      if (indicator_routeplanner == common::STATETOGGLE::READY) break;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-  }  // check_planner
+  }  // check_routeplanner
+
+  void check_pathplanner() {
+    while (1) {
+      if (indicator_pathplanner == common::STATETOGGLE::READY) break;
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+  }  // check_pathplanner
 
   void check_estimator() {
     while (1) {
