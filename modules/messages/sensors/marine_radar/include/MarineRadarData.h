@@ -21,6 +21,8 @@
 #include <PPIController.h>
 #include <TargetTrackingClient.h>
 
+#include "common/property/include/priority.h"
+
 namespace ASV::messages {
 
 enum class GUARDZONE {
@@ -33,6 +35,9 @@ struct MarineRadarConfig {};
 
 // real time data from marine radar
 struct MarineRadarRTdata {
+  // state toggle
+  common::STATETOGGLE state_toggle;
+
   double spoke_azimuth_deg;
   double spoke_samplerange_m;
   uint8_t spokedata[SAMPLES_PER_SPOKE / 2];

@@ -27,7 +27,7 @@ class threadloop : public StateMonitor {
     // std::ofstream o("pretty.json");
     // o << std::setw(4) << j << std::endl;
   }
-  ~threadloop() {}
+  ~threadloop() = default;
 
   void mainloop() {
     std::thread spokeprocess_thread(&threadloop::spoke_process_loop, this);
@@ -68,7 +68,7 @@ class threadloop : public StateMonitor {
       0,                          // setpoints_heading;
       0,                          // setpoints_longitude;
       0,                          // setpoints_latitude;
-      "0n",                       // UTM zone
+      "OFF",                      // UTM zone
       0,                          // speed
       0,                          // los_capture_radius
       Eigen::VectorXd::Zero(2),   // Waypoint_X
@@ -140,6 +140,7 @@ class threadloop : public StateMonitor {
       0,  // UTM_y
       ""  // UTM_zone
   };
+
   // real time stm32 data
   messages::stm32data stm32_data{
       "",                              // UTC_time
@@ -188,11 +189,12 @@ class threadloop : public StateMonitor {
   // real time sourroundings
   perception::SpokeProcessRTdata SpokeProcess_RTdata;
 
-  //
+  // real time data from marine radar
   perception::MarineRadarRTdata MarineRadar_RTdata{
-      0,                  // spoke_azimuth_deg
-      0,                  // spoke_samplerange_m
-      {0x00, 0x00, 0x00}  // spokedata
+      common::STATETOGGLE::IDLE,  // state_toggle
+      0,                          // spoke_azimuth_deg
+      0,                          // spoke_samplerange_m
+      {0x00, 0x00, 0x00}          // spokedata
   };
 
   // real time utc
@@ -204,7 +206,7 @@ class threadloop : public StateMonitor {
   // sqlite
   common::database<num_thruster, dim_controlspace> _sqlite;
 
-  // spoke processing
+  //##################### spoke processing ########################//
   void spoke_process_loop() {
     perception::SpokeProcessing Spoke_Processing(
         _jsonparse.getalarmzonedata(), _jsonparse.getSpokeProcessdata());
@@ -215,24 +217,52 @@ class threadloop : public StateMonitor {
     long int sample_time_ms =
         static_cast<long int>(1000 * Spoke_Processing.getsampletime());
 
+    StateMonitor::check_spoke_process();
+
     std::size_t size_spokedata = sizeof(MarineRadar_RTdata.spokedata) /
                                  sizeof(MarineRadar_RTdata.spokedata[0]);
-
     while (1) {
-      SpokeProcess_RTdata =
-          Spoke_Processing
-              .DetectionOnSpoke(MarineRadar_RTdata.spokedata, size_spokedata,
-                                MarineRadar_RTdata.spoke_azimuth_deg,
-                                MarineRadar_RTdata.spoke_samplerange_m,
-                                estimator_RTdata.State(0),
-                                estimator_RTdata.State(1),
-                                estimator_RTdata.State(2))
-              .getSpokeProcessRTdata();
+      outerloop_elapsed_time = timer_spokeprocess.timeelapsed();
+
+      switch (testmode) {
+        case common::TESTMODE::SIMULATION_DP:
+        case common::TESTMODE::SIMULATION_LOS:
+        case common::TESTMODE::SIMULATION_FRENET:
+        case common::TESTMODE::SIMULATION_AVOIDANCE:
+        case common::TESTMODE::EXPERIMENT_DP:
+        case common::TESTMODE::EXPERIMENT_LOS:
+        case common::TESTMODE::EXPERIMENT_FRENET: {
+          // no planner
+          break;
+        }
+        case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
+          SpokeProcess_RTdata =
+              Spoke_Processing
+                  .DetectionOnSpoke(
+                      MarineRadar_RTdata.spokedata, size_spokedata,
+                      MarineRadar_RTdata.spoke_azimuth_deg,
+                      MarineRadar_RTdata.spoke_samplerange_m,
+                      estimator_RTdata.State(0), estimator_RTdata.State(1),
+                      estimator_RTdata.State(2))
+                  .getSpokeProcessRTdata();
+          break;
+        }
+        default:
+          break;
+      }  // end switch
+
+      innerloop_elapsed_time = timer_spokeprocess.timeelapsed();
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(sample_time_ms - innerloop_elapsed_time));
+
+      if (outerloop_elapsed_time > 1.1 * sample_time_ms)
+        CLOG(INFO, "SpokeProcess") << "Too much time!";
     }
   }  // spoke_process_loop
 
+  //##################### route planning ########################//
   void route_planner_loop() {
-    planning::RoutePlanning _RoutePlanner(RoutePlanner_RTdata,
+    planning::RoutePlanning Route_Planner(RoutePlanner_RTdata,
                                           _jsonparse.getvessel());
 
     while (1) {
@@ -247,7 +277,7 @@ class threadloop : public StateMonitor {
         W_long << initial_long, final_long;
         W_lat << initial_lat, final_lat;
 
-        RoutePlanner_RTdata = _RoutePlanner.setCruiseSpeed(1)
+        RoutePlanner_RTdata = Route_Planner.setCruiseSpeed(1)
                                   .setWaypoints(W_long, W_lat)
                                   .getRoutePlannerRTdata();
 
@@ -259,6 +289,7 @@ class threadloop : public StateMonitor {
 
   }  // route_planner_loop
 
+  //##################### local path planner ########################//
   void path_planner_loop() {
     planning::LatticePlanner _trajectorygenerator(
         _jsonparse.getlatticedata(), _jsonparse.getcollisiondata());
@@ -271,11 +302,6 @@ class threadloop : public StateMonitor {
 
     StateMonitor::check_planner();
 
-    std::vector<double> ob_x(1);
-    std::vector<double> ob_y(1);
-    // ob_x << 3433794;
-    // ob_y << 350955;
-
     _trajectorygenerator.regenerate_target_course(
         RoutePlanner_RTdata.Waypoint_X, RoutePlanner_RTdata.Waypoint_Y);
 
@@ -283,13 +309,17 @@ class threadloop : public StateMonitor {
       outerloop_elapsed_time = timer_planner.timeelapsed();
 
       switch (testmode) {
-        case common::TESTMODE::SIMULATION_DP: {
-          break;
-        }
-        case common::TESTMODE::SIMULATION_LOS: {
+        case common::TESTMODE::SIMULATION_DP:
+        case common::TESTMODE::SIMULATION_LOS:
+        case common::TESTMODE::EXPERIMENT_DP:
+        case common::TESTMODE::EXPERIMENT_LOS: {
+          // no planner
           break;
         }
         case common::TESTMODE::SIMULATION_FRENET: {
+          std::vector<double> ob_x{3433794};
+          std::vector<double> ob_y{350955};
+
           _trajectorygenerator.setup_obstacle(ob_x, ob_y);
 
           auto Plan_cartesianstate =
@@ -311,14 +341,59 @@ class threadloop : public StateMonitor {
                   Plan_cartesianstate.speed, Plan_cartesianstate.dspeed);
           break;
         }
-        case common::TESTMODE::EXPERIMENT_DP: {
-          break;
-        }
-        case common::TESTMODE::EXPERIMENT_LOS: {
+        case common::TESTMODE::SIMULATION_AVOIDANCE: {
+          _trajectorygenerator.setup_obstacle(
+              SpokeProcess_RTdata.surroundings_x_m,
+              SpokeProcess_RTdata.surroundings_y_m);
+
+          auto Plan_cartesianstate =
+              _trajectorygenerator
+                  .trajectoryonestep(estimator_RTdata.Marine_state(0),
+                                     estimator_RTdata.Marine_state(1),
+                                     estimator_RTdata.Marine_state(2),
+                                     estimator_RTdata.Marine_state(3),
+                                     estimator_RTdata.Marine_state(4),
+                                     estimator_RTdata.Marine_state(5), 2)
+                  .getnextcartesianstate();
+
+          std::tie(Planning_Marine_state.x, Planning_Marine_state.y,
+                   Planning_Marine_state.theta, Planning_Marine_state.kappa,
+                   Planning_Marine_state.speed, Planning_Marine_state.dspeed) =
+              common::math::Cart2Marine(
+                  Plan_cartesianstate.x, Plan_cartesianstate.y,
+                  Plan_cartesianstate.theta, Plan_cartesianstate.kappa,
+                  Plan_cartesianstate.speed, Plan_cartesianstate.dspeed);
           break;
         }
         case common::TESTMODE::EXPERIMENT_FRENET: {
+          std::vector<double> ob_x{3433794};
+          std::vector<double> ob_y{350955};
+
           _trajectorygenerator.setup_obstacle(ob_x, ob_y);
+
+          auto Plan_cartesianstate =
+              _trajectorygenerator
+                  .trajectoryonestep(estimator_RTdata.Marine_state(0),
+                                     estimator_RTdata.Marine_state(1),
+                                     estimator_RTdata.Marine_state(2),
+                                     estimator_RTdata.Marine_state(3),
+                                     estimator_RTdata.Marine_state(4),
+                                     estimator_RTdata.Marine_state(5), 2)
+                  .getnextcartesianstate();
+
+          std::tie(Planning_Marine_state.x, Planning_Marine_state.y,
+                   Planning_Marine_state.theta, Planning_Marine_state.kappa,
+                   Planning_Marine_state.speed, Planning_Marine_state.dspeed) =
+              common::math::Cart2Marine(
+                  Plan_cartesianstate.x, Plan_cartesianstate.y,
+                  Plan_cartesianstate.theta, Plan_cartesianstate.kappa,
+                  Plan_cartesianstate.speed, Plan_cartesianstate.dspeed);
+          break;
+        }
+        case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
+          _trajectorygenerator.setup_obstacle(
+              SpokeProcess_RTdata.surroundings_x_m,
+              SpokeProcess_RTdata.surroundings_y_m);
 
           auto Plan_cartesianstate =
               _trajectorygenerator
@@ -353,6 +428,7 @@ class threadloop : public StateMonitor {
 
   }  // path_planner_loop
 
+  //################### path following, controller, TA ####################//
   void controllerloop() {
     control::controller<10, num_thruster, indicator_actuation, dim_controlspace>
         _controller(controller_RTdata, _jsonparse.getcontrollerdata(),
@@ -419,37 +495,33 @@ class threadloop : public StateMonitor {
                                .gettrackerRTdata();
           break;
         }
+        case common::TESTMODE::SIMULATION_AVOIDANCE: {
+          _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
+          _controller.set_thruster_feedback(
+              controller_RTdata.command_rotation,
+              controller_RTdata.command_alpha_deg);
+          // trajectory tracking
+          tracker_RTdata = _trajectorytracking
+                               .FollowCircularArc(Planning_Marine_state.kappa,
+                                                  Planning_Marine_state.speed,
+                                                  Planning_Marine_state.theta)
+                               .gettrackerRTdata();
+
+          break;
+        }
         case common::TESTMODE::EXPERIMENT_DP: {
           _controller.setcontrolmode(control::CONTROLMODE::DYNAMICPOSITION);
+          tracker_RTdata.setpoint = Eigen::Vector3d::Zero();
+          tracker_RTdata.v_setpoint = Eigen::Vector3d::Zero();
+
+          _controller.set_thruster_feedback(
+              controller_RTdata.command_rotation,
+              controller_RTdata.command_alpha_deg);
 
           break;
         }
         case common::TESTMODE::EXPERIMENT_LOS: {
           _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
-
-          // Eigen::Vector2i feedback_rotation;
-          // Eigen::Vector2i feedback_alpha;
-          // int rotation1 = stm32_data.feedback_pwm1 - 9250;
-          // int rotation2 = stm32_data.feedback_pwm2 - 9250;
-
-          // if (rotation1 > 0) {
-          //   feedback_rotation(0) = rotation1;
-          //   feedback_alpha(0) = 0;
-          // } else {
-          //   feedback_rotation(0) = -rotation1;
-          //   feedback_alpha(0) = 180;
-          // }
-
-          // if (rotation2 > 0) {
-          //   feedback_rotation(1) = rotation2;
-          //   feedback_alpha(1) = 0;
-          // } else {
-          //   feedback_rotation(1) = -rotation2;
-          //   feedback_alpha(1) = 180;
-          // }
-
-          // _controller.set_thruster_feedback(feedback_rotation,
-          // feedback_alpha);
 
           _controller.set_thruster_feedback(
               controller_RTdata.command_rotation,
@@ -462,6 +534,20 @@ class threadloop : public StateMonitor {
           break;
         }
         case common::TESTMODE::EXPERIMENT_FRENET: {
+          _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
+          _controller.set_thruster_feedback(
+              controller_RTdata.command_rotation,
+              controller_RTdata.command_alpha_deg);
+          // trajectory tracking
+          tracker_RTdata = _trajectorytracking
+                               .FollowCircularArc(Planning_Marine_state.kappa,
+                                                  Planning_Marine_state.speed,
+                                                  Planning_Marine_state.theta)
+                               .gettrackerRTdata();
+
+          break;
+        }
+        case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
           _controller.setcontrolmode(control::CONTROLMODE::MANEUVERING);
           _controller.set_thruster_feedback(
               controller_RTdata.command_rotation,
@@ -497,13 +583,14 @@ class threadloop : public StateMonitor {
     }
   }  // controllerloop
 
-  // loop to give real time state estimation
+  //##################### state estimation and simulator ####################//
   void estimatorloop() {
     // initialization of estimator
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP:
       case common::TESTMODE::SIMULATION_LOS:
-      case common::TESTMODE::SIMULATION_FRENET: {
+      case common::TESTMODE::SIMULATION_FRENET:
+      case common::TESTMODE::SIMULATION_AVOIDANCE: {
         // simulation
         estimator<indicator_kalman,  // indicator_kalman
                   1,                 // nlp_x
@@ -566,7 +653,8 @@ class threadloop : public StateMonitor {
       }
       case common::TESTMODE::EXPERIMENT_DP:
       case common::TESTMODE::EXPERIMENT_LOS:
-      case common::TESTMODE::EXPERIMENT_FRENET: {
+      case common::TESTMODE::EXPERIMENT_FRENET:
+      case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
         //                  experiment                        //
 
         // initializtion
@@ -657,6 +745,12 @@ class threadloop : public StateMonitor {
           _sqlite.update_controller_table(controller_RTdata, tracker_RTdata);
           break;
         }
+        case common::TESTMODE::SIMULATION_AVOIDANCE: {
+          _sqlite.update_estimator_table(estimator_RTdata);
+          _sqlite.update_controller_table(controller_RTdata, tracker_RTdata);
+          _sqlite.update_surroundings_table(SpokeProcess_RTdata);
+          break;
+        }
         case common::TESTMODE::EXPERIMENT_DP:
         case common::TESTMODE::EXPERIMENT_LOS:
         case common::TESTMODE::EXPERIMENT_FRENET: {
@@ -668,24 +762,35 @@ class threadloop : public StateMonitor {
 
           break;
         }
+        case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
+          _sqlite.update_gps_table(gps_data);
+          _sqlite.update_stm32_table(stm32_data);
+          _sqlite.update_estimator_table(estimator_RTdata);
+          _sqlite.update_controller_table(controller_RTdata, tracker_RTdata);
+          _sqlite.update_surroundings_table(SpokeProcess_RTdata);
+
+          break;
+        }
         default:
           break;
       }  // end switch
     }
   }  // sqlloop()
 
-  // loop to give messages to stm32
+  //##################### STM32 ########################//
   void stm32loop() {
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP:
       case common::TESTMODE::SIMULATION_LOS:
-      case common::TESTMODE::SIMULATION_FRENET: {
+      case common::TESTMODE::SIMULATION_FRENET:
+      case common::TESTMODE::SIMULATION_AVOIDANCE: {
         // simulation: do nothing
         break;
       }
       case common::TESTMODE::EXPERIMENT_DP:
       case common::TESTMODE::EXPERIMENT_LOS:
-      case common::TESTMODE::EXPERIMENT_FRENET: {
+      case common::TESTMODE::EXPERIMENT_FRENET:
+      case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
         // experiment
         messages::stm32_link _stm32_link(stm32_data,
                                          _jsonparse.getstm32baudrate(),
@@ -709,18 +814,20 @@ class threadloop : public StateMonitor {
 
   }  // stm32loop()
 
-  // read gps data and convert it to UTM
+  //################### GPS sensor and UTM conversion ######################//
   void gps_loop() {
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP:
       case common::TESTMODE::SIMULATION_LOS:
-      case common::TESTMODE::SIMULATION_FRENET: {
+      case common::TESTMODE::SIMULATION_FRENET:
+      case common::TESTMODE::SIMULATION_AVOIDANCE: {
         // simulation: do nothing
         break;
       }
       case common::TESTMODE::EXPERIMENT_DP:
       case common::TESTMODE::EXPERIMENT_LOS:
-      case common::TESTMODE::EXPERIMENT_FRENET: {
+      case common::TESTMODE::EXPERIMENT_FRENET:
+      case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
         messages::GPS _gpsimu(_jsonparse.getgpsbaudrate(),
                               _jsonparse.getgpsport());
 
@@ -738,8 +845,37 @@ class threadloop : public StateMonitor {
 
   }  // gps_loop()
 
-  // marine radar giving spoke data
+  //##################### marine radar and spoke messages ####################//
   void marine_radar_loop() {
+    switch (testmode) {
+      case common::TESTMODE::SIMULATION_DP:
+      case common::TESTMODE::SIMULATION_LOS:
+      case common::TESTMODE::SIMULATION_FRENET:
+      case common::TESTMODE::SIMULATION_AVOIDANCE:
+      case common::TESTMODE::EXPERIMENT_DP:
+      case common::TESTMODE::EXPERIMENT_LOS:
+      case common::TESTMODE::EXPERIMENT_FRENET: {
+        // simulation: do nothing
+        break;
+      }
+      case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
+        perception::MarineRadar Marine_Radar;
+        Marine_Radar.StartMarineRadar();
+        // experiment
+        while (1) {
+          MarineRadar_RTdata = Marine_Radar.getMarineRadarRTdata();
+          std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+        break;
+      }
+      default:
+        break;
+    }  // end switch
+
+  }  // marine_radar_loop
+
+  //################### GUI data link ######################//
+  void gui_loop() {
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP:
       case common::TESTMODE::SIMULATION_LOS:
@@ -750,61 +886,11 @@ class threadloop : public StateMonitor {
       }
       case common::TESTMODE::EXPERIMENT_DP:
       case common::TESTMODE::EXPERIMENT_LOS:
-      case common::TESTMODE::EXPERIMENT_FRENET: {
-        perception::MarineRadar Marine_Radar;
-
-        Marine_Radar.StartMarineRadar();
-        // experiment
-        while (1) {
-          MarineRadar_RTdata = Marine_Radar.getMarineRadarRTdata();
-          std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        }
-
-        break;
-      }
-      default:
-        break;
-    }  // end switch
-
-  }  // marine_radar_loop
-
-  // gui data link
-  void gui_loop() {
-    switch (testmode) {
-      case common::TESTMODE::SIMULATION_DP:
-      case common::TESTMODE::SIMULATION_LOS: {
-        guilink_RTdata.WX = Eigen::VectorXd::Zero(5);
-        guilink_RTdata.WY = Eigen::VectorXd::Zero(5);
-        guilink_RTdata.WX << 3433823.54, 3433803, 3433769, 3433790.37,
-            3433823.54;
-        guilink_RTdata.WY << 350938.7, 350928.66, 350987, 351004, 350938.7;
-        guilink_RTdata.desired_speed = 2;
-
-        break;
-      }
-      case common::TESTMODE::SIMULATION_FRENET: {
-        guilink_RTdata.desired_speed = 2;
-
-        // simulation: do nothing
-        break;
-      }
-      case common::TESTMODE::EXPERIMENT_DP:
-      case common::TESTMODE::EXPERIMENT_LOS: {
-        guilink_RTdata.WX = Eigen::VectorXd::Zero(5);
-        guilink_RTdata.WY = Eigen::VectorXd::Zero(5);
-        guilink_RTdata.WX << 3433823.54, 3433803, 3433769, 3433790.37,
-            3433823.54;
-        guilink_RTdata.WY << 350938.7, 350928.66, 350987, 351004, 350938.7;
-        guilink_RTdata.desired_speed = 1;
-
-        break;
-      }
-      case common::TESTMODE::EXPERIMENT_FRENET: {
+      case common::TESTMODE::EXPERIMENT_FRENET:
+      case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
         messages::guilink_serial<num_thruster, 3, dim_controlspace> _gui_link(
             guilink_RTdata, _jsonparse.getguibaudrate(),
             _jsonparse.getguiport());
-
-        guilink_RTdata.desired_speed = 2;
 
         // experiment
         while (1) {
@@ -837,7 +923,7 @@ class threadloop : public StateMonitor {
 
   }  // gui_loop
 
-  // timer
+  //################### UTC clock ######################//
   void utc_timer_loop() {
     common::timecounter utc_timer;
 
@@ -847,11 +933,13 @@ class threadloop : public StateMonitor {
     }
   }  // utc_timer_loop
 
+  //################### state monitor ######################//
   void state_monitor_loop() {
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP:
       case common::TESTMODE::SIMULATION_LOS:
-      case common::TESTMODE::SIMULATION_FRENET: {
+      case common::TESTMODE::SIMULATION_FRENET:
+      case common::TESTMODE::SIMULATION_AVOIDANCE: {
         while (1) {
           if (StateMonitor::indicator_estimator == common::STATETOGGLE::IDLE) {
             StateMonitor::indicator_estimator = common::STATETOGGLE::READY;
@@ -878,7 +966,6 @@ class threadloop : public StateMonitor {
       case common::TESTMODE::EXPERIMENT_LOS:
       case common::TESTMODE::EXPERIMENT_FRENET: {
         // experiment
-
         while (1) {
           if (StateMonitor::indicator_planner == common::STATETOGGLE::IDLE &&
               RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::READY) {
@@ -906,21 +993,53 @@ class threadloop : public StateMonitor {
           }
           std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
-
         break;
       }
+      case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
+        while (1) {
+          if (StateMonitor::indicator_planner == common::STATETOGGLE::IDLE &&
+              RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::READY) {
+            StateMonitor::indicator_planner = common::STATETOGGLE::READY;
+            CLOG(INFO, "planner") << "initialation successful!";
+          }
+
+          if (gps_data.status >= 1 &&
+              StateMonitor::indicator_gps == common::STATETOGGLE::IDLE &&
+              StateMonitor::indicator_planner == common::STATETOGGLE::READY) {
+            StateMonitor::indicator_gps = common::STATETOGGLE::READY;
+            CLOG(INFO, "GPS") << "initialation successful!";
+          }
+
+          if (StateMonitor::indicator_gps == common::STATETOGGLE::READY &&
+              StateMonitor::indicator_estimator == common::STATETOGGLE::IDLE) {
+            StateMonitor::indicator_estimator = common::STATETOGGLE::READY;
+            CLOG(INFO, "estimator") << "initialation successful!";
+          }
+
+          if (StateMonitor::indicator_estimator == common::STATETOGGLE::READY &&
+              StateMonitor::indicator_planner == common::STATETOGGLE::READY &&
+              StateMonitor::indicator_controller == common::STATETOGGLE::IDLE) {
+            StateMonitor::indicator_controller = common::STATETOGGLE::READY;
+          }
+          std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+        break;
+      }
+      default:
+        break;
     }
 
   }  // state_monitor_loop
 
-  // socket server
+  //################### socket TCP server ######################//
   void socket_loop() {
     tcpserver _tcpserver("9340");
 
     switch (testmode) {
       case common::TESTMODE::SIMULATION_DP:
       case common::TESTMODE::SIMULATION_LOS:
-      case common::TESTMODE::SIMULATION_FRENET: {
+      case common::TESTMODE::SIMULATION_FRENET:
+      case common::TESTMODE::SIMULATION_AVOIDANCE: {
         union socketmsg {
           double double_msg[20];
           char char_msg[160];
@@ -976,7 +1095,8 @@ class threadloop : public StateMonitor {
       }
       case common::TESTMODE::EXPERIMENT_DP:
       case common::TESTMODE::EXPERIMENT_LOS:
-      case common::TESTMODE::EXPERIMENT_FRENET: {
+      case common::TESTMODE::EXPERIMENT_FRENET:
+      case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
         // experiment: do nothing
         break;
       }

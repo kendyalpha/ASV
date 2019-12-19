@@ -20,7 +20,9 @@ namespace ASV {
 class StateMonitor {
  public:
   StateMonitor()
-      : indicator_planner(common::STATETOGGLE::IDLE),
+      : indicator_marine_radar(common::STATETOGGLE::IDLE),
+        indicator_spoke_process(common::STATETOGGLE::IDLE),
+        indicator_planner(common::STATETOGGLE::IDLE),
         indicator_estimator(common::STATETOGGLE::IDLE),
         indicator_controller(common::STATETOGGLE::IDLE),
         indicator_sql(common::STATETOGGLE::IDLE),
@@ -32,6 +34,8 @@ class StateMonitor {
   virtual ~StateMonitor() = default;
 
  protected:
+  common::STATETOGGLE indicator_marine_radar;
+  common::STATETOGGLE indicator_spoke_process;
   common::STATETOGGLE indicator_planner;
   common::STATETOGGLE indicator_estimator;
   common::STATETOGGLE indicator_controller;
@@ -41,6 +45,13 @@ class StateMonitor {
   common::STATETOGGLE indicator_gui;
   common::STATETOGGLE indicator_stm32;
   common::STATETOGGLE indicator_socket;
+
+  void check_spoke_process() {
+    while (1) {
+      if (indicator_spoke_process == common::STATETOGGLE::READY) break;
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+  }  // check_spoke_process
 
   void check_planner() {
     while (1) {

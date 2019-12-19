@@ -44,7 +44,13 @@ class MarineRadar
         m_pTargetClient(nullptr),
         m_pTargetAlarmSetup(nullptr),
         m_pTargetProperties(nullptr),
-        m_pTargets(nullptr) {
+        m_pTargets(nullptr),
+        MarineRadar_RTdata({
+            common::STATETOGGLE::IDLE,  // state_toggle
+            0.0,                        // spoke_azimuth_deg
+            0.0,                        // spoke_samplerange_m
+            {0x00, 0x00, 0x00}          // spokedata
+        }) {
     m_pImageClient = new Navico::Protocol::NRP::tImageClient();
     m_pTargetClient = new Navico::Protocol::NRP::tTargetTrackingClient();
     InitProtocolData();
@@ -74,9 +80,10 @@ class MarineRadar
   void StartMarineRadar() {
     // unlock the sdk
     while (1) {
-      if (m_pMultiRadar->InitiateUnlock() > 0)
+      if (m_pMultiRadar->InitiateUnlock() > 0) {
+        MarineRadar_RTdata.state_toggle = common::STATETOGGLE::READY;
         break;
-      else
+      } else
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 

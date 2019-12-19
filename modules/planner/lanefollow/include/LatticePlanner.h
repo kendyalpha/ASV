@@ -56,9 +56,8 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
   }  // trajectoryonestep
 
   // consider the reference line and obstacle resolution
-  void setup_obstacle(
-      const std::vector<double> &_marine_surrounding_x,
-      const std::vector<double> &_marine_surrounding_y) noexcept {
+  void setup_obstacle(const std::vector<double> &_marine_surrounding_x,
+                      const std::vector<double> &_marine_surrounding_y) {
     std::size_t size_of_surroundings = _marine_surrounding_x.size();
     if (size_of_surroundings == _marine_surrounding_y.size()) {
       // get the reference line
