@@ -31,9 +31,9 @@ class SpokeProcessing {
                                     const std::size_t _array_size,
                                     const double _spoke_azimuth_deg,
                                     const double _samplerange_m,
-                                    const double _vessel_x_m,
-                                    const double _vessel_y_m,
-                                    const double _vessel_theta_rad) {
+                                    const double _vessel_x_m = 0.0,
+                                    const double _vessel_y_m = 0.0,
+                                    const double _vessel_theta_rad = 0.0) {
     find_surroundings_spoke(_spoke_array, _array_size, _spoke_azimuth_deg,
                             _samplerange_m, SpokeProcess_RTdata);
     InAlarmZone(SpokeProcess_RTdata);

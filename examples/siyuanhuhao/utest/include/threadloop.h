@@ -953,8 +953,13 @@ class threadloop : public StateMonitor {
             CLOG(INFO, "estimator") << "initialation successful!";
           }
 
-          if (StateMonitor::indicator_estimator == common::STATETOGGLE::READY) {
-            CLOG(INFO, "path planner") << "initialation successful!";
+          if ((StateMonitor::indicator_pathplanner ==
+               common::STATETOGGLE::IDLE) &&
+              (StateMonitor::indicator_controller ==
+               common::STATETOGGLE::IDLE) &&
+              (StateMonitor::indicator_estimator ==
+               common::STATETOGGLE::READY)) {
+            CLOG(INFO, "path-planner") << "initialation successful!";
             CLOG(INFO, "controller") << "initialation successful!";
             StateMonitor::indicator_pathplanner = common::STATETOGGLE::READY;
             StateMonitor::indicator_controller = common::STATETOGGLE::READY;
@@ -992,12 +997,18 @@ class threadloop : public StateMonitor {
             CLOG(INFO, "estimator") << "initialation successful!";
           }
 
-          if (StateMonitor::indicator_estimator == common::STATETOGGLE::READY) {
-            CLOG(INFO, "path planner") << "initialation successful!";
+          if ((StateMonitor::indicator_pathplanner ==
+               common::STATETOGGLE::IDLE) &&
+              (StateMonitor::indicator_controller ==
+               common::STATETOGGLE::IDLE) &&
+              (StateMonitor::indicator_estimator ==
+               common::STATETOGGLE::READY)) {
+            CLOG(INFO, "path-planner") << "initialation successful!";
             CLOG(INFO, "controller") << "initialation successful!";
             StateMonitor::indicator_pathplanner = common::STATETOGGLE::READY;
             StateMonitor::indicator_controller = common::STATETOGGLE::READY;
           }
+
           std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
         break;
@@ -1030,20 +1041,26 @@ class threadloop : public StateMonitor {
                common::STATETOGGLE::IDLE) &&
               (MarineRadar_RTdata.state_toggle == common::STATETOGGLE::READY)) {
             StateMonitor::indicator_marine_radar = common::STATETOGGLE::READY;
-            CLOG(INFO, "marine radar") << "initialation successful!";
+            CLOG(INFO, "marine-radar") << "initialation successful!";
           }
 
           if ((StateMonitor::indicator_estimator ==
                common::STATETOGGLE::READY) &&
               (StateMonitor::indicator_marine_radar ==
-               common::STATETOGGLE::READY)) {
+               common::STATETOGGLE::READY) &&
+              (StateMonitor::indicator_spoke_process ==
+               common::STATETOGGLE::IDLE)) {
             StateMonitor::indicator_spoke_process = common::STATETOGGLE::READY;
-            CLOG(INFO, "spoke process") << "initialation successful!";
+            CLOG(INFO, "spoke-process") << "initialation successful!";
           }
 
-          if (StateMonitor::indicator_spoke_process ==
-              common::STATETOGGLE::READY) {
-            CLOG(INFO, "path planner") << "initialation successful!";
+          if ((StateMonitor::indicator_pathplanner ==
+               common::STATETOGGLE::IDLE) &&
+              (StateMonitor::indicator_controller ==
+               common::STATETOGGLE::IDLE) &&
+              (StateMonitor::indicator_spoke_process ==
+               common::STATETOGGLE::READY)) {
+            CLOG(INFO, "path-planner") << "initialation successful!";
             CLOG(INFO, "controller") << "initialation successful!";
             StateMonitor::indicator_pathplanner = common::STATETOGGLE::READY;
             StateMonitor::indicator_controller = common::STATETOGGLE::READY;

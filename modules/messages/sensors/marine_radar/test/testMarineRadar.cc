@@ -1,6 +1,6 @@
 /*
 ****************************************************************************
-* TestMarineRadar.cc:
+* testMarineRadar.cc:
 * example for marine radar and write spoke data to sqlite3
 * This header file can be read by C++ compilers
 *
@@ -9,8 +9,8 @@
 */
 
 #include <sqlite_modern_cpp.h>
-#include "../include/MarineRadar.h"
 #include "common/communication/include/tcpserver.h"
+#include "modules/messages/sensors/marine_radar/include/MarineRadar.h"
 
 using namespace ASV::messages;
 using namespace sqlite;

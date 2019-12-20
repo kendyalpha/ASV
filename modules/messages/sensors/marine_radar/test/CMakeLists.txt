@@ -47,8 +47,16 @@ find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
 
 # 指定生成目标
 
-add_executable (testMarineRadar testMarineRadar.cc ${SOURCE_FILES} )
+add_executable (testMarineRadar testMarineRadar.cc ${SOURCE_FILES})
 target_include_directories(testMarineRadar PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testMarineRadar PUBLIC ${NRPCLIENT_LIBRARY})
 target_link_libraries(testMarineRadar PUBLIC ${NRPPPI_LIBRARY})
 target_link_libraries(testMarineRadar PUBLIC ${SQLITE3_LIBRARY})
+
+
+
+add_executable (testThrehold testThrehold.cc )
+target_include_directories(testThrehold PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testThrehold PUBLIC ${NRPCLIENT_LIBRARY})
+target_link_libraries(testThrehold PUBLIC ${NRPPPI_LIBRARY})
+target_link_libraries(testThrehold PUBLIC ${SQLITE3_LIBRARY})
