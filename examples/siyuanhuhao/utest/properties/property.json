@@ -22,7 +22,7 @@
     "sample_time": 0.1,
      "LOS": {   
       "los_radius_co": 3,
-      "capture_radius_co":1.5
+      "capture_radius_co":2
     },
     "surge": {
       "position_P": 0,

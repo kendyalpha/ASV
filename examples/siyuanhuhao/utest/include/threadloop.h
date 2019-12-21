@@ -267,10 +267,14 @@ class threadloop : public StateMonitor {
 
     while (1) {
       if (RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::IDLE) {
-        double initial_long = 121.4378246;
-        double initial_lat = 31.0285510;
-        double final_long = 121.4388565;
-        double final_lat = 31.0282296;
+        // double initial_long = 121.4378246;
+        // double initial_lat = 31.0285510;
+        // double final_long = 121.4388565;
+        // double final_lat = 31.0282296;
+        double initial_long = 121.4377186;
+        double initial_lat = 31.0286309;
+        double final_long = 121.4389307;
+        double final_lat = 31.0281764;
 
         Eigen::VectorXd W_long(2);
         Eigen::VectorXd W_lat(2);
@@ -366,8 +370,8 @@ class threadloop : public StateMonitor {
           break;
         }
         case common::TESTMODE::EXPERIMENT_FRENET: {
-          std::vector<double> ob_x{3433794};
-          std::vector<double> ob_y{350955};
+          std::vector<double> ob_x{3433797};
+          std::vector<double> ob_y{350948.5};
 
           _trajectorygenerator.setup_obstacle(ob_x, ob_y);
 

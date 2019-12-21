@@ -15,13 +15,7 @@
 using namespace ASV;
 using namespace sqlite;
 
-void readsqlitedata() {
-  database db("radar.db");
-  std::vector<uint8_t> numbers_test;
-  db << "SELECT numbers from person where id = ?;" << 1 >> numbers_test;
-}
-
-int main() {
+void startRadarAndSpoke() {
   // radar
   messages::MarineRadar _MarineRadar;
   _MarineRadar.StartMarineRadar();
@@ -73,6 +67,32 @@ int main() {
        << SpokeProcess_RTdata.surroundings_x_m
        << SpokeProcess_RTdata.surroundings_y_m;
 
+    std::size_t num_surroundings_alarm =
+        SpokeProcess_RTdata.surroundings_bearing_rad.size();
+    if (num_surroundings_alarm == 0) {
+      std::cout << "No surrounding in the Alarm Zone\n";
+    } else {
+      std::cout << "Surrounding in the Alarm Zone: \n";
+
+      for (std::size_t i = 0; i != num_surroundings_alarm; ++i) {
+        std::cout << "bearing_rad: "
+                  << SpokeProcess_RTdata.surroundings_bearing_rad[i]
+                  << "range_m: " << SpokeProcess_RTdata.surroundings_range_m[i]
+                  << std::endl;
+      }
+    }
+
     // std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
+}
+
+void readsqlitedata() {
+  database db("radar.db");
+  std::vector<uint8_t> numbers_test;
+  db << "SELECT numbers from person where id = ?;" << 1 >> numbers_test;
+}
+
+int main() {
+  startRadarAndSpoke();
+  // readsqlitedata();
 }
