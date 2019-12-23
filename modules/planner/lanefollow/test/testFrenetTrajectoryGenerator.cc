@@ -40,10 +40,17 @@ int main() {
   marine_WX << 0.0, 25, 50, 75, 100;
   marine_WY << 0.0, 0.0, 0.0, 0.0, 0.0;
 
-  std::vector<double> marine_surrounding_x{50, 50.0, 50.0, 50.0, 48, 50.0,
-                                           53, 54,   56,   58,   58, 60};
-  std::vector<double> marine_surrounding_y{-2.0, -1.0, 2.0,  1,    0,   3.0,
-                                           -2.0, -2.0, -2.0, -2.0, -10, 10};
+  // std::vector<double> marine_surrounding_x{50, 50.0, 50.0, 50.0, 48, 50.0,
+  //                                          53, 54,   56,   58,   58, 60};
+  // std::vector<double> marine_surrounding_y{-2.0, -1.0, 2.0,  1,    0,   3.0,
+  //                                          -2.0, -2.0, -2.0, -2.0, -10, 10};
+
+  std::vector<double> marine_surrounding_x{50, 50.0, 50.0, 50.0, 48, 50.0};
+  std::vector<double> marine_surrounding_y{-2.0, -1.0, 2.0, 1, 0, 3.0};
+
+  std::vector<double> marine_surrounding_x_test{53, 54, 56, 58, 58, 60};
+  std::vector<double> marine_surrounding_y_test{-2.0, -2.0, -2.0,
+                                                -2.0, -10,  10};
 
   planning::LatticeData _latticedata{
       0.1,         // SAMPLE_TIME
@@ -101,9 +108,12 @@ int main() {
   common::timecounter _timer;
 
   for (int i = 0; i != 500; ++i) {
-    _trajectorygenerator.setup_obstacle(marine_surrounding_x,
-                                        marine_surrounding_y);
-
+    if (i < 10)
+      _trajectorygenerator.setup_obstacle(marine_surrounding_x,
+                                          marine_surrounding_y);
+    else
+      _trajectorygenerator.setup_obstacle(marine_surrounding_x_test,
+                                          marine_surrounding_y_test);
     Plan_cartesianstate =
         _trajectorygenerator
             .trajectoryonestep(

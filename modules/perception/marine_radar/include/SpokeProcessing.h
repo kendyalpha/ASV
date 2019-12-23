@@ -134,8 +134,10 @@ class SpokeProcessing {
                                                  _spoke_azimuth_rad);
     std::vector<double> surroundings_range_m(num_surroundings, 0.0);
 
+    double interception_empirical = 8.0;
     for (std::size_t i = 0; i != num_surroundings; ++i) {
-      surroundings_range_m[i] = _samplerange_m * (surroundings_index[i] + 1);
+      surroundings_range_m[i] =
+          interception_empirical + _samplerange_m * (surroundings_index[i] + 1);
     }
     _SpokeProcessRTdata.surroundings_bearing_rad = surroundings_bearing_rad;
     _SpokeProcessRTdata.surroundings_range_m = surroundings_range_m;
