@@ -98,4 +98,16 @@ void test_2d_miniball() {
   ASV::common::write2csvfile(_name + "circle.csv", save_circle);
 }
 
+void testAlphaBetafiltering() {
+  using namespace ASV::perception;
+  AlphaBetaData AlphaBeta_Data{
+      0.1,  // sample_time
+      0.1,  // alpha
+      0.1   // beta
+  };
+  TargetTracking Target_Tracking(AlphaBeta_Data);
+  auto [postion_x, postion_y, velocity_vx, velocity_y] =
+      Target_Tracking.AlphaBetaFiltering(1, 1, 1, 1, 1, 1);
+}
+
 int main() { test_2d_miniball(); }

@@ -39,6 +39,20 @@ struct SpokeProcessRTdata {
   std::vector<double> surroundings_y_m;
 };
 
+struct AlphaBetaData {
+  double sample_time;
+  double alpha;
+  double beta;
+};
+
+struct TargetTrackerRTdata {
+  // target position and velocity in the marine coordinate
+  std::vector<double> target_x;
+  std::vector<double> target_y;
+  std::vector<double> target_vx;
+  std::vector<double> target_vy;
+};
+
 }  // namespace ASV::perception
 
 #endif /* _SPOKEPROCESSINGDATA_H_ */
