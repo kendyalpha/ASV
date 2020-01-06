@@ -13,8 +13,8 @@
 #include "common/fileIO/include/utilityio.h"
 
 void test_2d_miniball() {
-  int d = 2;    // dimension
-  int n = 100;  // number of points
+  const int d = 2;  // dimension
+  const int n = 5;  // number of points
 
   std::srand(10);
 
@@ -23,13 +23,27 @@ void test_2d_miniball() {
 
   // generate random points and store them in a 2-d array
   // ----------------------------------------------------
+
+  // double** ap = new double*[n];
+  // for (int i = 0; i < n; ++i) {
+  //   double* p = new double[d];
+  //   for (int j = 0; j < d; ++j) {
+  //     p[j] = rand();
+  //     save_points(i, j) = p[j];
+  //   }
+  //   ap[i] = p;
+  // }
+
+  double test_x[n] = {0, 1, 2, 3, 4};
+  double test_y[n] = {0, 1, 2, 3, 4};
   double** ap = new double*[n];
   for (int i = 0; i < n; ++i) {
     double* p = new double[d];
-    for (int j = 0; j < d; ++j) {
-      p[j] = rand();
-      save_points(i, j) = p[j];
-    }
+    p[0] = test_x[i];
+    p[1] = test_y[i];
+    save_points(i, 0) = p[0];
+    save_points(i, 1) = p[1];
+
     ap[i] = p;
   }
 

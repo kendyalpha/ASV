@@ -237,10 +237,10 @@ void test_multiplethrusterallocation() {
     angle = (i + 1) * M_PI / 60;
     save_tau(2, i + 1) = -1.0 * sin(angle) + 0.2 * std::rand() / RAND_MAX;
   }
-  save_tau.block(1, 0, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 1) +
-                                 0.0 * Eigen::MatrixXd::Random(1, 100);
-  save_tau.block(1, 100, 1, 100) = Eigen::MatrixXd::Constant(1, 100, -1) +
-                                   0.0 * Eigen::MatrixXd::Random(1, 100);
+  save_tau.block(1, 0, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 0) +
+                                 0.00 * Eigen::MatrixXd::Random(1, 100);
+  save_tau.block(1, 100, 1, 100) = Eigen::MatrixXd::Constant(1, 100, -0) +
+                                   0.00 * Eigen::MatrixXd::Random(1, 100);
   save_tau.row(0) = 2 * Eigen::MatrixXd::Constant(1, totalstep, 1) +
                     0.01 * Eigen::MatrixXd::Random(1, totalstep);
   for (int i = 0; i != totalstep; ++i) {
@@ -306,26 +306,26 @@ void test_twinfixed() {
   std::vector<twinfixedthrusterdata> v_twinfixeddata;
   v_twinfixeddata.reserve(num_twinfixed);
   v_twinfixeddata.push_back({
-      -1.9,  // lx
-      -0.3,  // ly
-      2e-4,  // K_positive
-      1e-4,  // K_negative
-      50,    // max_delta_rotation
-      10,    // max_delta_rotation_p2n
-      2000,  // max rotation
-      20,    // max_thrust_positive
-      0.002  // max_thrust_negative
+      -1.9,    // lx
+      -0.7,    // ly
+      0.0083,  // K_positive
+      0.0036,  // K_negative
+      50,      // max_delta_rotation
+      10,      // max_delta_rotation_p2n
+      220,     // max rotation
+      20,      // max_thrust_positive
+      0.002    // max_thrust_negative
   });
   v_twinfixeddata.push_back({
-      -1.9,  // lx
-      0.3,   // ly
-      2e-4,  // K_positive
-      1e-4,  // K_negative
-      50,    // max_delta_rotation
-      10,    // max_delta_rotation_p2n
-      2000,  // max rotation
-      20,    // max_thrust_positive
-      0.002  // max_thrust_negative
+      -1.9,    // lx
+      0.7,     // ly
+      0.0083,  // K_positive
+      0.0036,  // K_negative
+      50,      // max_delta_rotation
+      10,      // max_delta_rotation_p2n
+      220,     // max rotation
+      20,      // max_thrust_positive
+      0.002    // max_thrust_negative
   });
 
   controllerRTdata<m, n> _controllerRTdata{
@@ -347,6 +347,7 @@ void test_twinfixed() {
       _thrustallocationdata, v_tunnelthrusterdata, v_azimuththrusterdata,
       v_ruddermaindata, v_twinfixeddata);
   _thrustallocation.initializapropeller(_controllerRTdata);
+  _thrustallocation.setQ(CONTROLMODE::MANEUVERING);
 
   // data saved for validation and viewer
   const int totalstep = 200;
@@ -360,15 +361,15 @@ void test_twinfixed() {
 
   // desired forces
   double angle = 0;
-  for (int i = 0; i != 120; ++i) {
+  for (int i = 0; i != 180; ++i) {
     angle = (i + 1) * M_PI / 60;
-    save_tau(2, i + 1) = 0 * sin(angle) + 0.5 * std::rand() / RAND_MAX;
+    save_tau(2, i + 1) = 20 * sin(angle) + 0.6 * std::rand() / RAND_MAX;
   }
-  save_tau.block(0, 0, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 5) +
-                                 0.0 * Eigen::MatrixXd::Random(1, 100);
-  save_tau.block(0, 100, 1, 100) = Eigen::MatrixXd::Constant(1, 100, -4) +
-                                   0.0 * Eigen::MatrixXd::Random(1, 100);
-  save_tau.row(1) = 0.01 * Eigen::MatrixXd::Random(1, totalstep);
+  save_tau.block(0, 0, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 50) +
+                                 0.1 * Eigen::MatrixXd::Random(1, 100);
+  save_tau.block(0, 100, 1, 100) = Eigen::MatrixXd::Constant(1, 100, -40) +
+                                   0.1 * Eigen::MatrixXd::Random(1, 100);
+  save_tau.row(1) = 0.00 * Eigen::MatrixXd::Random(1, totalstep);
   for (int i = 0; i != totalstep; ++i) {
     // update tau
     _controllerRTdata.tau = save_tau.col(i);
@@ -404,11 +405,11 @@ void test_twinfixed() {
 
 void testrudder() {
   // set the parameters in the thrust allocation
-  constexpr int m = 2;
+  constexpr int m = 1;
   constexpr int n = 3;
   constexpr ACTUATION index_actuation = ACTUATION::UNDERACTUATED;
 
-  std::vector<int> index_thrusters{3, 3};
+  std::vector<int> index_thrusters{3};
 
   int num_tunnel =
       std::count(index_thrusters.begin(), index_thrusters.end(), 1);
@@ -449,22 +450,22 @@ void testrudder() {
       30,      // max_varphi
       -30      // min_varphi
   });
-  v_ruddermaindata.push_back({
-      -1.893,  // lx
-      0,       // ly
-      2e-5,    // K
-      0.0126,  // Cy
-      20,      // max_delta_rotation
-      500,     // max rotation
-      1,       // min_rotation
-      0,       // max_thrust
-      2e-5,    // min_thrust
-      M_PI,    // max_alpha
-      -M_PI,   // min_alpha
-      1,       // max_delta_varphi
-      30,      // max_varphi
-      -30      // min_varphi
-  });
+  // v_ruddermaindata.push_back({
+  //     -1.893,  // lx
+  //     0,       // ly
+  //     2e-5,    // K
+  //     0.0126,  // Cy
+  //     20,      // max_delta_rotation
+  //     500,     // max rotation
+  //     1,       // min_rotation
+  //     0,       // max_thrust
+  //     2e-5,    // min_thrust
+  //     M_PI,    // max_alpha
+  //     -M_PI,   // min_alpha
+  //     1,       // max_delta_varphi
+  //     30,      // max_varphi
+  //     -30      // min_varphi
+  // });
   std::vector<twinfixedthrusterdata> v_twinfixeddata;
 
   controllerRTdata<m, n> _controllerRTdata{
@@ -503,10 +504,10 @@ void testrudder() {
     angle = (i + 1) * M_PI / 60;
     save_tau(2, i + 1) = 0.5 * sin(angle) + 0.1 * std::rand() / RAND_MAX;
   }
-  save_tau.block(0, 0, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 0.2) +
+  save_tau.block(0, 0, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 0.3) +
                                  0.0 * Eigen::MatrixXd::Random(1, 100);
-  // save_tau.block(0, 100, 1, 100) = Eigen::MatrixXd::Constant(1, 100, -0.2) +
-  //                                  0.0 * Eigen::MatrixXd::Random(1, 100);
+  save_tau.block(0, 100, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 0.3) +
+                                   0.0 * Eigen::MatrixXd::Random(1, 100);
   save_tau.row(1) = 0.01 * Eigen::MatrixXd::Random(1, totalstep);
   for (int i = 0; i != totalstep; ++i) {
     // update tau
@@ -724,10 +725,133 @@ void testbiling() {
   write2csvfile(_name + "rotation.csv", save_rotation);
 }
 
+void testoutboard() {
+  // set the parameters in the thrust allocation
+  const int m = 1;
+  const int n = 3;
+  constexpr ACTUATION index_actuation = ACTUATION::UNDERACTUATED;
+
+  std::vector<int> index_thrusters{2};
+
+  int num_tunnel =
+      std::count(index_thrusters.begin(), index_thrusters.end(), 1);
+
+  int num_azimuth =
+      std::count(index_thrusters.begin(), index_thrusters.end(), 2);
+
+  int num_mainrudder =
+      std::count(index_thrusters.begin(), index_thrusters.end(), 3);
+
+  int num_twinfixed =
+      std::count(index_thrusters.begin(), index_thrusters.end(), 4);
+
+  thrustallocationdata _thrustallocationdata{
+      num_tunnel, num_azimuth, num_mainrudder, num_twinfixed, index_thrusters};
+
+  std::vector<tunnelthrusterdata> v_tunnelthrusterdata;
+  v_tunnelthrusterdata.reserve(num_tunnel);
+
+  std::vector<azimuththrusterdata> v_azimuththrusterdata;
+  v_azimuththrusterdata.reserve(num_azimuth);
+  v_azimuththrusterdata.push_back({
+      -2,           // lx
+      0,            // ly
+      2.8E-4,       // K
+      100,          // max_delta_rotation
+      1500,         // max rotation
+      5,            // min_rotation
+      0.1277,       // max_delta_alpha
+      0.5 * M_PI,   // max_alpha
+      -0.5 * M_PI,  // min_alpha
+      20,           // max_thrust
+      0.05          // min_thrust
+  });
+
+  std::vector<ruddermaindata> v_ruddermaindata;
+  std::vector<twinfixedthrusterdata> v_twinfixeddata;
+
+  controllerRTdata<m, n> _controllerRTdata{
+      STATETOGGLE::IDLE,                    // state_toggle
+      Eigen::Matrix<double, n, 1>::Zero(),  // tau
+      Eigen::Matrix<double, n, 1>::Zero(),  // BalphaU
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // command_alpha
+      Eigen::Matrix<int, m, 1>::Zero(),     // command_alpha_deg
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_u
+      Eigen::Matrix<int, m, 1>::Zero(),     // feedback_rotation
+      Eigen::Matrix<double, m, 1>::Zero(),  // feedback_alpha
+      Eigen::Matrix<int, m, 1>::Zero()      // feedback_alpha_deg
+  };
+
+  // initialize the thrust allocation
+  thrustallocation<m, index_actuation, n> _thrustallocation(
+      _thrustallocationdata, v_tunnelthrusterdata, v_azimuththrusterdata,
+      v_ruddermaindata, v_twinfixeddata);
+  _thrustallocation.initializapropeller(_controllerRTdata);
+  _thrustallocation.setQ(CONTROLMODE::MANEUVERING);
+
+  const int totalstep = 200;
+
+  Eigen::MatrixXd save_u = Eigen::MatrixXd::Zero(m, totalstep);
+  Eigen::MatrixXd save_alpha = Eigen::MatrixXd::Zero(m, totalstep);
+  Eigen::MatrixXi save_alpha_deg = Eigen::MatrixXi::Zero(m, totalstep);
+  Eigen::MatrixXd save_Balphau = Eigen::MatrixXd::Zero(n, totalstep);
+  Eigen::MatrixXd save_tau = Eigen::MatrixXd::Zero(n, totalstep);
+  Eigen::MatrixXi save_rotation = Eigen::MatrixXi::Zero(m, totalstep);
+
+  // desired forces
+  double angle = 0;
+  for (int i = 0; i != 120; ++i) {
+    angle = (i + 1) * M_PI / 60;
+    save_tau(2, i + 1) = 100 * sin(angle) + 0.6 * std::rand() / RAND_MAX;
+  }
+  save_tau.block(0, 0, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 80) +
+                                 0.8 * Eigen::MatrixXd::Random(1, 100);
+  save_tau.block(0, 100, 1, 100) = Eigen::MatrixXd::Constant(1, 100, 90) +
+                                   0.9 * Eigen::MatrixXd::Random(1, 100);
+  save_tau.row(1) = 0.00 * Eigen::MatrixXd::Random(1, totalstep);
+  for (int i = 0; i != totalstep; ++i) {
+    // update tau
+    _controllerRTdata.tau = save_tau.col(i);
+    // update feedback
+    _controllerRTdata.feedback_rotation = _controllerRTdata.command_rotation;
+    _controllerRTdata.feedback_alpha_deg = _controllerRTdata.command_alpha_deg;
+    // thruster allocation
+    _thrustallocation.onestepthrustallocation(_controllerRTdata);
+    // save variables
+    save_u.col(i) = _controllerRTdata.command_u;
+    save_alpha.col(i) = _controllerRTdata.command_alpha;
+    save_alpha_deg.col(i) = _controllerRTdata.command_alpha_deg;
+    save_Balphau.col(i) = _controllerRTdata.BalphaU;
+    save_rotation.col(i) = _controllerRTdata.command_rotation;
+  }
+
+  save_tau = save_tau.transpose().eval();
+  save_u = save_u.transpose().eval();
+  save_alpha = save_alpha.transpose().eval();
+  save_alpha_deg = save_alpha_deg.transpose().eval();
+  save_Balphau = save_Balphau.transpose().eval();
+  save_rotation = save_rotation.transpose().eval();
+  // save data to csv file
+  std::string _name("../data/");
+  write2csvfile(_name + "tau.csv", save_tau);
+  write2csvfile(_name + "u.csv", save_u);
+  write2csvfile(_name + "alpha.csv", save_alpha);
+  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
+  write2csvfile(_name + "Balpha.csv", save_Balphau);
+  write2csvfile(_name + "rotation.csv", save_rotation);
+}
+
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
-  testbiling();
+
+  // test_multiplethrusterallocation();
+  // testrudder();
+  // test_twinfixed();
+  // testbiling();
+  testoutboard();
 
   LOG(INFO) << "Shutting down.";
   return 0;
