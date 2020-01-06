@@ -1,7 +1,7 @@
 obj/ut/tst/./utest-elbow.o: tst/./utest-elbow.cpp tst/./utest-elbow.hpp \
  external/include/gtest/gtest.h tst/./utenv_check.hpp \
- include/pyclustering/cluster/cluster_data.hpp \
  include/pyclustering/cluster/cluster_algorithm.hpp \
+ include/pyclustering/cluster/cluster_data.hpp \
  include/pyclustering/definitions.hpp \
  include/pyclustering/cluster/elbow.hpp \
  include/pyclustering/cluster/elbow_data.hpp \
@@ -20,9 +20,9 @@ external/include/gtest/gtest.h:
 
 tst/./utenv_check.hpp:
 
-include/pyclustering/cluster/cluster_data.hpp:
-
 include/pyclustering/cluster/cluster_algorithm.hpp:
+
+include/pyclustering/cluster/cluster_data.hpp:
 
 include/pyclustering/definitions.hpp:
 

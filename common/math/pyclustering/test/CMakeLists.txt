@@ -22,7 +22,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -mavx")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../ccore/"
+	"${PROJECT_SOURCE_DIR}/../ccore/libs/"
     )
 # thread库
 find_package(Threads MODULE REQUIRED)

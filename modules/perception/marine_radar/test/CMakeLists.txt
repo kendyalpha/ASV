@@ -21,18 +21,23 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -mavx")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# thread库
-find_package(Threads MODULE REQUIRED)
 
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
 	"${PROJECT_SOURCE_DIR}/../../../../"
+	"${PROJECT_SOURCE_DIR}/../../../../common/math/pyclustering/ccore/include"
 	)
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
 	"/usr/lib"
-    )
+	"${PROJECT_SOURCE_DIR}/../../../../common/math/pyclustering/ccore/libs/"
+     )
+
+
+# thread库
+find_package(Threads MODULE REQUIRED)
+find_library(CLUSTER_LIBRARY pyclustering HINTS ${LIBRARY_DIRECTORY})
 
 # 指定生成目标
 add_executable (testSpokeProcessing testSpokeProcessing.cc )
@@ -40,3 +45,5 @@ target_include_directories(testSpokeProcessing PRIVATE ${HEADER_DIRECTORY})
 
 add_executable (testTargetTracking testTargetTracking.cc )
 target_include_directories(testTargetTracking PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testTargetTracking PUBLIC ${CLUSTER_LIBRARY})
+target_link_libraries(testTargetTracking PUBLIC ${CMAKE_THREAD_LIBS_INIT})

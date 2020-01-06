@@ -23,16 +23,11 @@
 #include <gtest/gtest.h>
 
 #include <pyclustering/cluster/dbscan.hpp>
-
 #include <pyclustering/utils/metric.hpp>
 
 #include "samples.hpp"
 
 #include "utenv_check.hpp"
-
-using namespace pyclustering;
-using namespace pyclustering::clst;
-using namespace pyclustering::utils::metric;
 
 static std::shared_ptr<dbscan_data> template_length_process_data(
     const std::shared_ptr<dataset>& p_data, const double p_radius,
@@ -60,7 +55,7 @@ static std::shared_ptr<dbscan_data> template_length_process_distance_matrix(
   dbscan solver(p_radius, p_neighbors);
 
   dataset matrix;
-  distance_matrix(*p_data, matrix);
+  pyclustering::utils::metric::distance_matrix(*p_data, matrix);
 
   solver.process(matrix, dbscan_data_t::DISTANCE_MATRIX, *ptr_output_result);
 

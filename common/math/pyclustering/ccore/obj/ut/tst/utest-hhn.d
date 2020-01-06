@@ -1,7 +1,7 @@
 obj/ut/tst/./utest-hhn.o: tst/./utest-hhn.cpp \
  external/include/gtest/gtest.h tst/./utenv_check.hpp \
- include/pyclustering/cluster/cluster_data.hpp \
  include/pyclustering/cluster/cluster_algorithm.hpp \
+ include/pyclustering/cluster/cluster_data.hpp \
  include/pyclustering/definitions.hpp \
  include/pyclustering/container/ensemble_data.hpp \
  include/pyclustering/nnet/dynamic_analyser.hpp \
@@ -14,9 +14,9 @@ external/include/gtest/gtest.h:
 
 tst/./utenv_check.hpp:
 
-include/pyclustering/cluster/cluster_data.hpp:
-
 include/pyclustering/cluster/cluster_algorithm.hpp:
+
+include/pyclustering/cluster/cluster_data.hpp:
 
 include/pyclustering/definitions.hpp:
 
