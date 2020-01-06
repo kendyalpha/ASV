@@ -1,9 +1,9 @@
 obj/ut/tst/./utest-interface-syncpr.o: tst/./utest-interface-syncpr.cpp \
  external/include/gtest/gtest.h \
- include/pyclustering/interface/syncpr_interface.h \
+ include/pyclustering/interface/pyclustering_interface.h \
  include/pyclustering/interface/pyclustering_package.hpp \
  include/pyclustering/definitions.hpp \
- include/pyclustering/interface/pyclustering_interface.h \
+ include/pyclustering/interface/syncpr_interface.h \
  include/pyclustering/nnet/syncpr.hpp include/pyclustering/nnet/sync.hpp \
  include/pyclustering/container/adjacency.hpp \
  include/pyclustering/container/adjacency_connector.hpp \
@@ -19,13 +19,13 @@ obj/ut/tst/./utest-interface-syncpr.o: tst/./utest-interface-syncpr.cpp \
 
 external/include/gtest/gtest.h:
 
-include/pyclustering/interface/syncpr_interface.h:
+include/pyclustering/interface/pyclustering_interface.h:
 
 include/pyclustering/interface/pyclustering_package.hpp:
 
 include/pyclustering/definitions.hpp:
 
-include/pyclustering/interface/pyclustering_interface.h:
+include/pyclustering/interface/syncpr_interface.h:
 
 include/pyclustering/nnet/syncpr.hpp:
 
