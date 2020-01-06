@@ -8,47 +8,44 @@
 ****************************************************************************
 */
 
-#include <pyclustering/cluster/dbscan.hpp>
-#include <pyclustering/utils/metric.hpp>
-
 #include <iostream>
 
 #include "../include/TargetTracking.h"
-#include "common/fileIO/include/utilityio.h"
+#include "common/plotting/include/matplotlibcpp.h"
+
+void generatecircle(const double center_x, const double center_y,
+                    const double radius, std::vector<double>& _circle_x,
+                    std::vector<double>& _circle_y) {
+  const int n = 120;
+  _circle_x.resize(n);
+  _circle_y.resize(n);
+  for (int i = 0; i < n; ++i) {
+    double t = 2 * M_PI * i / n;
+    _circle_x.at(i) = center_x + radius * std::cos(t);
+    _circle_y.at(i) = center_y + radius * std::sin(t);
+  }
+}
 
 void test_2d_miniball() {
-  const int d = 2;  // dimension
-  const int n = 5;  // number of points
+  const int d = 2;    // dimension
+  const int n = 100;  // number of points
 
   std::srand(10);
 
-  Eigen::MatrixXd save_points = Eigen::MatrixXd::Zero(n, d);
-  Eigen::MatrixXd save_circle = Eigen::MatrixXd::Zero(d + 1, 1);
-
   // generate random points and store them in a 2-d array
   // ----------------------------------------------------
+  std::vector<double> points_x;
+  std::vector<double> points_y;
 
-  // double** ap = new double*[n];
-  // for (int i = 0; i < n; ++i) {
-  //   double* p = new double[d];
-  //   for (int j = 0; j < d; ++j) {
-  //     p[j] = rand();
-  //     save_points(i, j) = p[j];
-  //   }
-  //   ap[i] = p;
-  // }
-
-  double test_x[n] = {0, 1, 2, 3, 4};
-  double test_y[n] = {0, 1, 2, 3, 4};
   double** ap = new double*[n];
   for (int i = 0; i < n; ++i) {
     double* p = new double[d];
-    p[0] = test_x[i];
-    p[1] = test_y[i];
-    save_points(i, 0) = p[0];
-    save_points(i, 1) = p[1];
-
+    for (int j = 0; j < d; ++j) {
+      p[j] = rand();
+    }
     ap[i] = p;
+    points_x.push_back(p[0]);
+    points_y.push_back(p[1]);
   }
 
   // create an instance of Miniball
@@ -61,16 +58,14 @@ void test_2d_miniball() {
   // center
   std::cout << "Center:\n  ";
   const double* center = mb.center();
-  for (int i = 0; i < d; ++i, ++center) {
-    std::cout << *center << " ";
-    save_circle(i) = *center;
+  for (int i = 0; i < d; ++i) {
+    std::cout << *(center + i) << " ";
   }
   std::cout << std::endl;
 
   // squared radius
   std::cout << "Squared radius:\n  ";
   std::cout << mb.squared_radius() << std::endl;
-  save_circle(d) = std::sqrt(mb.squared_radius());
 
   // number of support points
   std::cout << "Number of support points:\n  ";
@@ -108,13 +103,24 @@ void test_2d_miniball() {
   for (int i = 0; i < n; ++i) delete[] ap[i];
   delete[] ap;
 
-  //
+  // plotting
+  // Set the size of output image = 1200x780 pixels
+  matplotlibcpp::figure_size(800, 780);
 
-  // save data to csv file
-  std::string _name("../../data/");
-  ASV::common::write2csvfile(_name + "points.csv", save_points);
-  ASV::common::write2csvfile(_name + "circle.csv", save_circle);
-}
+  // Plot line from given x and y data. Color is selected automatically.
+  matplotlibcpp::plot(points_x, points_y, ".");
+
+  std::vector<double> circle_x;
+  std::vector<double> circle_y;
+
+  generatecircle(center[0], center[1], std::sqrt(mb.squared_radius()), circle_x,
+                 circle_y);
+
+  // Plot a red dashed line from given x and y data.
+  matplotlibcpp::plot(circle_x, circle_y, "r-");
+  matplotlibcpp::title("Smallest Closing Ball of Points");
+  matplotlibcpp::show();
+}  // test_2d_miniball
 
 void testAlphaBetafiltering() {
   using namespace ASV::perception;
@@ -126,7 +132,7 @@ void testAlphaBetafiltering() {
   TargetTracking Target_Tracking(AlphaBeta_Data);
   auto [postion_x, postion_y, velocity_vx, velocity_y] =
       Target_Tracking.AlphaBetaFiltering(1, 1, 1, 1, 1, 1);
-}
+}  // testAlphaBetafiltering
 
 void testClustering() {
   double p_radius = 0.7;
@@ -171,15 +177,27 @@ void testClustering() {
   const pyclustering::clst::cluster_sequence& actual_clusters =
       ptr_output_result->clusters();
 
-  const std::vector<size_t> expected_clusters_length = {15, 15, 15, 15, 15};
+  // plotting
+  // Set the size of output image = 1200x780 pixels
+  matplotlibcpp::figure_size(800, 780);
 
-  for (auto const& cluster : actual_clusters) {
-    for (auto& value : cluster) {
-      std::cout << value << " ";
+  for (std::size_t index = 0; index != actual_clusters.size(); ++index) {
+    std::vector<double> cluster_x;
+    std::vector<double> cluster_y;
+
+    for (auto& value : actual_clusters[index]) {
+      cluster_x.push_back(p_data_x[value]);
+      cluster_y.push_back(p_data_y[value]);
     }
-    std::cout << "\n";
+
+    // Plot line from given x and y data. Color is selected automatically.
+    matplotlibcpp::plot(cluster_x, cluster_y, ".");
   }
-}
+
+  matplotlibcpp::title("Clustering results");
+  matplotlibcpp::show();
+
+}  // testClustering
 
 int main() {
   testClustering();

@@ -49,6 +49,7 @@ struct TargetTrackerRTdata {
   // target position and velocity in the marine coordinate
   std::vector<double> target_x;
   std::vector<double> target_y;
+  std::vector<double> target_square_radius;
   std::vector<double> target_vx;
   std::vector<double> target_vy;
 };

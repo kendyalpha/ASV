@@ -37,6 +37,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 
 # thread库
 find_package(Threads MODULE REQUIRED)
+find_package(PythonLibs 2.7)
 find_library(CLUSTER_LIBRARY pyclustering HINTS ${LIBRARY_DIRECTORY})
 
 # 指定生成目标
@@ -45,5 +46,7 @@ target_include_directories(testSpokeProcessing PRIVATE ${HEADER_DIRECTORY})
 
 add_executable (testTargetTracking testTargetTracking.cc )
 target_include_directories(testTargetTracking PRIVATE ${HEADER_DIRECTORY})
+target_include_directories(testTargetTracking PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(testTargetTracking PUBLIC ${PYTHON_LIBRARIES})
 target_link_libraries(testTargetTracking PUBLIC ${CLUSTER_LIBRARY})
 target_link_libraries(testTargetTracking PUBLIC ${CMAKE_THREAD_LIBS_INIT})
