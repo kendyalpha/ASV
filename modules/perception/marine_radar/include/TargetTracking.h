@@ -33,13 +33,13 @@ class TargetTracking {
         SpokeProcess_data(_SpokeProcessdata) {}
   virtual ~TargetTracking() = default;
 
-  TargetTracking &DetectionOnSpoke(const uint8_t *_spoke_array,
-                                   const std::size_t _array_size,
-                                   const double _spoke_azimuth_deg,
-                                   const double _samplerange_m,
-                                   const double _vessel_x_m = 0.0,
-                                   const double _vessel_y_m = 0.0,
-                                   const double _vessel_theta_rad = 0.0) {
+  TargetTracking &AutoTracking(const uint8_t *_spoke_array,
+                               const std::size_t _array_size,
+                               const double _spoke_azimuth_deg,
+                               const double _samplerange_m,
+                               const double _vessel_x_m = 0.0,
+                               const double _vessel_y_m = 0.0,
+                               const double _vessel_theta_rad = 0.0) {
     static double previous_spoke_azimuth_rad = 0;
     static bool previous_IsInAlarmAzimuth = false;
 
@@ -100,10 +100,10 @@ class TargetTracking {
     previous_IsInAlarmAzimuth = IsInAlarmAzimuth(previous_spoke_azimuth_rad);
 
     return *this;
-  }  // DetectionOnSpoke
+  }  // AutoTracking
 
-  TargetTracking &AutoTracking(const std::vector<double> &_surroundings_x,
-                               const std::vector<double> &_surroundings_y) {
+  TargetTracking &TestClustering(const std::vector<double> &_surroundings_x,
+                                 const std::vector<double> &_surroundings_y) {
     ClusteringAndMiniBall(_surroundings_x, _surroundings_y,
                           TargetTracker_RTdata.target_x,
                           TargetTracker_RTdata.target_y,

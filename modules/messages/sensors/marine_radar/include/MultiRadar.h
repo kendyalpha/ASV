@@ -67,6 +67,7 @@ class MultiRadar : public Navico::Protocol::iRadarListObserver,
                                iRadarListObserver::eAction /*action*/) {
     multi_radar_devices.clear();
 
+    constexpr unsigned cMaxRadars = 8;
     char radars[cMaxRadars][MAX_SERIALNUMBER_SIZE];
 
     unsigned numRadars =
@@ -115,7 +116,6 @@ class MultiRadar : public Navico::Protocol::iRadarListObserver,
   }  // UpdateUnlockState
 
  private:
-  const unsigned cMaxRadars = 8;
   std::map<unsigned, std::vector<std::string>> multi_radar_devices;
   std::string current_radar_serial_number;
   unsigned current_radar_index = 0;

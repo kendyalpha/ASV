@@ -195,8 +195,8 @@ void testClusteringAndBall() {
       0.1   // beta
   };
   ClusteringData Clustering_Data{
-      0.7,  // p_radius
-      3     // p_minumum_neighbors
+      1,  // p_radius
+      3   // p_minumum_neighbors
   };
   SpokeProcessdata SpokeProcess_data{
       0.1,   // sample_time
@@ -239,8 +239,8 @@ void testClusteringAndBall() {
   TargetTracking Target_Tracking(AlphaBeta_Data, Clustering_Data, Alarm_Zone,
                                  SpokeProcess_data);
 
-  auto TargetTracker_RTdata =
-      Target_Tracking.AutoTracking(p_data_x, p_data_y).getTargetTrackerRTdata();
+  auto TargetTracker_RTdata = Target_Tracking.TestClustering(p_data_x, p_data_y)
+                                  .getTargetTrackerRTdata();
 
   // plotting
   // Set the size of output image = 1200x780 pixels
@@ -276,17 +276,86 @@ void testSpokeAndCluster() {
   };
 
   AlarmZone Alarm_Zone{
-      10,        // start_range_m
-      20,        // end_range_m
-      0,         // center_bearing_rad
-      M_PI / 2,  // width_bearing_rad
-      0xac       // sensitivity_threhold
+      10,            // start_range_m
+      20,            // end_range_m
+      0,             // center_bearing_rad
+      2 * M_PI / 3,  // width_bearing_rad
+      0xac           // sensitivity_threhold
   };
 
-  SpokeProcessRTdata SpokeProcess_RTdata;
-}
+  AlphaBetaData AlphaBeta_Data{
+      0.1,  // sample_time
+      0.1,  // alpha
+      0.1   // beta
+  };
+  ClusteringData Clustering_Data{
+      1,  // p_radius
+      3   // p_minumum_neighbors
+  };
+
+  constexpr std::size_t size_array = 512;
+
+  TargetTracking Target_Tracking(AlphaBeta_Data, Clustering_Data, Alarm_Zone,
+                                 SpokeProcess_data);
+
+  for (int i = 0; i != 4; ++i) {
+    uint8_t spokedata[size_array] = {0xc0, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                     0xff, 0xff, 0xff, 0xca, 0x01, 0x30, 0x45};
+    double spokeazimuth_deg = -30 + 5 * i;
+    double spoke_samplerange_m = 0.5;
+    double vessel_x_m = 0;
+    double vessel_y_m = 0;
+    double vessel_theta_rad = 0;
+    Target_Tracking.AutoTracking(spokedata, size_array, spokeazimuth_deg,
+                                 spoke_samplerange_m, vessel_x_m, vessel_y_m,
+                                 vessel_theta_rad);
+    auto SpokeProcess_RTdata = Target_Tracking.getSpokeProcessRTdata();
+    std::size_t num = SpokeProcess_RTdata.surroundings_bearing_rad.size();
+    assert(num == SpokeProcess_RTdata.surroundings_range_m.size());
+    assert(num == SpokeProcess_RTdata.surroundings_x_m.size());
+    assert(num == SpokeProcess_RTdata.surroundings_y_m.size());
+    for (std::size_t i = 0; i != num; ++i) {
+      std::cout << "bearing_rad: "
+                << SpokeProcess_RTdata.surroundings_bearing_rad[i] << std::endl;
+      std::cout << "range_m: " << SpokeProcess_RTdata.surroundings_range_m[i]
+                << std::endl;
+      std::cout << "x: " << SpokeProcess_RTdata.surroundings_x_m[i]
+                << std::endl;
+      std::cout << "y: " << SpokeProcess_RTdata.surroundings_y_m[i]
+                << std::endl;
+    }
+    auto TargetTracker_RTdata = Target_Tracking.getTargetTrackerRTdata();
+    std::cout << TargetTracker_RTdata.target_x.size() << std::endl;
+  }
+
+  // // plotting
+  // // Set the size of output image = 1200x780 pixels
+  // matplotlibcpp::figure_size(800, 780);
+
+  // for (std::size_t index = 0; index != TargetTracker_RTdata.target_x.size();
+  //      ++index) {
+  //   std::vector<double> circle_x;
+  //   std::vector<double> circle_y;
+
+  //   generatecircle(TargetTracker_RTdata.target_x[index],
+  //                  TargetTracker_RTdata.target_y[index],
+  //                  std::sqrt(TargetTracker_RTdata.target_square_radius[index]),
+  //                  circle_x, circle_y);
+  //   // Plot line from given x and y data. Color is selected automatically.
+  //   matplotlibcpp::plot(circle_x, circle_y, "-");
+  // }
+  // matplotlibcpp::plot(p_data_x, p_data_y, ".");
+
+  // matplotlibcpp::title("Clustering and MiniBall results");
+  // matplotlibcpp::axis("equal");
+  // matplotlibcpp::show();
+
+}  // testSpokeAndCluster
 
 int main() {
-  testClusteringAndBall();
+  testSpokeAndCluster();
+  // testClusteringAndBall();
   // test_2d_miniball();
 }
