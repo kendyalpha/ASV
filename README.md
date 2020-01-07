@@ -1,4 +1,4 @@
-### Code for ASV (Version 0.2)
+### Code for ASV (Version 0.2.5)
 
 We are developing the autonomous surface vehicle, including the environmental perception, behavioral planning, motion planning, path following, feedback control, etc. 
 ASV will be a high performance, flexible architecture which accelerates the development, testing, and deployment of Autonomous Surface Vessels.
@@ -14,11 +14,11 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 * C++ 17
 * communication: socket TCP/IP, serial communication, checksum, etc
 * controller: PID controller, thrust allocation, actuator, etc
+* planner: Frenet Lattice generator, etc
 * math: library involving linear algebra, numerical analysis, etc
 * fileIO: csv parser, Database (SqLite3), JSON, etc
-* remotecontrol: remote controller
-* sensors: GPS, IMU, Wind, etc
-
+* sensors: GPS, IMU, Wind, Marine Radar, etc
+* 
 
 
 #### TODO: 
