@@ -122,18 +122,6 @@ void test_2d_miniball() {
   matplotlibcpp::show();
 }  // test_2d_miniball
 
-void testAlphaBetafiltering() {
-  using namespace ASV::perception;
-  AlphaBetaData AlphaBeta_Data{
-      0.1,  // sample_time
-      0.1,  // alpha
-      0.1   // beta
-  };
-  TargetTracking Target_Tracking(AlphaBeta_Data);
-  auto [postion_x, postion_y, velocity_vx, velocity_y] =
-      Target_Tracking.AlphaBetaFiltering(1, 1, 1, 1, 1, 1);
-}  // testAlphaBetafiltering
-
 void testClustering() {
   double p_radius = 0.7;
   size_t p_neighbors = 3;
@@ -199,7 +187,73 @@ void testClustering() {
 
 }  // testClustering
 
+void testClusteringAndBall() {
+  using namespace ASV::perception;
+  AlphaBetaData AlphaBeta_Data{
+      0.1,  // sample_time
+      0.1,  // alpha
+      0.1   // beta
+  };
+  ClusteringData Clustering_Data{
+      0.7,  // p_radius
+      3     // p_minumum_neighbors
+  };
+
+  std::vector<double> p_data_x = {
+      1.520060, 2.022029, 2.057351, 2.264624, 1.833837, 1.642185, 2.296886,
+      1.651659, 2.171928, 1.911756, 2.037709, 1.973467, 2.290475, 1.561361,
+      1.974000, 2.402489, 1.989742, 1.769925, 2.337243, 1.763479, 1.877453,
+      1.648136, 1.983505, 1.777163, 2.373442, 2.125649, 2.011568, 2.371343,
+      1.866134, 2.407069, 2.411449, 1.529495, 2.213014, 2.158573, 2.453622,
+      1.706733, 1.688246, 1.648121, 2.042832, 1.637036, 2.389355, 1.772783,
+      2.430609, 1.835628, 2.010313, 2.130630, 1.908663, 1.803819, 1.876055,
+      1.624722, 2.479029, 1.647363, 2.093093, 1.962334, 1.716604, 1.829242,
+      1.862751, 2.232196, 1.973060, 2.322847, 2.496003, 2.252416, 2.420608,
+      2.240567, 1.980673, 1.598466, 2.405742, 1.785233, 2.177794, 1.845079,
+      2.375952, 1.619341, 2.405635, 1.905190, 1.745843};
+  std::vector<double> p_data_y = {
+      0.962128, 0.808040, 1.211364, 0.691987, 0.873777, 0.759126, 1.049943,
+      1.479517, 0.833745, 0.765536, 0.885850, 0.586479, 1.157447, 1.167609,
+      0.643743, 2.512324, 2.578131, 2.894308, 3.089108, 3.078625, 3.473692,
+      3.203372, 3.397341, 3.081633, 2.613905, 3.245356, 3.420420, 3.280969,
+      2.656021, 2.510251, 4.922576, 4.624166, 4.655022, 5.438162, 5.487703,
+      5.095323, 4.716194, 5.033194, 5.456132, 4.715025, 4.519055, 5.389859,
+      4.585668, 4.928907, 5.031169, 6.686596, 7.473307, 7.333536, 6.635525,
+      7.233937, 6.928866, 7.127566, 6.662946, 6.812723, 6.539181, 6.924507,
+      7.229120, 7.306841, 6.695993, 7.056129, 9.163995, 8.745723, 9.339556,
+      8.871278, 8.529820, 9.284379, 9.410697, 9.384720, 9.324454, 8.689630,
+      8.684424, 8.743305, 8.782045, 9.464194, 9.369996};
+
+  TargetTracking Target_Tracking(AlphaBeta_Data, Clustering_Data);
+
+  auto TargetTracker_RTdata =
+      Target_Tracking.AutoTracking(p_data_x, p_data_y).getTargetTrackerRTdata();
+
+  // plotting
+  // Set the size of output image = 1200x780 pixels
+  matplotlibcpp::figure_size(800, 780);
+
+  for (std::size_t index = 0; index != TargetTracker_RTdata.target_x.size();
+       ++index) {
+    std::vector<double> circle_x;
+    std::vector<double> circle_y;
+
+    generatecircle(TargetTracker_RTdata.target_x[index],
+                   TargetTracker_RTdata.target_y[index],
+                   std::sqrt(TargetTracker_RTdata.target_square_radius[index]),
+                   circle_x, circle_y);
+    // Plot line from given x and y data. Color is selected automatically.
+    matplotlibcpp::plot(circle_x, circle_y, "-");
+  }
+  matplotlibcpp::plot(p_data_x, p_data_y, ".");
+
+  matplotlibcpp::title("Clustering and MiniBall results");
+  matplotlibcpp::axis("equal");
+  matplotlibcpp::show();
+
+}  // testClusteringAndBall
+
 int main() {
-  testClustering();
+  testClusteringAndBall();
   // test_2d_miniball();
 }

@@ -16,41 +16,37 @@
 #include "SpokeProcessingData.h"
 #include "common/math/Geometry/include/Miniball.hpp"
 
+#include "common/timer/include/timecounter.h"
+
 namespace ASV::perception {
 class TargetTracking {
  public:
-  TargetTracking(const AlphaBetaData &_AlphaBeta_data)
-      : AlphaBeta_data(_AlphaBeta_data), clustering_solver(0.7, 3) {}
+  TargetTracking(const AlphaBetaData &_AlphaBeta_data,
+                 const ClusteringData &_ClusteringData)
+      : AlphaBeta_data(_AlphaBeta_data), Clustering_data(_ClusteringData) {}
   virtual ~TargetTracking() = default;
 
-  // alpha-beta filtering for 2d target tracking
-  std::tuple<double, double, double, double> AlphaBetaFiltering(
-      const double previous_target_x, const double previous_target_y,
-      const double previous_target_vx, const double previous_target_vy,
-      const double meas_x, const double meas_y) {
-    double previous_position[2] = {previous_target_x, previous_target_y};
-    double previous_velocity[2] = {previous_target_vx, previous_target_vy};
-    double measurement[2] = {meas_x, meas_y};
-    double position[2] = {};
-    double velocity[2] = {};
+  TargetTracking &AutoTracking(const std::vector<double> &_surroundings_x,
+                               const std::vector<double> &_surroundings_y) {
+    ClusteringAndMiniBall(_surroundings_x, _surroundings_y,
+                          TargetTracker_RTdata.target_x,
+                          TargetTracker_RTdata.target_y,
+                          TargetTracker_RTdata.target_square_radius);
+    auto [postion_x, postion_y, velocity_vx, velocity_y] =
+        AlphaBetaFiltering(1, 1, 1, 1, 1, 1);
+    return *this;
+  }  // AutoTracking
 
-    for (int i = 0; i != 2; ++i) {
-      double xk = previous_position[i] +
-                  AlphaBeta_data.sample_time * previous_velocity[i];
-      double rk = measurement[i] - xk;
-      position[i] = xk + AlphaBeta_data.alpha * rk;
-      velocity[i] = previous_velocity[i] +
-                    rk * AlphaBeta_data.beta / AlphaBeta_data.sample_time;
-    }
-    return {position[0], position[1], velocity[0], velocity[1]};
-  }  // AlphaBetaFiltering
+  TargetTrackerRTdata getTargetTrackerRTdata() const noexcept {
+    return TargetTracker_RTdata;
+  }
 
  private:
   const AlphaBetaData AlphaBeta_data;
-  pyclustering::clst::dbscan clustering_solver;
-
+  const ClusteringData Clustering_data;
   TargetTrackerRTdata TargetTracker_RTdata;
 
+  // clustering for all points and find the miniball around each sets of points
   void ClusteringAndMiniBall(const std::vector<double> &_surroundings_x,
                              const std::vector<double> &_surroundings_y,
                              std::vector<double> &_target_x,
@@ -62,10 +58,14 @@ class TargetTracking {
     std::shared_ptr<pyclustering::clst::dbscan_data> ptr_output_result =
         std::make_shared<pyclustering::clst::dbscan_data>();
 
-    for (std::size_t i = 0; i != _surroundings_x.size(); ++i) {
-      p_data->push_back({_surroundings_x[i], _surroundings_y[i]});
+    std::size_t num_surroundings = _surroundings_x.size();
+    p_data->resize(num_surroundings);
+    for (std::size_t i = 0; i != num_surroundings; ++i) {
+      p_data->at(i) = {_surroundings_x[i], _surroundings_y[i]};
     }
 
+    pyclustering::clst::dbscan clustering_solver(
+        Clustering_data.p_radius, Clustering_data.p_minumum_neighbors);
     clustering_solver.process(*p_data, *ptr_output_result);
     const pyclustering::clst::cluster_sequence &actual_clusters =
         ptr_output_result->clusters();
@@ -105,9 +105,32 @@ class TargetTracking {
       for (std::size_t j = 0; j < n; ++j) delete[] ap[j];
       delete[] ap;
     }
-  }
 
-};  // namespace ASV::perception
+  }  // ClusteringAndMiniBall
+
+  // alpha-beta filtering for 2d target tracking
+  std::tuple<double, double, double, double> AlphaBetaFiltering(
+      const double previous_target_x, const double previous_target_y,
+      const double previous_target_vx, const double previous_target_vy,
+      const double meas_x, const double meas_y) {
+    double previous_position[2] = {previous_target_x, previous_target_y};
+    double previous_velocity[2] = {previous_target_vx, previous_target_vy};
+    double measurement[2] = {meas_x, meas_y};
+    double position[2] = {};
+    double velocity[2] = {};
+
+    for (int i = 0; i != 2; ++i) {
+      double xk = previous_position[i] +
+                  AlphaBeta_data.sample_time * previous_velocity[i];
+      double rk = measurement[i] - xk;
+      position[i] = xk + AlphaBeta_data.alpha * rk;
+      velocity[i] = previous_velocity[i] +
+                    rk * AlphaBeta_data.beta / AlphaBeta_data.sample_time;
+    }
+    return {position[0], position[1], velocity[0], velocity[1]};
+  }  // AlphaBetaFiltering
+
+};  // end class TargetTracking
 
 }  // namespace ASV::perception
 

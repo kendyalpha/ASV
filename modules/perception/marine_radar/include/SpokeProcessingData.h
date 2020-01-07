@@ -45,6 +45,11 @@ struct AlphaBetaData {
   double beta;
 };
 
+struct ClusteringData {
+  double p_radius;  // radius of a neighborhood with respect to some point
+  std::size_t p_minumum_neighbors;  //
+};
+
 struct TargetTrackerRTdata {
   // target position and velocity in the marine coordinate
   std::vector<double> target_x;
