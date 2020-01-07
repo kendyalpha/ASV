@@ -41,8 +41,8 @@ find_package(PythonLibs 2.7)
 find_library(CLUSTER_LIBRARY pyclustering HINTS ${LIBRARY_DIRECTORY})
 
 # 指定生成目标
-add_executable (testSpokeProcessing testSpokeProcessing.cc )
-target_include_directories(testSpokeProcessing PRIVATE ${HEADER_DIRECTORY})
+# add_executable (testSpokeProcessing testSpokeProcessing.cc )
+# target_include_directories(testSpokeProcessing PRIVATE ${HEADER_DIRECTORY})
 
 add_executable (testTargetTracking testTargetTracking.cc )
 target_include_directories(testTargetTracking PRIVATE ${HEADER_DIRECTORY})

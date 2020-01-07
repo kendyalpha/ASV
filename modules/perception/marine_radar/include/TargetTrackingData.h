@@ -1,6 +1,6 @@
 /*
 ****************************************************************************
-* SpokeProcessingData.h:
+* TargetTrackingData.h:
 * obstacle detection using spoke data from marine radar
 * This header file can be read by C++ compilers
 *
@@ -8,8 +8,8 @@
 ****************************************************************************
 */
 
-#ifndef _SPOKEPROCESSINGDATA_H_
-#define _SPOKEPROCESSINGDATA_H_
+#ifndef _TARGETTRACKINGDATA_H_
+#define _TARGETTRACKINGDATA_H_
 
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
@@ -30,6 +30,7 @@ struct AlarmZone {
   uint8_t sensitivity_threhold;  // min sensitivity
 };
 
+// all spoke data in the alarm zone
 struct SpokeProcessRTdata {
   // surroundings in the body-fixed coordinate
   std::vector<double> surroundings_bearing_rad;
@@ -61,4 +62,4 @@ struct TargetTrackerRTdata {
 
 }  // namespace ASV::perception
 
-#endif /* _SPOKEPROCESSINGDATA_H_ */
+#endif /* _TARGETTRACKINGDATA_H_ */

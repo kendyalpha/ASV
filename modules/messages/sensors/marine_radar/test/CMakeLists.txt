@@ -26,15 +26,17 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
 	"${PROJECT_SOURCE_DIR}/../third_party/SDK_3.0.02/include/"
 	"${PROJECT_SOURCE_DIR}/../../../../../"
+	"${PROJECT_SOURCE_DIR}/../../../../../common/math/pyclustering/ccore/include"
 	)
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
 	"/usr/lib"
+	"${PROJECT_SOURCE_DIR}/../../../../../common/math/pyclustering/ccore/libs/"
+
     )
 
 set(SOURCE_FILES ${SOURCE_FILES} 
 	"${PROJECT_SOURCE_DIR}/../../../../../common/logging/src/easylogging++.cc" )
-
 
 
 
@@ -43,6 +45,7 @@ find_package(Threads MODULE REQUIRED)
 find_library(NRPCLIENT_LIBRARY NRPClient HINTS ${LIBRARY_DIRECTORY})
 find_library(NRPPPI_LIBRARY NRPPPI HINTS ${LIBRARY_DIRECTORY})
 find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
+find_library(CLUSTER_LIBRARY pyclustering HINTS ${LIBRARY_DIRECTORY})
 
 
 # 指定生成目标
@@ -60,3 +63,13 @@ target_include_directories(testThrehold PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testThrehold PUBLIC ${NRPCLIENT_LIBRARY})
 target_link_libraries(testThrehold PUBLIC ${NRPPPI_LIBRARY})
 target_link_libraries(testThrehold PUBLIC ${SQLITE3_LIBRARY})
+
+
+
+add_executable (testclustering testclustering.cc )
+target_include_directories(testclustering PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testclustering PUBLIC ${NRPCLIENT_LIBRARY})
+target_link_libraries(testclustering PUBLIC ${NRPPPI_LIBRARY})
+target_link_libraries(testclustering PUBLIC ${SQLITE3_LIBRARY})
+target_link_libraries(testclustering PUBLIC ${CLUSTER_LIBRARY})
+target_link_libraries(testclustering PUBLIC ${CMAKE_THREAD_LIBS_INIT})

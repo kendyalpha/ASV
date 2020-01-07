@@ -198,7 +198,19 @@ void testClusteringAndBall() {
       0.7,  // p_radius
       3     // p_minumum_neighbors
   };
+  SpokeProcessdata SpokeProcess_data{
+      0.1,   // sample_time
+      -1.0,  // radar_x
+      0.0    // radar_y
+  };
 
+  AlarmZone Alarm_Zone{
+      10,        // start_range_m
+      20,        // end_range_m
+      0,         // center_bearing_rad
+      M_PI / 2,  // width_bearing_rad
+      0xac       // sensitivity_threhold
+  };
   std::vector<double> p_data_x = {
       1.520060, 2.022029, 2.057351, 2.264624, 1.833837, 1.642185, 2.296886,
       1.651659, 2.171928, 1.911756, 2.037709, 1.973467, 2.290475, 1.561361,
@@ -224,7 +236,8 @@ void testClusteringAndBall() {
       8.871278, 8.529820, 9.284379, 9.410697, 9.384720, 9.324454, 8.689630,
       8.684424, 8.743305, 8.782045, 9.464194, 9.369996};
 
-  TargetTracking Target_Tracking(AlphaBeta_Data, Clustering_Data);
+  TargetTracking Target_Tracking(AlphaBeta_Data, Clustering_Data, Alarm_Zone,
+                                 SpokeProcess_data);
 
   auto TargetTracker_RTdata =
       Target_Tracking.AutoTracking(p_data_x, p_data_y).getTargetTrackerRTdata();
@@ -252,6 +265,26 @@ void testClusteringAndBall() {
   matplotlibcpp::show();
 
 }  // testClusteringAndBall
+
+void testSpokeAndCluster() {
+  using namespace ASV::perception;
+
+  SpokeProcessdata SpokeProcess_data{
+      0.1,   // sample_time
+      -1.0,  // radar_x
+      0.0    // radar_y
+  };
+
+  AlarmZone Alarm_Zone{
+      10,        // start_range_m
+      20,        // end_range_m
+      0,         // center_bearing_rad
+      M_PI / 2,  // width_bearing_rad
+      0xac       // sensitivity_threhold
+  };
+
+  SpokeProcessRTdata SpokeProcess_RTdata;
+}
 
 int main() {
   testClusteringAndBall();
