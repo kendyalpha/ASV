@@ -236,8 +236,8 @@ void testClusteringAndBall() {
       8.871278, 8.529820, 9.284379, 9.410697, 9.384720, 9.324454, 8.689630,
       8.684424, 8.743305, 8.782045, 9.464194, 9.369996};
 
-  TargetTracking Target_Tracking(AlphaBeta_Data, Clustering_Data, Alarm_Zone,
-                                 SpokeProcess_data);
+  TargetTracking Target_Tracking(Alarm_Zone, SpokeProcess_data, AlphaBeta_Data,
+                                 Clustering_Data);
 
   auto TargetTracker_RTdata = Target_Tracking.TestClustering(p_data_x, p_data_y)
                                   .getTargetTrackerRTdata();
@@ -298,8 +298,8 @@ void testSpokeAndCluster() {
 
   constexpr std::size_t size_array = 512;
 
-  TargetTracking Target_Tracking(AlphaBeta_Data, Clustering_Data, Alarm_Zone,
-                                 SpokeProcess_data);
+  TargetTracking Target_Tracking(Alarm_Zone, SpokeProcess_data, AlphaBeta_Data,
+                                 Clustering_Data);
 
   for (int i = 0; i != 3; ++i) {
     uint8_t _value = 252 - 15 * i;

@@ -50,12 +50,12 @@ void startRadarAndClustering() {
   };
 
   perception::ClusteringData Clustering_Data{
-      0.7,  // p_radius
-      3     // p_minumum_neighbors
+      1,  // p_radius
+      2   // p_minumum_neighbors
   };
 
-  perception::TargetTracking Target_Tracking(AlphaBeta_Data, Clustering_Data,
-                                             Alarm_Zone, SpokeProcess_data);
+  perception::TargetTracking Target_Tracking(Alarm_Zone, SpokeProcess_data,
+                                             AlphaBeta_Data, Clustering_Data);
 
   perception::TargetTrackerRTdata TargetTracker_RTdata;
   perception::SpokeProcessRTdata SpokeProcess_RTdata;
@@ -81,6 +81,8 @@ void startRadarAndClustering() {
 
     TargetTracker_RTdata = Target_Tracking.getTargetTrackerRTdata();
 
+    std::cout << "spoke_azimuth_deg: " << MarineRadar_RTdata.spoke_azimuth_deg
+              << std::endl;
     db << "INSERT INTO radar (azimuth, sample_range, spokedata) "
           "VALUES (?, ?, ?)"
        << MarineRadar_RTdata.spoke_azimuth_deg
@@ -89,66 +91,108 @@ void startRadarAndClustering() {
               &MarineRadar_RTdata.spokedata[0],
               &MarineRadar_RTdata.spokedata[SAMPLES_PER_SPOKE / 2]);
 
-    std::cout << "spoke_azimuth_deg: " << MarineRadar_RTdata.spoke_azimuth_deg
-              << std::endl;
-
-    std::size_t num_surroundings_alarm =
-        SpokeProcess_RTdata.surroundings_bearing_rad.size();
-    if (num_surroundings_alarm != 0) {
-      std::cout << "Surrounding in the Alarm Zone: \n";
-
-      db << "INSERT INTO spoke (bearing_rad, range_m, x_m, y_m) VALUES (?, ?, "
-            "?, ?)"
-         << SpokeProcess_RTdata.surroundings_bearing_rad
-         << SpokeProcess_RTdata.surroundings_range_m
-         << SpokeProcess_RTdata.surroundings_x_m
-         << SpokeProcess_RTdata.surroundings_y_m;
-
-      for (std::size_t i = 0; i != num_surroundings_alarm; ++i) {
-        std::cout << "bearing_deg: "
-                  << SpokeProcess_RTdata.surroundings_bearing_rad[i] * 180 /
-                         M_PI
-                  << "range_m: " << SpokeProcess_RTdata.surroundings_range_m[i]
-                  << std::endl;
-      }
-    }
+    db << "INSERT INTO spoke (bearing_rad, range_m, x_m, y_m) VALUES (?, ?, "
+          "?, ?)"
+       << SpokeProcess_RTdata.surroundings_bearing_rad
+       << SpokeProcess_RTdata.surroundings_range_m
+       << SpokeProcess_RTdata.surroundings_x_m
+       << SpokeProcess_RTdata.surroundings_y_m;
 
     db << "INSERT INTO target (target_x, target_y, target_radius) "
           "VALUES (?, ?, ?)"
        << TargetTracker_RTdata.target_x << TargetTracker_RTdata.target_y
        << TargetTracker_RTdata.target_square_radius;
 
+    // std::size_t num_surroundings_alarm =
+    //     SpokeProcess_RTdata.surroundings_bearing_rad.size();
+    // if (num_surroundings_alarm != 0) {
+    //   std::cout << "Surrounding in the Alarm Zone: \n";
+
+    //   for (std::size_t i = 0; i != num_surroundings_alarm; ++i) {
+    //     std::cout << "bearing_deg: "
+    //               << SpokeProcess_RTdata.surroundings_bearing_rad[i] * 180 /
+    //                      M_PI
+    //               << "range_m: " <<
+    //               SpokeProcess_RTdata.surroundings_range_m[i]
+    //               << std::endl;
+    //   }
+    // }
+
     // std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 }
 
 void readsqlitedata() {
-  database db("../../data/Sun Dec 22 16:22:33 2019.db");
+  database db("../../data/radar.db");
 
-  for (int _id = 1; _id != 19470; ++_id) {
-    db << "SELECT bearing_rad, range_m, x_m, y_m from surroundings where id = "
+  // for (int _id = 1; _id != 1900; ++_id) {
+  //   db << "SELECT bearing_rad, range_m, x_m, y_m from spoke where id = "
+  //         "?;"
+  //      << _id >>
+  //       [](std::unique_ptr<std::vector<double>> surroundings_bearing_rad,
+  //          std::unique_ptr<std::vector<double>> surroundings_range_m,
+  //          std::unique_ptr<std::vector<double>> surroundings_x_m,
+  //          std::unique_ptr<std::vector<double>> surroundings_y_m) {
+  //         if (surroundings_bearing_rad == nullptr ||
+  //             surroundings_range_m == nullptr || surroundings_x_m == nullptr
+  //             || surroundings_y_m == nullptr) {
+  //           std::cout << "No surrounding in the Alarm Zone\n";
+  //         } else {
+  //           for (std::size_t i = 0; i != surroundings_bearing_rad->size();
+  //           ++i)
+  //             std::cout << " bearing_rad: " <<
+  //             surroundings_bearing_rad->at(i)
+  //                       << " range_m: " << surroundings_range_m->at(i)
+  //                       << " x_m: " << surroundings_x_m->at(i)
+  //                       << " y_m: " << surroundings_y_m->at(i) << std::endl;
+  //         }
+  //       };
+  // }
+
+  // read radar spoke data
+  for (int _id = 1; _id != 30000; ++_id) {
+    db << "SELECT azimuth, sample_range, spokedata from radar where id = "
           "?;"
        << _id >>
-        [](std::unique_ptr<std::vector<double>> surroundings_bearing_rad,
-           std::unique_ptr<std::vector<double>> surroundings_range_m,
-           std::unique_ptr<std::vector<double>> surroundings_x_m,
-           std::unique_ptr<std::vector<double>> surroundings_y_m) {
-          if (surroundings_bearing_rad == nullptr ||
-              surroundings_range_m == nullptr || surroundings_x_m == nullptr ||
-              surroundings_y_m == nullptr) {
-            std::cout << "No surrounding in the Alarm Zone\n";
+        [](std::unique_ptr<double> spoke_azimuth_deg,
+           std::unique_ptr<double> spoke_samplerange_m,
+           std::unique_ptr<std::vector<uint8_t>> spokedata) {
+          if (spoke_azimuth_deg == nullptr || spoke_samplerange_m == nullptr ||
+              spokedata == nullptr) {
+            std::cout << "No spoke data\n";
           } else {
-            for (std::size_t i = 0; i != surroundings_bearing_rad->size(); ++i)
-              std::cout << " bearing_rad: " << surroundings_bearing_rad->at(i)
-                        << " range_m: " << surroundings_range_m->at(i)
-                        << " x_m: " << surroundings_x_m->at(i)
-                        << " y_m: " << surroundings_y_m->at(i) << std::endl;
+            std::cout << " spoke_azimuth_deg: " << *spoke_azimuth_deg
+                      << " spoke_samplerange_m: " << *spoke_samplerange_m
+                      << " spokedata:\n";
+            for (std::size_t i = 0; i != spokedata->size(); ++i)
+              printf("0x%x\n", spokedata->at(i));
+          }
+        };
+  }
+
+  // read target data
+  for (int _id = 1; _id != 30000; ++_id) {
+    db << "SELECT target_x, target_y, target_radius from target where id = "
+          "?;"
+       << _id >>
+        [](std::unique_ptr<std::vector<double>> target_x,
+           std::unique_ptr<std::vector<double>> target_y,
+           std::unique_ptr<std::vector<double>> target_radius) {
+          if (target_x == nullptr || target_y == nullptr ||
+              target_radius == nullptr) {
+            std::cout << "No target data\n";
+          } else {
+            for (std::size_t i = 0; i != target_x->size(); ++i)
+              std::cout << " target_x: " << target_x->at(i)
+                        << " target_y: " << target_y->at(i)
+                        << " target_radius: " << target_radius->at(i)
+                        << std::endl;
           }
         };
   }
 }
 
 int main() {
-  // startRadarAndSpoke();
+  // startRadarAndClustering();
   readsqlitedata();
 }

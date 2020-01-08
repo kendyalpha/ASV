@@ -23,14 +23,14 @@
 namespace ASV::perception {
 class TargetTracking {
  public:
-  TargetTracking(const AlphaBetaData &_AlphaBeta_data,
-                 const ClusteringData &_ClusteringData,
-                 const AlarmZone &_AlarmZone,
-                 const SpokeProcessdata &_SpokeProcessdata)
-      : AlphaBeta_data(_AlphaBeta_data),
-        Clustering_data(_ClusteringData),
-        Alarm_Zone(_AlarmZone),
-        SpokeProcess_data(_SpokeProcessdata) {}
+  TargetTracking(const AlarmZone &_AlarmZone,
+                 const SpokeProcessdata &_SpokeProcessdata,
+                 const AlphaBetaData &_AlphaBeta_data,
+                 const ClusteringData &_ClusteringData)
+      : Alarm_Zone(_AlarmZone),
+        SpokeProcess_data(_SpokeProcessdata),
+        AlphaBeta_data(_AlphaBeta_data),
+        Clustering_data(_ClusteringData) {}
   virtual ~TargetTracking() = default;
 
   TargetTracking &AutoTracking(const uint8_t *_spoke_array,
@@ -122,13 +122,20 @@ class TargetTracking {
 
   double getsampletime() const noexcept {
     return SpokeProcess_data.sample_time;
-  }
+  }  // getsampletime
+
+  void setClusteringdata(double _p_radius,
+                         std::size_t _p_minumum_neighbors = 2) {
+    Clustering_data.p_radius = _p_radius;
+    Clustering_data.p_minumum_neighbors = _p_minumum_neighbors;
+  }  // setClusteringdata
 
  private:
-  const AlphaBetaData AlphaBeta_data;
-  const ClusteringData Clustering_data;
   const AlarmZone Alarm_Zone;
   const SpokeProcessdata SpokeProcess_data;
+  const AlphaBetaData AlphaBeta_data;
+  ClusteringData Clustering_data;
+
   SpokeProcessRTdata SpokeProcess_RTdata;
   TargetTrackerRTdata TargetTracker_RTdata;
 

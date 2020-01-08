@@ -42,6 +42,7 @@ set(SOURCE_FILES ${SOURCE_FILES}
 
 # thread库
 find_package(Threads MODULE REQUIRED)
+find_package( OpenCV REQUIRED )
 find_library(NRPCLIENT_LIBRARY NRPClient HINTS ${LIBRARY_DIRECTORY})
 find_library(NRPPPI_LIBRARY NRPPPI HINTS ${LIBRARY_DIRECTORY})
 find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
@@ -64,3 +65,11 @@ target_link_libraries(testclustering PUBLIC ${NRPPPI_LIBRARY})
 target_link_libraries(testclustering PUBLIC ${SQLITE3_LIBRARY})
 target_link_libraries(testclustering PUBLIC ${CLUSTER_LIBRARY})
 target_link_libraries(testclustering PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+
+
+add_executable (plotradar plotradar.cc )
+target_include_directories(plotradar PRIVATE ${HEADER_DIRECTORY} ${OpenCV_INCLUDE_DIRS} )
+target_link_libraries(plotradar PUBLIC ${SQLITE3_LIBRARY})
+target_link_libraries(plotradar PUBLIC ${CLUSTER_LIBRARY})
+target_link_libraries(plotradar PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(plotradar PUBLIC ${OpenCV_LIBS})
