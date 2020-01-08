@@ -53,7 +53,7 @@ using namespace sqlite;
 void readsqlitedata() {
   database db("radar.db");
   std::vector<uint8_t> numbers_test;
-  db << "SELECT numbers from person where id = ?;" << 1 >> numbers_test;
+  db << "SELECT numbers from radar where id = ?;" << 1 >> numbers_test;
 }
 
 int main() {
@@ -66,13 +66,13 @@ int main() {
 
   // sqlite3
   database db("radar.db");
-  db << "CREATE TABLE person (id integer primary key autoincrement not "
+  db << "CREATE TABLE radar (id integer primary key autoincrement not "
         "null, angle real, range real, numbers BLOB);";
 
   while (1) {
     auto MarineRadar_RTdata = _MarineRadar.getMarineRadarRTdata();
 
-    db << "INSERT INTO person (angle, range, numbers) VALUES (?, ?, ?)"
+    db << "INSERT INTO radar (angle, range, numbers) VALUES (?, ?, ?)"
        << MarineRadar_RTdata.spoke_azimuth_deg
        << MarineRadar_RTdata.spoke_samplerange_m
        << std::vector<uint8_t>(

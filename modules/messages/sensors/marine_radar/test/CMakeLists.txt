@@ -57,19 +57,10 @@ target_link_libraries(testMarineRadar PUBLIC ${NRPPPI_LIBRARY})
 target_link_libraries(testMarineRadar PUBLIC ${SQLITE3_LIBRARY})
 
 
-
-# add_executable (testThrehold testThrehold.cc )
-# target_include_directories(testThrehold PRIVATE ${HEADER_DIRECTORY})
-# target_link_libraries(testThrehold PUBLIC ${NRPCLIENT_LIBRARY})
-# target_link_libraries(testThrehold PUBLIC ${NRPPPI_LIBRARY})
-# target_link_libraries(testThrehold PUBLIC ${SQLITE3_LIBRARY})
-
-
-
-# add_executable (testclustering testclustering.cc )
-# target_include_directories(testclustering PRIVATE ${HEADER_DIRECTORY})
-# target_link_libraries(testclustering PUBLIC ${NRPCLIENT_LIBRARY})
-# target_link_libraries(testclustering PUBLIC ${NRPPPI_LIBRARY})
-# target_link_libraries(testclustering PUBLIC ${SQLITE3_LIBRARY})
-# target_link_libraries(testclustering PUBLIC ${CLUSTER_LIBRARY})
-# target_link_libraries(testclustering PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+add_executable (testclustering testclustering.cc )
+target_include_directories(testclustering PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testclustering PUBLIC ${NRPCLIENT_LIBRARY})
+target_link_libraries(testclustering PUBLIC ${NRPPPI_LIBRARY})
+target_link_libraries(testclustering PUBLIC ${SQLITE3_LIBRARY})
+target_link_libraries(testclustering PUBLIC ${CLUSTER_LIBRARY})
+target_link_libraries(testclustering PUBLIC ${CMAKE_THREAD_LIBS_INIT})

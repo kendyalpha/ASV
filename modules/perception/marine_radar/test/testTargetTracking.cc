@@ -280,7 +280,7 @@ void testSpokeAndCluster() {
       20,            // end_range_m
       0,             // center_bearing_rad
       2 * M_PI / 3,  // width_bearing_rad
-      0xac           // sensitivity_threhold
+      0xe0           // sensitivity_threhold
   };
 
   AlphaBetaData AlphaBeta_Data{
@@ -290,19 +290,24 @@ void testSpokeAndCluster() {
   };
   ClusteringData Clustering_Data{
       1,  // p_radius
-      3   // p_minumum_neighbors
+      2   // p_minumum_neighbors
   };
+
+  SpokeProcessRTdata SpokeProcess_RTdata;
+  TargetTrackerRTdata TargetTracker_RTdata;
 
   constexpr std::size_t size_array = 512;
 
   TargetTracking Target_Tracking(AlphaBeta_Data, Clustering_Data, Alarm_Zone,
                                  SpokeProcess_data);
 
-  for (int i = 0; i != 4; ++i) {
-    uint8_t spokedata[size_array] = {0xc0, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff,
-                                     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                                     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                                     0xff, 0xff, 0xff, 0xca, 0x01, 0x30, 0x45};
+  for (int i = 0; i != 3; ++i) {
+    uint8_t _value = 252 - 15 * i;
+    uint8_t spokedata[size_array] = {
+        0xc0,   0x00,   _value, _value, _value, _value, _value,
+        _value, _value, _value, _value, _value, _value, _value,
+        _value, _value, _value, _value, _value, _value, _value,
+        _value, _value, _value, 0xca,   0x01,   0x30,   0x45};
     double spokeazimuth_deg = -30 + 5 * i;
     double spoke_samplerange_m = 0.5;
     double vessel_x_m = 0;
@@ -311,46 +316,92 @@ void testSpokeAndCluster() {
     Target_Tracking.AutoTracking(spokedata, size_array, spokeazimuth_deg,
                                  spoke_samplerange_m, vessel_x_m, vessel_y_m,
                                  vessel_theta_rad);
-    auto SpokeProcess_RTdata = Target_Tracking.getSpokeProcessRTdata();
-    std::size_t num = SpokeProcess_RTdata.surroundings_bearing_rad.size();
-    assert(num == SpokeProcess_RTdata.surroundings_range_m.size());
-    assert(num == SpokeProcess_RTdata.surroundings_x_m.size());
-    assert(num == SpokeProcess_RTdata.surroundings_y_m.size());
-    for (std::size_t i = 0; i != num; ++i) {
-      std::cout << "bearing_rad: "
-                << SpokeProcess_RTdata.surroundings_bearing_rad[i] << std::endl;
-      std::cout << "range_m: " << SpokeProcess_RTdata.surroundings_range_m[i]
-                << std::endl;
-      std::cout << "x: " << SpokeProcess_RTdata.surroundings_x_m[i]
-                << std::endl;
-      std::cout << "y: " << SpokeProcess_RTdata.surroundings_y_m[i]
-                << std::endl;
-    }
-    auto TargetTracker_RTdata = Target_Tracking.getTargetTrackerRTdata();
+
+    if (i == 18) SpokeProcess_RTdata = Target_Tracking.getSpokeProcessRTdata();
+    // std::size_t num = SpokeProcess_RTdata.surroundings_bearing_rad.size();
+    // assert(num == SpokeProcess_RTdata.surroundings_range_m.size());
+    // assert(num == SpokeProcess_RTdata.surroundings_x_m.size());
+    // assert(num == SpokeProcess_RTdata.surroundings_y_m.size());
+    // for (std::size_t i = 0; i != num; ++i) {
+    //   std::cout << "bearing_rad: "
+    //             << SpokeProcess_RTdata.surroundings_bearing_rad[i] <<
+    //             std::endl;
+    //   std::cout << "range_m: " << SpokeProcess_RTdata.surroundings_range_m[i]
+    //             << std::endl;
+    //   std::cout << "x: " << SpokeProcess_RTdata.surroundings_x_m[i]
+    //             << std::endl;
+    //   std::cout << "y: " << SpokeProcess_RTdata.surroundings_y_m[i]
+    //             << std::endl;
+    // }
+    TargetTracker_RTdata = Target_Tracking.getTargetTrackerRTdata();
     std::cout << TargetTracker_RTdata.target_x.size() << std::endl;
   }
 
-  // // plotting
-  // // Set the size of output image = 1200x780 pixels
-  // matplotlibcpp::figure_size(800, 780);
+  for (int i = 3; i != 20; ++i) {
+    uint8_t _value = 100 * i - 60;
+    uint8_t spokedata[size_array] = {
+        0xc0,   0x00,   _value, _value, _value, _value, _value,
+        _value, _value, _value, _value, _value, _value, _value,
+        _value, _value, _value, _value, _value, _value, _value,
+        _value, _value, _value, 0xca,   0x01,   0x30,   0x45};
+    double spokeazimuth_deg = -30 + 5 * i;
+    double spoke_samplerange_m = 0.5;
+    double vessel_x_m = 0;
+    double vessel_y_m = 0;
+    double vessel_theta_rad = 0;
+    Target_Tracking.AutoTracking(spokedata, size_array, spokeazimuth_deg,
+                                 spoke_samplerange_m, vessel_x_m, vessel_y_m,
+                                 vessel_theta_rad);
 
-  // for (std::size_t index = 0; index != TargetTracker_RTdata.target_x.size();
-  //      ++index) {
-  //   std::vector<double> circle_x;
-  //   std::vector<double> circle_y;
+    if (i == 18) SpokeProcess_RTdata = Target_Tracking.getSpokeProcessRTdata();
+    // std::size_t num = SpokeProcess_RTdata.surroundings_bearing_rad.size();
+    // assert(num == SpokeProcess_RTdata.surroundings_range_m.size());
+    // assert(num == SpokeProcess_RTdata.surroundings_x_m.size());
+    // assert(num == SpokeProcess_RTdata.surroundings_y_m.size());
+    // for (std::size_t i = 0; i != num; ++i) {
+    //   std::cout << "bearing_rad: "
+    //             << SpokeProcess_RTdata.surroundings_bearing_rad[i] <<
+    //             std::endl;
+    //   std::cout << "range_m: " << SpokeProcess_RTdata.surroundings_range_m[i]
+    //             << std::endl;
+    //   std::cout << "x: " << SpokeProcess_RTdata.surroundings_x_m[i]
+    //             << std::endl;
+    //   std::cout << "y: " << SpokeProcess_RTdata.surroundings_y_m[i]
+    //             << std::endl;
+    // }
+    TargetTracker_RTdata = Target_Tracking.getTargetTrackerRTdata();
+    std::cout << TargetTracker_RTdata.target_x.size() << std::endl;
+  }
 
-  //   generatecircle(TargetTracker_RTdata.target_x[index],
-  //                  TargetTracker_RTdata.target_y[index],
-  //                  std::sqrt(TargetTracker_RTdata.target_square_radius[index]),
-  //                  circle_x, circle_y);
-  //   // Plot line from given x and y data. Color is selected automatically.
-  //   matplotlibcpp::plot(circle_x, circle_y, "-");
+  // for (int i = 0; i != 20; ++i) {
+  //   double spokeazimuth_deg = -30 + 5 * i;
+  //   uint8_t _value = 240 + 5 * i;
+  //   std::cout << "angle: " << spokeazimuth_deg << std::endl;
+  //   printf("%x\n", _value);
   // }
-  // matplotlibcpp::plot(p_data_x, p_data_y, ".");
 
-  // matplotlibcpp::title("Clustering and MiniBall results");
-  // matplotlibcpp::axis("equal");
-  // matplotlibcpp::show();
+  // plotting
+  // Set the size of output image = 1200x780 pixels
+  matplotlibcpp::figure_size(800, 780);
+
+  for (std::size_t index = 0; index != TargetTracker_RTdata.target_x.size();
+       ++index) {
+    std::vector<double> circle_x;
+    std::vector<double> circle_y;
+
+    generatecircle(TargetTracker_RTdata.target_x[index],
+                   TargetTracker_RTdata.target_y[index],
+                   std::sqrt(TargetTracker_RTdata.target_square_radius[index]),
+                   circle_x, circle_y);
+    // Plot line from given x and y data. Color is selected automatically.
+    matplotlibcpp::plot(circle_y, circle_x, "-");
+  }
+  matplotlibcpp::plot(SpokeProcess_RTdata.surroundings_y_m,
+                      SpokeProcess_RTdata.surroundings_x_m, ".");
+
+  matplotlibcpp::title("Clustering and MiniBall results");
+  matplotlibcpp::axis("equal");
+  matplotlibcpp::show();
 
 }  // testSpokeAndCluster
 
