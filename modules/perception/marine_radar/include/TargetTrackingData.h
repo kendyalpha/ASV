@@ -16,6 +16,13 @@
 
 namespace ASV::perception {
 
+enum class SPOKESTATE {
+  OUTSIDE_ALARM_ZONE = 0,  // outside the alarm zone
+  ENTER_ALARM_ZONE,        // enter the alarm zone
+  IN_ALARM_ZONE,           // in the alarm zone
+  LEAVE_ALARM_ZONE,        // leave the alarm zone
+};
+
 struct SpokeProcessdata {
   double sample_time;
   double radar_x;  // x of radar relative to CoG, in the body-fixed coordinate

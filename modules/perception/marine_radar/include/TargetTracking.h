@@ -30,7 +30,8 @@ class TargetTracking {
       : Alarm_Zone(_AlarmZone),
         SpokeProcess_data(_SpokeProcessdata),
         AlphaBeta_data(_AlphaBeta_data),
-        Clustering_data(_ClusteringData) {}
+        Clustering_data(_ClusteringData),
+        spoke_state(SPOKESTATE::OUTSIDE_ALARM_ZONE) {}
   virtual ~TargetTracking() = default;
 
   TargetTracking &AutoTracking(const uint8_t *_spoke_array,
@@ -79,6 +80,12 @@ class TargetTracking {
             SpokeProcess_RTdata.surroundings_y_m.end(),
             surroundings_onespoke_y_m.begin(), surroundings_onespoke_y_m.end());
 
+        // check the spoke azimuth to determine spoke state
+        if (previous_IsInAlarmAzimuth)
+          spoke_state = SPOKESTATE::IN_ALARM_ZONE;
+        else
+          spoke_state = SPOKESTATE::ENTER_ALARM_ZONE;
+
       } else {                            // outside the alarm azimuth
         if (previous_IsInAlarmAzimuth) {  // leaving the alarm azimuth
           // start to cluster and miniball
@@ -88,13 +95,17 @@ class TargetTracking {
                                 TargetTracker_RTdata.target_y,
                                 TargetTracker_RTdata.target_square_radius);
 
+          spoke_state = SPOKESTATE::LEAVE_ALARM_ZONE;
+        } else {
           SpokeProcess_RTdata.surroundings_bearing_rad.clear();
           SpokeProcess_RTdata.surroundings_range_m.clear();
           SpokeProcess_RTdata.surroundings_x_m.clear();
           SpokeProcess_RTdata.surroundings_y_m.clear();
+
+          spoke_state = SPOKESTATE::OUTSIDE_ALARM_ZONE;
         }
       }
-    }
+    }  // check if two azimuth is different
 
     previous_spoke_azimuth_rad = _spoke_azimuth_rad;
     previous_IsInAlarmAzimuth = IsInAlarmAzimuth(previous_spoke_azimuth_rad);
@@ -120,6 +131,10 @@ class TargetTracking {
     return SpokeProcess_RTdata;
   }  // getSpokeProcessRTdata
 
+  SPOKESTATE getSpokeState() const noexcept {
+    return spoke_state;
+  }  // getSpokeState
+
   double getsampletime() const noexcept {
     return SpokeProcess_data.sample_time;
   }  // getsampletime
@@ -136,6 +151,7 @@ class TargetTracking {
   const AlphaBetaData AlphaBeta_data;
   ClusteringData Clustering_data;
 
+  SPOKESTATE spoke_state;
   SpokeProcessRTdata SpokeProcess_RTdata;
   TargetTrackerRTdata TargetTracker_RTdata;
 
