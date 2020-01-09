@@ -1,7 +1,7 @@
 /*
 ****************************************************************************
-* testclustering.cc:
-* example for marine radar and write spoke data to sqlite3
+* testTargetDetection.cc:
+* example for marine radar and target detection
 * This header file can be read by C++ compilers
 *
 * by Hu.ZH(CrossOcean.ai)
@@ -57,7 +57,7 @@ void startRadarAndClustering() {
   perception::TargetTracking Target_Tracking(Alarm_Zone, SpokeProcess_data,
                                              AlphaBeta_Data, Clustering_Data);
 
-  perception::TargetTrackerRTdata TargetTracker_RTdata;
+  perception::TargetDetectionRTdata TargetDetection_RTdata;
   perception::SpokeProcessRTdata SpokeProcess_RTdata;
 
   // sqlite3
@@ -79,7 +79,7 @@ void startRadarAndClustering() {
                           MarineRadar_RTdata.spoke_samplerange_m)
             .getSpokeProcessRTdata();
 
-    TargetTracker_RTdata = Target_Tracking.getTargetTrackerRTdata();
+    TargetDetection_RTdata = Target_Tracking.getTargetDetectionRTdata();
 
     std::cout << "spoke_azimuth_deg: " << MarineRadar_RTdata.spoke_azimuth_deg
               << std::endl;
@@ -100,8 +100,8 @@ void startRadarAndClustering() {
 
     db << "INSERT INTO target (target_x, target_y, target_radius) "
           "VALUES (?, ?, ?)"
-       << TargetTracker_RTdata.target_x << TargetTracker_RTdata.target_y
-       << TargetTracker_RTdata.target_square_radius;
+       << TargetDetection_RTdata.target_x << TargetDetection_RTdata.target_y
+       << TargetDetection_RTdata.target_square_radius;
 
     // std::size_t num_surroundings_alarm =
     //     SpokeProcess_RTdata.surroundings_bearing_rad.size();

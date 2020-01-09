@@ -41,6 +41,15 @@ find_package(PythonLibs 2.7)
 find_library(CLUSTER_LIBRARY pyclustering HINTS ${LIBRARY_DIRECTORY})
 
 # 指定生成目标
+add_executable (testTargetDetection testTargetDetection.cc )
+target_include_directories(testTargetDetection PRIVATE ${HEADER_DIRECTORY})
+target_include_directories(testTargetDetection PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(testTargetDetection PUBLIC ${PYTHON_LIBRARIES})
+target_link_libraries(testTargetDetection PUBLIC ${CLUSTER_LIBRARY})
+target_link_libraries(testTargetDetection PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+
+
+
 add_executable (testTargetTracking testTargetTracking.cc )
 target_include_directories(testTargetTracking PRIVATE ${HEADER_DIRECTORY})
 target_include_directories(testTargetTracking PRIVATE ${PYTHON_INCLUDE_DIRS})

@@ -35,8 +35,8 @@ int main() {
       10,        // start_range_m
       20,        // end_range_m
       0,         // center_bearing_rad
-      M_PI / 4,  // width_bearing_rad
-      0xf0       // sensitivity_threhold
+      M_PI / 2,  // width_bearing_rad
+      0xc0       // sensitivity_threhold
   };
 
   ASV::perception::AlphaBetaData AlphaBeta_Data{
@@ -53,9 +53,9 @@ int main() {
   ASV::perception::TargetTracking Target_Tracking(
       Alarm_Zone, SpokeProcess_data, AlphaBeta_Data, Clustering_Data);
 
-  cv::Mat newimage;
+  cv::Mat Alarm_image;
 
-  for (int _id = 1; _id != 11500; ++_id) {
+  for (int _id = 11000; _id != 51500; ++_id) {
     db << "SELECT azimuth, sample_range, spokedata from radar where id = "
           "?;"
        << _id >>
@@ -77,43 +77,49 @@ int main() {
                                         spoke_samplerange_m)
                           .getSpokeState();
 
-    std::cout << static_cast<int>(spokestate) << std::endl;
+    static double previous_spokea_zimuth = 0;
 
-    if (spokestate == ASV::perception::SPOKESTATE::LEAVE_ALARM_ZONE) {
-      auto SpokeProcess_RTdata = Target_Tracking.getSpokeProcessRTdata();
-      auto TargetTracker_RTdata = Target_Tracking.getTargetTrackerRTdata();
+    if (previous_spokea_zimuth != spoke_azimuth_deg) {
+      previous_spokea_zimuth = spoke_azimuth_deg;
+
+      if (static_cast<int>(spokestate) >= 1) {
+        if (spokestate == ASV::perception::SPOKESTATE::ENTER_ALARM_ZONE) {
+          std::cout << "enter the alarm zone!\n";
+        }
+
+        cv::Mat t_image(1, 64, CV_8UC1, &spokedata[0]);
+        Alarm_image.push_back(t_image);
+
+        if (spokestate == ASV::perception::SPOKESTATE::LEAVE_ALARM_ZONE) {
+          std::cout << "leave the alarm zone!\n";
+          auto SpokeProcess_RTdata = Target_Tracking.getSpokeProcessRTdata();
+          auto getTargetDetection_RTdata =
+              Target_Tracking.getTargetDetectionRTdata();
+
+          cv::Mat img_color;
+          cv::applyColorMap(Alarm_image, img_color, cv::COLORMAP_OCEAN);
+          cv::namedWindow("colorMap", cv::WINDOW_NORMAL);
+          cv::imshow("colorMap", img_color);
+          cv::resizeWindow("colorMap", 2000, 700);
+          waitKey(0);
+
+          // for (std::size_t i = 0;
+          //      i != SpokeProcess_RTdata.surroundings_bearing_rad.size(); ++i)
+          //   std::cout << " bearing_rad: "
+          //             << SpokeProcess_RTdata.surroundings_bearing_rad.at(i)
+          //             << " range_m: "
+          //             << SpokeProcess_RTdata.surroundings_range_m.at(i)
+          //             << " x_m: " <<
+          //             SpokeProcess_RTdata.surroundings_x_m.at(i)
+          //             << " y_m: " <<
+          //             SpokeProcess_RTdata.surroundings_y_m.at(i)
+          //             << std::endl;
+
+          Alarm_image = cv::Mat();
+        }
+      }
     }
-
-    // for (std::size_t i = 0;
-    //      i != SpokeProcess_RTdata.surroundings_bearing_rad.size(); ++i)
-    //   std::cout << " bearing_rad: "
-    //             << SpokeProcess_RTdata.surroundings_bearing_rad.at(i)
-    //             << " range_m: "
-    //             << SpokeProcess_RTdata.surroundings_range_m.at(i)
-    //             << " x_m: " << SpokeProcess_RTdata.surroundings_x_m.at(i)
-    //             << " y_m: " << SpokeProcess_RTdata.surroundings_y_m.at(i)
-    //             << std::endl;
-
-    // if (spoke_azimuth_deg != previous_azimuth_deg) {
-    //   cv::Mat image1(1, 512, CV_8UC1, &spokedata);
-    //   newimage.push_back(image1);
-    // }
   }
 
-  // Holds the colormap version of the image:
-  cv::Mat img_color;
-
-  // Apply the colormap:
-  cv::applyColorMap(newimage, img_color, cv::COLORMAP_OCEAN);
-  // Show the result:
-  cv::namedWindow("colorMap", cv::WINDOW_NORMAL);
-  cv::imshow("colorMap", img_color);
-  cv::resizeWindow("colorMap", 5120, 100);
-
-  waitKey(0);
-  cv::applyColorMap(newimage, img_color, cv::COLORMAP_JET);
-
-  imshow("colorMap", img_color);
-  waitKey(0);
   return 0;
 }

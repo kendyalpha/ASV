@@ -17,11 +17,15 @@
 #include "TargetTrackingData.h"
 #include "common/math/Geometry/include/Miniball.hpp"
 #include "common/math/miscellaneous/include/math_utils.h"
-
 #include "common/timer/include/timecounter.h"
 
 namespace ASV::perception {
+
+template <int max_num_target = 20>
 class TargetTracking {
+  using T_Vectord = Eigen::Matrix<double, max_num_target, 1>;
+  using T_Vectori = Eigen::Matrix<int, max_num_target, 1>;
+
  public:
   TargetTracking(const AlarmZone &_AlarmZone,
                  const SpokeProcessdata &_SpokeProcessdata,
@@ -31,7 +35,17 @@ class TargetTracking {
         SpokeProcess_data(_SpokeProcessdata),
         AlphaBeta_data(_AlphaBeta_data),
         Clustering_data(_ClusteringData),
-        spoke_state(SPOKESTATE::OUTSIDE_ALARM_ZONE) {}
+        spoke_state(SPOKESTATE::OUTSIDE_ALARM_ZONE),
+        TargetTracking_RTdata({
+            T_Vectori::Zero(),  // targets_state
+            T_Vectord::Zero(),  // targets_x
+            T_Vectord::Zero(),  // targets_y
+            T_Vectord::Zero(),  // targets_square_radius
+            T_Vectord::Zero(),  // targets_vx
+            T_Vectord::Zero(),  // targets_vy
+            T_Vectord::Zero(),  // targets_CPA
+            T_Vectord::Zero()   // targets_TCPA
+        }) {}
   virtual ~TargetTracking() = default;
 
   TargetTracking &AutoTracking(const uint8_t *_spoke_array,
@@ -91,9 +105,9 @@ class TargetTracking {
           // start to cluster and miniball
           ClusteringAndMiniBall(SpokeProcess_RTdata.surroundings_x_m,
                                 SpokeProcess_RTdata.surroundings_y_m,
-                                TargetTracker_RTdata.target_x,
-                                TargetTracker_RTdata.target_y,
-                                TargetTracker_RTdata.target_square_radius);
+                                TargetDetection_RTdata.target_x,
+                                TargetDetection_RTdata.target_y,
+                                TargetDetection_RTdata.target_square_radius);
 
           spoke_state = SPOKESTATE::LEAVE_ALARM_ZONE;
         } else {
@@ -116,15 +130,20 @@ class TargetTracking {
   TargetTracking &TestClustering(const std::vector<double> &_surroundings_x,
                                  const std::vector<double> &_surroundings_y) {
     ClusteringAndMiniBall(_surroundings_x, _surroundings_y,
-                          TargetTracker_RTdata.target_x,
-                          TargetTracker_RTdata.target_y,
-                          TargetTracker_RTdata.target_square_radius);
+                          TargetDetection_RTdata.target_x,
+                          TargetDetection_RTdata.target_y,
+                          TargetDetection_RTdata.target_square_radius);
+
+    auto [CPA_X, CPA_Y, TCPA] = computeCPA(0, 0, 1, 0, 3, 3, 0, -1);
+    std::cout << CPA_X << std::endl;
+    std::cout << CPA_Y << std::endl;
+    std::cout << TCPA << std::endl;
 
     return *this;
   }  // AutoTracking
 
-  TargetTrackerRTdata getTargetTrackerRTdata() const noexcept {
-    return TargetTracker_RTdata;
+  TargetDetectionRTdata getTargetDetectionRTdata() const noexcept {
+    return TargetDetection_RTdata;
   }
 
   SpokeProcessRTdata getSpokeProcessRTdata() const noexcept {
@@ -134,6 +153,10 @@ class TargetTracking {
   SPOKESTATE getSpokeState() const noexcept {
     return spoke_state;
   }  // getSpokeState
+
+  TargetTrackerRTdata<max_num_target> getTargetTrackerRTdata() const noexcept {
+    return TargetTracking_RTdata;
+  }  // getTargetTrackerRTdata
 
   double getsampletime() const noexcept {
     return SpokeProcess_data.sample_time;
@@ -152,8 +175,54 @@ class TargetTracking {
   ClusteringData Clustering_data;
 
   SPOKESTATE spoke_state;
+  TargetTrackerRTdata<max_num_target> TargetTracking_RTdata;
+
   SpokeProcessRTdata SpokeProcess_RTdata;
-  TargetTrackerRTdata TargetTracker_RTdata;
+  TargetDetectionRTdata TargetDetection_RTdata;
+
+  // calculate the CPA and TCPA, relative to boat A
+  std::tuple<double, double, double> computeCPA(
+      const double boatA_position_x, const double boatA_position_y,
+      const double boatA_speed_x, const double boatA_speed_y,
+      const double boatB_position_x, const double boatB_position_y,
+      const double boatB_speed_x, const double boatB_speed_y) {
+    double initial_delta_x = boatA_position_x - boatB_position_x;
+    double initial_delta_y = boatA_position_y - boatB_position_y;
+    double delta_speed_x = boatA_speed_x - boatB_speed_x;
+    double delta_speed_y = boatA_speed_y - boatB_speed_y;
+    double initial_square_distance =
+        initial_delta_x * initial_delta_x + initial_delta_y * initial_delta_y;
+    double initial_square_rela_speed =
+        delta_speed_x * delta_speed_x + delta_speed_y * delta_speed_y;
+
+    /** empiricial value **/
+    double max_search_time = std::sqrt(2 * initial_square_distance /
+                                       (initial_square_rela_speed + 1));
+    int max_search_index = 100;
+    double search_time_step = max_search_time / max_search_index;
+    // empiricial value
+
+    double min_distance = initial_square_distance;
+    double CPA_x = 0;
+    double CPA_y = 0;
+    double TCPA = 0;
+    for (int i = 0; i != max_search_index; ++i) {
+      double search_time = i * search_time_step;
+      double distance = (search_time * delta_speed_x + initial_delta_x) *
+                            (search_time * delta_speed_x + initial_delta_x) +
+                        (search_time * delta_speed_y + initial_delta_y) *
+                            (search_time * delta_speed_y + initial_delta_y);
+
+      if (distance < min_distance) {
+        min_distance = distance;
+        TCPA = search_time;
+        CPA_x = boatA_position_x + boatA_speed_x * search_time;
+        CPA_y = boatA_position_y + boatA_speed_y * search_time;
+      }
+    }
+
+    return {CPA_x, CPA_y, TCPA};
+  }  // computeCPA
 
   // clustering for all points and find the miniball around each sets of points
   void ClusteringAndMiniBall(const std::vector<double> &_surroundings_x,

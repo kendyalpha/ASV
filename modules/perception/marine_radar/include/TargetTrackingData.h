@@ -23,6 +23,12 @@ enum class SPOKESTATE {
   LEAVE_ALARM_ZONE,        // leave the alarm zone
 };
 
+enum class TARGETSTATE {
+  IDLE = 0,  // initial target state, or lost out of range, or acquire fail
+  SAFE,      // successfully acquired, safe
+  DANGEROUS  // successfully acquired, dangerous
+};
+
 struct SpokeProcessdata {
   double sample_time;
   double radar_x;  // x of radar relative to CoG, in the body-fixed coordinate
@@ -58,13 +64,27 @@ struct ClusteringData {
   std::size_t p_minumum_neighbors;  //
 };
 
-struct TargetTrackerRTdata {
-  // target position and velocity in the marine coordinate
+struct TargetDetectionRTdata {
+  // detected target position in the marine coordinate
   std::vector<double> target_x;
   std::vector<double> target_y;
   std::vector<double> target_square_radius;
-  std::vector<double> target_vx;
-  std::vector<double> target_vy;
+};
+
+template <int max_num_target = 20>
+struct TargetTrackerRTdata {
+  // target state
+  Eigen::Matrix<int, max_num_target, 1> targets_state;
+
+  // target position and velocity in the marine coordinate
+  Eigen::Matrix<double, max_num_target, 1> targets_x;
+  Eigen::Matrix<double, max_num_target, 1> targets_y;
+  Eigen::Matrix<double, max_num_target, 1> targets_square_radius;
+  Eigen::Matrix<double, max_num_target, 1> targets_vx;
+  Eigen::Matrix<double, max_num_target, 1> targets_vy;
+  // CPA and TCPA (closest point of approach)
+  Eigen::Matrix<double, max_num_target, 1> targets_CPA;
+  Eigen::Matrix<double, max_num_target, 1> targets_TCPA;
 };
 
 }  // namespace ASV::perception
