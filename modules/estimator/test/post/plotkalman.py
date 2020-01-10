@@ -12,7 +12,7 @@ import pandas
 import matplotlib.pyplot as plt
 import math
 
-path = './data/'
+path = '../data/'
 kalman = pandas.read_csv(path+'kalman.csv')
 observed = pandas.read_csv(path+'observed.csv')
 truex = pandas.read_csv(path+'truex.csv')

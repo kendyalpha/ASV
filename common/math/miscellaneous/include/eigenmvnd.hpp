@@ -23,6 +23,8 @@
 #include <utility>
 #include <vector>
 
+namespace ASV::common::math {
+
 class eigenmvnd {
   friend std::ostream &operator<<(std::ostream &os,
                                   eigenmvnd const &requested_ceigen) {
@@ -93,5 +95,8 @@ class eigenmvnd {
   int totalsample;
   int row_standard;
   Eigen::MatrixXd multidistribution;
-};
+};  // end class eigenmvnd
+
+}  // namespace ASV::common::math
+
 #endif  // _EIGENMVND_HPP

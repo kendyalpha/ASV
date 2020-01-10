@@ -24,7 +24,7 @@
 #include "modules/messages/sensors/gpsimu/include/gpsdata.h"
 #include "modules/messages/sensors/wind/include/winddata.h"
 #include "modules/messages/stm32/include/stm32data.h"
-#include "modules/perception/marine_radar/include/SpokeProcessingData.h"
+#include "modules/perception/marine_radar/include/TargetTrackingData.h"
 #include "modules/planner/route_planning/include/RoutePlannerData.h"
 
 namespace ASV::common {

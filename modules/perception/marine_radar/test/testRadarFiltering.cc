@@ -1,6 +1,6 @@
 /*
 ****************************************************************************
-* testTargetTracking.cc:
+* testRadarFiltering.cc:
 * unit test for Target tracking using marine radar
 * This header file can be read by C++ compilers
 *
@@ -9,6 +9,6 @@
 */
 
 #include <iostream>
-#include "../include/TargetTracking.h"
+#include "../include/RadarFiltering.h"
 
 int main() {}

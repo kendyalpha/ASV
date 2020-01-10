@@ -50,9 +50,9 @@ target_link_libraries(testTargetDetection PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 
 
 
-add_executable (testTargetTracking testTargetTracking.cc )
-target_include_directories(testTargetTracking PRIVATE ${HEADER_DIRECTORY})
-target_include_directories(testTargetTracking PRIVATE ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(testTargetTracking PUBLIC ${PYTHON_LIBRARIES})
-target_link_libraries(testTargetTracking PUBLIC ${CLUSTER_LIBRARY})
-target_link_libraries(testTargetTracking PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+add_executable (testRadarFiltering testRadarFiltering.cc )
+target_include_directories(testRadarFiltering PRIVATE ${HEADER_DIRECTORY})
+target_include_directories(testRadarFiltering PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(testRadarFiltering PUBLIC ${PYTHON_LIBRARIES})
+target_link_libraries(testRadarFiltering PUBLIC ${CLUSTER_LIBRARY})
+target_link_libraries(testRadarFiltering PUBLIC ${CMAKE_THREAD_LIBS_INIT})

@@ -43,19 +43,13 @@ void startRadarAndClustering() {
       0xf0       // sensitivity_threhold
   };
 
-  perception::AlphaBetaData AlphaBeta_Data{
-      0.1,  // sample_time
-      0.1,  // alpha
-      0.1   // beta
-  };
-
   perception::ClusteringData Clustering_Data{
       1,  // p_radius
       2   // p_minumum_neighbors
   };
 
   perception::TargetTracking Target_Tracking(Alarm_Zone, SpokeProcess_data,
-                                             AlphaBeta_Data, Clustering_Data);
+                                             Clustering_Data);
 
   perception::TargetDetectionRTdata TargetDetection_RTdata;
   perception::SpokeProcessRTdata SpokeProcess_RTdata;

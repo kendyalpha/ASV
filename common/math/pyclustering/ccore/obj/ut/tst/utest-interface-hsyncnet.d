@@ -1,10 +1,10 @@
 obj/ut/tst/./utest-interface-hsyncnet.o: \
  tst/./utest-interface-hsyncnet.cpp external/include/gtest/gtest.h \
- include/pyclustering/interface/sync_interface.h \
+ include/pyclustering/interface/hsyncnet_interface.h \
  include/pyclustering/interface/pyclustering_package.hpp \
  include/pyclustering/definitions.hpp \
- include/pyclustering/interface/hsyncnet_interface.h \
  include/pyclustering/interface/pyclustering_interface.h \
+ include/pyclustering/interface/sync_interface.h \
  include/pyclustering/cluster/hsyncnet.hpp \
  include/pyclustering/cluster/syncnet.hpp \
  include/pyclustering/nnet/sync.hpp \
@@ -22,15 +22,15 @@ obj/ut/tst/./utest-interface-hsyncnet.o: \
 
 external/include/gtest/gtest.h:
 
-include/pyclustering/interface/sync_interface.h:
+include/pyclustering/interface/hsyncnet_interface.h:
 
 include/pyclustering/interface/pyclustering_package.hpp:
 
 include/pyclustering/definitions.hpp:
 
-include/pyclustering/interface/hsyncnet_interface.h:
-
 include/pyclustering/interface/pyclustering_interface.h:
+
+include/pyclustering/interface/sync_interface.h:
 
 include/pyclustering/cluster/hsyncnet.hpp:
 

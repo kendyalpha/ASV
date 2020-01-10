@@ -21,6 +21,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 find_package(Boost COMPONENTS  unit_test_framework REQUIRED)
+find_package(PythonLibs 2.7)
 
 # 添加 include 子目录
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
@@ -33,3 +34,10 @@ ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK -DBOOST_TEST_MODULE)
 add_executable (testmath testmathutils.cc)
 target_include_directories(testmath PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testmath ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+
+
+
+add_executable (testeigenmvnd testeigenmvnd.cc)
+target_include_directories(testeigenmvnd PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_include_directories(testeigenmvnd PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testeigenmvnd PUBLIC ${PYTHON_LIBRARIES})

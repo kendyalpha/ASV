@@ -24,9 +24,10 @@ enum class SPOKESTATE {
 };
 
 enum class TARGETSTATE {
-  IDLE = 0,  // initial target state, or lost out of range, or acquire fail
-  SAFE,      // successfully acquired, safe
-  DANGEROUS  // successfully acquired, dangerous
+  IDLE = 0,   // initial target state, or lost out of range, or acquire fail
+  ACQUIRING,  //
+  SAFE,       // successfully acquired, safe
+  DANGEROUS   // successfully acquired, dangerous
 };
 
 struct SpokeProcessdata {
@@ -54,7 +55,6 @@ struct SpokeProcessRTdata {
 };
 
 struct AlphaBetaData {
-  double sample_time;
   double alpha;
   double beta;
 };

@@ -1,7 +1,8 @@
 
 #include "common/fileIO/include/utilityio.h"
-#include "modules/estimator/include/eigenmvnd.hpp"
+#include "common/math/miscellaneous/include/eigenmvnd.hpp"
 #include "modules/estimator/include/kalmanfilter.h"
+
 using namespace ASV;
 using namespace ASV::common;
 
@@ -59,8 +60,8 @@ void test2d() {
 
   // generate multivariate normal distribution to simulate gaussian noise
   int _TotalT = 50;
-  eigenmvnd normal_Q(Eigen::MatrixXd::Zero(n, 1), Q, _TotalT);
-  eigenmvnd normal_R(Eigen::MatrixXd::Zero(m, 1), R, _TotalT);
+  math::eigenmvnd normal_Q(Eigen::MatrixXd::Zero(n, 1), Q, _TotalT);
+  math::eigenmvnd normal_R(Eigen::MatrixXd::Zero(m, 1), R, _TotalT);
   Eigen::MatrixXd sample_normal_Q = normal_Q.perform_mvnd().get_mvnd_matrix();
   Eigen::MatrixXd sample_normal_R = normal_R.perform_mvnd().get_mvnd_matrix();
 

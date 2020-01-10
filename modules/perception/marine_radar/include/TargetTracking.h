@@ -29,11 +29,9 @@ class TargetTracking {
  public:
   TargetTracking(const AlarmZone &_AlarmZone,
                  const SpokeProcessdata &_SpokeProcessdata,
-                 const AlphaBetaData &_AlphaBeta_data,
                  const ClusteringData &_ClusteringData)
       : Alarm_Zone(_AlarmZone),
         SpokeProcess_data(_SpokeProcessdata),
-        AlphaBeta_data(_AlphaBeta_data),
         Clustering_data(_ClusteringData),
         spoke_state(SPOKESTATE::OUTSIDE_ALARM_ZONE),
         TargetTracking_RTdata({
@@ -57,6 +55,7 @@ class TargetTracking {
                                const double _vessel_theta_rad = 0.0) {
     static double previous_spoke_azimuth_rad = 0;
     static bool previous_IsInAlarmAzimuth = false;
+    static common::timecounter _timer;
 
     double _spoke_azimuth_rad = common::math::Normalizeheadingangle(
         common::math::Degree2Rad(_spoke_azimuth_deg));
@@ -97,11 +96,16 @@ class TargetTracking {
         // check the spoke azimuth to determine spoke state
         if (previous_IsInAlarmAzimuth)
           spoke_state = SPOKESTATE::IN_ALARM_ZONE;
-        else
+        else {
           spoke_state = SPOKESTATE::ENTER_ALARM_ZONE;
+          _timer.timeelapsed();
+        }
 
       } else {                            // outside the alarm azimuth
         if (previous_IsInAlarmAzimuth) {  // leaving the alarm azimuth
+
+          long int et_ms = _timer.timeelapsed();
+
           // start to cluster and miniball
           ClusteringAndMiniBall(SpokeProcess_RTdata.surroundings_x_m,
                                 SpokeProcess_RTdata.surroundings_y_m,
@@ -134,7 +138,7 @@ class TargetTracking {
                           TargetDetection_RTdata.target_y,
                           TargetDetection_RTdata.target_square_radius);
 
-    auto [CPA_X, CPA_Y, TCPA] = computeCPA(0, 0, 1, 0, 3, 3, 0, -1);
+    auto [CPA_X, CPA_Y, TCPA] = computeCPA(0, 0, 2, 0, 0, 4, 2, -2);
     std::cout << CPA_X << std::endl;
     std::cout << CPA_Y << std::endl;
     std::cout << TCPA << std::endl;
@@ -144,7 +148,7 @@ class TargetTracking {
 
   TargetDetectionRTdata getTargetDetectionRTdata() const noexcept {
     return TargetDetection_RTdata;
-  }
+  }  // getTargetDetectionRTdata
 
   SpokeProcessRTdata getSpokeProcessRTdata() const noexcept {
     return SpokeProcess_RTdata;
@@ -171,12 +175,10 @@ class TargetTracking {
  private:
   const AlarmZone Alarm_Zone;
   const SpokeProcessdata SpokeProcess_data;
-  const AlphaBetaData AlphaBeta_data;
   ClusteringData Clustering_data;
 
   SPOKESTATE spoke_state;
   TargetTrackerRTdata<max_num_target> TargetTracking_RTdata;
-
   SpokeProcessRTdata SpokeProcess_RTdata;
   TargetDetectionRTdata TargetDetection_RTdata;
 
@@ -286,27 +288,15 @@ class TargetTracking {
 
   }  // ClusteringAndMiniBall
 
-  // alpha-beta filtering for 2d target tracking
-  std::tuple<double, double, double, double> AlphaBetaFiltering(
-      const double previous_target_x, const double previous_target_y,
-      const double previous_target_vx, const double previous_target_vy,
-      const double meas_x, const double meas_y) {
-    double previous_position[2] = {previous_target_x, previous_target_y};
-    double previous_velocity[2] = {previous_target_vx, previous_target_vy};
-    double measurement[2] = {meas_x, meas_y};
-    double position[2] = {};
-    double velocity[2] = {};
+  // motion prediction for radar-detected target (Staight line assumption)
+  void PredictMotion(
+      const std::vector<double> &new_target_x,
+      const std::vector<double> &new_target_y,
+      const std::vector<double> &new_target_radius,
+      TargetTrackerRTdata<max_num_target> &_TargetTracking_RTdata) {
+    // _TargetTracking_RTdata.;
 
-    for (int i = 0; i != 2; ++i) {
-      double xk = previous_position[i] +
-                  AlphaBeta_data.sample_time * previous_velocity[i];
-      double rk = measurement[i] - xk;
-      position[i] = xk + AlphaBeta_data.alpha * rk;
-      velocity[i] = previous_velocity[i] +
-                    rk * AlphaBeta_data.beta / AlphaBeta_data.sample_time;
-    }
-    return {position[0], position[1], velocity[0], velocity[1]};
-  }  // AlphaBetaFiltering
+  }  // PredictMotion
 
   // check if spoke azimuth is the alarm zone, depending on azimuth
   bool IsInAlarmAzimuth(const double _current_spoke_azimuth_rad) {

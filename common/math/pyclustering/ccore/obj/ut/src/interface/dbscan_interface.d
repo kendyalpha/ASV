@@ -4,11 +4,11 @@ obj/ut/src/interface/dbscan_interface.o: \
  include/pyclustering/interface/pyclustering_package.hpp \
  include/pyclustering/definitions.hpp \
  include/pyclustering/cluster/dbscan.hpp \
- include/pyclustering/container/kdtree.hpp \
- include/pyclustering/container/kdnode.hpp \
  include/pyclustering/cluster/cluster_algorithm.hpp \
  include/pyclustering/cluster/cluster_data.hpp \
- include/pyclustering/cluster/dbscan_data.hpp
+ include/pyclustering/cluster/dbscan_data.hpp \
+ include/pyclustering/container/kdtree.hpp \
+ include/pyclustering/container/kdnode.hpp
 
 include/pyclustering/interface/dbscan_interface.h:
 
@@ -18,12 +18,12 @@ include/pyclustering/definitions.hpp:
 
 include/pyclustering/cluster/dbscan.hpp:
 
-include/pyclustering/container/kdtree.hpp:
-
-include/pyclustering/container/kdnode.hpp:
-
 include/pyclustering/cluster/cluster_algorithm.hpp:
 
 include/pyclustering/cluster/cluster_data.hpp:
 
 include/pyclustering/cluster/dbscan_data.hpp:
+
+include/pyclustering/container/kdtree.hpp:
+
+include/pyclustering/container/kdnode.hpp:

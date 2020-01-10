@@ -9,7 +9,7 @@
 
 using namespace cv;
 #include <iostream>
-
+#include <thread>
 int main() {
   std::vector<double> surroundings_bearing_rad;
   std::vector<double> surroundings_range_m;
@@ -39,23 +39,18 @@ int main() {
       0xc0       // sensitivity_threhold
   };
 
-  ASV::perception::AlphaBetaData AlphaBeta_Data{
-      0.1,  // sample_time
-      0.1,  // alpha
-      0.1   // beta
-  };
-
   ASV::perception::ClusteringData Clustering_Data{
       1,  // p_radius
       2   // p_minumum_neighbors
   };
 
-  ASV::perception::TargetTracking Target_Tracking(
-      Alarm_Zone, SpokeProcess_data, AlphaBeta_Data, Clustering_Data);
+  ASV::perception::TargetTracking<> Target_Tracking(
+      Alarm_Zone, SpokeProcess_data, Clustering_Data);
 
   cv::Mat Alarm_image;
 
   for (int _id = 11000; _id != 51500; ++_id) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     db << "SELECT azimuth, sample_range, spokedata from radar where id = "
           "?;"
        << _id >>

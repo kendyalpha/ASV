@@ -26,102 +26,6 @@ void generatecircle(const double center_x, const double center_y,
   }
 }
 
-void test_2d_miniball() {
-  const int d = 2;    // dimension
-  const int n = 100;  // number of points
-
-  std::srand(10);
-
-  // generate random points and store them in a 2-d array
-  // ----------------------------------------------------
-  std::vector<double> points_x;
-  std::vector<double> points_y;
-
-  double** ap = new double*[n];
-  for (int i = 0; i < n; ++i) {
-    double* p = new double[d];
-    for (int j = 0; j < d; ++j) {
-      p[j] = rand();
-    }
-    ap[i] = p;
-    points_x.push_back(p[0]);
-    points_y.push_back(p[1]);
-  }
-
-  // create an instance of Miniball
-  // ------------------------------
-  Miniball::Miniball<Miniball::CoordAccessor<double* const*, const double*> >
-      mb(d, ap, ap + n);
-
-  // output results
-  // --------------
-  // center
-  std::cout << "Center:\n  ";
-  const double* center = mb.center();
-  for (int i = 0; i < d; ++i) {
-    std::cout << *(center + i) << " ";
-  }
-  std::cout << std::endl;
-
-  // squared radius
-  std::cout << "Squared radius:\n  ";
-  std::cout << mb.squared_radius() << std::endl;
-
-  // number of support points
-  std::cout << "Number of support points:\n  ";
-  std::cout << mb.nr_support_points() << std::endl;
-
-  // support points on the boundary determine the smallest enclosing ball
-  std::cout << "Support point indices (numbers refer to the input order):\n  ";
-  for (auto it = mb.support_points_begin(); it != mb.support_points_end();
-       ++it) {
-    std::cout << (*it) - ap << " ";  // 0 = first point
-  }
-  std::cout << std::endl;
-
-  // relative error: by how much does the ball fail to contain all points?
-  //                 tiny positive numbers come from roundoff and are ok
-  std::cout << "Relative error:\n  ";
-  double suboptimality;
-  std::cout << mb.relative_error(suboptimality) << std::endl;
-
-  // suboptimality: by how much does the ball fail to be the smallest
-  //                enclosing ball of its support points? should be 0
-  //                in most cases, but tiny positive numbers are again ok
-  std::cout << "Suboptimality:\n  ";
-  std::cout << suboptimality << std::endl;
-
-  // validity: the ball is considered valid if the relative error is tiny
-  //           (<= 10 times the machine epsilon) and the suboptimality is zero
-  std::cout << "Validity:\n  ";
-  std::cout << (mb.is_valid() ? "ok" : "possibly invalid") << std::endl;
-
-  // computation time
-  std::cout << "Computation time was " << mb.get_time() << " seconds\n";
-
-  // clean up
-  for (int i = 0; i < n; ++i) delete[] ap[i];
-  delete[] ap;
-
-  // plotting
-  // Set the size of output image = 1200x780 pixels
-  matplotlibcpp::figure_size(800, 780);
-
-  // Plot line from given x and y data. Color is selected automatically.
-  matplotlibcpp::plot(points_x, points_y, ".");
-
-  std::vector<double> circle_x;
-  std::vector<double> circle_y;
-
-  generatecircle(center[0], center[1], std::sqrt(mb.squared_radius()), circle_x,
-                 circle_y);
-
-  // Plot a red dashed line from given x and y data.
-  matplotlibcpp::plot(circle_x, circle_y, "r-");
-  matplotlibcpp::title("Smallest Closing Ball of Points");
-  matplotlibcpp::show();
-}  // test_2d_miniball
-
 void testClustering() {
   double p_radius = 0.7;
   size_t p_neighbors = 3;
@@ -189,11 +93,7 @@ void testClustering() {
 
 void testClusteringAndBall() {
   using namespace ASV::perception;
-  AlphaBetaData AlphaBeta_Data{
-      0.1,  // sample_time
-      0.1,  // alpha
-      0.1   // beta
-  };
+
   ClusteringData Clustering_Data{
       1,  // p_radius
       3   // p_minumum_neighbors
@@ -237,7 +137,7 @@ void testClusteringAndBall() {
       8.684424, 8.743305, 8.782045, 9.464194, 9.369996};
 
   TargetTracking<> Target_Tracking(Alarm_Zone, SpokeProcess_data,
-                                   AlphaBeta_Data, Clustering_Data);
+                                   Clustering_Data);
 
   auto TargetDetection_RTdata =
       Target_Tracking.TestClustering(p_data_x, p_data_y)
@@ -285,11 +185,6 @@ void testSpokeAndCluster() {
       0xe0           // sensitivity_threhold
   };
 
-  AlphaBetaData AlphaBeta_Data{
-      0.1,  // sample_time
-      0.1,  // alpha
-      0.1   // beta
-  };
   ClusteringData Clustering_Data{
       1,  // p_radius
       2   // p_minumum_neighbors
@@ -301,7 +196,7 @@ void testSpokeAndCluster() {
   constexpr std::size_t size_array = 512;
 
   TargetTracking<> Target_Tracking(Alarm_Zone, SpokeProcess_data,
-                                   AlphaBeta_Data, Clustering_Data);
+                                   Clustering_Data);
 
   for (int i = 0; i != 3; ++i) {
     uint8_t _value = 252 - 15 * i;
@@ -412,5 +307,4 @@ void testSpokeAndCluster() {
 int main() {
   // testSpokeAndCluster();
   testClusteringAndBall();
-  // test_2d_miniball();
 }
