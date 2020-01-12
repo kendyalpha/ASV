@@ -14,15 +14,18 @@
 
 #include <pyclustering/cluster/dbscan.hpp>
 #include <pyclustering/utils/metric.hpp>
-#include "TargetTrackingData.h"
+
 #include "common/math/Geometry/include/Miniball.hpp"
 #include "common/math/miscellaneous/include/math_utils.h"
 #include "common/timer/include/timecounter.h"
 
+#include "RadarFiltering.h"
+#include "TargetTrackingData.h"
+
 namespace ASV::perception {
 
 template <int max_num_target = 20>
-class TargetTracking {
+class TargetTracking : public RadarFiltering {
   using T_Vectord = Eigen::Matrix<double, max_num_target, 1>;
   using T_Vectori = Eigen::Matrix<int, max_num_target, 1>;
 
@@ -30,7 +33,8 @@ class TargetTracking {
   TargetTracking(const AlarmZone &_AlarmZone,
                  const SpokeProcessdata &_SpokeProcessdata,
                  const ClusteringData &_ClusteringData)
-      : Alarm_Zone(_AlarmZone),
+      : RadarFiltering(1, 1),
+        Alarm_Zone(_AlarmZone),
         SpokeProcess_data(_SpokeProcessdata),
         Clustering_data(_ClusteringData),
         spoke_state(SPOKESTATE::OUTSIDE_ALARM_ZONE),
