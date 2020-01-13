@@ -89,7 +89,7 @@ class RadarFiltering {
     return {new_x, new_v};
   }  // AlphaBetaFiltering
 
-  //
+  // Predict the motion, without measurement
   std::tuple<double, double> Predict(const double previous_x,
                                      const double previous_v,
                                      const double sample_time) {
@@ -97,7 +97,7 @@ class RadarFiltering {
     double new_v = previous_v;
 
     return {new_x, new_v};
-  }  // AlphaBetaFiltering
+  }  // Predict
 
 };  // end class RadarFiltering
 }  // namespace ASV::perception

@@ -32,10 +32,12 @@ class TargetTracking : public RadarFiltering {
  public:
   TargetTracking(const AlarmZone &_AlarmZone,
                  const SpokeProcessdata &_SpokeProcessdata,
+                 const TrackingTargetData &_TrackingTargetData,
                  const ClusteringData &_ClusteringData)
       : RadarFiltering(1, 1),
         Alarm_Zone(_AlarmZone),
         SpokeProcess_data(_SpokeProcessdata),
+        TrackingTarget_Data(_TrackingTargetData),
         Clustering_data(_ClusteringData),
         spoke_state(SPOKESTATE::OUTSIDE_ALARM_ZONE),
         TargetTracking_RTdata({
@@ -142,10 +144,7 @@ class TargetTracking : public RadarFiltering {
                           TargetDetection_RTdata.target_y,
                           TargetDetection_RTdata.target_square_radius);
 
-    auto [CPA_X, CPA_Y, TCPA] = computeCPA(0, 0, 2, 0, 0, 4, 2, -2);
-    std::cout << CPA_X << std::endl;
-    std::cout << CPA_Y << std::endl;
-    std::cout << TCPA << std::endl;
+    RemoveSmallRadius(TargetDetection_RTdata);
 
     return *this;
   }  // AutoTracking
@@ -179,6 +178,7 @@ class TargetTracking : public RadarFiltering {
  private:
   const AlarmZone Alarm_Zone;
   const SpokeProcessdata SpokeProcess_data;
+  const TrackingTargetData TrackingTarget_Data;
   ClusteringData Clustering_data;
 
   SPOKESTATE spoke_state;
@@ -301,6 +301,96 @@ class TargetTracking : public RadarFiltering {
     // _TargetTracking_RTdata.;
 
   }  // PredictMotion
+
+  // remove the small radius from the detected targets
+  void RemoveSmallRadius(TargetDetectionRTdata &_TargetDetection_RTdata) {
+    std::vector<double> new_target_x;
+    std::vector<double> new_target_y;
+    std::vector<double> new_target_square_radius;
+
+    std::size_t num_detected_targets = _TargetDetection_RTdata.target_x.size();
+    for (std::size_t i = 0; i != num_detected_targets; ++i) {
+      if (_TargetDetection_RTdata.target_square_radius[i] >=
+          TrackingTarget_Data.min_squared_radius) {
+        new_target_x.emplace_back(_TargetDetection_RTdata.target_x[i]);
+        new_target_y.emplace_back(_TargetDetection_RTdata.target_y[i]);
+        new_target_square_radius.emplace_back(
+            _TargetDetection_RTdata.target_square_radius[i]);
+      }
+    }
+
+    _TargetDetection_RTdata.target_x = new_target_x;
+    _TargetDetection_RTdata.target_y = new_target_y;
+    _TargetDetection_RTdata.target_square_radius = new_target_square_radius;
+
+  }  // RemoveSmallRadius
+
+  // match the detected target with the tracking targets
+  TargetTrackerRTdata<max_num_target> TargetIdentification(
+      const std::vector<double> &detected_target_x,
+      const std::vector<double> &detected_target_y,
+      const std::vector<double> &detected_target_radius,
+      const TargetTrackerRTdata<max_num_target> &previous_tracking_targets,
+      const double sample_time) {
+    TargetTrackerRTdata<max_num_target> New_tracking_targets{
+        T_Vectori::Zero(),  // targets_state
+        T_Vectord::Zero(),  // targets_x
+        T_Vectord::Zero(),  // targets_y
+        T_Vectord::Zero(),  // targets_square_radius
+        T_Vectord::Zero(),  // targets_vx
+        T_Vectord::Zero(),  // targets_vy
+        T_Vectord::Zero(),  // targets_CPA
+        T_Vectord::Zero()   // targets_TCPA
+    };
+
+    std::size_t num_detected_targets = detected_target_x.size();
+    double inverse_time = 1.0 / sample_time;
+    // first loop to match the detected targets with tracking
+    // targets(ACQUIRING/SAFE/DANGEROUS)
+    for (int j = 0; j != max_num_target; ++j) {
+      if (previous_tracking_targets.targets_state(j) > 0) {
+        double Vj0_x = previous_tracking_targets.targets_vx(j);
+        double Vj0_y = previous_tracking_targets.targets_vy(j);
+
+        double previous_square_speed = Vj0_x * Vj0_x + Vj0_y * Vj0_y;
+
+        for (std::size_t i = 0; i != num_detected_targets; ++i) {
+          double Vji_x =
+              inverse_time *
+              (detected_target_x[i] - previous_tracking_targets.targets_x(j));
+          double Vji_y =
+              inverse_time *
+              (detected_target_y[i] - previous_tracking_targets.targets_y(j));
+
+          double predicted_speed_ji = Vji_x * Vji_x + Vji_y * Vji_y;
+
+          double delta_angle =
+              common::math::VectorAngle_2d(Vj0_x, Vj0_y, Vji_x, Vji_y);
+
+          double radius_term =
+              std::abs(detected_target_radius[i] /
+                           previous_tracking_targets.targets_square_radius(j) -
+                       1);
+
+          double delta_speed_term =
+              std::abs((predicted_speed_ji - previous_square_speed) /
+                       (previous_square_speed + 1));
+
+          // remove the detected targets which is un-matched
+
+          double loss = TrackingTarget_Data.K_radius * radius_term + ;
+
+          //
+        }
+
+        if (previous_square_speed >
+            std::pow(TrackingTarget_Data.speed_threhold, 2)) {
+        } else {
+        }
+      }
+    }
+
+  }  // TargetIdentification
 
   // check if spoke azimuth is the alarm zone, depending on azimuth
   bool IsInAlarmAzimuth(const double _current_spoke_azimuth_rad) {

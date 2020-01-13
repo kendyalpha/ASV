@@ -104,6 +104,17 @@ void testClusteringAndBall() {
       0.0    // radar_y
   };
 
+  TrackingTargetData TrackingTarget_Data{
+      0.25,  // min_squared_radius
+      1,     // speed_threhold
+      20,    // max_speed
+      5,     // max_acceleration
+      60,    // max_roti
+      1,     // K_radius
+      1,     // K_delta_speed
+      1      // K_delta_yaw;
+  };
+
   AlarmZone Alarm_Zone{
       10,        // start_range_m
       20,        // end_range_m
@@ -137,7 +148,7 @@ void testClusteringAndBall() {
       8.684424, 8.743305, 8.782045, 9.464194, 9.369996};
 
   TargetTracking<> Target_Tracking(Alarm_Zone, SpokeProcess_data,
-                                   Clustering_Data);
+                                   TrackingTarget_Data, Clustering_Data);
 
   auto TargetDetection_RTdata =
       Target_Tracking.TestClustering(p_data_x, p_data_y)
@@ -185,6 +196,17 @@ void testSpokeAndCluster() {
       0xe0           // sensitivity_threhold
   };
 
+  TrackingTargetData TrackingTarget_Data{
+      1,   // min_squared_radius
+      1,   // speed_threhold
+      20,  // max_speed
+      5,   // max_acceleration
+      60,  // max_roti
+      1,   // K_radius
+      1,   // K_delta_speed
+      1    // K_delta_yaw;
+  };
+
   ClusteringData Clustering_Data{
       1,  // p_radius
       2   // p_minumum_neighbors
@@ -196,7 +218,7 @@ void testSpokeAndCluster() {
   constexpr std::size_t size_array = 512;
 
   TargetTracking<> Target_Tracking(Alarm_Zone, SpokeProcess_data,
-                                   Clustering_Data);
+                                   TrackingTarget_Data, Clustering_Data);
 
   for (int i = 0; i != 3; ++i) {
     uint8_t _value = 252 - 15 * i;

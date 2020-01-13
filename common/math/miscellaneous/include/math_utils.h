@@ -73,7 +73,7 @@ double Rad2Degree(double _rad) noexcept {
 // convert marine coordinate to cartesian coordinate
 double Degree2Rad(double _degree) noexcept {
   return M_PI * _degree / 180.0;
-}  // Marine2Cart
+}  // Degree2Rad
 
 // convert Cartesian coordinates to Polar coordinates
 std::tuple<double, double> Cartesian2Polar(const double x, const double y) {

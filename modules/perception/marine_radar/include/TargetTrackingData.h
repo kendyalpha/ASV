@@ -54,9 +54,18 @@ struct SpokeProcessRTdata {
   std::vector<double> surroundings_y_m;
 };
 
-struct AlphaBetaData {
-  double alpha;
-  double beta;
+struct TrackingTargetData {
+  // the minimum squared radius of detected targets (m^2)
+  double min_squared_radius;
+  double speed_threhold;    // s
+  double max_speed;         // the maximum speed of detected targets (m/s)
+  double max_acceleration;  // the max acceleration of detected targets (m/s^2)
+  double max_roti;          // the maximum ROTI of detected targets (deg/min)
+
+  // loss function
+  double K_radius;
+  double K_delta_speed;
+  double K_delta_yaw;
 };
 
 struct ClusteringData {
