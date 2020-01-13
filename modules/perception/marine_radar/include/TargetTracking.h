@@ -293,12 +293,88 @@ class TargetTracking : public RadarFiltering {
   }  // ClusteringAndMiniBall
 
   // motion prediction for radar-detected target (Staight line assumption)
-  void PredictMotion(
+  TargetTrackerRTdata<max_num_target> PredictMotion(
       const std::vector<double> &new_target_x,
       const std::vector<double> &new_target_y,
-      const std::vector<double> &new_target_radius,
-      TargetTrackerRTdata<max_num_target> &_TargetTracking_RTdata) {
-    // _TargetTracking_RTdata.;
+      const std::vector<double> &new_target_radius, const double sample_time,
+      const TargetTrackerRTdata<max_num_target> &previous_tracking_target) {
+    TargetTrackerRTdata<max_num_target> new_tracking_target{
+        T_Vectori::Zero(),  // targets_state
+        T_Vectord::Zero(),  // targets_x
+        T_Vectord::Zero(),  // targets_y
+        T_Vectord::Zero(),  // targets_square_radius
+        T_Vectord::Zero(),  // targets_vx
+        T_Vectord::Zero(),  // targets_vy
+        T_Vectord::Zero(),  // targets_CPA
+        T_Vectord::Zero()   // targets_TCPA
+    };
+
+    auto match_targets_index =
+        TargetIdentification(new_target_x, new_target_y, new_target_radius,
+                             previous_tracking_target, sample_time);
+
+    for (int i = 0; i != max_num_target; ++i) {
+      int match_target_index = match_targets_index(i);
+      if (match_target_index < 0) {  // unmatched
+        switch (previous_tracking_target.targets_state(i)) {
+          case 0:  // IDLE
+          case 1:  // ACQUIRING
+            new_tracking_target.targets_state(i) = 0;
+            break;
+          case 2:
+          case 3:  //  SAFE/DANGEROUS
+            new_tracking_target.targets_state(i) = 1;
+            std::tie(new_tracking_target.targets_x(i),
+                     new_tracking_target.targets_vx(i),
+                     new_tracking_target.targets_y(i),
+                     new_tracking_target.targets_vy(i)) =
+                RadarFiltering::NormalFilter(
+                    previous_tracking_target.targets_x(i),
+                    previous_tracking_target.targets_vx(i),
+                    previous_tracking_target.targets_y(i),
+                    previous_tracking_target.targets_vy(i), sample_time);
+            new_tracking_target.targets_square_radius(i) =
+                previous_tracking_target.targets_square_radius(i);
+            break;
+        }
+      } else {  // matched
+        switch (previous_tracking_target.targets_state(i)) {
+          case 0:  // IDLE
+            new_tracking_target.targets_state(i) = 1;
+            new_tracking_target.targets_x(i) =
+                new_target_x.at(match_target_index);
+            new_tracking_target.targets_vx(i) = 0;
+            new_tracking_target.targets_y(i) =
+                new_target_y.at(match_target_index);
+            new_tracking_target.targets_vy(i) = 0;
+            new_tracking_target.targets_square_radius(i) =
+                new_target_radius.at(match_target_index);
+            break;
+          case 1:
+          case 2:  //  ACQUIRING/SAFE/DANGEROUS
+          case 3:
+            new_tracking_target.targets_state(i) = 2;
+            std::tie(new_tracking_target.targets_x(i),
+                     new_tracking_target.targets_vx(i),
+                     new_tracking_target.targets_y(i),
+                     new_tracking_target.targets_vy(i)) =
+                RadarFiltering::NormalFilter(
+                    previous_tracking_target.targets_x(i),
+                    previous_tracking_target.targets_vx(i),
+                    new_target_x.at(match_target_index),
+                    previous_tracking_target.targets_y(i),
+                    previous_tracking_target.targets_vy(i),
+                    new_target_y.at(match_target_index), sample_time);
+            new_tracking_target.targets_square_radius(i) =
+                0.5 * (previous_tracking_target.targets_square_radius(i) +
+                       new_target_radius.at(match_target_index));
+
+            break;
+        }
+      }
+    }
+
+    return new_tracking_target;
 
   }  // PredictMotion
 
@@ -326,70 +402,138 @@ class TargetTracking : public RadarFiltering {
   }  // RemoveSmallRadius
 
   // match the detected target with the tracking targets
-  TargetTrackerRTdata<max_num_target> TargetIdentification(
+  T_Vectori TargetIdentification(
       const std::vector<double> &detected_target_x,
       const std::vector<double> &detected_target_y,
       const std::vector<double> &detected_target_radius,
       const TargetTrackerRTdata<max_num_target> &previous_tracking_targets,
       const double sample_time) {
-    TargetTrackerRTdata<max_num_target> New_tracking_targets{
-        T_Vectori::Zero(),  // targets_state
-        T_Vectord::Zero(),  // targets_x
-        T_Vectord::Zero(),  // targets_y
-        T_Vectord::Zero(),  // targets_square_radius
-        T_Vectord::Zero(),  // targets_vx
-        T_Vectord::Zero(),  // targets_vy
-        T_Vectord::Zero(),  // targets_CPA
-        T_Vectord::Zero()   // targets_TCPA
-    };
+    // match_index: -1 means unmatched, >=0 means the index in detected targets
+    T_Vectori match_targets_index = T_Vectori::Constant(-1);
+    double inverse_time = 1.0 / sample_time;
 
     std::size_t num_detected_targets = detected_target_x.size();
-    double inverse_time = 1.0 / sample_time;
+    std::vector<int> unmatch_detected_targets_index(num_detected_targets);
+    for (std::size_t i = 0; i != num_detected_targets; ++i) {
+      unmatch_detected_targets_index[i] = i;
+    }
     // first loop to match the detected targets with tracking
     // targets(ACQUIRING/SAFE/DANGEROUS)
     for (int j = 0; j != max_num_target; ++j) {
       if (previous_tracking_targets.targets_state(j) > 0) {
-        double Vj0_x = previous_tracking_targets.targets_vx(j);
-        double Vj0_y = previous_tracking_targets.targets_vy(j);
+        int index_match_with_detection = TargetIdentification(
+            detected_target_x, detected_target_y, detected_target_radius,
+            previous_tracking_targets.targets_x(j),
+            previous_tracking_targets.targets_y(j),
+            previous_tracking_targets.targets_square_radius(j),
+            previous_tracking_targets.targets_vx(j),
+            previous_tracking_targets.targets_vy(j), inverse_time);
 
-        double previous_square_speed = Vj0_x * Vj0_x + Vj0_y * Vj0_y;
-
-        for (std::size_t i = 0; i != num_detected_targets; ++i) {
-          double Vji_x =
-              inverse_time *
-              (detected_target_x[i] - previous_tracking_targets.targets_x(j));
-          double Vji_y =
-              inverse_time *
-              (detected_target_y[i] - previous_tracking_targets.targets_y(j));
-
-          double predicted_speed_ji = Vji_x * Vji_x + Vji_y * Vji_y;
-
-          double delta_angle =
-              common::math::VectorAngle_2d(Vj0_x, Vj0_y, Vji_x, Vji_y);
-
-          double radius_term =
-              std::abs(detected_target_radius[i] /
-                           previous_tracking_targets.targets_square_radius(j) -
-                       1);
-
-          double delta_speed_term =
-              std::abs((predicted_speed_ji - previous_square_speed) /
-                       (previous_square_speed + 1));
-
-          // remove the detected targets which is un-matched
-
-          double loss = TrackingTarget_Data.K_radius * radius_term + ;
-
-          //
-        }
-
-        if (previous_square_speed >
-            std::pow(TrackingTarget_Data.speed_threhold, 2)) {
-        } else {
+        if (index_match_with_detection < num_detected_targets) {
+          match_targets_index(j) = index_match_with_detection;
+          if (index_match_with_detection >= 0)
+            unmatch_detected_targets_index.erase(
+                std::remove(unmatch_detected_targets_index.begin(),
+                            unmatch_detected_targets_index.end(),
+                            index_match_with_detection),
+                unmatch_detected_targets_index.end());
         }
       }
     }
 
+    //  assign the unmatched detected targets to IDLE tracking targets
+    for (int j = 0; j != max_num_target; ++j) {
+      if (previous_tracking_targets.targets_state(j) == 0) {
+        // only the IDLE previous tracking targets can be setup new detection
+        if (j < unmatch_detected_targets_index.size())
+          match_targets_index(j) = unmatch_detected_targets_index[j];
+      }
+    }
+
+    return match_targets_index;
+
+  }  // TargetIdentification
+
+  // match the detected targets with tracking targets(except IDLE)
+  int TargetIdentification(const std::vector<double> &detected_target_x,
+                           const std::vector<double> &detected_target_y,
+                           const std::vector<double> &detected_target_radius,
+                           const double previous_target_x,
+                           const double previous_target_y,
+                           const double previous_target_square_radius,
+                           const double previous_target_vx,
+                           const double previous_target_vy,
+                           const double inverse_time) {
+    // match_index: -1 means unmatched, >=0 means the index in detected targets
+    int match_index = -1;
+    double min_loss = 1e4;
+
+    std::size_t num_detected_targets = detected_target_x.size();
+    double Vj0_x = previous_target_vx;
+    double Vj0_y = previous_target_vy;
+    double previous_speed_j0 = std::sqrt(Vj0_x * Vj0_x + Vj0_y * Vj0_y);
+    if (previous_speed_j0 > TrackingTarget_Data.speed_threhold) {
+      for (std::size_t i = 0; i != num_detected_targets; ++i) {
+        double Vji_x =
+            inverse_time * (detected_target_x[i] - previous_target_x);
+        double Vji_y =
+            inverse_time * (detected_target_y[i] - previous_target_y);
+
+        double predicted_speed_ji = std::sqrt(Vji_x * Vji_x + Vji_y * Vji_y);
+
+        double aji =
+            std::abs(inverse_time * (predicted_speed_ji - previous_speed_j0));
+
+        double delta_yaw =
+            std::abs(common::math::VectorAngle_2d(Vj0_x, Vj0_y, Vji_x, Vji_y));
+
+        // remove the detected targets which is un-matched
+        if (predicted_speed_ji > TrackingTarget_Data.max_speed) continue;
+        if (aji > TrackingTarget_Data.max_acceleration) continue;
+        if ((delta_yaw * inverse_time) >
+            (0.00029 * TrackingTarget_Data.max_roti))
+          continue;
+
+        double radius_term = std::abs(
+            detected_target_radius[i] / previous_target_square_radius - 1);
+
+        double delta_speed_term =
+            std::abs(predicted_speed_ji / previous_speed_j0 - 1);
+
+        double delta_angle_term = delta_yaw / M_PI;
+
+        // compute the loss
+        double loss = TrackingTarget_Data.K_radius * radius_term +
+                      TrackingTarget_Data.K_delta_speed * delta_speed_term +
+                      TrackingTarget_Data.K_delta_yaw * delta_angle_term;
+        if (loss < min_loss) match_index = i;
+      }
+    } else {  // previous speed is small, and the delta angle is ignored
+      for (std::size_t i = 0; i != num_detected_targets; ++i) {
+        double Vji_x =
+            inverse_time * (detected_target_x[i] - previous_target_x);
+        double Vji_y =
+            inverse_time * (detected_target_y[i] - previous_target_y);
+
+        double predicted_speed_ji = std::sqrt(Vji_x * Vji_x + Vji_y * Vji_y);
+
+        double delta_speed = std::abs(predicted_speed_ji - previous_speed_j0);
+
+        // remove the detected targets which is un-matched
+        if (predicted_speed_ji > TrackingTarget_Data.max_speed) continue;
+        if ((delta_speed * inverse_time) > TrackingTarget_Data.max_acceleration)
+          continue;
+
+        double radius_term = std::abs(
+            detected_target_radius[i] / previous_target_square_radius - 1);
+
+        // compute the loss
+        double loss = TrackingTarget_Data.K_radius * radius_term +
+                      TrackingTarget_Data.K_delta_speed * delta_speed;
+        if (loss < min_loss) match_index = i;
+      }
+    }
+    return match_index;
   }  // TargetIdentification
 
   // check if spoke azimuth is the alarm zone, depending on azimuth
