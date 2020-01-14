@@ -47,24 +47,31 @@ class TargetTracking : public RadarFiltering {
             T_Vectord::Zero(),  // targets_square_radius
             T_Vectord::Zero(),  // targets_vx
             T_Vectord::Zero(),  // targets_vy
-            T_Vectord::Zero(),  // targets_CPA
+            T_Vectord::Zero(),  // targets_CPA_x
+            T_Vectord::Zero(),  // targets_CPA_y
             T_Vectord::Zero()   // targets_TCPA
         }) {}
   virtual ~TargetTracking() = default;
 
-  TargetTracking &AutoTracking(const uint8_t *_spoke_array,
-                               const std::size_t _array_size,
-                               const double _spoke_azimuth_deg,
-                               const double _samplerange_m,
-                               const double _vessel_x_m = 0.0,
-                               const double _vessel_y_m = 0.0,
-                               const double _vessel_theta_rad = 0.0) {
+  // spoke data from marine radar
+  // [_vessel_x_m, _vessel_y_m]: vessel position in the marine coordinate
+  // _vessel_theta_rad: vessel orientation (rad)
+  // [_vessel_speed_x, _vessel_speed_y]: vessel speed in the marine coordinate
+  TargetTracking &AutoTracking(
+      const uint8_t *_spoke_array, const std::size_t _array_size,
+      const double _spoke_azimuth_deg, const double _samplerange_m,
+      const double _vessel_x_m = 0.0, const double _vessel_y_m = 0.0,
+      const double _vessel_theta_rad = 0.0, const double _vessel_speed_x = 0.0,
+      const double _vessel_speed_y = 0.0) {
     static double previous_spoke_azimuth_rad = 0;
     static bool previous_IsInAlarmAzimuth = false;
     static common::timecounter _timer;
 
     double _spoke_azimuth_rad = common::math::Normalizeheadingangle(
         common::math::Degree2Rad(_spoke_azimuth_deg));
+
+    // TODO: empirical value
+    // setClusteringdata(_samplerange_m);
 
     if (std::abs(common::math::Normalizeheadingangle(
             _spoke_azimuth_rad - previous_spoke_azimuth_rad)) > 0.008) {
@@ -127,6 +134,9 @@ class TargetTracking : public RadarFiltering {
               TargetDetection_RTdata.target_square_radius, sample_time,
               TargetTracking_RTdata);
 
+          SituationAwareness(_vessel_speed_x, _vessel_speed_y, _vessel_speed_x,
+                             _vessel_speed_y, TargetTracking_RTdata);
+
           spoke_state = SPOKESTATE::LEAVE_ALARM_ZONE;
         } else {
           SpokeProcess_RTdata.surroundings_bearing_rad.clear();
@@ -165,7 +175,8 @@ class TargetTracking : public RadarFiltering {
         T_Vectord::Zero(),  // targets_square_radius
         T_Vectord::Zero(),  // targets_vx
         T_Vectord::Zero(),  // targets_vy
-        T_Vectord::Zero(),  // targets_CPA
+        T_Vectord::Zero(),  // targets_CPA_x
+        T_Vectord::Zero(),  // targets_CPA_y
         T_Vectord::Zero()   // targets_TCPA
     };
 
@@ -189,6 +200,8 @@ class TargetTracking : public RadarFiltering {
         _detected_target_x, _detected_target_y, _detected_target_radius,
         _sample_time, _previous_tracking_targets);
 
+    SituationAwareness(0, 0, 1, 0, _new_tracking_targets);
+
     std::cout << "targets_state:\n " << _new_tracking_targets.targets_state
               << std::endl;
     std::cout << "targets_x:\n " << _new_tracking_targets.targets_x
@@ -201,6 +214,13 @@ class TargetTracking : public RadarFiltering {
               << std::endl;
     std::cout << "targets_vy:\n " << _new_tracking_targets.targets_vy
               << std::endl;
+    std::cout << "targets_CPA_x:\n " << _new_tracking_targets.targets_CPA_x
+              << std::endl;
+    std::cout << "targets_CPA_y:\n " << _new_tracking_targets.targets_CPA_y
+              << std::endl;
+    std::cout << "targets_TCPA:\n " << _new_tracking_targets.targets_TCPA
+              << std::endl;
+
     return *this;
   }  // AutoTracking
 
@@ -241,7 +261,47 @@ class TargetTracking : public RadarFiltering {
   SpokeProcessRTdata SpokeProcess_RTdata;
   TargetDetectionRTdata TargetDetection_RTdata;
 
-  // calculate the CPA and TCPA, relative to boat A
+  // calculate the CPA and TCPA of all targets
+  void SituationAwareness(
+      const double _vessel_x_m, const double _vessel_y_m,
+      const double _vessel_vx, const double _vessel_vy,
+      TargetTrackerRTdata<max_num_target> &_TargetTracking_RTdata) {
+    for (int i = 0; i != max_num_target; ++i) {
+      if (_TargetTracking_RTdata.targets_state(i) > 1) {
+        auto [_CPA_x, _CPA_y, _TCPA] =
+            computeCPA(_vessel_x_m, _vessel_y_m, _vessel_vx, _vessel_vy,
+                       _TargetTracking_RTdata.targets_x(i),
+                       _TargetTracking_RTdata.targets_y(i),
+                       _TargetTracking_RTdata.targets_vx(i),
+                       _TargetTracking_RTdata.targets_vy(i));
+
+        std::cout << "CPA: " << _CPA_x << " " << _CPA_y << " " << _TCPA
+                  << std::endl;
+
+        _TargetTracking_RTdata.targets_CPA_x(i) = _CPA_x;
+        _TargetTracking_RTdata.targets_CPA_y(i) = _CPA_y;
+        _TargetTracking_RTdata.targets_TCPA(i) = _TCPA;
+
+        double _square_distance_V2T =
+            std::pow(_vessel_x_m - _TargetTracking_RTdata.targets_x(i), 2) +
+            std::pow(_vessel_y_m - _TargetTracking_RTdata.targets_y(i), 2);
+        double _square_distance_V2CPA = std::pow(_vessel_x_m - _CPA_x, 2) +
+                                        std::pow(_vessel_y_m - _CPA_y, 2);
+
+        if ((_square_distance_V2T <=
+             std::pow(TrackingTarget_Data.safe_distance, 2)) ||
+            (_square_distance_V2CPA <=
+             std::pow(TrackingTarget_Data.safe_distance, 2)))
+          _TargetTracking_RTdata.targets_state(i) = 3;  // dangerous
+        else
+          _TargetTracking_RTdata.targets_state(i) = 2;  // safe
+      }
+    }
+
+  }  // SituationAwareness
+
+  // calculate the CPA and TCPA, regarding with boat A, in global coordinate
+  // TCPA < 0 means there is no CPA
   std::tuple<double, double, double> computeCPA(
       const double boatA_position_x, const double boatA_position_y,
       const double boatA_speed_x, const double boatA_speed_y,
@@ -281,6 +341,8 @@ class TargetTracking : public RadarFiltering {
         CPA_y = boatA_position_y + boatA_speed_y * search_time;
       }
     }
+
+    if (TCPA < 0.01) TCPA = -1;
 
     return {CPA_x, CPA_y, TCPA};
   }  // computeCPA
@@ -360,7 +422,8 @@ class TargetTracking : public RadarFiltering {
         T_Vectord::Zero(),  // targets_square_radius
         T_Vectord::Zero(),  // targets_vx
         T_Vectord::Zero(),  // targets_vy
-        T_Vectord::Zero(),  // targets_CPA
+        T_Vectord::Zero(),  // targets_CPA_x
+        T_Vectord::Zero(),  // targets_CPA_y
         T_Vectord::Zero()   // targets_TCPA
     };
 

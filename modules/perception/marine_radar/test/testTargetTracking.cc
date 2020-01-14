@@ -47,6 +47,7 @@ void testClusteringAndBall() {
       20,   // max_speed
       5,    // max_acceleration
       600,  // max_roti
+      1,    // safe_distance
       0.8,  // K_radius
       1,    // K_delta_speed
       1     // K_delta_yaw;
@@ -139,6 +140,7 @@ void testSpokeAndCluster() {
       20,  // max_speed
       5,   // max_acceleration
       60,  // max_roti
+      1,   // safe_distance
       1,   // K_radius
       1,   // K_delta_speed
       1    // K_delta_yaw;

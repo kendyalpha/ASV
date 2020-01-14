@@ -49,6 +49,7 @@ void startRadarAndRecording() {
       20,   // max_speed
       5,    // max_acceleration
       600,  // max_roti
+      1,    // safe_distance
       0.8,  // K_radius
       1,    // K_delta_speed
       1     // K_delta_yaw;
@@ -64,7 +65,7 @@ void startRadarAndRecording() {
 
   perception::TargetDetectionRTdata TargetDetection_RTdata;
   perception::SpokeProcessRTdata SpokeProcess_RTdata;
-
+  perception::TargetTrackerRTdata<> TargetTracker_RTdata;
   // sqlite3
   database db("radar.db");
   db << "CREATE TABLE radar (id integer primary key autoincrement not "

@@ -57,10 +57,11 @@ struct SpokeProcessRTdata {
 struct TrackingTargetData {
   // the minimum squared radius of detected targets (m^2)
   double min_squared_radius;
-  double speed_threhold;    // s
+  double speed_threhold;    //
   double max_speed;         // the maximum speed of detected targets (m/s)
   double max_acceleration;  // the max acceleration of detected targets (m/s^2)
   double max_roti;          // the maximum ROTI of detected targets (deg/min)
+  double safe_distance;
 
   // loss function
   double K_radius;
@@ -92,7 +93,9 @@ struct TargetTrackerRTdata {
   Eigen::Matrix<double, max_num_target, 1> targets_vx;
   Eigen::Matrix<double, max_num_target, 1> targets_vy;
   // CPA and TCPA (closest point of approach)
-  Eigen::Matrix<double, max_num_target, 1> targets_CPA;
+  Eigen::Matrix<double, max_num_target, 1> targets_CPA_x;
+  Eigen::Matrix<double, max_num_target, 1> targets_CPA_y;
+  // when TCPA<0, no collision
   Eigen::Matrix<double, max_num_target, 1> targets_TCPA;
 };
 
