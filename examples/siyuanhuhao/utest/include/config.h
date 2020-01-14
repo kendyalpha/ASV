@@ -24,7 +24,7 @@
 #include "modules/messages/sensors/gpsimu/include/gps.h"
 #include "modules/messages/sensors/marine_radar/include/MarineRadar.h"
 #include "modules/messages/stm32/include/stm32_link.h"
-#include "modules/perception/marine_radar/include/SpokeProcessing.h"
+#include "modules/perception/marine_radar/include/TargetTracking.h"
 #include "modules/planner/lanefollow/include/LatticePlanner.h"
 #include "modules/planner/route_planning/include/RoutePlanning.h"
 

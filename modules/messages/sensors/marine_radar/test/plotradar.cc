@@ -39,13 +39,24 @@ int main() {
       0xc0       // sensitivity_threhold
   };
 
+  ASV::perception::TrackingTargetData TrackingTarget_Data{
+      1,    // min_squared_radius
+      1,    // speed_threhold
+      20,   // max_speed
+      5,    // max_acceleration
+      600,  // max_roti
+      0.8,  // K_radius
+      1,    // K_delta_speed
+      1     // K_delta_yaw;
+  };
+
   ASV::perception::ClusteringData Clustering_Data{
       1,  // p_radius
       2   // p_minumum_neighbors
   };
 
   ASV::perception::TargetTracking<> Target_Tracking(
-      Alarm_Zone, SpokeProcess_data, Clustering_Data);
+      Alarm_Zone, SpokeProcess_data, TrackingTarget_Data, Clustering_Data);
 
   cv::Mat Alarm_image;
 

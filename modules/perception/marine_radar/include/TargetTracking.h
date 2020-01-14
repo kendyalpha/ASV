@@ -111,10 +111,8 @@ class TargetTracking : public RadarFiltering {
         if (previous_IsInAlarmAzimuth) {  // leaving the alarm azimuth
 
           long int et_ms = _timer.timeelapsed();
-
           double sample_time = 0.001 * et_ms;
 
-          std::cout << "time: " << sample_time << std::endl;
           // start to cluster and miniball
           ClusteringAndMiniBall(SpokeProcess_RTdata.surroundings_x_m,
                                 SpokeProcess_RTdata.surroundings_y_m,
@@ -469,9 +467,9 @@ class TargetTracking : public RadarFiltering {
     T_Vectori match_targets_index = T_Vectori::Constant(-1);
     double inverse_time = 1.0 / sample_time;
 
-    std::size_t num_detected_targets = detected_target_x.size();
+    int num_detected_targets = static_cast<int>(detected_target_x.size());
     std::vector<int> unmatch_detected_targets_index(num_detected_targets);
-    for (std::size_t i = 0; i != num_detected_targets; ++i) {
+    for (int i = 0; i != num_detected_targets; ++i) {
       unmatch_detected_targets_index[i] = i;
     }
     // first loop to match the detected targets with tracking

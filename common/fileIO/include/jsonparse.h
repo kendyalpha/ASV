@@ -22,7 +22,7 @@
 #include "common/property/include/vesseldata.h"
 #include "modules/controller/include/controllerdata.h"
 #include "modules/estimator/include/estimatordata.h"
-#include "modules/perception/marine_radar/include/SpokeProcessingData.h"
+#include "modules/perception/marine_radar/include/TargetTrackingData.h"
 #include "modules/planner/common/include/plannerdata.h"
 #include "modules/planner/lanefollow/include/LatticePlannerdata.h"
 /*
@@ -187,6 +187,17 @@ class jsonparse {
       0,         // center_bearing_rad
       M_PI / 2,  // width_bearing_rad
       0xac       // sensitivity_threhold
+  };
+
+  perception::TrackingTargetData TrackingTarget_Data{
+      1,    // min_squared_radius
+      1,    // speed_threhold
+      20,   // max_speed
+      5,    // max_acceleration
+      600,  // max_roti
+      0.8,  // K_radius
+      1,    // K_delta_speed
+      1     // K_delta_yaw;
   };
 
   void parsejson() {

@@ -16,7 +16,7 @@
 using namespace ASV;
 using namespace sqlite;
 
-void startRadarAndClustering() {
+void startRadarAndRecording() {
   // radar
   messages::MarineRadar _MarineRadar;
   _MarineRadar.StartMarineRadar();
@@ -40,19 +40,18 @@ void startRadarAndClustering() {
       20,        // end_range_m
       0,         // center_bearing_rad
       M_PI / 4,  // width_bearing_rad
-      0xf0       // sensitivity_threhold
+      0xac       // sensitivity_threhold
   };
 
   perception::TrackingTargetData TrackingTarget_Data{
-      1,   // min_squared_radius
-      1,   // speed_threhold
-      20,  // max_speed
-      5,   // max_acceleration
-      60,  // max_roti
-      1,   // K_radius
-      1,   // K_speed
-      1,   // K_delta_speed
-      1    // K_delta_yaw;
+      1,    // min_squared_radius
+      1,    // speed_threhold
+      20,   // max_speed
+      5,    // max_acceleration
+      600,  // max_roti
+      0.8,  // K_radius
+      1,    // K_delta_speed
+      1     // K_delta_yaw;
   };
 
   perception::ClusteringData Clustering_Data{
@@ -60,7 +59,7 @@ void startRadarAndClustering() {
       2   // p_minumum_neighbors
   };
 
-  perception::TargetTracking Target_Tracking(
+  perception::TargetTracking<> Target_Tracking(
       Alarm_Zone, SpokeProcess_data, TrackingTarget_Data, Clustering_Data);
 
   perception::TargetDetectionRTdata TargetDetection_RTdata;
@@ -199,6 +198,6 @@ void readsqlitedata() {
 }
 
 int main() {
-  // startRadarAndClustering();
+  // startRadarAndRecording();
   readsqlitedata();
 }
