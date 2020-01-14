@@ -112,12 +112,22 @@ class TargetTracking : public RadarFiltering {
 
           long int et_ms = _timer.timeelapsed();
 
+          double sample_time = 0.001 * et_ms;
+
+          std::cout << "time: " << sample_time << std::endl;
           // start to cluster and miniball
           ClusteringAndMiniBall(SpokeProcess_RTdata.surroundings_x_m,
                                 SpokeProcess_RTdata.surroundings_y_m,
                                 TargetDetection_RTdata.target_x,
                                 TargetDetection_RTdata.target_y,
                                 TargetDetection_RTdata.target_square_radius);
+
+          RemoveSmallRadius(TargetDetection_RTdata);
+
+          TargetTracking_RTdata = PredictMotion(
+              TargetDetection_RTdata.target_x, TargetDetection_RTdata.target_y,
+              TargetDetection_RTdata.target_square_radius, sample_time,
+              TargetTracking_RTdata);
 
           spoke_state = SPOKESTATE::LEAVE_ALARM_ZONE;
         } else {
@@ -146,6 +156,53 @@ class TargetTracking : public RadarFiltering {
 
     RemoveSmallRadius(TargetDetection_RTdata);
 
+    std::vector<double> _detected_target_x{0, 3, 3, 3, 4};
+    std::vector<double> _detected_target_y{0, 1, 2, 5, -4};
+    std::vector<double> _detected_target_radius{1, 2, 1, 1, 4};
+
+    TargetTrackerRTdata<max_num_target> _previous_tracking_targets{
+        T_Vectori::Zero(),  // targets_state
+        T_Vectord::Zero(),  // targets_x
+        T_Vectord::Zero(),  // targets_y
+        T_Vectord::Zero(),  // targets_square_radius
+        T_Vectord::Zero(),  // targets_vx
+        T_Vectord::Zero(),  // targets_vy
+        T_Vectord::Zero(),  // targets_CPA
+        T_Vectord::Zero()   // targets_TCPA
+    };
+
+    _previous_tracking_targets.targets_state(1) = 2;
+    _previous_tracking_targets.targets_x(1) = 1;
+    _previous_tracking_targets.targets_y(1) = 1;
+    _previous_tracking_targets.targets_square_radius(1) = 2;
+    _previous_tracking_targets.targets_vx(1) = 1;
+    _previous_tracking_targets.targets_vy(1) = 1;
+
+    _previous_tracking_targets.targets_state(3) = 2;
+    _previous_tracking_targets.targets_x(3) = -100;
+    _previous_tracking_targets.targets_y(3) = 100;
+    _previous_tracking_targets.targets_square_radius(3) = 2;
+    _previous_tracking_targets.targets_vx(3) = 1;
+    _previous_tracking_targets.targets_vy(3) = 1;
+
+    double _sample_time = 2.5;
+
+    auto _new_tracking_targets = PredictMotion(
+        _detected_target_x, _detected_target_y, _detected_target_radius,
+        _sample_time, _previous_tracking_targets);
+
+    std::cout << "targets_state:\n " << _new_tracking_targets.targets_state
+              << std::endl;
+    std::cout << "targets_x:\n " << _new_tracking_targets.targets_x
+              << std::endl;
+    std::cout << "targets_y:\n " << _new_tracking_targets.targets_y
+              << std::endl;
+    std::cout << "targets_square_radius:\n "
+              << _new_tracking_targets.targets_square_radius << std::endl;
+    std::cout << "targets_vx:\n " << _new_tracking_targets.targets_vx
+              << std::endl;
+    std::cout << "targets_vy:\n " << _new_tracking_targets.targets_vy
+              << std::endl;
     return *this;
   }  // AutoTracking
 
@@ -441,12 +498,22 @@ class TargetTracking : public RadarFiltering {
       }
     }
 
+    // std::cout << "match index:\n " << match_targets_index << std::endl;
+
+    // std::cout << "unmatched: \n";
+    // for (auto const &value : unmatch_detected_targets_index) {
+    //   std::cout << " " << value;
+    // }
+    // std::cout << std::endl;
+
     //  assign the unmatched detected targets to IDLE tracking targets
     for (int j = 0; j != max_num_target; ++j) {
-      if (previous_tracking_targets.targets_state(j) == 0) {
+      static std::size_t it_unmatched = 0;
+      if ((previous_tracking_targets.targets_state(j) == 0) &&
+          (it_unmatched < unmatch_detected_targets_index.size())) {
         // only the IDLE previous tracking targets can be setup new detection
-        if (j < unmatch_detected_targets_index.size())
-          match_targets_index(j) = unmatch_detected_targets_index[j];
+        match_targets_index(j) = unmatch_detected_targets_index[it_unmatched];
+        ++it_unmatched;
       }
     }
 
@@ -472,13 +539,14 @@ class TargetTracking : public RadarFiltering {
     double Vj0_x = previous_target_vx;
     double Vj0_y = previous_target_vy;
     double previous_speed_j0 = std::sqrt(Vj0_x * Vj0_x + Vj0_y * Vj0_y);
-    if (previous_speed_j0 > TrackingTarget_Data.speed_threhold) {
+
+    double Vt = TrackingTarget_Data.speed_threhold;
+    if (previous_speed_j0 > Vt) {
       for (std::size_t i = 0; i != num_detected_targets; ++i) {
         double Vji_x =
             inverse_time * (detected_target_x[i] - previous_target_x);
         double Vji_y =
             inverse_time * (detected_target_y[i] - previous_target_y);
-
         double predicted_speed_ji = std::sqrt(Vji_x * Vji_x + Vji_y * Vji_y);
 
         double aji =
@@ -501,12 +569,14 @@ class TargetTracking : public RadarFiltering {
             std::abs(predicted_speed_ji / previous_speed_j0 - 1);
 
         double delta_angle_term = delta_yaw / M_PI;
-
         // compute the loss
         double loss = TrackingTarget_Data.K_radius * radius_term +
                       TrackingTarget_Data.K_delta_speed * delta_speed_term +
                       TrackingTarget_Data.K_delta_yaw * delta_angle_term;
-        if (loss < min_loss) match_index = i;
+        if (loss < min_loss) {
+          min_loss = loss;
+          match_index = i;
+        }
       }
     } else {  // previous speed is small, and the delta angle is ignored
       for (std::size_t i = 0; i != num_detected_targets; ++i) {
@@ -526,11 +596,14 @@ class TargetTracking : public RadarFiltering {
 
         double radius_term = std::abs(
             detected_target_radius[i] / previous_target_square_radius - 1);
-
+        double delta_speed_term = delta_speed / Vt;
         // compute the loss
         double loss = TrackingTarget_Data.K_radius * radius_term +
-                      TrackingTarget_Data.K_delta_speed * delta_speed;
-        if (loss < min_loss) match_index = i;
+                      TrackingTarget_Data.K_delta_speed * delta_speed_term;
+        if (loss < min_loss) {
+          min_loss = loss;
+          match_index = i;
+        }
       }
     }
     return match_index;
