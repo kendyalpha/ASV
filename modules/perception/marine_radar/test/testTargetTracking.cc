@@ -43,6 +43,7 @@ void testClusteringAndBall() {
 
   TrackingTargetData TrackingTarget_Data{
       1,    // min_squared_radius
+      4,    // max_squared_radius
       1,    // speed_threhold
       20,   // max_speed
       5,    // max_acceleration
@@ -136,6 +137,7 @@ void testSpokeAndCluster() {
 
   TrackingTargetData TrackingTarget_Data{
       1,   // min_squared_radius
+      4,   // max_squared_radius
       1,   // speed_threhold
       20,  // max_speed
       5,   // max_acceleration

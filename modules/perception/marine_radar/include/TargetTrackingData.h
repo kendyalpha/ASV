@@ -37,10 +37,10 @@ struct SpokeProcessdata {
 };
 
 struct AlarmZone {
-  double start_range_m;
-  double end_range_m;
-  double center_bearing_rad;
-  double width_bearing_rad;
+  double start_range_m;          // minimum range of alarm zone
+  double end_range_m;            // maximum range of alarm zone
+  double center_bearing_rad;     // bearing of center of alarm zone (-Pi ~ Pi)
+  double width_bearing_rad;      // bearing width of alarm zone (<2 Pi)
   uint8_t sensitivity_threhold;  // min sensitivity
 };
 
@@ -56,9 +56,10 @@ struct SpokeProcessRTdata {
 
 struct TrackingTargetData {
   // the minimum squared radius of detected targets (m^2)
-  double min_squared_radius;
-  double speed_threhold;    //
-  double max_speed;         // the maximum speed of detected targets (m/s)
+  double min_squared_radius;  // too small to be ignore
+  double max_squared_radius;  // too big to be removed
+  double speed_threhold;      //
+  double max_speed;           // the maximum speed of detected targets (m/s)
   double max_acceleration;  // the max acceleration of detected targets (m/s^2)
   double max_roti;          // the maximum ROTI of detected targets (deg/min)
   double safe_distance;

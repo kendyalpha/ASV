@@ -120,9 +120,7 @@ class TargetTracking : public RadarFiltering {
           long int et_ms = _timer.timeelapsed();
           double sample_time = 0.001 * et_ms;
 
-          std::cout << "sample_time: " << sample_time << std::endl;
-
-          common::timecounter test_timer;
+          sample_time = 2.5;
 
           // start to cluster and miniball
           ClusteringAndMiniBall(SpokeProcess_RTdata.surroundings_x_m,
@@ -131,7 +129,7 @@ class TargetTracking : public RadarFiltering {
                                 TargetDetection_RTdata.target_y,
                                 TargetDetection_RTdata.target_square_radius);
 
-          RemoveSmallRadius(TargetDetection_RTdata);
+          RemoveImpossibleRadius(TargetDetection_RTdata);
 
           TargetTracking_RTdata = PredictMotion(
               TargetDetection_RTdata.target_x, TargetDetection_RTdata.target_y,
@@ -142,10 +140,6 @@ class TargetTracking : public RadarFiltering {
                              _vessel_speed_y, TargetTracking_RTdata);
 
           spoke_state = SPOKESTATE::LEAVE_ALARM_ZONE;
-
-          long int t_et_ms = test_timer.timeelapsed();
-
-          std::cout << "t_et_ms: " << t_et_ms << std::endl;
 
         } else {
           SpokeProcess_RTdata.surroundings_bearing_rad.clear();
@@ -171,7 +165,7 @@ class TargetTracking : public RadarFiltering {
                           TargetDetection_RTdata.target_y,
                           TargetDetection_RTdata.target_square_radius);
 
-    RemoveSmallRadius(TargetDetection_RTdata);
+    RemoveImpossibleRadius(TargetDetection_RTdata);
 
     std::vector<double> _detected_target_x{0, 3, 3, 3, 8};
     std::vector<double> _detected_target_y{0, 1, 2, 5, 7};
@@ -508,19 +502,20 @@ class TargetTracking : public RadarFiltering {
   }  // PredictMotion
 
   // remove the small radius from the detected targets
-  void RemoveSmallRadius(TargetDetectionRTdata &_TargetDetection_RTdata) {
+  void RemoveImpossibleRadius(TargetDetectionRTdata &_TargetDetection_RTdata) {
     std::vector<double> new_target_x;
     std::vector<double> new_target_y;
     std::vector<double> new_target_square_radius;
 
     std::size_t num_detected_targets = _TargetDetection_RTdata.target_x.size();
     for (std::size_t i = 0; i != num_detected_targets; ++i) {
-      if (_TargetDetection_RTdata.target_square_radius[i] >=
-          TrackingTarget_Data.min_squared_radius) {
+      double _target_square_radius =
+          _TargetDetection_RTdata.target_square_radius[i];
+      if ((TrackingTarget_Data.min_squared_radius <= _target_square_radius) &&
+          (_target_square_radius <= TrackingTarget_Data.max_squared_radius)) {
         new_target_x.emplace_back(_TargetDetection_RTdata.target_x[i]);
         new_target_y.emplace_back(_TargetDetection_RTdata.target_y[i]);
-        new_target_square_radius.emplace_back(
-            _TargetDetection_RTdata.target_square_radius[i]);
+        new_target_square_radius.emplace_back(_target_square_radius);
       }
     }
 
@@ -528,7 +523,7 @@ class TargetTracking : public RadarFiltering {
     _TargetDetection_RTdata.target_y = new_target_y;
     _TargetDetection_RTdata.target_square_radius = new_target_square_radius;
 
-  }  // RemoveSmallRadius
+  }  // RemoveImpossibleRadius
 
   // match the detected target with the tracking targets
   T_Vectori TargetIdentification(
@@ -579,8 +574,8 @@ class TargetTracking : public RadarFiltering {
     // std::cout << std::endl;
 
     //  assign the unmatched detected targets to IDLE tracking targets
+    std::size_t it_unmatched = 0;
     for (int j = 0; j != max_num_target; ++j) {
-      static std::size_t it_unmatched = 0;
       if ((previous_tracking_targets.targets_state(j) == 0) &&
           (it_unmatched < unmatch_detected_targets_index.size())) {
         // only the IDLE previous tracking targets can be setup new detection
