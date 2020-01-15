@@ -71,7 +71,7 @@ class CollisionChecker {
   void IsObstacle(double surrounding_x, double surrounding_y,
                   const Eigen::VectorXd &_ref_x,
                   const Eigen::VectorXd &_ref_y) {
-    // reference line
+    // check the reference line
     double max_reference_radius = 9 * std::pow(collisiondata.ROBOT_RADIUS, 2);
     double min_dist = 100000000;
 

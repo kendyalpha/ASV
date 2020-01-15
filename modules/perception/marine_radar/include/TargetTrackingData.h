@@ -93,7 +93,8 @@ struct TargetTrackerRTdata {
   Eigen::Matrix<double, max_num_target, 1> targets_square_radius;
   Eigen::Matrix<double, max_num_target, 1> targets_vx;
   Eigen::Matrix<double, max_num_target, 1> targets_vy;
-  // CPA and TCPA (closest point of approach)
+  // CPA and TCPA (closest point of approach),
+  // if target is static, CPA is equal to target position
   Eigen::Matrix<double, max_num_target, 1> targets_CPA_x;
   Eigen::Matrix<double, max_num_target, 1> targets_CPA_y;
   // when TCPA<0, no collision
