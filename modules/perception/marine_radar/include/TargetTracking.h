@@ -111,7 +111,7 @@ class TargetTracking : public RadarFiltering {
           spoke_state = SPOKESTATE::IN_ALARM_ZONE;
         else {
           spoke_state = SPOKESTATE::ENTER_ALARM_ZONE;
-          _timer.timeelapsed();
+          // _timer.timeelapsed();
         }
 
       } else {                            // outside the alarm azimuth
@@ -119,6 +119,10 @@ class TargetTracking : public RadarFiltering {
 
           long int et_ms = _timer.timeelapsed();
           double sample_time = 0.001 * et_ms;
+
+          std::cout << "sample_time: " << sample_time << std::endl;
+
+          common::timecounter test_timer;
 
           // start to cluster and miniball
           ClusteringAndMiniBall(SpokeProcess_RTdata.surroundings_x_m,
@@ -138,6 +142,11 @@ class TargetTracking : public RadarFiltering {
                              _vessel_speed_y, TargetTracking_RTdata);
 
           spoke_state = SPOKESTATE::LEAVE_ALARM_ZONE;
+
+          long int t_et_ms = test_timer.timeelapsed();
+
+          std::cout << "t_et_ms: " << t_et_ms << std::endl;
+
         } else {
           SpokeProcess_RTdata.surroundings_bearing_rad.clear();
           SpokeProcess_RTdata.surroundings_range_m.clear();
@@ -164,9 +173,9 @@ class TargetTracking : public RadarFiltering {
 
     RemoveSmallRadius(TargetDetection_RTdata);
 
-    std::vector<double> _detected_target_x{0, 3, 3, 3, 4};
-    std::vector<double> _detected_target_y{0, 1, 2, 5, -4};
-    std::vector<double> _detected_target_radius{1, 2, 1, 1, 4};
+    std::vector<double> _detected_target_x{0, 3, 3, 3, 8};
+    std::vector<double> _detected_target_y{0, 1, 2, 5, 7};
+    std::vector<double> _detected_target_radius{1, 2, 1, 1, 3};
 
     TargetTrackerRTdata<max_num_target> _previous_tracking_targets{
         T_Vectori::Zero(),  // targets_state
@@ -188,11 +197,11 @@ class TargetTracking : public RadarFiltering {
     _previous_tracking_targets.targets_vy(1) = 1;
 
     _previous_tracking_targets.targets_state(3) = 2;
-    _previous_tracking_targets.targets_x(3) = -100;
-    _previous_tracking_targets.targets_y(3) = 100;
+    _previous_tracking_targets.targets_x(3) = 12;
+    _previous_tracking_targets.targets_y(3) = 13;
     _previous_tracking_targets.targets_square_radius(3) = 2;
-    _previous_tracking_targets.targets_vx(3) = 1;
-    _previous_tracking_targets.targets_vy(3) = 1;
+    _previous_tracking_targets.targets_vx(3) = -1;
+    _previous_tracking_targets.targets_vy(3) = -2;
 
     double _sample_time = 2.5;
 
@@ -200,7 +209,7 @@ class TargetTracking : public RadarFiltering {
         _detected_target_x, _detected_target_y, _detected_target_radius,
         _sample_time, _previous_tracking_targets);
 
-    SituationAwareness(0, 0, 1, 0, _new_tracking_targets);
+    SituationAwareness(10, 10, -3, -3, _new_tracking_targets);
 
     std::cout << "targets_state:\n " << _new_tracking_targets.targets_state
               << std::endl;
@@ -282,19 +291,21 @@ class TargetTracking : public RadarFiltering {
         _TargetTracking_RTdata.targets_CPA_y(i) = _CPA_y;
         _TargetTracking_RTdata.targets_TCPA(i) = _TCPA;
 
-        double _square_distance_V2T =
-            std::pow(_vessel_x_m - _TargetTracking_RTdata.targets_x(i), 2) +
-            std::pow(_vessel_y_m - _TargetTracking_RTdata.targets_y(i), 2);
-        double _square_distance_V2CPA = std::pow(_vessel_x_m - _CPA_x, 2) +
-                                        std::pow(_vessel_y_m - _CPA_y, 2);
+        _TargetTracking_RTdata.targets_state(i) = 2;  // default: safe
 
-        if ((_square_distance_V2T <=
-             std::pow(TrackingTarget_Data.safe_distance, 2)) ||
-            (_square_distance_V2CPA <=
-             std::pow(TrackingTarget_Data.safe_distance, 2)))
-          _TargetTracking_RTdata.targets_state(i) = 3;  // dangerous
-        else
-          _TargetTracking_RTdata.targets_state(i) = 2;  // safe
+        if (_TCPA > 0) {  // collision may occur
+          double _square_distance_V2T =
+              std::pow(_vessel_x_m - _TargetTracking_RTdata.targets_x(i), 2) +
+              std::pow(_vessel_y_m - _TargetTracking_RTdata.targets_y(i), 2);
+          double _square_distance_V2CPA = std::pow(_vessel_x_m - _CPA_x, 2) +
+                                          std::pow(_vessel_y_m - _CPA_y, 2);
+
+          if ((_square_distance_V2T <=
+               std::pow(TrackingTarget_Data.safe_distance, 2)) ||
+              (_square_distance_V2CPA <=
+               std::pow(TrackingTarget_Data.safe_distance, 2)))
+            _TargetTracking_RTdata.targets_state(i) = 3;  // dangerous
+        }
       }
     }
 
@@ -630,6 +641,10 @@ class TargetTracking : public RadarFiltering {
             std::abs(predicted_speed_ji / previous_speed_j0 - 1);
 
         double delta_angle_term = delta_yaw / M_PI;
+
+        // std::cout << "i: " << i << " radius_term: " << radius_term
+        //           << " delta_speed_term: " << delta_speed_term
+        //           << " delta_angle_term: " << delta_angle_term << std::endl;
         // compute the loss
         double loss = TrackingTarget_Data.K_radius * radius_term +
                       TrackingTarget_Data.K_delta_speed * delta_speed_term +

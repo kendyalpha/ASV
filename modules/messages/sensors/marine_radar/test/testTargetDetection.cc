@@ -68,12 +68,16 @@ void startRadarAndRecording() {
   perception::TargetTrackerRTdata<> TargetTracker_RTdata;
   // sqlite3
   database db("radar.db");
-  db << "CREATE TABLE radar (id integer primary key autoincrement not "
-        "null, azimuth DOUBLE, sample_range DOUBLE, spokedata BLOB);";
-  db << "CREATE TABLE spoke (id integer primary key autoincrement not "
-        "null, bearing_rad BLOB, range_m BLOB, x_m BLOB, y_m BLOB);";
-  db << "CREATE TABLE target (id integer primary key autoincrement not "
-        "null, target_x BLOB, target_y BLOB, target_radius BLOB);";
+  db << "CREATE TABLE radar ("
+        "id integer primary key autoincrement not null,"
+        "DATETIME TEXT,"
+        "azimuth DOUBLE,"
+        "sample_range DOUBLE, "
+        "spokedata BLOB);";
+  // db << "CREATE TABLE spoke (id integer primary key autoincrement not "
+  //       "null, bearing_rad BLOB, range_m BLOB, x_m BLOB, y_m BLOB);";
+  // db << "CREATE TABLE target (id integer primary key autoincrement not "
+  //       "null, target_x BLOB, target_y BLOB, target_radius BLOB);";
 
   while (1) {
     MarineRadar_RTdata = _MarineRadar.getMarineRadarRTdata();
@@ -89,25 +93,25 @@ void startRadarAndRecording() {
 
     std::cout << "spoke_azimuth_deg: " << MarineRadar_RTdata.spoke_azimuth_deg
               << std::endl;
-    db << "INSERT INTO radar (azimuth, sample_range, spokedata) "
-          "VALUES (?, ?, ?)"
+    db << "INSERT INTO radar (DATETIME, azimuth, sample_range, spokedata) "
+          "VALUES (julianday('now'), ?, ?, ?)"
        << MarineRadar_RTdata.spoke_azimuth_deg
        << MarineRadar_RTdata.spoke_samplerange_m
        << std::vector<uint8_t>(
               &MarineRadar_RTdata.spokedata[0],
               &MarineRadar_RTdata.spokedata[SAMPLES_PER_SPOKE / 2]);
 
-    db << "INSERT INTO spoke (bearing_rad, range_m, x_m, y_m) VALUES (?, ?, "
-          "?, ?)"
-       << SpokeProcess_RTdata.surroundings_bearing_rad
-       << SpokeProcess_RTdata.surroundings_range_m
-       << SpokeProcess_RTdata.surroundings_x_m
-       << SpokeProcess_RTdata.surroundings_y_m;
+    // db << "INSERT INTO spoke (bearing_rad, range_m, x_m, y_m) VALUES (?, ?, "
+    //       "?, ?)"
+    //    << SpokeProcess_RTdata.surroundings_bearing_rad
+    //    << SpokeProcess_RTdata.surroundings_range_m
+    //    << SpokeProcess_RTdata.surroundings_x_m
+    //    << SpokeProcess_RTdata.surroundings_y_m;
 
-    db << "INSERT INTO target (target_x, target_y, target_radius) "
-          "VALUES (?, ?, ?)"
-       << TargetDetection_RTdata.target_x << TargetDetection_RTdata.target_y
-       << TargetDetection_RTdata.target_square_radius;
+    // db << "INSERT INTO target (target_x, target_y, target_radius) "
+    //       "VALUES (?, ?, ?)"
+    //    << TargetDetection_RTdata.target_x << TargetDetection_RTdata.target_y
+    //    << TargetDetection_RTdata.target_square_radius;
 
     // std::size_t num_surroundings_alarm =
     //     SpokeProcess_RTdata.surroundings_bearing_rad.size();
