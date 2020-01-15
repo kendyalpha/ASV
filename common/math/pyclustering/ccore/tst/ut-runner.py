@@ -28,7 +28,8 @@ class Runner:
                 if exit_code == EExitCode.success:
                     break
         else:
-            logging.error("Impossible to find executable file '%s'." % self.__executable)
+            logging.error("Impossible to find executable file '%s'." %
+                          self.__executable)
             exit_code = EExitCode.executable_not_found
 
         exit(exit_code)
@@ -41,7 +42,8 @@ class Runner:
         for fail in failures:
             argument += ":" + fail
 
-        result = subprocess.run([self.__executable, argument], stdout=subprocess.PIPE)
+        result = subprocess.run(
+            [self.__executable, argument], stdout=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
         print(output)
 
