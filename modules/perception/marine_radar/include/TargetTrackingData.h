@@ -26,8 +26,12 @@ enum class SPOKESTATE {
 enum class TARGETSTATE {
   IDLE = 0,   // initial target state, or lost out of range, or acquire fail
   ACQUIRING,  //
-  SAFE,       // successfully acquired, safe
-  DANGEROUS   // successfully acquired, dangerous
+  ACQUIRED    // successfully acquired
+};
+
+enum class INTENTIONSTATE {
+  SAFE = 0,  //
+  DANGEROUS
 };
 
 struct SpokeProcessdata {
@@ -86,6 +90,7 @@ template <int max_num_target = 20>
 struct TargetTrackerRTdata {
   // target state
   Eigen::Matrix<int, max_num_target, 1> targets_state;
+  Eigen::Matrix<int, max_num_target, 1> targets_intention;
 
   // target position and velocity in the marine coordinate
   Eigen::Matrix<double, max_num_target, 1> targets_x;
@@ -94,7 +99,6 @@ struct TargetTrackerRTdata {
   Eigen::Matrix<double, max_num_target, 1> targets_vx;
   Eigen::Matrix<double, max_num_target, 1> targets_vy;
   // CPA and TCPA (closest point of approach),
-  // if target is static, CPA is equal to target position
   Eigen::Matrix<double, max_num_target, 1> targets_CPA_x;
   Eigen::Matrix<double, max_num_target, 1> targets_CPA_y;
   // when TCPA<0, no collision

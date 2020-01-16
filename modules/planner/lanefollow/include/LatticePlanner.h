@@ -78,6 +78,36 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
 
   }  // setup_obstacle
 
+  // consider the reference line
+  void setup_obstacle(const Eigen::VectorXd &_targets_state,
+                      const Eigen::VectorXd &_targets_CPA_marine_x,
+                      const Eigen::VectorXd &_targets_CPA_marine_y) {
+    unsigned size_of_targets = _targets_state.size();
+    // get the reference line
+    auto _CartRefX = FrenetTrajectoryGenerator::getCartRefX();
+    auto _CartRefY = FrenetTrajectoryGenerator::getCartRefY();
+    //
+    std::vector<double> new_surroundings_x;  // in the Cartesian coordinate
+    std::vector<double> new_surroundings_y;  // in the Cartesian coordinate
+
+    // check if the surroundings are obstacles
+    for (unsigned i = 0; i != size_of_targets; ++i) {
+      if (_targets_state(i) > 0) {
+        // convert to cart coordinate
+        auto [surrounding_x, surrounding_y] = common::math::Marine2Cart(
+            _targets_CPA_marine_x(i), _targets_CPA_marine_y(i));
+        if (!CollisionChecker::check_reference(surrounding_x, surrounding_y,
+                                               _CartRefX, _CartRefY)) {
+          new_surroundings_x.emplace_back(surrounding_x);
+          new_surroundings_y.emplace_back(surrounding_y);
+        }
+      }
+    }
+
+    // update
+    CollisionChecker::update_obstacles(new_surroundings_x, new_surroundings_y);
+  }  // setup_obstacle
+
   CartesianState getnextcartesianstate() const noexcept {
     return next_cartesianstate;
   }

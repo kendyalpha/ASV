@@ -43,9 +43,9 @@ class CollisionChecker {
         collision_free_roi_paths.emplace_back(constraint_free_paths[i]);
       }
     }
-    std::cout << constraint_free_paths.size() << " "
-              << collision_free_roi_paths.size() << " "
-              << sub_collision_free_roi_paths.size() << std::endl;
+    // std::cout << constraint_free_paths.size() << " "
+    //           << collision_free_roi_paths.size() << " "
+    //           << sub_collision_free_roi_paths.size() << std::endl;
 
     if (collision_free_roi_paths.size() == 0) {
       if (sub_collision_free_roi_paths.size() != 0) {
@@ -64,6 +64,12 @@ class CollisionChecker {
 
   std::vector<double> getobstacle_x() const noexcept { return obstacle_x; }
   std::vector<double> getobstacle_y() const noexcept { return obstacle_y; }
+  std::vector<double> getprevious_obstacle_x() const noexcept {
+    return previous_obstacle_x;
+  }
+  std::vector<double> getprevious_obstacle_y() const noexcept {
+    return previous_obstacle_y;
+  }
 
  protected:
   // check if the surroundings will block the reference line: if true, the
@@ -72,16 +78,7 @@ class CollisionChecker {
                   const Eigen::VectorXd &_ref_x,
                   const Eigen::VectorXd &_ref_y) {
     // check the reference line
-    double max_reference_radius = 9 * std::pow(collisiondata.ROBOT_RADIUS, 2);
-    double min_dist = 100000000;
-
-    for (unsigned i = 0; i != _ref_x.size(); ++i) {
-      double distance =
-          (_ref_x(i) - surrounding_x) * (_ref_x(i) - surrounding_x) +
-          (_ref_y(i) - surrounding_y) * (_ref_y(i) - surrounding_y);
-      if (distance < min_dist) min_dist = distance;
-    }
-    if (min_dist > max_reference_radius) return;
+    if (check_reference(surrounding_x, surrounding_y, _ref_x, _ref_y)) return;
 
     // obstacle resolution
     double obstacle_resolution = 0.1 * std::pow(collisiondata.ROBOT_RADIUS, 2);
@@ -100,23 +97,58 @@ class CollisionChecker {
 
   }  // IsObstacle
 
+  bool check_reference(double surrounding_x, double surrounding_y,
+                       const Eigen::VectorXd &_ref_x,
+                       const Eigen::VectorXd &_ref_y) {
+    // check the reference line
+    double max_reference_radius = 9 * std::pow(collisiondata.ROBOT_RADIUS, 2);
+    double min_dist = 100000000;
+
+    for (unsigned i = 0; i != _ref_x.size(); ++i) {
+      double distance =
+          (_ref_x(i) - surrounding_x) * (_ref_x(i) - surrounding_x) +
+          (_ref_y(i) - surrounding_y) * (_ref_y(i) - surrounding_y);
+      if (distance < min_dist) min_dist = distance;
+    }
+    if (min_dist > max_reference_radius)  // out of reference line
+      return true;
+    return false;
+  }  // check_reference
+
+  void update_obstacles(const std::vector<double> &_new_obstacle_x,
+                        const std::vector<double> &_new_obstacle_y) {
+    previous_obstacle_x = obstacle_x;
+    previous_obstacle_y = obstacle_y;
+    obstacle_x = _new_obstacle_x;
+    obstacle_y = _new_obstacle_y;
+
+  }  // update_obstacles
+
  private:
   CollisionData collisiondata;
-  // obstacles
-  std::vector<double> obstacle_x;  // in the Cartesian coordinate
-  std::vector<double> obstacle_y;  // in the Cartesian coordinate
+  // obstacles (static and dynamic)
+  std::vector<double> previous_obstacle_x;  // in the Cartesian coordinate
+  std::vector<double> previous_obstacle_y;  // in the Cartesian coordinate
+  std::vector<double> obstacle_x;           // in the Cartesian coordinate
+  std::vector<double> obstacle_y;           // in the Cartesian coordinate
 
   int check_collision(const Frenet_path &_Frenet_path) {
-    std::size_t max_n_obstacle = static_cast<std::size_t>(obstacle_x.size());
     std::size_t num_path_point =
         static_cast<std::size_t>(_Frenet_path.x.size());
 
     double min_dist = 10000;
     double min_radius = std::pow(collisiondata.ROBOT_RADIUS, 2);
-    for (std::size_t i = 0; i != max_n_obstacle; i++) {
-      for (std::size_t j = 0; j != num_path_point; j++) {
+    for (std::size_t j = 0; j != num_path_point; j++) {
+      for (std::size_t i = 0; i != obstacle_x.size(); i++) {
         double _dis = std::pow(_Frenet_path.x(j) - obstacle_x[i], 2) +
                       std::pow(_Frenet_path.y(j) - obstacle_y[i], 2);
+
+        if (_dis < min_dist) min_dist = _dis;
+      }
+      for (std::size_t i = 0; i != previous_obstacle_x.size(); i++) {
+        double _dis = std::pow(_Frenet_path.x(j) - previous_obstacle_x[i], 2) +
+                      std::pow(_Frenet_path.y(j) - previous_obstacle_x[i], 2);
+
         if (_dis < min_dist) min_dist = _dis;
       }
     }
