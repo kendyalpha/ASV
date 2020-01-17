@@ -57,6 +57,8 @@ class jsonparse {
   auto getcollisiondata() const noexcept { return collisiondata_input; }
   auto getSpokeProcessdata() const noexcept { return SpokeProcess_data; }
   auto getalarmzonedata() const noexcept { return Alarm_Zone; }
+  auto getTargetTrackingdata() const noexcept { return TrackingTarget_Data; }
+  auto getClusteringdata() const noexcept { return Clustering_Data; }
 
   std::string getsqlitedata() const noexcept { return dbpath; }
   std::string getgpsport() const noexcept { return gps_port; }
@@ -175,6 +177,11 @@ class jsonparse {
       2.5          // ROBOT_RADIUS
   };
 
+  ClusteringData Clustering_Data{
+      1,  // p_radius
+      3   // p_minumum_neighbors
+  };
+
   perception::SpokeProcessdata SpokeProcess_data{
       0.1,   // sampletime
       -1.0,  // radar_x
@@ -189,8 +196,9 @@ class jsonparse {
       0xac       // sensitivity_threhold
   };
 
-  perception::TrackingTargetData TrackingTarget_Data{
+  perception::TrackingTargetData<> TrackingTarget_Data{
       1,    // min_squared_radius
+      4,    // max_squared_radius
       1,    // speed_threhold
       20,   // max_speed
       5,    // max_acceleration

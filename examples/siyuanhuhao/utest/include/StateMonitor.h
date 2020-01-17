@@ -21,7 +21,7 @@ class StateMonitor {
  public:
   StateMonitor()
       : indicator_marine_radar(common::STATETOGGLE::IDLE),
-        indicator_spoke_process(common::STATETOGGLE::IDLE),
+        indicator_target_tracking(common::STATETOGGLE::IDLE),
         indicator_routeplanner(common::STATETOGGLE::IDLE),
         indicator_pathplanner(common::STATETOGGLE::IDLE),
         indicator_estimator(common::STATETOGGLE::IDLE),
@@ -36,7 +36,7 @@ class StateMonitor {
 
  protected:
   common::STATETOGGLE indicator_marine_radar;
-  common::STATETOGGLE indicator_spoke_process;
+  common::STATETOGGLE indicator_target_tracking;
   common::STATETOGGLE indicator_routeplanner;
   common::STATETOGGLE indicator_pathplanner;
   common::STATETOGGLE indicator_estimator;
@@ -48,9 +48,9 @@ class StateMonitor {
   common::STATETOGGLE indicator_stm32;
   common::STATETOGGLE indicator_socket;
 
-  void check_spoke_process() {
+  void check_target_tracking() {
     while (1) {
-      if (indicator_spoke_process == common::STATETOGGLE::READY) break;
+      if (indicator_target_tracking == common::STATETOGGLE::READY) break;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   }  // check_spoke_process

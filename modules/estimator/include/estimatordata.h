@@ -69,6 +69,14 @@ struct estimatorRTdata {
    */
   Eigen::Matrix<double, 6, 1> Marine_state;
 
+  /**************************** radar_state **************************/
+  /** Motion in Marine coordinate, for radar detection
+   * +----+----+------------+------------+-----------+
+   * | 0  | 1  |      2     |     3      |    4      |
+   * |x(m)|y(m)|heading(rad)| V_x (m/s)  | V_y (m/s) |
+   * +----+----+------------+------------+-----------+
+   */
+  Eigen::Matrix<double, 5, 1> radar_state;
   /********************* state *********************************************/
   // x(surge: m), y(sway: m), yaw(theta: rad), u, v, r
   // data wroten by Kalman

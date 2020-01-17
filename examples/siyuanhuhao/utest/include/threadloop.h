@@ -30,7 +30,7 @@ class threadloop : public StateMonitor {
   ~threadloop() = default;
 
   void mainloop() {
-    std::thread spokeprocess_thread(&threadloop::spoke_process_loop, this);
+    std::thread targettracking_thread(&threadloop::target_tracking_loop, this);
     std::thread route_planner_thread(&threadloop::route_planner_loop, this);
     std::thread path_planner_thread(&threadloop::path_planner_loop, this);
     std::thread estimator_thread(&threadloop::estimatorloop, this);
@@ -44,7 +44,7 @@ class threadloop : public StateMonitor {
     std::thread socket_thread(&threadloop::socket_loop, this);
     std::thread statemonitor_thread(&threadloop::state_monitor_loop, this);
 
-    spokeprocess_thread.join();
+    targettracking_thread.join();
     route_planner_thread.join();
     path_planner_thread.join();
     estimator_thread.join();
@@ -187,8 +187,7 @@ class threadloop : public StateMonitor {
   };
 
   // real time sourroundings
-  perception::SpokeProcessRTdata SpokeProcess_RTdata;
-
+  perception::TargetTrackerRTdata<> TargetTracker_RTdata;
   // real time data from marine radar
   messages::MarineRadarRTdata MarineRadar_RTdata{
       common::STATETOGGLE::IDLE,  // state_toggle
@@ -206,23 +205,24 @@ class threadloop : public StateMonitor {
   // sqlite
   common::database<num_thruster, dim_controlspace> _sqlite;
 
-  //##################### spoke processing ########################//
-  void spoke_process_loop() {
-    perception::SpokeProcessing Spoke_Processing(
-        _jsonparse.getalarmzonedata(), _jsonparse.getSpokeProcessdata());
+  //##################### target tracking ########################//
+  void target_tracking_loop() {
+    perception::TargetTracking<> Target_Tracking(
+        _jsonparse.getalarmzonedata(), _jsonparse.getSpokeProcessdata(),
+        _jsonparse.getTargetTrackingdata(), _jsonparse.getClusteringdata());
 
-    common::timecounter timer_spokeprocess;
+    common::timecounter timer_targettracking;
     long int outerloop_elapsed_time = 0;
     long int innerloop_elapsed_time = 0;
     long int sample_time_ms =
-        static_cast<long int>(1000 * Spoke_Processing.getsampletime());
+        static_cast<long int>(1000 * Target_Tracking.getsampletime());
 
-    StateMonitor::check_spoke_process();
+    StateMonitor::check_target_tracking();
 
     std::size_t size_spokedata = sizeof(MarineRadar_RTdata.spokedata) /
                                  sizeof(MarineRadar_RTdata.spokedata[0]);
     while (1) {
-      outerloop_elapsed_time = timer_spokeprocess.timeelapsed();
+      outerloop_elapsed_time = timer_targettracking.timeelapsed();
 
       switch (testmode) {
         case common::TESTMODE::SIMULATION_DP:
@@ -237,13 +237,13 @@ class threadloop : public StateMonitor {
         }
         case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
           SpokeProcess_RTdata =
-              Spoke_Processing
-                  .DetectionOnSpoke(
-                      MarineRadar_RTdata.spokedata, size_spokedata,
-                      MarineRadar_RTdata.spoke_azimuth_deg,
-                      MarineRadar_RTdata.spoke_samplerange_m,
-                      estimator_RTdata.State(0), estimator_RTdata.State(1),
-                      estimator_RTdata.State(2))
+              Target_Tracking
+                  .AutoTracking(MarineRadar_RTdata.spokedata, size_spokedata,
+                                MarineRadar_RTdata.spoke_azimuth_deg,
+                                MarineRadar_RTdata.spoke_samplerange_m,
+                                estimator_RTdata.State(0),
+                                estimator_RTdata.State(1),
+                                estimator_RTdata.State(2), )
                   .getSpokeProcessRTdata();
           break;
         }
@@ -251,14 +251,14 @@ class threadloop : public StateMonitor {
           break;
       }  // end switch
 
-      innerloop_elapsed_time = timer_spokeprocess.timeelapsed();
+      innerloop_elapsed_time = timer_targettracking.timeelapsed();
       std::this_thread::sleep_for(
           std::chrono::milliseconds(sample_time_ms - innerloop_elapsed_time));
 
       if (outerloop_elapsed_time > 1.1 * sample_time_ms)
-        CLOG(INFO, "SpokeProcess") << "Too much time!";
+        CLOG(INFO, "TargetTracking") << "Too much time!";
     }
-  }  // spoke_process_loop
+  }  // target_tracking_loop
 
   //##################### route planning ########################//
   void route_planner_loop() {
@@ -1052,17 +1052,18 @@ class threadloop : public StateMonitor {
                common::STATETOGGLE::READY) &&
               (StateMonitor::indicator_marine_radar ==
                common::STATETOGGLE::READY) &&
-              (StateMonitor::indicator_spoke_process ==
+              (StateMonitor::indicator_target_tracking ==
                common::STATETOGGLE::IDLE)) {
-            StateMonitor::indicator_spoke_process = common::STATETOGGLE::READY;
-            CLOG(INFO, "spoke-process") << "initialation successful!";
+            StateMonitor::indicator_target_tracking =
+                common::STATETOGGLE::READY;
+            CLOG(INFO, "target-tracking") << "initialation successful!";
           }
 
           if ((StateMonitor::indicator_pathplanner ==
                common::STATETOGGLE::IDLE) &&
               (StateMonitor::indicator_controller ==
                common::STATETOGGLE::IDLE) &&
-              (StateMonitor::indicator_spoke_process ==
+              (StateMonitor::indicator_target_tracking ==
                common::STATETOGGLE::READY)) {
             CLOG(INFO, "path-planner") << "initialation successful!";
             CLOG(INFO, "controller") << "initialation successful!";
