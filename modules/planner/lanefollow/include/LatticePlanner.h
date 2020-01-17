@@ -79,7 +79,7 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
   }  // setup_obstacle
 
   // consider the reference line
-  void setup_obstacle(const Eigen::VectorXd &_targets_state,
+  void setup_obstacle(const Eigen::VectorXi &_targets_state,
                       const Eigen::VectorXd &_targets_CPA_marine_x,
                       const Eigen::VectorXd &_targets_CPA_marine_y) {
     unsigned size_of_targets = _targets_state.size();

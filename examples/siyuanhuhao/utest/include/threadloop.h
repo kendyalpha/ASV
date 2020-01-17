@@ -107,6 +107,7 @@ class threadloop : public StateMonitor {
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement_6dof
       Eigen::Matrix<double, 6, 1>::Zero(),  // Marine_state
+      Eigen::Matrix<double, 5, 1>::Zero(),  // radar_state
       Eigen::Matrix<double, 6, 1>::Zero(),  // State
       Eigen::Vector3d::Zero(),              // p_error
       Eigen::Vector3d::Zero(),              // v_error
@@ -187,7 +188,20 @@ class threadloop : public StateMonitor {
   };
 
   // real time sourroundings
-  perception::TargetTrackerRTdata<> TargetTracker_RTdata;
+  perception::TargetTrackerRTdata<> TargetTracker_RTdata{
+      perception::SPOKESTATE::OUTSIDE_ALARM_ZONE,  // spoke_state
+      Eigen::Matrix<int, 20, 1>::Zero(),           // targets_state
+      Eigen::Matrix<int, 20, 1>::Zero(),           // targets_intention
+      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_x
+      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_y
+      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_square_radius
+      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_vx
+      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_vy
+      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_CPA_x
+      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_CPA_y
+      Eigen::Matrix<double, 20, 1>::Zero()         // targets_TCPA
+  };
+
   // real time data from marine radar
   messages::MarineRadarRTdata MarineRadar_RTdata{
       common::STATETOGGLE::IDLE,  // state_toggle
@@ -236,15 +250,17 @@ class threadloop : public StateMonitor {
           break;
         }
         case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
-          SpokeProcess_RTdata =
+          TargetTracker_RTdata =
               Target_Tracking
                   .AutoTracking(MarineRadar_RTdata.spokedata, size_spokedata,
                                 MarineRadar_RTdata.spoke_azimuth_deg,
                                 MarineRadar_RTdata.spoke_samplerange_m,
-                                estimator_RTdata.State(0),
-                                estimator_RTdata.State(1),
-                                estimator_RTdata.State(2), )
-                  .getSpokeProcessRTdata();
+                                estimator_RTdata.radar_state(0),
+                                estimator_RTdata.radar_state(1),
+                                estimator_RTdata.radar_state(3),
+                                estimator_RTdata.radar_state(4),
+                                estimator_RTdata.radar_state(5))
+                  .getTargetTrackerRTdata();
           break;
         }
         default:
@@ -346,9 +362,12 @@ class threadloop : public StateMonitor {
           break;
         }
         case common::TESTMODE::SIMULATION_AVOIDANCE: {
-          _trajectorygenerator.setup_obstacle(
-              SpokeProcess_RTdata.surroundings_x_m,
-              SpokeProcess_RTdata.surroundings_y_m);
+          if (TargetTracker_RTdata.spoke_state ==
+              perception::SPOKESTATE::LEAVE_ALARM_ZONE) {
+            _trajectorygenerator.setup_obstacle(
+                TargetTracker_RTdata.targets_state,
+                TargetTracker_RTdata.targets_x, TargetTracker_RTdata.targets_y);
+          }
 
           auto Plan_cartesianstate =
               _trajectorygenerator
@@ -395,9 +414,12 @@ class threadloop : public StateMonitor {
           break;
         }
         case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
-          _trajectorygenerator.setup_obstacle(
-              SpokeProcess_RTdata.surroundings_x_m,
-              SpokeProcess_RTdata.surroundings_y_m);
+          if (TargetTracker_RTdata.spoke_state ==
+              perception::SPOKESTATE::LEAVE_ALARM_ZONE) {
+            _trajectorygenerator.setup_obstacle(
+                TargetTracker_RTdata.targets_state,
+                TargetTracker_RTdata.targets_x, TargetTracker_RTdata.targets_y);
+          }
 
           auto Plan_cartesianstate =
               _trajectorygenerator
@@ -752,7 +774,7 @@ class threadloop : public StateMonitor {
         case common::TESTMODE::SIMULATION_AVOIDANCE: {
           _sqlite.update_estimator_table(estimator_RTdata);
           _sqlite.update_controller_table(controller_RTdata, tracker_RTdata);
-          _sqlite.update_surroundings_table(SpokeProcess_RTdata);
+          // _sqlite.update_surroundings_table(SpokeProcess_RTdata);
           break;
         }
         case common::TESTMODE::EXPERIMENT_DP:
@@ -771,7 +793,7 @@ class threadloop : public StateMonitor {
           _sqlite.update_stm32_table(stm32_data);
           _sqlite.update_estimator_table(estimator_RTdata);
           _sqlite.update_controller_table(controller_RTdata, tracker_RTdata);
-          _sqlite.update_surroundings_table(SpokeProcess_RTdata);
+          // _sqlite.update_surroundings_table(SpokeProcess_RTdata);
 
           break;
         }

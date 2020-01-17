@@ -102,10 +102,11 @@ int main() {
     //    << _id >>
     //     std::tie(target_x, target_y, target_radius);
 
-    auto spokestate = Target_Tracking
-                          .AutoTracking(&spokedata[0], 512, spoke_azimuth_deg,
-                                        spoke_samplerange_m)
-                          .getSpokeState();
+    auto TargetTracking_RTdata =
+        Target_Tracking
+            .AutoTracking(&spokedata[0], 512, spoke_azimuth_deg,
+                          spoke_samplerange_m)
+            .getTargetTrackerRTdata();
 
     timestamp = (std::stod(str_datetime) - timestamp0) * 86400;
 
@@ -114,20 +115,21 @@ int main() {
     if (previous_spokea_zimuth != spoke_azimuth_deg) {
       previous_spokea_zimuth = spoke_azimuth_deg;
 
-      if (static_cast<int>(spokestate) >= 1) {
-        if (spokestate == ASV::perception::SPOKESTATE::ENTER_ALARM_ZONE) {
+      if (static_cast<int>(TargetTracking_RTdata.spoke_state) >= 1) {
+        if (TargetTracking_RTdata.spoke_state ==
+            ASV::perception::SPOKESTATE::ENTER_ALARM_ZONE) {
           std::cout << "enter the alarm zone!\n";
         }
 
         cv::Mat t_image(1, 64, CV_8UC1, &spokedata[0]);
         Alarm_image.push_back(t_image);
 
-        if (spokestate == ASV::perception::SPOKESTATE::LEAVE_ALARM_ZONE) {
+        if (TargetTracking_RTdata.spoke_state ==
+            ASV::perception::SPOKESTATE::LEAVE_ALARM_ZONE) {
           std::cout << "leave the alarm zone!\n";
           auto SpokeProcess_RTdata = Target_Tracking.getSpokeProcessRTdata();
           auto TargetDetection_RTdata =
               Target_Tracking.getTargetDetectionRTdata();
-          auto TargetTracking_RTdata = Target_Tracking.getTargetTrackerRTdata();
 
           matplotlibcpp::figure_size(800, 780);
 

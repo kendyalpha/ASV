@@ -28,10 +28,12 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 	"${PROJECT_SOURCE_DIR}/../../../../"
 	"${PROJECT_SOURCE_DIR}/../../../../modules/messages/sensors/marine_radar/third_party/SDK_3.0.02/include/"
 	"${PROJECT_SOURCE_DIR}/../../../../common/math/eigen"
+	"${PROJECT_SOURCE_DIR}/../../../../common/math/pyclustering/ccore/include"
 	"/opt/mosek/9.0/tools/platform/linux64x86/h")
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
     "/usr/lib"
+    "${PROJECT_SOURCE_DIR}/../../../../common/math/pyclustering/ccore/libs/"
     "/opt/mosek/9.0/tools/platform/linux64x86/bin"
    )
 
@@ -44,6 +46,7 @@ find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
 find_library(MOSEK8_LIBRARY mosek64 HINTS ${LIBRARY_DIRECTORY})
 find_library(NRPCLIENT_LIBRARY NRPClient HINTS ${LIBRARY_DIRECTORY})
 find_library(NRPPPI_LIBRARY NRPPPI HINTS ${LIBRARY_DIRECTORY})
+find_library(CLUSTER_LIBRARY pyclustering HINTS ${LIBRARY_DIRECTORY})
 
     
 # 指定生成目标
@@ -60,3 +63,4 @@ target_link_libraries(testASV PUBLIC ${GeographicLib_LIBRARIES})
 target_link_libraries(testASV PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(testASV PUBLIC ${NRPCLIENT_LIBRARY})
 target_link_libraries(testASV PUBLIC ${NRPPPI_LIBRARY})
+target_link_libraries(testASV PUBLIC ${CLUSTER_LIBRARY})

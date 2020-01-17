@@ -63,7 +63,7 @@ class estimator {
       KalmanFilter.setState(EstimatorRTData.State);
     // compute Cartesian state
     computeCartesianState(EstimatorRTData);
-
+    computeRadarState(EstimatorRTData);
     // state toggle
     EstimatorRTData.state_toggle = common::STATETOGGLE::READY;
     return *this;
@@ -98,6 +98,7 @@ class estimator {
 
     // compute Cartesian state
     computeCartesianState(EstimatorRTData);
+    computeRadarState(EstimatorRTData);
 
     return *this;
 
@@ -119,6 +120,8 @@ class estimator {
 
     // compute Cartesian state
     computeCartesianState(EstimatorRTData);
+    computeRadarState(EstimatorRTData);
+
     return *this;
   }
 
@@ -332,6 +335,20 @@ class estimator {
     previous_theta = _RTdata.State(2);
     previous_speed = _speed;
   }  // computeCartesianState
+
+  // compute the boat state for radar detection
+  void computeRadarState(estimatorRTdata& _RTdata) {
+    _RTdata.radar_state(0) = _RTdata.State(0);
+    _RTdata.radar_state(1) = _RTdata.State(1);
+    _RTdata.radar_state(2) = _RTdata.State(2);
+
+    Eigen::Vector2d velocity_marine =
+        _RTdata.CTB2G.block<2, 2>(0, 0) *
+        (Eigen::Vector2d() << _RTdata.State(3), _RTdata.State(4)).finished();
+
+    _RTdata.radar_state(3) = velocity_marine(0);
+    _RTdata.radar_state(4) = velocity_marine(1);
+  }  // computeRadarState
 
 };  // end class estimator
 }  // end namespace ASV

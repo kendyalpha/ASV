@@ -177,7 +177,7 @@ class jsonparse {
       2.5          // ROBOT_RADIUS
   };
 
-  ClusteringData Clustering_Data{
+  perception::ClusteringData Clustering_Data{
       1,  // p_radius
       3   // p_minumum_neighbors
   };
@@ -196,13 +196,14 @@ class jsonparse {
       0xac       // sensitivity_threhold
   };
 
-  perception::TrackingTargetData<> TrackingTarget_Data{
+  perception::TrackingTargetData TrackingTarget_Data{
       1,    // min_squared_radius
       4,    // max_squared_radius
       1,    // speed_threhold
       20,   // max_speed
       5,    // max_acceleration
       600,  // max_roti
+      1,    // safe_distance
       0.8,  // K_radius
       1,    // K_delta_speed
       1     // K_delta_yaw;

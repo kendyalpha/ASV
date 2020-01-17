@@ -39,18 +39,18 @@ class TargetTracking : public RadarFiltering {
         SpokeProcess_data(_SpokeProcessdata),
         TrackingTarget_Data(_TrackingTargetData),
         Clustering_data(_ClusteringData),
-        spoke_state(SPOKESTATE::OUTSIDE_ALARM_ZONE),
         TargetTracking_RTdata({
-            T_Vectori::Zero(),  // targets_state
-            T_Vectori::Zero(),  // targets_intention
-            T_Vectord::Zero(),  // targets_x
-            T_Vectord::Zero(),  // targets_y
-            T_Vectord::Zero(),  // targets_square_radius
-            T_Vectord::Zero(),  // targets_vx
-            T_Vectord::Zero(),  // targets_vy
-            T_Vectord::Zero(),  // targets_CPA_x
-            T_Vectord::Zero(),  // targets_CPA_y
-            T_Vectord::Zero()   // targets_TCPA
+            SPOKESTATE::OUTSIDE_ALARM_ZONE,  // spoke_state
+            T_Vectori::Zero(),               // targets_state
+            T_Vectori::Zero(),               // targets_intention
+            T_Vectord::Zero(),               // targets_x
+            T_Vectord::Zero(),               // targets_y
+            T_Vectord::Zero(),               // targets_square_radius
+            T_Vectord::Zero(),               // targets_vx
+            T_Vectord::Zero(),               // targets_vy
+            T_Vectord::Zero(),               // targets_CPA_x
+            T_Vectord::Zero(),               // targets_CPA_y
+            T_Vectord::Zero()                // targets_TCPA
         }) {}
   virtual ~TargetTracking() = default;
 
@@ -109,9 +109,9 @@ class TargetTracking : public RadarFiltering {
 
         // check the spoke azimuth to determine spoke state
         if (previous_IsInAlarmAzimuth)
-          spoke_state = SPOKESTATE::IN_ALARM_ZONE;
+          TargetTracking_RTdata.spoke_state = SPOKESTATE::IN_ALARM_ZONE;
         else {
-          spoke_state = SPOKESTATE::ENTER_ALARM_ZONE;
+          TargetTracking_RTdata.spoke_state = SPOKESTATE::ENTER_ALARM_ZONE;
           // _timer.timeelapsed();
         }
 
@@ -140,7 +140,7 @@ class TargetTracking : public RadarFiltering {
           SituationAwareness(_vessel_speed_x, _vessel_speed_y, _vessel_speed_x,
                              _vessel_speed_y, TargetTracking_RTdata);
 
-          spoke_state = SPOKESTATE::LEAVE_ALARM_ZONE;
+          TargetTracking_RTdata.spoke_state = SPOKESTATE::LEAVE_ALARM_ZONE;
 
         } else {
           SpokeProcess_RTdata.surroundings_bearing_rad.clear();
@@ -148,7 +148,7 @@ class TargetTracking : public RadarFiltering {
           SpokeProcess_RTdata.surroundings_x_m.clear();
           SpokeProcess_RTdata.surroundings_y_m.clear();
 
-          spoke_state = SPOKESTATE::OUTSIDE_ALARM_ZONE;
+          TargetTracking_RTdata.spoke_state = SPOKESTATE::OUTSIDE_ALARM_ZONE;
         }
       }
     }  // check if two azimuth is different
@@ -173,16 +173,17 @@ class TargetTracking : public RadarFiltering {
     std::vector<double> _detected_target_radius{1, 2, 1, 1, 3};
 
     TargetTrackerRTdata<max_num_target> _previous_tracking_targets{
-        T_Vectori::Zero(),  // targets_state
-        T_Vectori::Zero(),  // targets_intention
-        T_Vectord::Zero(),  // targets_x
-        T_Vectord::Zero(),  // targets_y
-        T_Vectord::Zero(),  // targets_square_radius
-        T_Vectord::Zero(),  // targets_vx
-        T_Vectord::Zero(),  // targets_vy
-        T_Vectord::Zero(),  // targets_CPA_x
-        T_Vectord::Zero(),  // targets_CPA_y
-        T_Vectord::Zero()   // targets_TCPA
+        SPOKESTATE::OUTSIDE_ALARM_ZONE,  // spoke_state
+        T_Vectori::Zero(),               // targets_state
+        T_Vectori::Zero(),               // targets_intention
+        T_Vectord::Zero(),               // targets_x
+        T_Vectord::Zero(),               // targets_y
+        T_Vectord::Zero(),               // targets_square_radius
+        T_Vectord::Zero(),               // targets_vx
+        T_Vectord::Zero(),               // targets_vy
+        T_Vectord::Zero(),               // targets_CPA_x
+        T_Vectord::Zero(),               // targets_CPA_y
+        T_Vectord::Zero()                // targets_TCPA
     };
 
     _previous_tracking_targets.targets_state(1) = 2;
@@ -244,10 +245,6 @@ class TargetTracking : public RadarFiltering {
     return SpokeProcess_RTdata;
   }  // getSpokeProcessRTdata
 
-  SPOKESTATE getSpokeState() const noexcept {
-    return spoke_state;
-  }  // getSpokeState
-
   TargetTrackerRTdata<max_num_target> getTargetTrackerRTdata() const noexcept {
     return TargetTracking_RTdata;
   }  // getTargetTrackerRTdata
@@ -268,7 +265,6 @@ class TargetTracking : public RadarFiltering {
   const TrackingTargetData TrackingTarget_Data;
   ClusteringData Clustering_data;
 
-  SPOKESTATE spoke_state;
   TargetTrackerRTdata<max_num_target> TargetTracking_RTdata;
   SpokeProcessRTdata SpokeProcess_RTdata;
   TargetDetectionRTdata TargetDetection_RTdata;
@@ -442,18 +438,8 @@ class TargetTracking : public RadarFiltering {
       const std::vector<double> &new_target_y,
       const std::vector<double> &new_target_radius, const double sample_time,
       const TargetTrackerRTdata<max_num_target> &previous_tracking_target) {
-    TargetTrackerRTdata<max_num_target> new_tracking_target{
-        T_Vectori::Zero(),  // targets_state
-        T_Vectori::Zero(),  // targets_intention
-        T_Vectord::Zero(),  // targets_x
-        T_Vectord::Zero(),  // targets_y
-        T_Vectord::Zero(),  // targets_square_radius
-        T_Vectord::Zero(),  // targets_vx
-        T_Vectord::Zero(),  // targets_vy
-        T_Vectord::Zero(),  // targets_CPA_x
-        T_Vectord::Zero(),  // targets_CPA_y
-        T_Vectord::Zero()   // targets_TCPA
-    };
+    TargetTrackerRTdata<max_num_target> new_tracking_target =
+        previous_tracking_target;
 
     auto match_targets_index =
         TargetIdentification(new_target_x, new_target_y, new_target_radius,
@@ -831,7 +817,7 @@ class TargetTracking : public RadarFiltering {
     return results;
   }  // find_above_allelements_index
 
-};  // end class TargetTracking
+};  // namespace ASV::perception
 
 }  // namespace ASV::perception
 

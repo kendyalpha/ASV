@@ -63,6 +63,7 @@ int main() {
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement
       Eigen::Matrix<double, 6, 1>::Zero(),  // Measurement_6dof
       Eigen::Matrix<double, 6, 1>::Zero(),  // Cartesian_state
+      Eigen::Matrix<double, 5, 1>::Zero(),  // radar_state
       Eigen::Matrix<double, 6, 1>::Zero(),  // State
       Eigen::Vector3d::Zero(),              // p_error
       Eigen::Vector3d::Zero(),              // v_error

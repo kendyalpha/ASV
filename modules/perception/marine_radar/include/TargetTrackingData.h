@@ -88,6 +88,8 @@ struct TargetDetectionRTdata {
 
 template <int max_num_target = 20>
 struct TargetTrackerRTdata {
+  // spoke state
+  SPOKESTATE spoke_state;
   // target state
   Eigen::Matrix<int, max_num_target, 1> targets_state;
   Eigen::Matrix<int, max_num_target, 1> targets_intention;
