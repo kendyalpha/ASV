@@ -140,6 +140,8 @@ class TargetTracking : public RadarFiltering {
           SituationAwareness(_vessel_speed_x, _vessel_speed_y, _vessel_speed_x,
                              _vessel_speed_y, TargetTracking_RTdata);
 
+          RemoveDuplicateTargets(TargetTracking_RTdata);
+
           TargetTracking_RTdata.spoke_state = SPOKESTATE::LEAVE_ALARM_ZONE;
 
         } else {
@@ -452,6 +454,8 @@ class TargetTracking : public RadarFiltering {
           case 0:  // IDLE
           case 1:  // ACQUIRING
             new_tracking_target.targets_state(i) = 0;
+            new_tracking_target.targets_x(i) = 0;
+            new_tracking_target.targets_y(i) = 0;
             new_tracking_target.targets_vx(i) = 0;
             new_tracking_target.targets_vy(i) = 0;
             break;
@@ -542,6 +546,37 @@ class TargetTracking : public RadarFiltering {
 
   }  // RemoveImpossibleRadius
 
+  // remove the duplicate tracking targets, depending on target distance
+  void RemoveDuplicateTargets(
+      TargetTrackerRTdata<max_num_target> &_tracking_target) {
+    for (int i = 0; i < (max_num_target - 1); ++i) {
+      if (_tracking_target.targets_state(i) > 0)
+        for (int j = (i + 1); j < max_num_target; ++j) {
+          if (_tracking_target.targets_state(j) > 0) {
+            double _distance = std::pow(_tracking_target.targets_x(i) -
+                                            _tracking_target.targets_x(j),
+                                        2) +
+                               std::pow(_tracking_target.targets_y(i) -
+                                            _tracking_target.targets_y(j),
+                                        2);
+            if (_distance <= std::pow(Clustering_data.p_radius, 2)) {
+              double speed_i = std::pow(_tracking_target.targets_vx(i), 2) +
+                               std::pow(_tracking_target.targets_vy(i), 2);
+              double speed_j = std::pow(_tracking_target.targets_vx(j), 2) +
+                               std::pow(_tracking_target.targets_vy(j), 2);
+              if (speed_i > speed_j) {
+                _tracking_target.targets_state(j) = 0;
+              } else {
+                _tracking_target.targets_state(i) = 0;
+                break;
+              }
+            }  // if two targets are too close
+          }
+        }  // end for loop
+    }      // end for loop
+
+  }  // RemoveDuplicateTargets
+
   // match the detected target with the tracking targets
   T_Vectori TargetIdentification(
       const std::vector<double> &detected_target_x,
@@ -559,7 +594,7 @@ class TargetTracking : public RadarFiltering {
       unmatch_detected_targets_index[i] = i;
     }
     // first loop to match the detected targets with tracking
-    // targets(ACQUIRING/SAFE/DANGEROUS)
+    // targets(ACQUIRING/ACQUIRED)
     for (int j = 0; j != max_num_target; ++j) {
       if (previous_tracking_targets.targets_state(j) > 0) {
         int index_match_with_detection = TargetIdentification(

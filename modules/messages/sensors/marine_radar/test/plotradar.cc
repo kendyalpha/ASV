@@ -45,9 +45,9 @@ int main() {
   ASV::perception::TrackingTargetData TrackingTarget_Data{
       1,    // min_squared_radius
       36,   // max_squared_radius
-      1,    // speed_threhold
+      0.8,  // speed_threhold
       20,   // max_speed
-      5,    // max_acceleration
+      4,    // max_acceleration
       600,  // max_roti
       1,    // safe_distance
       0.5,  // K_radius
@@ -149,9 +149,16 @@ int main() {
             matplotlibcpp::plot(circle_y, circle_x, "-");
           }
 
-          std::cout << "tracking target state: \n"
-                    << TargetTracking_RTdata.targets_state;
+          std::cout << "index | target state | targets_x | targets_y | "
+                       "targets_vx | targets_vy |\n";
           for (int index = 0; index != 20; ++index) {
+            std::cout << index << " | "
+                      << TargetTracking_RTdata.targets_state(index) << " | "
+                      << TargetTracking_RTdata.targets_x(index) << " | "
+                      << TargetTracking_RTdata.targets_y(index) << " | "
+                      << TargetTracking_RTdata.targets_vx(index) << " | "
+                      << TargetTracking_RTdata.targets_vy(index) << std::endl;
+
             std::vector<double> circle_x;
             std::vector<double> circle_y;
 
@@ -165,6 +172,8 @@ int main() {
           }
 
           matplotlibcpp::title("Clustering and MiniBall results");
+          matplotlibcpp::xlabel("Y(m)");
+          matplotlibcpp::ylabel("X(m)");
           matplotlibcpp::axis("equal");
           matplotlibcpp::xlim(-60, 20);
           matplotlibcpp::show();
