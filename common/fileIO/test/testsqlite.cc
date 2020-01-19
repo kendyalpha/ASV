@@ -20,7 +20,11 @@ int main() {
   LOG(INFO) << "The program has started!";
 
   common::database<m, n> _sqlitetest("dbtest.db");
+  common::database<m, n> _sqlitemtest("mdbtest.db");
+
   _sqlitetest.initializetables();
+  _sqlitemtest.initializetables();
+
   // real time GPS/IMU data
   messages::gpsRTdata gps_data{
       0,    // UTC
