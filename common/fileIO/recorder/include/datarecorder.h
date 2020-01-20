@@ -12,6 +12,7 @@
 #define _DATARECORDER_H_
 
 #include <sqlite_modern_cpp.h>
+#include <common/math/eigen/Eigen/Core>
 #include <string>
 #include <typeindex>
 #include <typeinfo>
@@ -259,8 +260,6 @@ class estimator_db : public dbinfo {
 
       db << str;
 
-      std::cout << str << std::endl;
-
       // insert_string
       insert_string_measurement = "(DATETIME, ";
       insert_string_measurement += s_meas_x + ", ";
@@ -269,8 +268,6 @@ class estimator_db : public dbinfo {
       insert_string_measurement += s_meas_u + ", ";
       insert_string_measurement += s_meas_v + ", ";
       insert_string_measurement += s_meas_r + ") ";
-
-      std::cout << insert_string_measurement << std::endl;
 
       // state
       str =
@@ -308,8 +305,6 @@ class estimator_db : public dbinfo {
 
       db << str;
 
-      std::cout << str << std::endl;
-
       // insert_string_state
       insert_string_state = "(DATETIME, ";
       insert_string_state += s_state_x + ", ";
@@ -321,8 +316,6 @@ class estimator_db : public dbinfo {
       insert_string_state += s_curvature + ", ";
       insert_string_state += s_speed + ", ";
       insert_string_state += s_dspeed + ") ";
-
-      std::cout << insert_string_state << std::endl;
 
       // error
       str =
@@ -350,8 +343,6 @@ class estimator_db : public dbinfo {
 
       db << str;
 
-      std::cout << str << std::endl;
-
       // insert_string_error
       insert_string_error = "(DATETIME, ";
       insert_string_error += s_perror_x + ", ";
@@ -360,8 +351,6 @@ class estimator_db : public dbinfo {
       insert_string_error += s_verror_x + ", ";
       insert_string_error += s_verror_y + ", ";
       insert_string_error += s_verror_mz + ") ";
-
-      std::cout << insert_string_error << std::endl;
 
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-estimator") << e.what();
@@ -564,9 +553,8 @@ class controller_db : public dbinfo {
       : dbinfo(_folder_path),
         dbpath(dbinfo::folder_path + "controller.db"),
         insert_string_setpoint(""),
-        db(dbpath) {
-    std::cout << dbpath << std::endl;
-  }
+        insert_string_TA(""),
+        db(dbpath) {}
   ~controller_db() {}
 
   void create_table(double set_x = 0, double set_y = 0, double set_theta = 0,
@@ -575,6 +563,7 @@ class controller_db : public dbinfo {
                     double desired_Mz = 0, double est_Fx = 0, double est_Fy = 0,
                     double est_Mz = 0) {
     try {
+      // setpoints
       std::string s_set_x = VARIABLENAME4DB(set_x);
       std::string s_set_y = VARIABLENAME4DB(set_y);
       std::string s_set_theta = VARIABLENAME4DB(set_theta);
@@ -592,54 +581,206 @@ class controller_db : public dbinfo {
       // set_y
       str += s_set_y + " " +
              dbinfo::type_names[std::type_index(typeid(set_y))] + ",";
-      // set_x
-      str += s_set_x + " " +
-             dbinfo::type_names[std::type_index(typeid(set_x))] + ",";
-      // set_x
-      str += s_set_x + " " +
-             dbinfo::type_names[std::type_index(typeid(set_x))] + ",";
-      // set_x
-      str += s_set_x + " " +
-             dbinfo::type_names[std::type_index(typeid(set_x))] + ",";
+      // set_theta
+      str += s_set_theta + " " +
+             dbinfo::type_names[std::type_index(typeid(set_theta))] + ",";
+      // set_u
+      str += s_set_u + " " +
+             dbinfo::type_names[std::type_index(typeid(set_u))] + ",";
+      // set_v
+      str += s_set_v + " " +
+             dbinfo::type_names[std::type_index(typeid(set_v))] + ",";
+      // set_r
+      str += s_set_r + " " + dbinfo::type_names[std::type_index(typeid(set_r))];
       str += ");";
       db << str;
 
       insert_string_setpoint = "(DATETIME, ";
-      insert_string_setpoint += s_intvalue;
+      insert_string_setpoint += s_set_x;
       insert_string_setpoint += ", ";
-      insert_string_setpoint += s_doublevalue;
+      insert_string_setpoint += s_set_y;
+      insert_string_setpoint += ", ";
+      insert_string_setpoint += s_set_theta;
+      insert_string_setpoint += ", ";
+      insert_string_setpoint += s_set_u;
+      insert_string_setpoint += ", ";
+      insert_string_setpoint += s_set_v;
+      insert_string_setpoint += ", ";
+      insert_string_setpoint += s_set_r;
       insert_string_setpoint += ") ";
 
-      std::cout << str << std::endl << insert_string << std::endl;
+      // thrust allocation
+      std::string s_desired_Fx = VARIABLENAME4DB(desired_Fx);
+      std::string s_desired_Fy = VARIABLENAME4DB(desired_Fy);
+      std::string s_desired_Mz = VARIABLENAME4DB(desired_Mz);
+      std::string s_est_Fx = VARIABLENAME4DB(est_Fx);
+      std::string s_est_Fy = VARIABLENAME4DB(est_Fy);
+      std::string s_est_Mz = VARIABLENAME4DB(est_Mz);
+
+      str =
+          "CREATE TABLE TA"
+          "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+          " DATETIME    TEXT       NOT NULL,";
+      // desired_Fx
+      str += s_desired_Fx + " " +
+             dbinfo::type_names[std::type_index(typeid(desired_Fx))] + ",";
+      // desired_Fy
+      str += s_desired_Fy + " " +
+             dbinfo::type_names[std::type_index(typeid(desired_Fy))] + ",";
+      // desired_Mz
+      str += s_desired_Mz + " " +
+             dbinfo::type_names[std::type_index(typeid(desired_Mz))] + ",";
+      // est_Fx
+      str += s_est_Fx + " " +
+             dbinfo::type_names[std::type_index(typeid(est_Fx))] + ",";
+      // est_Fy
+      str += s_est_Fy + " " +
+             dbinfo::type_names[std::type_index(typeid(est_Fy))] + ",";
+      // est_Mz
+      str += s_est_Mz + " " +
+             dbinfo::type_names[std::type_index(typeid(est_Mz))] + ",";
+      // Azimuth
+      str += "Azimuth BLOB,";
+      // Rotation
+      str += "Rotation BLOB);";
 
       db << str;
+
+      insert_string_TA = "(DATETIME, ";
+      insert_string_TA += s_desired_Fx;
+      insert_string_TA += ", ";
+      insert_string_TA += s_desired_Fy;
+      insert_string_TA += ", ";
+      insert_string_TA += s_desired_Mz;
+      insert_string_TA += ", ";
+      insert_string_TA += s_est_Fx;
+      insert_string_TA += ", ";
+      insert_string_TA += s_est_Fy;
+      insert_string_TA += ", ";
+      insert_string_TA += s_est_Mz;
+      insert_string_TA += ", Azimuth, Rotation)";
+
     } catch (sqlite::sqlite_exception &e) {
-      CLOG(ERROR, "sql") << e.what();
+      CLOG(ERROR, "sql-controller") << e.what();
     }
   }  // create_table
-  void update_table(int intvalue, double doublevalue) {
+
+  void update_setpoint_table(double set_x = 0, double set_y = 0,
+                             double set_theta = 0, double set_u = 0,
+                             double set_v = 0, double set_r = 0) {
     try {
-      std::string str = "INSERT INTO controller";
-      str += insert_string;
+      std::string str = "INSERT INTO setpoint";
+      str += insert_string_setpoint;
       str += "VALUES(julianday('now')";
       str += ", ";
-      str += std::to_string(intvalue);
+      str += std::to_string(set_x);
       str += ", ";
-      str += std::to_string(doublevalue);
+      str += std::to_string(set_y);
+      str += ", ";
+      str += std::to_string(set_theta);
+      str += ", ";
+      str += std::to_string(set_u);
+      str += ", ";
+      str += std::to_string(set_v);
+      str += ", ";
+      str += std::to_string(set_r);
       str += ");";
 
       db << str;
     } catch (sqlite::sqlite_exception &e) {
-      CLOG(ERROR, "sql-GPS") << e.what();
+      CLOG(ERROR, "sql-controller") << e.what();
     }
-  }
+  }  // update_setpoint_table
+
+  template <int num_thruster>
+  void update_TA_table(double desired_Fx, double desired_Fy, double desired_Mz,
+                       double est_Fx, double est_Fy, double est_Mz,
+                       const Eigen::Matrix<int, num_thruster, 1> &_alpha,
+                       const Eigen::Matrix<int, num_thruster, 1> &_rpm) {
+    try {
+      std::string str = "INSERT INTO TA";
+      str += insert_string_TA;
+      str += "VALUES(julianday('now'),?,?,?,?,?,?,?,?)";
+
+      std::vector<int> alpha(_alpha.data(), _alpha.data() + num_thruster);
+      std::vector<int> rpm(_rpm.data(), _rpm.data() + num_thruster);
+      db << str << desired_Fx << desired_Fy << desired_Mz << est_Fx << est_Fy
+         << est_Mz << alpha << rpm;
+
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-controller") << e.what();
+    }
+  }  // update_TA_table
 
  private:
   std::string dbpath;
   std::string insert_string_setpoint;
+  std::string insert_string_TA;
+
   sqlite::database db;
 
 };  // end class controller_db
+
+class wind_db : public dbinfo {
+ public:
+  explicit wind_db(const std::string &_folder_path)
+      : dbinfo(_folder_path),
+        dbpath(dbinfo::folder_path + "wind.db"),
+        insert_string(""),
+        db(dbpath) {}
+  ~wind_db() {}
+
+  void create_table(double speed = 0, double orientation = 0) {
+    try {
+      std::string s_speed = VARIABLENAME4DB(speed);
+      std::string s_orientation = VARIABLENAME4DB(orientation);
+
+      std::string str =
+          "CREATE TABLE wind"
+          "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+          " DATETIME    TEXT       NOT NULL,";
+      // speed
+      str += s_speed + " " +
+             dbinfo::type_names[std::type_index(typeid(speed))] + ",";
+      // orientation;
+      str += s_orientation + " " +
+             dbinfo::type_names[std::type_index(typeid(orientation))];
+      str += ");";
+
+      db << str;
+      // insert_string
+      insert_string = "(DATETIME, ";
+      insert_string += s_speed + ", ";
+      insert_string += s_orientation + ")";
+
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-wind") << e.what();
+    }
+  }  // create_table
+
+  void update_table(double speed = 0, double orientation = 0) {
+    try {
+      std::string str = "INSERT INTO wind";
+      str += insert_string;
+      str += "VALUES(julianday('now')";
+      str += ", ";
+      str += std::to_string(speed);
+      str += ", ";
+      str += std::to_string(orientation);
+      str += ");";
+
+      db << str;
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-wind") << e.what();
+    }
+  }  // update_table
+
+ private:
+  std::string dbpath;
+  std::string insert_string;
+  sqlite::database db;
+
+};  // end class wind_db
 
 }  // namespace ASV::common
 

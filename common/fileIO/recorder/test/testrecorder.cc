@@ -7,9 +7,18 @@ int main() {
   LOG(INFO) << "The program has started!";
 
   const std::string folderp = "../../data/";
+
+  // controller
+  constexpr int m = 4;
+  Eigen::Matrix<int, m, 1> azimuth;
+  Eigen::Matrix<int, m, 1> rotation;
+  azimuth << 100, 200, 300, 400;
+  rotation << 900, 800, 700, 600;
+
   ASV::common::controller_db controller_db(folderp);
   controller_db.create_table();
-  // db.update_table(0, 0);
+  controller_db.update_setpoint_table(1, 0, 2, 3, 4, 5);
+  controller_db.update_TA_table<m>(1, 0, 2, 3, 4, 5, azimuth, rotation);
 
   // GPS
   ASV::messages::gpsRTdata gps_data{
@@ -47,6 +56,11 @@ int main() {
   ASV::common::planner_db planner_db(folderp);
   planner_db.create_table();
   planner_db.update_routeplanner_table(1, 2, 3, 4, 5, 6);
+
+  // wind
+  ASV::common::wind_db wind_db(folderp);
+  wind_db.create_table();
+  wind_db.update_table(1, 2);
 
   LOG(INFO) << "Shutting down.";
 }

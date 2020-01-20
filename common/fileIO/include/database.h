@@ -40,11 +40,11 @@ class database {
 
   void initializetables() {
     create_mastertable();
-    create_GPS_table();  //
-    create_wind_table();
-    create_controller_table();
-    create_estimator_table();  //
-    create_routeplanner_table();
+    create_GPS_table();           //
+    create_wind_table();          //
+    create_controller_table();    //
+    create_estimator_table();     //
+    create_routeplanner_table();  //
     create_stm32_table();
     create_surrounding_table();
   }  // initializetables
