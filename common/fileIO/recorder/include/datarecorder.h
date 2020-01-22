@@ -29,7 +29,9 @@ class dbinfo {
       : folder_path(_folder_path),
         type_names({{std::type_index(typeid(int)), "INT"},
                     {std::type_index(typeid(double)), "DOUBLE"},
-                    {std::type_index(typeid(std::string)), "TEXT"}}) {}
+                    {std::type_index(typeid(std::string)), "TEXT"},
+                    {std::type_index(typeid(std::vector<double>)), "BLOB"},
+                    {std::type_index(typeid(std::vector<int>)), "BLOB"}}) {}
   virtual ~dbinfo() = default;
 
  protected:
@@ -37,6 +39,8 @@ class dbinfo {
   std::unordered_map<std::type_index, std::string> type_names;
 };  // end class database
 
+/********************************* messages **********************************/
+/*sensors(GPS, IMU, marine radar, etc)          */
 class gps_db : public dbinfo {
  public:
   explicit gps_db(const std::string &_folder_path)
@@ -189,6 +193,290 @@ class gps_db : public dbinfo {
 
 };  // end class gps_db
 
+class wind_db : public dbinfo {
+ public:
+  explicit wind_db(const std::string &_folder_path)
+      : dbinfo(_folder_path),
+        dbpath(dbinfo::folder_path + "wind.db"),
+        insert_string(""),
+        db(dbpath) {}
+  ~wind_db() {}
+
+  void create_table(double speed = 0, double orientation = 0) {
+    try {
+      std::string s_speed = VARIABLENAME4DB(speed);
+      std::string s_orientation = VARIABLENAME4DB(orientation);
+
+      std::string str =
+          "CREATE TABLE wind"
+          "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+          " DATETIME    TEXT       NOT NULL,";
+      // speed
+      str += s_speed + " " +
+             dbinfo::type_names[std::type_index(typeid(speed))] + ",";
+      // orientation;
+      str += s_orientation + " " +
+             dbinfo::type_names[std::type_index(typeid(orientation))];
+      str += ");";
+
+      db << str;
+      // insert_string
+      insert_string = "(DATETIME, ";
+      insert_string += s_speed + ", ";
+      insert_string += s_orientation + ")";
+
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-wind") << e.what();
+    }
+  }  // create_table
+
+  void update_table(double speed = 0, double orientation = 0) {
+    try {
+      std::string str = "INSERT INTO wind";
+      str += insert_string;
+      str += "VALUES(julianday('now')";
+      str += ", ";
+      str += std::to_string(speed);
+      str += ", ";
+      str += std::to_string(orientation);
+      str += ");";
+
+      db << str;
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-wind") << e.what();
+    }
+  }  // update_table
+
+ private:
+  std::string dbpath;
+  std::string insert_string;
+  sqlite::database db;
+
+};  // end class wind_db
+
+class stm32_db : public dbinfo {
+ public:
+  explicit stm32_db(const std::string &_folder_path)
+      : dbinfo(_folder_path),
+        dbpath(dbinfo::folder_path + "stm32.db"),
+        insert_string(""),
+        db(dbpath) {}
+  ~stm32_db() {}
+
+  void create_table(int stm32_link = 0, int stm32_status = 0,
+                    double command_u1 = 0, double command_u2 = 0,
+                    double feedback_u1 = 0, double feedback_u2 = 0,
+                    int feedback_pwm1 = 0, int feedback_pwm2 = 0,
+                    double RC_X = 0, double RC_Y = 0, double RC_Mz = 0,
+                    double voltage_b1 = 0, double voltage_b2 = 0,
+                    double voltage_b3 = 0) {
+    try {
+      std::string s_stm32_link = VARIABLENAME4DB(stm32_link);
+      std::string s_stm32_status = VARIABLENAME4DB(stm32_status);
+      std::string s_command_u1 = VARIABLENAME4DB(command_u1);
+      std::string s_command_u2 = VARIABLENAME4DB(command_u2);
+      std::string s_feedback_u1 = VARIABLENAME4DB(feedback_u1);
+      std::string s_feedback_u2 = VARIABLENAME4DB(feedback_u2);
+      std::string s_feedback_pwm1 = VARIABLENAME4DB(feedback_pwm1);
+      std::string s_feedback_pwm2 = VARIABLENAME4DB(feedback_pwm2);
+      std::string s_RC_X = VARIABLENAME4DB(RC_X);
+      std::string s_RC_Y = VARIABLENAME4DB(RC_Y);
+      std::string s_RC_Mz = VARIABLENAME4DB(RC_Mz);
+      std::string s_voltage_b1 = VARIABLENAME4DB(voltage_b1);
+      std::string s_voltage_b2 = VARIABLENAME4DB(voltage_b2);
+      std::string s_voltage_b3 = VARIABLENAME4DB(voltage_b3);
+
+      std::string str =
+          "CREATE TABLE stm32"
+          "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+          " DATETIME    TEXT       NOT NULL,";
+      // stm32_link
+      str += s_stm32_link + " " +
+             dbinfo::type_names[std::type_index(typeid(stm32_link))] + ",";
+      // stm32_status
+      str += s_stm32_status + " " +
+             dbinfo::type_names[std::type_index(typeid(stm32_status))] + ",";
+      // command_u1
+      str += s_command_u1 + " " +
+             dbinfo::type_names[std::type_index(typeid(command_u1))] + ",";
+      // command_u2
+      str += s_command_u2 + " " +
+             dbinfo::type_names[std::type_index(typeid(command_u2))] + ",";
+      // feedback_u1
+      str += s_feedback_u1 + " " +
+             dbinfo::type_names[std::type_index(typeid(feedback_u1))] + ",";
+      // feedback_u2
+      str += s_feedback_u2 + " " +
+             dbinfo::type_names[std::type_index(typeid(feedback_u2))] + ",";
+      // feedback_pwm1
+      str += s_feedback_pwm1 + " " +
+             dbinfo::type_names[std::type_index(typeid(feedback_pwm1))] + ",";
+      // feedback_pwm2
+      str += s_feedback_pwm2 + " " +
+             dbinfo::type_names[std::type_index(typeid(feedback_pwm2))] + ",";
+      // RC_X
+      str += s_RC_X + " " + dbinfo::type_names[std::type_index(typeid(RC_X))] +
+             ",";
+      // RC_Y
+      str += s_RC_Y + " " + dbinfo::type_names[std::type_index(typeid(RC_Y))] +
+             ",";
+      // RC_Mz
+      str += s_RC_Mz + " " +
+             dbinfo::type_names[std::type_index(typeid(RC_Mz))] + ",";
+      // voltage_b1
+      str += s_voltage_b1 + " " +
+             dbinfo::type_names[std::type_index(typeid(voltage_b1))] + ",";
+      // voltage_b2
+      str += s_voltage_b2 + " " +
+             dbinfo::type_names[std::type_index(typeid(voltage_b2))] + ",";
+      // voltage_b3
+      str += s_voltage_b3 + " " +
+             dbinfo::type_names[std::type_index(typeid(voltage_b3))];
+      str += ");";
+
+      db << str;
+      // insert_string
+      insert_string = "(DATETIME, ";
+      insert_string += s_stm32_link + ", ";
+      insert_string += s_stm32_status + ", ";
+      insert_string += s_command_u1 + ", ";
+      insert_string += s_command_u2 + ", ";
+      insert_string += s_feedback_u1 + ", ";
+      insert_string += s_feedback_u2 + ", ";
+      insert_string += s_feedback_pwm1 + ", ";
+      insert_string += s_feedback_pwm2 + ", ";
+      insert_string += s_RC_X + ", ";
+      insert_string += s_RC_Y + ", ";
+      insert_string += s_RC_Mz + ", ";
+      insert_string += s_voltage_b1 + ", ";
+      insert_string += s_voltage_b2 + ", ";
+      insert_string += s_voltage_b3 + ")";
+
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-stm32") << e.what();
+    }
+  }  // create_table
+
+  void update_table(int stm32_link = 0, int stm32_status = 0,
+                    double command_u1 = 0, double command_u2 = 0,
+                    double feedback_u1 = 0, double feedback_u2 = 0,
+                    int feedback_pwm1 = 0, int feedback_pwm2 = 0,
+                    double RC_X = 0, double RC_Y = 0, double RC_Mz = 0,
+                    double voltage_b1 = 0, double voltage_b2 = 0,
+                    double voltage_b3 = 0) {
+    try {
+      std::string str = "INSERT INTO stm32";
+      str += insert_string;
+      str += "VALUES(julianday('now')";
+      str += ", ";
+      str += std::to_string(stm32_link);
+      str += ", ";
+      str += std::to_string(stm32_status);
+      str += ", ";
+      str += std::to_string(command_u1);
+      str += ", ";
+      str += std::to_string(command_u2);
+      str += ", ";
+      str += std::to_string(feedback_u1);
+      str += ", ";
+      str += std::to_string(feedback_u2);
+      str += ", ";
+      str += std::to_string(feedback_pwm1);
+      str += ", ";
+      str += std::to_string(feedback_pwm2);
+      str += ", ";
+      str += std::to_string(RC_X);
+      str += ", ";
+      str += std::to_string(RC_Y);
+      str += ", ";
+      str += std::to_string(RC_Mz);
+      str += ", ";
+      str += std::to_string(voltage_b1);
+      str += ", ";
+      str += std::to_string(voltage_b2);
+      str += ", ";
+      str += std::to_string(voltage_b3);
+      str += ");";
+
+      db << str;
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-stm32") << e.what();
+    }
+  }  // update_table
+
+ private:
+  std::string dbpath;
+  std::string insert_string;
+  sqlite::database db;
+
+};  // end class stm32_db
+
+class marineradar_db : public dbinfo {
+ public:
+  marineradar_db(const std::string &_folder_path)
+      : dbinfo(_folder_path),
+        dbpath(dbinfo::folder_path + "marineradar.db"),
+        insert_string(""),
+        db(dbpath) {}
+  ~marineradar_db() {}
+
+  void create_table(double azimuth_deg = 0, double sample_range = 0) {
+    try {
+      // setpoints
+      std::string s_azimuth_deg = VARIABLENAME4DB(azimuth_deg);
+      std::string s_sample_range = VARIABLENAME4DB(sample_range);
+
+      std::string str =
+          "CREATE TABLE radar"
+          "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+          " DATETIME    TEXT       NOT NULL,";
+      // azimuth_deg
+      str += s_azimuth_deg + " " +
+             dbinfo::type_names[std::type_index(typeid(azimuth_deg))] + ",";
+      // sample_range
+      str += s_sample_range + " " +
+             dbinfo::type_names[std::type_index(typeid(sample_range))] + ",";
+      // spoke data
+      str += "SpokeData BLOB);";
+      db << str;
+
+      insert_string = "(DATETIME, ";
+      insert_string += s_azimuth_deg;
+      insert_string += ", ";
+      insert_string += s_sample_range;
+      insert_string += ", ";
+      insert_string += "SpokeData)";
+
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-marineradar") << e.what();
+    }
+  }  // create_table
+
+  template <int datasize>
+  void update_table(double azimuth_deg, double sample_range,
+                    const uint8_t *spokedata) {
+    try {
+      std::string str = "INSERT INTO radar";
+      str += insert_string;
+      str += "VALUES(julianday('now'),? ,? ,? )";
+
+      std::vector<uint8_t> data(&spokedata[0], &spokedata[datasize]);
+      db << str << azimuth_deg << sample_range << data;
+
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-marineradar") << e.what();
+    }
+  }  // update_table
+
+ private:
+  std::string dbpath;
+  std::string insert_string;
+  sqlite::database db;
+
+};  // end class marineradar_db
+
+/********************************* Modules **********************************/
+/* perception, planner, controller, estimator(GPS, IMU, marine radar, etc) */
 class estimator_db : public dbinfo {
  public:
   explicit estimator_db(const std::string &_folder_path)
@@ -721,66 +1009,279 @@ class controller_db : public dbinfo {
 
 };  // end class controller_db
 
-class wind_db : public dbinfo {
+class perception_db : public dbinfo {
  public:
-  explicit wind_db(const std::string &_folder_path)
+  perception_db(const std::string &_folder_path)
       : dbinfo(_folder_path),
-        dbpath(dbinfo::folder_path + "wind.db"),
-        insert_string(""),
+        dbpath(dbinfo::folder_path + "perception.db"),
+        insert_string_spoke(""),
+        insert_string_detectedtarget(""),
+        insert_string_trackingtarget(""),
         db(dbpath) {}
-  ~wind_db() {}
+  ~perception_db() {}
 
-  void create_table(double speed = 0, double orientation = 0) {
+  void create_table(const std::vector<double> &surroundings_bearing_rad = {},
+                    const std::vector<double> &surroundings_range_m = {},
+                    const std::vector<double> &surroundings_x_m = {},
+                    const std::vector<double> &surroundings_y_m = {},
+                    const std::vector<double> &detected_target_x = {},
+                    const std::vector<double> &detected_target_y = {},
+                    const std::vector<double> &detected_target_radius = {},
+                    int spoke_state = 0,
+                    const std::vector<int> &targets_state = {},
+                    const std::vector<int> &targets_intention = {},
+                    const std::vector<double> &targets_x = {},
+                    const std::vector<double> &targets_y = {},
+                    const std::vector<double> &targets_square_radius = {},
+                    const std::vector<double> &targets_vx = {},
+                    const std::vector<double> &targets_vy = {},
+                    const std::vector<double> &targets_CPA_x = {},
+                    const std::vector<double> &targets_CPA_y = {},
+                    const std::vector<double> &targets_TCPA = {}) {
     try {
-      std::string s_speed = VARIABLENAME4DB(speed);
-      std::string s_orientation = VARIABLENAME4DB(orientation);
+      // spoke process
+      std::string s_surroundings_bearing_rad =
+          VARIABLENAME4DB(surroundings_bearing_rad);
+      std::string s_surroundings_range_m =
+          VARIABLENAME4DB(surroundings_range_m);
+      std::string s_surroundings_x_m = VARIABLENAME4DB(surroundings_x_m);
+      std::string s_surroundings_y_m = VARIABLENAME4DB(surroundings_y_m);
 
       std::string str =
-          "CREATE TABLE wind"
+          "CREATE TABLE SpokeProcess"
           "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
           " DATETIME    TEXT       NOT NULL,";
-      // speed
-      str += s_speed + " " +
-             dbinfo::type_names[std::type_index(typeid(speed))] + ",";
-      // orientation;
-      str += s_orientation + " " +
-             dbinfo::type_names[std::type_index(typeid(orientation))];
+      // surroundings_bearing_rad
+      str += s_surroundings_bearing_rad + " " +
+             dbinfo::type_names[std::type_index(
+                 typeid(surroundings_bearing_rad))] +
+             ",";
+      // surroundings_range_m
+      str += s_surroundings_range_m + " " +
+             dbinfo::type_names[std::type_index(typeid(surroundings_range_m))] +
+             ",";
+      // surroundings_x_m
+      str += s_surroundings_x_m + " " +
+             dbinfo::type_names[std::type_index(typeid(surroundings_x_m))] +
+             ",";
+      // surroundings_y_m
+      str += s_surroundings_y_m + " " +
+             dbinfo::type_names[std::type_index(typeid(surroundings_y_m))];
       str += ");";
+      db << str;
+
+      insert_string_spoke = "(DATETIME, ";
+      insert_string_spoke += s_surroundings_bearing_rad;
+      insert_string_spoke += ", ";
+      insert_string_spoke += s_surroundings_range_m;
+      insert_string_spoke += ", ";
+      insert_string_spoke += s_surroundings_x_m;
+      insert_string_spoke += ", ";
+      insert_string_spoke += s_surroundings_y_m;
+      insert_string_spoke += ") ";
+
+      // Detected target
+      std::string s_detected_target_x = VARIABLENAME4DB(detected_target_x);
+      std::string s_detected_target_y = VARIABLENAME4DB(detected_target_y);
+      std::string s_detected_target_radius =
+          VARIABLENAME4DB(detected_target_radius);
+
+      str =
+          "CREATE TABLE DetectedTarget"
+          "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+          " DATETIME    TEXT       NOT NULL,";
+      // detected_target_x
+      str += s_detected_target_x + " " +
+             dbinfo::type_names[std::type_index(typeid(detected_target_x))] +
+             ",";
+      // detected_target_y
+      str += s_detected_target_y + " " +
+             dbinfo::type_names[std::type_index(typeid(detected_target_y))] +
+             ",";
+      // detected_target_radius
+      str +=
+          s_detected_target_radius + " " +
+          dbinfo::type_names[std::type_index(typeid(detected_target_radius))] +
+          ");";
+      db << str;
+
+      insert_string_detectedtarget = "(DATETIME, ";
+      insert_string_detectedtarget += s_detected_target_x;
+      insert_string_detectedtarget += ", ";
+      insert_string_detectedtarget += s_detected_target_y;
+      insert_string_detectedtarget += ", ";
+      insert_string_detectedtarget += s_detected_target_radius;
+      insert_string_detectedtarget += ")";
+
+      // Tracking targets
+      std::string s_spoke_state = VARIABLENAME4DB(spoke_state);
+      std::string s_targets_state = VARIABLENAME4DB(targets_state);
+      std::string s_targets_intention = VARIABLENAME4DB(targets_intention);
+      std::string s_targets_x = VARIABLENAME4DB(targets_x);
+      std::string s_targets_y = VARIABLENAME4DB(targets_y);
+      std::string s_targets_square_radius =
+          VARIABLENAME4DB(targets_square_radius);
+      std::string s_targets_vx = VARIABLENAME4DB(targets_vx);
+      std::string s_targets_vy = VARIABLENAME4DB(targets_vy);
+      std::string s_targets_CPA_x = VARIABLENAME4DB(targets_CPA_x);
+      std::string s_targets_CPA_y = VARIABLENAME4DB(targets_CPA_y);
+      std::string s_targets_TCPA = VARIABLENAME4DB(targets_TCPA);
+
+      str =
+          "CREATE TABLE TrackingTarget"
+          "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+          " DATETIME    TEXT       NOT NULL,";
+      // spoke_state
+      str += s_spoke_state + " " +
+             dbinfo::type_names[std::type_index(typeid(spoke_state))] + ",";
+      // targets_state
+      str += s_targets_state + " " +
+             dbinfo::type_names[std::type_index(typeid(targets_state))] + ",";
+      // targets_intention
+      str += s_targets_intention + " " +
+             dbinfo::type_names[std::type_index(typeid(targets_intention))] +
+             ",";
+      // targets_x
+      str += s_targets_x + " " +
+             dbinfo::type_names[std::type_index(typeid(targets_x))] + ",";
+      // targets_y
+      str += s_targets_y + " " +
+             dbinfo::type_names[std::type_index(typeid(targets_y))] + ",";
+      // targets_square_radius
+      str +=
+          s_targets_square_radius + " " +
+          dbinfo::type_names[std::type_index(typeid(targets_square_radius))] +
+          ",";
+      // targets_vx
+      str += s_targets_vx + " " +
+             dbinfo::type_names[std::type_index(typeid(targets_vx))] + ",";
+      // targets_vy
+      str += s_targets_vy + " " +
+             dbinfo::type_names[std::type_index(typeid(targets_vy))] + ",";
+      // targets_CPA_x
+      str += s_targets_CPA_x + " " +
+             dbinfo::type_names[std::type_index(typeid(targets_CPA_x))] + ",";
+      // targets_CPA_y
+      str += s_targets_CPA_y + " " +
+             dbinfo::type_names[std::type_index(typeid(targets_CPA_y))] + ",";
+      // targets_TCPA
+      str += s_targets_TCPA + " " +
+             dbinfo::type_names[std::type_index(typeid(targets_TCPA))] + ");";
 
       db << str;
-      // insert_string
-      insert_string = "(DATETIME, ";
-      insert_string += s_speed + ", ";
-      insert_string += s_orientation + ")";
+
+      insert_string_trackingtarget = "(DATETIME, ";
+      insert_string_trackingtarget += s_spoke_state;
+      insert_string_trackingtarget += ", ";
+      insert_string_trackingtarget += s_targets_state;
+      insert_string_trackingtarget += ", ";
+      insert_string_trackingtarget += s_targets_intention;
+      insert_string_trackingtarget += ", ";
+      insert_string_trackingtarget += s_targets_x;
+      insert_string_trackingtarget += ", ";
+      insert_string_trackingtarget += s_targets_y;
+      insert_string_trackingtarget += ", ";
+      insert_string_trackingtarget += s_targets_square_radius;
+      insert_string_trackingtarget += ", ";
+      insert_string_trackingtarget += s_targets_vx;
+      insert_string_trackingtarget += ", ";
+      insert_string_trackingtarget += s_targets_vy;
+      insert_string_trackingtarget += ", ";
+      insert_string_trackingtarget += s_targets_CPA_x;
+      insert_string_trackingtarget += ", ";
+      insert_string_trackingtarget += s_targets_CPA_y;
+      insert_string_trackingtarget += ", ";
+      insert_string_trackingtarget += s_targets_TCPA;
+      insert_string_trackingtarget += ")";
 
     } catch (sqlite::sqlite_exception &e) {
-      CLOG(ERROR, "sql-wind") << e.what();
+      CLOG(ERROR, "sql-perception") << e.what();
     }
   }  // create_table
 
-  void update_table(double speed = 0, double orientation = 0) {
+  void update_spoke_table(const std::vector<double> &surroundings_bearing_rad,
+                          const std::vector<double> &surroundings_range_m,
+                          const std::vector<double> &surroundings_x_m,
+                          const std::vector<double> &surroundings_y_m) {
     try {
-      std::string str = "INSERT INTO wind";
-      str += insert_string;
-      str += "VALUES(julianday('now')";
-      str += ", ";
-      str += std::to_string(speed);
-      str += ", ";
-      str += std::to_string(orientation);
-      str += ");";
+      std::string str = "INSERT INTO SpokeProcess";
+      str += insert_string_spoke;
+      str += "VALUES(julianday('now'), ?, ?, ?, ?)";
 
-      db << str;
+      db << str << surroundings_bearing_rad << surroundings_range_m
+         << surroundings_x_m << surroundings_y_m;
     } catch (sqlite::sqlite_exception &e) {
-      CLOG(ERROR, "sql-wind") << e.what();
+      CLOG(ERROR, "sql-perception") << e.what();
     }
-  }  // update_table
+  }  // update_spoke_table
+
+  void update_detection_table(
+      const std::vector<double> &detected_target_x,
+      const std::vector<double> &detected_target_y,
+      const std::vector<double> &detected_target_radius) {
+    try {
+      std::string str = "INSERT INTO DetectedTarget";
+      str += insert_string_spoke;
+      str += "VALUES(julianday('now'), ?, ?, ?)";
+
+      db << str << detected_target_x << detected_target_y
+         << detected_target_radius;
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-perception") << e.what();
+    }
+  }  // update_detection_table
+
+  template <int num_target>
+  void update_trackingtarget_table(
+      int spoke_state, const Eigen::Matrix<int, num_target, 1> &targets_state,
+      const Eigen::Matrix<int, num_target, 1> &targets_intention,
+      const Eigen::Matrix<double, num_target, 1> &targets_x,
+      const Eigen::Matrix<double, num_target, 1> &targets_y,
+      const Eigen::Matrix<double, num_target, 1> &targets_square_radius,
+      const Eigen::Matrix<double, num_target, 1> &targets_vx,
+      const Eigen::Matrix<double, num_target, 1> &targets_vy,
+      const Eigen::Matrix<double, num_target, 1> &targets_CPA_x,
+      const Eigen::Matrix<double, num_target, 1> &targets_CPA_y,
+      const Eigen::Matrix<double, num_target, 1> &targets_TCPA) {
+    try {
+      std::string str = "INSERT INTO TrackingTarget";
+      str += insert_string_trackingtarget;
+      str += "VALUES(julianday('now'),? ,? ,? ,? ,? ,? ,? ,?, ?, ?, ?)";
+
+      db << str << spoke_state
+         << std::vector<int>(targets_state.data(),
+                             targets_state.data() + num_target)
+         << std::vector<int>(targets_intention.data(),
+                             targets_intention.data() + num_target)
+         << std::vector<double>(targets_x.data(), targets_x.data() + num_target)
+         << std::vector<double>(targets_y.data(), targets_y.data() + num_target)
+         << std::vector<double>(targets_square_radius.data(),
+                                targets_square_radius.data() + num_target)
+         << std::vector<double>(targets_vx.data(),
+                                targets_vx.data() + num_target)
+         << std::vector<double>(targets_vy.data(),
+                                targets_vy.data() + num_target)
+         << std::vector<double>(targets_CPA_x.data(),
+                                targets_CPA_x.data() + num_target)
+         << std::vector<double>(targets_CPA_y.data(),
+                                targets_CPA_y.data() + num_target)
+         << std::vector<double>(targets_TCPA.data(),
+                                targets_TCPA.data() + num_target);
+
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-perception") << e.what();
+    }
+  }  // update_TA_table
 
  private:
   std::string dbpath;
-  std::string insert_string;
+  std::string insert_string_spoke;
+  std::string insert_string_detectedtarget;
+  std::string insert_string_trackingtarget;
+
   sqlite::database db;
 
-};  // end class wind_db
+};  // end class perception_db
 
 }  // namespace ASV::common
 

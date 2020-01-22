@@ -8,18 +8,6 @@ int main() {
 
   const std::string folderp = "../../data/";
 
-  // controller
-  constexpr int m = 4;
-  Eigen::Matrix<int, m, 1> azimuth;
-  Eigen::Matrix<int, m, 1> rotation;
-  azimuth << 100, 200, 300, 400;
-  rotation << 900, 800, 700, 600;
-
-  ASV::common::controller_db controller_db(folderp);
-  controller_db.create_table();
-  controller_db.update_setpoint_table(1, 0, 2, 3, 4, 5);
-  controller_db.update_TA_table<m>(1, 0, 2, 3, 4, 5, azimuth, rotation);
-
   // GPS
   ASV::messages::gpsRTdata gps_data{
       1,    // UTC
@@ -45,6 +33,28 @@ int main() {
                       gps_data.roti, gps_data.status, gps_data.UTM_x,
                       gps_data.UTM_y, gps_data.UTM_zone);
 
+  // wind
+  ASV::common::wind_db wind_db(folderp);
+  wind_db.create_table();
+  wind_db.update_table(1, 2);
+
+  // stm32
+  ASV::common::stm32_db stm32_db(folderp);
+  stm32_db.create_table();
+  stm32_db.update_table(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
+
+  // marine radar
+  constexpr int size_array = 512;
+  uint8_t _value = 0x23;
+  uint8_t spokedata[size_array] = {
+      0xc0,   0x00,   _value, _value, _value, _value, _value,
+      _value, _value, _value, _value, _value, _value, _value,
+      _value, _value, _value, _value, _value, _value, _value,
+      _value, _value, _value, 0xca,   0x01,   0x30,   0x45};
+  ASV::common::marineradar_db marineradar_db(folderp);
+  marineradar_db.create_table();
+  marineradar_db.update_table<size_array>(10, 20, spokedata);
+
   // estimator
   ASV::common::estimator_db estimator_db(folderp);
   estimator_db.create_table();
@@ -57,10 +67,21 @@ int main() {
   planner_db.create_table();
   planner_db.update_routeplanner_table(1, 2, 3, 4, 5, 6);
 
-  // wind
-  ASV::common::wind_db wind_db(folderp);
-  wind_db.create_table();
-  wind_db.update_table(1, 2);
+  // controller
+  constexpr int m = 4;
+  Eigen::Matrix<int, m, 1> azimuth;
+  Eigen::Matrix<int, m, 1> rotation;
+  azimuth << 100, 200, 300, 400;
+  rotation << 900, 800, 700, 600;
+
+  ASV::common::controller_db controller_db(folderp);
+  controller_db.create_table();
+  controller_db.update_setpoint_table(1, 0, 2, 3, 4, 5);
+  controller_db.update_TA_table<m>(1, 0, 2, 3, 4, 5, azimuth, rotation);
+
+  // perception
+  ASV::common::perception_db perception_db(folderp);
+  perception_db.create_table();
 
   LOG(INFO) << "Shutting down.";
 }
