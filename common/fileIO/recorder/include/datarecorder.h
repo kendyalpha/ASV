@@ -750,11 +750,15 @@ class planner_db : public dbinfo {
       : dbinfo(_folder_path),
         dbpath(dbinfo::folder_path + "planner.db"),
         insert_string_routeplanner(""),
+        insert_string_latticeplanner(""),
         db(dbpath) {}
   ~planner_db() {}
 
   void create_table(double speed = 0, double captureradius = 0, double WPX = 0,
-                    double WPY = 0, double WPLONG = 0, double WPLAT = 0) {
+                    double WPY = 0, double WPLONG = 0, double WPLAT = 0,
+                    double lattice_x = 0, double lattice_y = 0,
+                    double lattice_theta = 0, double lattice_kappa = 0,
+                    double lattice_speed = 0, double lattice_dspeed = 0) {
     try {
       std::string s_speed = VARIABLENAME4DB(speed);
       std::string s_captureradius = VARIABLENAME4DB(captureradius);
@@ -796,6 +800,48 @@ class planner_db : public dbinfo {
       insert_string_routeplanner += s_WPLONG + ", ";
       insert_string_routeplanner += s_WPLAT + ")";
 
+      // planning marine state
+      std::string s_lattice_x = VARIABLENAME4DB(lattice_x);
+      std::string s_lattice_y = VARIABLENAME4DB(lattice_y);
+      std::string s_lattice_theta = VARIABLENAME4DB(lattice_theta);
+      std::string s_lattice_kappa = VARIABLENAME4DB(lattice_kappa);
+      std::string s_lattice_speed = VARIABLENAME4DB(lattice_speed);
+      std::string s_lattice_dspeed = VARIABLENAME4DB(lattice_dspeed);
+
+      str =
+          "CREATE TABLE latticeplanner"
+          "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+          " DATETIME    TEXT       NOT NULL,";
+      // lattice_x
+      str += s_lattice_x + " " +
+             dbinfo::type_names[std::type_index(typeid(lattice_x))] + ",";
+      // lattice_y;
+      str += s_lattice_y + " " +
+             dbinfo::type_names[std::type_index(typeid(lattice_y))] + ",";
+      // lattice_theta
+      str += s_lattice_theta + " " +
+             dbinfo::type_names[std::type_index(typeid(lattice_theta))] + ",";
+      // lattice_kappa
+      str += s_lattice_kappa + " " +
+             dbinfo::type_names[std::type_index(typeid(lattice_kappa))] + ",";
+      // lattice_speed
+      str += s_lattice_speed + " " +
+             dbinfo::type_names[std::type_index(typeid(lattice_speed))] + ",";
+      // lattice_dspeed
+      str += s_lattice_dspeed + " " +
+             dbinfo::type_names[std::type_index(typeid(lattice_dspeed))];
+      str += ");";
+
+      db << str;
+      // insert_string_latticeplanner
+      insert_string_latticeplanner = "(DATETIME, ";
+      insert_string_latticeplanner += s_lattice_x + ", ";
+      insert_string_latticeplanner += s_lattice_y + ", ";
+      insert_string_latticeplanner += s_lattice_theta + ", ";
+      insert_string_latticeplanner += s_lattice_kappa + ", ";
+      insert_string_latticeplanner += s_lattice_speed + ", ";
+      insert_string_latticeplanner += s_lattice_dspeed + ")";
+
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-planner") << e.what();
     }
@@ -828,9 +874,40 @@ class planner_db : public dbinfo {
     }
   }  // update_routeplanner_table
 
+  void update_latticeplanner_table(double lattice_x = 0, double lattice_y = 0,
+                                   double lattice_theta = 0,
+                                   double lattice_kappa = 0,
+                                   double lattice_speed = 0,
+                                   double lattice_dspeed = 0) {
+    try {
+      std::string str = "INSERT INTO latticeplanner";
+      str += insert_string_latticeplanner;
+      str += "VALUES(julianday('now')";
+      str += ", ";
+      str += std::to_string(lattice_x);
+      str += ", ";
+      str += std::to_string(lattice_y);
+      str += ", ";
+      str += std::to_string(lattice_theta);
+      str += ", ";
+      str += std::to_string(lattice_kappa);
+      str += ", ";
+      str += std::to_string(lattice_speed);
+      str += ", ";
+      str += std::to_string(lattice_dspeed);
+      str += ");";
+
+      db << str;
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-planner") << e.what();
+    }
+  }  // update_latticeplanner_table
+
  private:
   std::string dbpath;
   std::string insert_string_routeplanner;
+  std::string insert_string_latticeplanner;
+
   sqlite::database db;
 
 };  // end class planner_db
@@ -988,7 +1065,7 @@ class controller_db : public dbinfo {
     try {
       std::string str = "INSERT INTO TA";
       str += insert_string_TA;
-      str += "VALUES(julianday('now'),?,?,?,?,?,?,?,?)";
+      str += "VALUES(julianday('now'),? ,? ,? ,? ,? ,? ,? ,?)";
 
       std::vector<int> alpha(_alpha.data(), _alpha.data() + num_thruster);
       std::vector<int> rpm(_rpm.data(), _rpm.data() + num_thruster);
@@ -1221,7 +1298,7 @@ class perception_db : public dbinfo {
       const std::vector<double> &detected_target_radius) {
     try {
       std::string str = "INSERT INTO DetectedTarget";
-      str += insert_string_spoke;
+      str += insert_string_detectedtarget;
       str += "VALUES(julianday('now'), ?, ?, ?)";
 
       db << str << detected_target_x << detected_target_y
@@ -1233,7 +1310,8 @@ class perception_db : public dbinfo {
 
   template <int num_target>
   void update_trackingtarget_table(
-      int spoke_state, const Eigen::Matrix<int, num_target, 1> &targets_state,
+      const int spoke_state,
+      const Eigen::Matrix<int, num_target, 1> &targets_state,
       const Eigen::Matrix<int, num_target, 1> &targets_intention,
       const Eigen::Matrix<double, num_target, 1> &targets_x,
       const Eigen::Matrix<double, num_target, 1> &targets_y,

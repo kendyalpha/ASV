@@ -8,7 +8,7 @@
 ***********************************************************************
 */
 
-#include "common/fileIO/include/database.h"
+#include "common/fileIO/recorder/include/datarecorder.h"
 #include "common/timer/include/timecounter.h"
 #include "modules/estimator/include/estimator.h"
 #include "modules/estimator/include/windcompensation.h"
@@ -83,8 +83,12 @@ int main() {
       Eigen::Matrix<double, 6, 6>::Identity()     // R
   };
 
-  common::database<3, 3> _sqlitetest("../data/dbtest.db");
-  _sqlitetest.initializetables();
+  common::gps_db gps_db("../data/");
+  common::estimator_db estimator_db("../data/");
+
+  gps_db.create_table();
+  estimator_db.create_table();
+
   common::timecounter _timer;
   messages::GPS _gpsimu(115200);  // zone 51 N
   estimator<USEKALMAN::KALMANOFF> _estimator(_estimatorRTdata, _vessel,
@@ -120,8 +124,25 @@ int main() {
 
       long int et = _timer.timeelapsed();
 
-      _sqlitetest.update_gps_table(gps_data);
-      _sqlitetest.update_estimator_table(_estimatorRTdata);
+      gps_db.update_table(gps_data.UTC, gps_data.latitude, gps_data.longitude,
+                          gps_data.heading, gps_data.pitch, gps_data.roll,
+                          gps_data.altitude, gps_data.Ve, gps_data.Vn,
+                          gps_data.roti, gps_data.status, gps_data.UTM_x,
+                          gps_data.UTM_y, gps_data.UTM_zone);
+      estimator_db.update_measurement_table(
+          _estimatorRTdata.Measurement(0), _estimatorRTdata.Measurement(1),
+          _estimatorRTdata.Measurement(2), _estimatorRTdata.Measurement(3),
+          _estimatorRTdata.Measurement(4), _estimatorRTdata.Measurement(5));
+      estimator_db.update_state_table(
+          _estimatorRTdata.State(0), _estimatorRTdata.State(1),
+          _estimatorRTdata.State(2), _estimatorRTdata.State(3),
+          _estimatorRTdata.State(4), _estimatorRTdata.State(5),
+          _estimatorRTdata.Marine_state(3), _estimatorRTdata.Marine_state(4),
+          _estimatorRTdata.Marine_state(5));
+      estimator_db.update_error_table(
+          _estimatorRTdata.p_error(0), _estimatorRTdata.p_error(1),
+          _estimatorRTdata.p_error(2), _estimatorRTdata.v_error(0),
+          _estimatorRTdata.v_error(1), _estimatorRTdata.v_error(2));
 
       std::cout << "UTC:      " << gps_data.UTC << std::endl;
       std::cout << "latitude:   " << std::fixed << setprecision(7)

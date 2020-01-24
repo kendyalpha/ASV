@@ -10,7 +10,7 @@
 
 #include "../include/gps.h"
 #include "common/communication/include/tcpserver.h"
-#include "common/fileIO/include/database.h"
+#include "common/fileIO/recorder/include/datarecorder.h"
 #include "common/timer/include/timecounter.h"
 using std::setprecision;
 using namespace ASV;
@@ -46,8 +46,8 @@ int main() {
   socketmsg _sendmsg = {0.0, 0.0};
 
   try {
-    // common::database<3, 3> _sqlitetest("dbtest.db");
-    // _sqlitetest.initializetables();
+    common::gps_db gps_db("./");
+    gps_db.create_table();
     common::timecounter _timer;
     messages::GPS _gpsimu(115200, "/dev/ttyUSB0");  // zone 51 N
     tcpserver _tcpserver("9340");
@@ -56,7 +56,11 @@ int main() {
       gps_data = _gpsimu.parseGPS().getgpsRTdata();
       long int et = _timer.timeelapsed();
 
-      // _sqlitetest.update_gps_table(gps_data);
+      gps_db.update_table(gps_data.UTC, gps_data.latitude, gps_data.longitude,
+                          gps_data.heading, gps_data.pitch, gps_data.roll,
+                          gps_data.altitude, gps_data.Ve, gps_data.Vn,
+                          gps_data.roti, gps_data.status, gps_data.UTM_x,
+                          gps_data.UTM_y, gps_data.UTM_zone);
 
       _sendmsg.double_msg[0] = gps_data.heading;
       _sendmsg.double_msg[1] =

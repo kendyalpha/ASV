@@ -66,6 +66,7 @@ int main() {
   ASV::common::planner_db planner_db(folderp);
   planner_db.create_table();
   planner_db.update_routeplanner_table(1, 2, 3, 4, 5, 6);
+  planner_db.update_latticeplanner_table(1, 2, 3, 4, 5, 6);
 
   // controller
   constexpr int m = 4;
@@ -82,6 +83,25 @@ int main() {
   // perception
   ASV::common::perception_db perception_db(folderp);
   perception_db.create_table();
+  perception_db.update_spoke_table(
+      std::vector<double>({1, 2, 3, 4}), std::vector<double>({1, 2, 3, 4}),
+      std::vector<double>({1, 2, 3, 4}), std::vector<double>({1, 2, 3, 4}));
+  perception_db.update_detection_table(std::vector<double>({1, 2, 3, 4}),
+                                       std::vector<double>({1, 2, 3, 4}),
+                                       std::vector<double>({1, 2, 3, 4}));
+  perception_db.update_trackingtarget_table<20>(
+      20,                                    // spoke_state
+      Eigen::Matrix<int, 20, 1>::Zero(),     // targets_state
+      Eigen::Matrix<int, 20, 1>::Zero(),     // targets_intention
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_x
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_y
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_square_radius
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_vx
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_vy
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_CPA_x
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_CPA_y
+      Eigen::Matrix<double, 20, 1>::Zero()   // targets_TCPA
+  );
 
   LOG(INFO) << "Shutting down.";
 }

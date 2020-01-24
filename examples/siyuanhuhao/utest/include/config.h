@@ -13,8 +13,8 @@
 
 #include "StateMonitor.h"
 #include "common/communication/include/tcpserver.h"
-#include "common/fileIO/include/database.h"
 #include "common/fileIO/include/jsonparse.h"
+#include "common/fileIO/recorder/include/datarecorder.h"
 #include "common/logging/include/easylogging++.h"
 #include "common/timer/include/timecounter.h"
 #include "modules/controller/include/controller.h"
