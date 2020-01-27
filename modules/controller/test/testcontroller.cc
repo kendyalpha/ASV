@@ -36,7 +36,15 @@ void test_multiplecontroller() {
       std::count(index_thrusters.begin(), index_thrusters.end(), 4);
 
   thrustallocationdata _thrustallocationdata{
-      num_tunnel, num_azimuth, num_mainrudder, num_twinfixed, index_thrusters};
+      50,              // Q_surge
+      50,              // Q_sway
+      100,             // Q_yaw
+      num_tunnel,      // num_tunnel
+      num_azimuth,     // num_azimuth
+      num_mainrudder,  // num_mainrudder
+      num_twinfixed,   // num_twinfixed
+      index_thrusters  // index_thrusters
+  };
 
   std::vector<tunnelthrusterdata> v_tunnelthrusterdata;
   v_tunnelthrusterdata.reserve(num_tunnel);

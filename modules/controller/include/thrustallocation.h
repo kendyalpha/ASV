@@ -49,7 +49,10 @@ class thrustallocation {
       const std::vector<azimuththrusterdata> &_v_azimuththrusterdata,
       const std::vector<ruddermaindata> &_v_ruddermaindata,
       const std::vector<twinfixedthrusterdata> &_v_twinfixeddata)
-      : num_tunnel(_thrustallocationdata.num_tunnel),
+      : Q_surge(_thrustallocationdata.Q_surge),
+        Q_sway(_thrustallocationdata.Q_sway),
+        Q_yaw(_thrustallocationdata.Q_yaw),
+        num_tunnel(_thrustallocationdata.num_tunnel),
         num_azimuth(_thrustallocationdata.num_azimuth),
         num_mainrudder(_thrustallocationdata.num_mainrudder),
         num_twinfixed(_thrustallocationdata.num_twinfixed),
@@ -140,24 +143,28 @@ class thrustallocation {
     if constexpr (index_actuation == ACTUATION::FULLYACTUATED) {
       switch (_cm) {
         case CONTROLMODE::MANUAL:
-          Q(0, 0) = 600;
-          Q(1, 1) = 600;
-          Q(2, 2) = 1000;
+          Q(0, 0) = Q_surge;
+          Q(1, 1) = Q_sway;
+          Q(2, 2) = Q_yaw;
           break;
         case CONTROLMODE::HEADINGONLY:
-          Q(0, 0) = 100;
-          Q(1, 1) = 100;
-          Q(2, 2) = 2000;
+          // empirical value
+          Q(0, 0) = 0.2 * Q_surge;
+          Q(1, 1) = 0.2 * Q_sway;
+          Q(2, 2) = 2 * Q_yaw;
           break;
         case CONTROLMODE::MANEUVERING:
-          Q(0, 0) = 1000;
-          // Q(1, 1) = 0;  The penalty for sway error is zero
-          Q(2, 2) = 100;
+          Q(0, 0) = Q_surge;
+          Q(1, 1) = 0;  // The penalty for sway error is zero
+          Q(2, 2) = Q_yaw;
           break;
         case CONTROLMODE::DYNAMICPOSITION:
-          Q(0, 0) = 500;
-          Q(1, 1) = 500;
-          Q(2, 2) = 1000;
+          Q(0, 0) = Q_surge;
+          Q(1, 1) = Q_sway;
+          Q(2, 2) = Q_yaw;
+          // Q(0, 0) = 500;
+          // Q(1, 1) = 500;
+          // Q(2, 2) = 1000;
           break;
         default:
           break;
@@ -165,23 +172,25 @@ class thrustallocation {
     } else {  // underactuated
       switch (_cm) {
         case CONTROLMODE::MANUAL:
-          Q(0, 0) = 1000;
-          // Q(1, 1) = 0;  The penalty for sway error is zero
-          Q(2, 2) = 1000;
+          Q(0, 0) = Q_surge;
+          Q(1, 1) = 0;  // The penalty for sway error is zero
+          Q(2, 2) = Q_yaw;
           break;
         case CONTROLMODE::HEADINGONLY:
-          Q(0, 0) = 100;
-          // Q(1, 1) = 0;  The penalty for sway error is zero
-          Q(2, 2) = 2000;
+          Q(0, 0) = 0.2 * Q_surge;
+          Q(1, 1) = 0;  // The penalty for sway error is zero
+          Q(2, 2) = 2 * Q_yaw;
           break;
         case CONTROLMODE::MANEUVERING:
-          Q(0, 0) = 10;  // 取值与螺旋桨最大推力呈负相关
-          // Q(1, 1) = 0;  The penalty for sway error is zero
-          Q(2, 2) = 20;
-
-          // Q(0, 0) = 50;  // 取值与螺旋桨最大推力呈负相关
+          // Q(0, 0) = 10;  // 取值与螺旋桨最大推力呈负相关
           // // Q(1, 1) = 0;  The penalty for sway error is zero
-          // Q(2, 2) = 200;
+          // Q(2, 2) = 20;
+
+          // 取值与螺旋桨最大推力呈负相关
+          Q(0, 0) = Q_surge;
+          Q(1, 1) = 0;  // The penalty for sway error is zero
+          Q(2, 2) = Q_yaw;
+
           break;
         default:
           break;
@@ -213,6 +222,10 @@ class thrustallocation {
   Eigen::Matrix<double, 2 * m + n, 1> getresults() const { return results; }
 
  private:
+  const double Q_surge;
+  const double Q_sway;
+  const double Q_yaw;
+
   const int num_tunnel;
   const int num_azimuth;
   const int num_mainrudder;

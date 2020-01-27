@@ -35,7 +35,15 @@ void testonestepthrustallocation() {
       std::count(index_thrusters.begin(), index_thrusters.end(), 4);
 
   thrustallocationdata _thrustallocationdata{
-      num_tunnel, num_azimuth, num_mainrudder, num_twinfixed, index_thrusters};
+      500,             // Q_surge
+      500,             // Q_sway
+      1000,            // Q_yaw
+      num_tunnel,      // num_tunnel
+      num_azimuth,     // num_azimuth
+      num_mainrudder,  // num_mainrudder
+      num_twinfixed,   // num_twinfixed
+      index_thrusters  // index_thrusters
+  };
 
   std::vector<tunnelthrusterdata> v_tunnelthrusterdata;
   v_tunnelthrusterdata.reserve(num_tunnel);
@@ -161,7 +169,15 @@ void test_multiplethrusterallocation() {
       std::count(index_thrusters.begin(), index_thrusters.end(), 4);
 
   thrustallocationdata _thrustallocationdata{
-      num_tunnel, num_azimuth, num_mainrudder, num_twinfixed, index_thrusters};
+      500,             // Q_surge
+      500,             // Q_sway
+      1000,            // Q_yaw
+      num_tunnel,      // num_tunnel
+      num_azimuth,     // num_azimuth
+      num_mainrudder,  // num_mainrudder
+      num_twinfixed,   // num_twinfixed
+      index_thrusters  // index_thrusters
+  };
 
   std::vector<tunnelthrusterdata> v_tunnelthrusterdata;
   v_tunnelthrusterdata.reserve(num_tunnel);
@@ -298,7 +314,15 @@ void test_twinfixed() {
       std::count(index_thrusters.begin(), index_thrusters.end(), 4);
 
   thrustallocationdata _thrustallocationdata{
-      num_tunnel, num_azimuth, num_mainrudder, num_twinfixed, index_thrusters};
+      10,              // Q_surge
+      10,              // Q_sway
+      20,              // Q_yaw
+      num_tunnel,      // num_tunnel
+      num_azimuth,     // num_azimuth
+      num_mainrudder,  // num_mainrudder
+      num_twinfixed,   // num_twinfixed
+      index_thrusters  // index_thrusters
+  };
 
   std::vector<tunnelthrusterdata> v_tunnelthrusterdata;
   std::vector<azimuththrusterdata> v_azimuththrusterdata;
@@ -424,7 +448,15 @@ void testrudder() {
       std::count(index_thrusters.begin(), index_thrusters.end(), 4);
 
   thrustallocationdata _thrustallocationdata{
-      num_tunnel, num_azimuth, num_mainrudder, num_twinfixed, index_thrusters};
+      500,             // Q_surge
+      500,             // Q_sway
+      1000,            // Q_yaw
+      num_tunnel,      // num_tunnel
+      num_azimuth,     // num_azimuth
+      num_mainrudder,  // num_mainrudder
+      num_twinfixed,   // num_twinfixed
+      index_thrusters  // index_thrusters
+  };
 
   std::vector<tunnelthrusterdata> v_tunnelthrusterdata;
   v_tunnelthrusterdata.reserve(num_tunnel);
@@ -564,7 +596,15 @@ void testbiling() {
       std::count(index_thrusters.begin(), index_thrusters.end(), 4);
 
   thrustallocationdata _thrustallocationdata{
-      num_tunnel, num_azimuth, num_mainrudder, num_twinfixed, index_thrusters};
+      500,             // Q_surge
+      500,             // Q_sway
+      1000,            // Q_yaw
+      num_tunnel,      // num_tunnel
+      num_azimuth,     // num_azimuth
+      num_mainrudder,  // num_mainrudder
+      num_twinfixed,   // num_twinfixed
+      index_thrusters  // index_thrusters
+  };
 
   std::vector<tunnelthrusterdata> v_tunnelthrusterdata;
   v_tunnelthrusterdata.reserve(num_tunnel);
@@ -746,7 +786,15 @@ void testoutboard() {
       std::count(index_thrusters.begin(), index_thrusters.end(), 4);
 
   thrustallocationdata _thrustallocationdata{
-      num_tunnel, num_azimuth, num_mainrudder, num_twinfixed, index_thrusters};
+      50,              // Q_surge
+      50,              // Q_sway
+      100,             // Q_yaw
+      num_tunnel,      // num_tunnel
+      num_azimuth,     // num_azimuth
+      num_mainrudder,  // num_mainrudder
+      num_twinfixed,   // num_twinfixed
+      index_thrusters  // index_thrusters
+  };
 
   std::vector<tunnelthrusterdata> v_tunnelthrusterdata;
   v_tunnelthrusterdata.reserve(num_tunnel);
@@ -847,11 +895,11 @@ int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
 
-  // test_multiplethrusterallocation();
+  test_multiplethrusterallocation();
   // testrudder();
   // test_twinfixed();
   // testbiling();
-  testoutboard();
+  // testoutboard();
 
   LOG(INFO) << "Shutting down.";
   return 0;

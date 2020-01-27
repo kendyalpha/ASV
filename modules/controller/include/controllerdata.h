@@ -84,6 +84,9 @@ struct trackerRTdata {
 };
 
 struct thrustallocationdata {
+  double Q_surge;      // penalty for error in Fx
+  double Q_sway;       // penalty for error in Fy
+  double Q_yaw;        // penalty for error in Mz
   int num_tunnel;      // # of tunnel thruster
   int num_azimuth;     // # of azimuth thruster
   int num_mainrudder;  // # of main thruster with rudder
