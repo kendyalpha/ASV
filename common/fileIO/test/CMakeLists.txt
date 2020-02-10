@@ -43,16 +43,6 @@ target_include_directories(testutility PRIVATE ${HEADER_DIRECTORY})
 add_executable (testjson testjson.cc)
 target_include_directories(testjson PRIVATE ${HEADER_DIRECTORY})
 
-
-set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../logging/src/easylogging++.cc"                            
-	"${CMAKE_CURRENT_SOURCE_DIR}/testsqlite.cc")
-add_executable (testsqlite ${SOURCE_FILES})
-target_include_directories(testsqlite PRIVATE ${HEADER_DIRECTORY})
-find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
-target_link_libraries(testsqlite PUBLIC ${SQLITE3_LIBRARY})
-target_link_libraries(testsqlite PUBLIC ${CMAKE_THREAD_LIBS_INIT})
-
 add_executable (testcsv testcsv.cc)
 target_include_directories(testcsv PRIVATE ${HEADER_DIRECTORY})
 

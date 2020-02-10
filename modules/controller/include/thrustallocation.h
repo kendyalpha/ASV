@@ -12,7 +12,6 @@
 
 // TODO:
 // 1. modify the qp solver (osqp)
-// 2. member function to change the loss parameter
 
 #ifndef _THRUSTALLOCATION_H_
 #define _THRUSTALLOCATION_H_

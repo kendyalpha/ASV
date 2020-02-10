@@ -134,6 +134,9 @@ class jsonparse {
   double simulator_sample_time = 0.1;
   // thrustallocationdata
   control::thrustallocationdata thrustallocationdata_input{
+      1,  // Q_surge
+      1,  // Q_sway
+      1,  // Q_yaw
       0,  // num_tunnel
       0,  // num_azimuth
       0,  // num_mainrudder
@@ -289,6 +292,15 @@ class jsonparse {
     _pidcontrollerdata_input.max_output =
         file["controller"]["yaw"]["max_output"].get<double>();
     pidcontrollerdata_input.push_back(_pidcontrollerdata_input);
+
+    // thrust allocation
+    thrustallocationdata_input.Q_surge =
+        file["thrustallocation"]["penality"]["surge"].get<double>();
+    thrustallocationdata_input.Q_sway =
+        file["thrustallocation"]["penality"]["sway"].get<double>();
+    thrustallocationdata_input.Q_yaw =
+        file["thrustallocation"]["penality"]["yaw"].get<double>();
+
     // thrusters
     for (int i = 0; i != m; ++i) {
       std::string str_thruster("thruster");
@@ -610,6 +622,11 @@ class jsonparse {
 
 template <int _m, int _n>
 std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
+  os << "penality of thrust allocation:\n";
+  os << "surge:" << _jp.thrustallocationdata_input.Q_surge << std::endl;
+  os << "sway:" << _jp.thrustallocationdata_input.Q_sway << std::endl;
+  os << "yaw:" << _jp.thrustallocationdata_input.Q_yaw << std::endl;
+
   os << "index of each thruster:\n";
   for (int i = 0; i != _m; ++i)
     os << _jp.thrustallocationdata_input.index_thrusters[i] << " ";

@@ -55,6 +55,13 @@
       "max_output": 5
     }
   },
+  "thrustallocation":{
+    "penality":{
+      "surge": 40,
+      "sway":  400,
+      "yaw": 4000
+    }
+  },
   "thruster1": {
     "type": "tunnel",
     "position": [3.6, 0],
