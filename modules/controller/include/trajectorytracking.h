@@ -1,7 +1,8 @@
 /*
 *******************************************************************************
-* lineofsight.h:
-* path following using line of sight algorithm
+* trajectorytracking.h:
+* The trajectory tracker: including path following using line of sight,
+* and path tracking using direct method
 * This header file can be read by C++ compilers
 *
 * by Hu.ZH(CrossOcean.ai)
@@ -21,6 +22,9 @@
 #include "common/logging/include/easylogging++.h"
 #include "common/math/miscellaneous/include/math_utils.h"
 #include "controllerdata.h"
+
+// TODO:
+// move the trajectory tracker into planner
 
 namespace ASV::control {
 
@@ -171,6 +175,7 @@ class trajectorytracking final : public lineofsight {
     return *this;
   }  // FollowCircularArc
 
+  // set the waypoints for LOS
   void set_grid_points(const Eigen::VectorXd &_grid_points_x,
                        const Eigen::VectorXd &_grid_points_y,
                        double _desired_speed, double _captureradius) {

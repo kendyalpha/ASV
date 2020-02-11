@@ -40,7 +40,7 @@ class threadloop {
       : _jsonparse("./../../properties/property.json"),
         _estimator(_estimatorRTdata, _jsonparse.getvessel(),
                    _jsonparse.getestimatordata()),
-        _sqlite(_jsonparse.getsqlitedata()),
+        _sqlite(_jsonparse.getsqlitepath()),
         db("./../../data/Mon Oct 21 09:57:25 2019.db") {
     intializethreadloop();
   }

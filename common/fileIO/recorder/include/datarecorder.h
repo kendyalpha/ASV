@@ -452,15 +452,15 @@ class marineradar_db : public dbinfo {
     }
   }  // create_table
 
-  template <int datasize>
   void update_table(double azimuth_deg, double sample_range,
+                    const std::size_t size_spokedata,
                     const uint8_t *spokedata) {
     try {
       std::string str = "INSERT INTO radar";
       str += insert_string;
       str += "VALUES(julianday('now'),? ,? ,? )";
 
-      std::vector<uint8_t> data(&spokedata[0], &spokedata[datasize]);
+      std::vector<uint8_t> data(&spokedata[0], &spokedata[size_spokedata]);
       db << str << azimuth_deg << sample_range << data;
 
     } catch (sqlite::sqlite_exception &e) {

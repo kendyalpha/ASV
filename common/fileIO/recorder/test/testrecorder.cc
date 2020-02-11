@@ -53,7 +53,7 @@ int main() {
       _value, _value, _value, 0xca,   0x01,   0x30,   0x45};
   ASV::common::marineradar_db marineradar_db(folderp);
   marineradar_db.create_table();
-  marineradar_db.update_table<size_array>(10, 20, spokedata);
+  marineradar_db.update_table(10, 20, size_array, spokedata);
 
   // estimator
   ASV::common::estimator_db estimator_db(folderp);

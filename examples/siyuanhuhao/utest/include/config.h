@@ -46,6 +46,7 @@ constexpr int dim_controlspace = 3;
 constexpr USEKALMAN indicator_kalman = USEKALMAN::KALMANOFF;
 constexpr control::ACTUATION indicator_actuation =
     control::ACTUATION::UNDERACTUATED;
+constexpr int max_num_targets = 20;
 
 }  // namespace ASV
 

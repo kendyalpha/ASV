@@ -60,7 +60,7 @@ class jsonparse {
   auto getTargetTrackingdata() const noexcept { return TrackingTarget_Data; }
   auto getClusteringdata() const noexcept { return Clustering_Data; }
 
-  std::string getsqlitedata() const noexcept { return dbpath; }
+  std::string getsqlitepath() const noexcept { return dbpath; }
   std::string getgpsport() const noexcept { return gps_port; }
   std::string getguiport() const noexcept { return gui_port; }
   std::string getremotecontrolport() const noexcept { return rc_port; }
@@ -531,7 +531,7 @@ class jsonparse {
     std::string utctime = std::asctime(std::localtime(&result));
     utctime.pop_back();
     dbpath = file["project_directory"].get<std::string>() +
-             file["dbpath"].get<std::string>() + utctime + ".db";
+             file["dbpath"].get<std::string>() + utctime + "/";
 
   }  // parsesqlitedata
 

@@ -19,10 +19,7 @@ namespace ASV {
 class threadloop : public StateMonitor {
  public:
   threadloop()
-      : StateMonitor(),
-        _jsonparse("./../../properties/property.json"),
-        _sqlite(_jsonparse.getsqlitedata()) {
-    _sqlite.initializetables();
+      : StateMonitor(), _jsonparse("./../../properties/property.json") {
     // // write prettified JSON to another file
     // std::ofstream o("pretty.json");
     // o << std::setw(4) << j << std::endl;
@@ -187,20 +184,27 @@ class threadloop : public StateMonitor {
       Eigen::VectorXd::Zero(2)                      // WY
   };
 
-  // real time sourroundings
-  perception::TargetTrackerRTdata<> TargetTracker_RTdata{
-      perception::SPOKESTATE::OUTSIDE_ALARM_ZONE,  // spoke_state
-      Eigen::Matrix<int, 20, 1>::Zero(),           // targets_state
-      Eigen::Matrix<int, 20, 1>::Zero(),           // targets_intention
-      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_x
-      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_y
-      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_square_radius
-      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_vx
-      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_vy
-      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_CPA_x
-      Eigen::Matrix<double, 20, 1>::Zero(),        // targets_CPA_y
-      Eigen::Matrix<double, 20, 1>::Zero()         // targets_TCPA
+  // real time data of target tracker
+  perception::TargetTrackerRTdata<max_num_targets> TargetTracker_RTdata{
+      perception::SPOKESTATE::OUTSIDE_ALARM_ZONE,         // spoke_state
+      Eigen::Matrix<int, max_num_targets, 1>::Zero(),     // targets_state
+      Eigen::Matrix<int, max_num_targets, 1>::Zero(),     // targets_intention
+      Eigen::Matrix<double, max_num_targets, 1>::Zero(),  // targets_x
+      Eigen::Matrix<double, max_num_targets, 1>::Zero(),  // targets_y
+      Eigen::Matrix<double, max_num_targets,
+                    1>::Zero(),  // targets_square_radius
+      Eigen::Matrix<double, max_num_targets, 1>::Zero(),  // targets_vx
+      Eigen::Matrix<double, max_num_targets, 1>::Zero(),  // targets_vy
+      Eigen::Matrix<double, max_num_targets, 1>::Zero(),  // targets_CPA_x
+      Eigen::Matrix<double, max_num_targets, 1>::Zero(),  // targets_CPA_y
+      Eigen::Matrix<double, max_num_targets, 1>::Zero()   // targets_TCPA
   };
+
+  // real time SpokeProcess data
+  perception::SpokeProcessRTdata SpokeProcess_RTdata;
+
+  // real time radar detected data
+  perception::TargetDetectionRTdata TargetDetection_RTdata;
 
   // real time data from marine radar
   messages::MarineRadarRTdata MarineRadar_RTdata{
@@ -216,8 +220,6 @@ class threadloop : public StateMonitor {
   /********************* Modules  *********************/
   // json
   common::jsonparse<num_thruster, dim_controlspace> _jsonparse;
-  // sqlite
-  common::database<num_thruster, dim_controlspace> _sqlite;
 
   //##################### target tracking ########################//
   void target_tracking_loop() {
@@ -261,6 +263,9 @@ class threadloop : public StateMonitor {
                                 estimator_RTdata.radar_state(4),
                                 estimator_RTdata.radar_state(5))
                   .getTargetTrackerRTdata();
+
+          SpokeProcess_RTdata = Target_Tracking.getSpokeProcessRTdata();
+          TargetDetection_RTdata = Target_Tracking.getTargetDetectionRTdata();
           break;
         }
         default:
@@ -300,8 +305,6 @@ class threadloop : public StateMonitor {
         RoutePlanner_RTdata = Route_Planner.setCruiseSpeed(1)
                                   .setWaypoints(W_long, W_lat)
                                   .getRoutePlannerRTdata();
-
-        _sqlite.update_routeplanner_table(RoutePlanner_RTdata);
       }
 
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -349,7 +352,8 @@ class threadloop : public StateMonitor {
                                      estimator_RTdata.Marine_state(2),
                                      estimator_RTdata.Marine_state(3),
                                      estimator_RTdata.Marine_state(4),
-                                     estimator_RTdata.Marine_state(5), 2)
+                                     estimator_RTdata.Marine_state(5),
+                                     RoutePlanner_RTdata.speed)
                   .getnextcartesianstate();
 
           std::tie(Planning_Marine_state.x, Planning_Marine_state.y,
@@ -376,7 +380,8 @@ class threadloop : public StateMonitor {
                                      estimator_RTdata.Marine_state(2),
                                      estimator_RTdata.Marine_state(3),
                                      estimator_RTdata.Marine_state(4),
-                                     estimator_RTdata.Marine_state(5), 2)
+                                     estimator_RTdata.Marine_state(5),
+                                     RoutePlanner_RTdata.speed)
                   .getnextcartesianstate();
 
           std::tie(Planning_Marine_state.x, Planning_Marine_state.y,
@@ -401,7 +406,8 @@ class threadloop : public StateMonitor {
                                      estimator_RTdata.Marine_state(2),
                                      estimator_RTdata.Marine_state(3),
                                      estimator_RTdata.Marine_state(4),
-                                     estimator_RTdata.Marine_state(5), 2)
+                                     estimator_RTdata.Marine_state(5),
+                                     RoutePlanner_RTdata.speed)
                   .getnextcartesianstate();
 
           std::tie(Planning_Marine_state.x, Planning_Marine_state.y,
@@ -428,7 +434,8 @@ class threadloop : public StateMonitor {
                                      estimator_RTdata.Marine_state(2),
                                      estimator_RTdata.Marine_state(3),
                                      estimator_RTdata.Marine_state(4),
-                                     estimator_RTdata.Marine_state(5), 2)
+                                     estimator_RTdata.Marine_state(5),
+                                     RoutePlanner_RTdata.speed)
                   .getnextcartesianstate();
 
           std::tie(Planning_Marine_state.x, Planning_Marine_state.y,
@@ -761,19 +768,78 @@ class threadloop : public StateMonitor {
 
   // loop to save real time data using sqlite3 and modern_sqlite3_cpp_wrapper
   void sqlloop() {
+    std::string sqlpath = _jsonparse.getsqlitepath();
+    common::gps_db _gps_db(sqlpath);
+    common::stm32_db _stm32_db(sqlpath);
+    common::marineradar_db _marineradar_db(sqlpath);
+    common::estimator_db _estimator_db(sqlpath);
+    common::planner_db _planner_db(sqlpath);
+    common::controller_db _controller_db(sqlpath);
+    common::perception_db _perception_db(sqlpath);
+
+    _gps_db.create_table();
+    _stm32_db.create_table();
+    _marineradar_db.create_table();
+    _estimator_db.create_table();
+    _planner_db.create_table();
+    _controller_db.create_table();
+    _perception_db.create_table();
+
     while (1) {
       switch (testmode) {
         case common::TESTMODE::SIMULATION_DP:
         case common::TESTMODE::SIMULATION_LOS:
         case common::TESTMODE::SIMULATION_FRENET: {
           // simulation
-          _sqlite.update_estimator_table(estimator_RTdata);
-          _sqlite.update_controller_table(controller_RTdata, tracker_RTdata);
+          _estimator_db.update_measurement_table(
+              estimator_RTdata.Measurement(0), estimator_RTdata.Measurement(1),
+              estimator_RTdata.Measurement(2), estimator_RTdata.Measurement(3),
+              estimator_RTdata.Measurement(4), estimator_RTdata.Measurement(5));
+          _estimator_db.update_state_table(
+              estimator_RTdata.State(0), estimator_RTdata.State(1),
+              estimator_RTdata.State(2), estimator_RTdata.State(3),
+              estimator_RTdata.State(4), estimator_RTdata.State(5));
+          _estimator_db.update_error_table(
+              estimator_RTdata.p_error(0), estimator_RTdata.p_error(1),
+              estimator_RTdata.p_error(2), estimator_RTdata.v_error(0),
+              estimator_RTdata.v_error(1), estimator_RTdata.v_error(2));
+
+          _controller_db.update_setpoint_table(
+              tracker_RTdata.setpoint(0), tracker_RTdata.setpoint(1),
+              tracker_RTdata.setpoint(2), tracker_RTdata.v_setpoint(0),
+              tracker_RTdata.v_setpoint(1), tracker_RTdata.v_setpoint(2));
+          _controller_db.update_TA_table<num_thruster>(
+              controller_RTdata.tau(0), controller_RTdata.tau(1),
+              controller_RTdata.tau(2), controller_RTdata.BalphaU(0),
+              controller_RTdata.BalphaU(1), controller_RTdata.BalphaU(2),
+              controller_RTdata.command_alpha_deg,
+              controller_RTdata.command_rotation);
           break;
         }
         case common::TESTMODE::SIMULATION_AVOIDANCE: {
-          _sqlite.update_estimator_table(estimator_RTdata);
-          _sqlite.update_controller_table(controller_RTdata, tracker_RTdata);
+          _estimator_db.update_measurement_table(
+              estimator_RTdata.Measurement(0), estimator_RTdata.Measurement(1),
+              estimator_RTdata.Measurement(2), estimator_RTdata.Measurement(3),
+              estimator_RTdata.Measurement(4), estimator_RTdata.Measurement(5));
+          _estimator_db.update_state_table(
+              estimator_RTdata.State(0), estimator_RTdata.State(1),
+              estimator_RTdata.State(2), estimator_RTdata.State(3),
+              estimator_RTdata.State(4), estimator_RTdata.State(5));
+          _estimator_db.update_error_table(
+              estimator_RTdata.p_error(0), estimator_RTdata.p_error(1),
+              estimator_RTdata.p_error(2), estimator_RTdata.v_error(0),
+              estimator_RTdata.v_error(1), estimator_RTdata.v_error(2));
+
+          _controller_db.update_setpoint_table(
+              tracker_RTdata.setpoint(0), tracker_RTdata.setpoint(1),
+              tracker_RTdata.setpoint(2), tracker_RTdata.v_setpoint(0),
+              tracker_RTdata.v_setpoint(1), tracker_RTdata.v_setpoint(2));
+          _controller_db.update_TA_table<num_thruster>(
+              controller_RTdata.tau(0), controller_RTdata.tau(1),
+              controller_RTdata.tau(2), controller_RTdata.BalphaU(0),
+              controller_RTdata.BalphaU(1), controller_RTdata.BalphaU(2),
+              controller_RTdata.command_alpha_deg,
+              controller_RTdata.command_rotation);
           // _sqlite.update_surroundings_table(SpokeProcess_RTdata);
           break;
         }
@@ -781,19 +847,120 @@ class threadloop : public StateMonitor {
         case common::TESTMODE::EXPERIMENT_LOS:
         case common::TESTMODE::EXPERIMENT_FRENET: {
           // experiment
-          _sqlite.update_gps_table(gps_data);
-          _sqlite.update_stm32_table(stm32_data);
-          _sqlite.update_estimator_table(estimator_RTdata);
-          _sqlite.update_controller_table(controller_RTdata, tracker_RTdata);
+
+          _gps_db.update_table(gps_data.UTC, gps_data.latitude,
+                               gps_data.longitude, gps_data.heading,
+                               gps_data.pitch, gps_data.roll, gps_data.altitude,
+                               gps_data.Ve, gps_data.Vn, gps_data.roti,
+                               gps_data.status, gps_data.UTM_x, gps_data.UTM_y,
+                               gps_data.UTM_zone);
+          _stm32_db.update_table(
+              static_cast<int>(stm32_data.linkstatus),
+              static_cast<int>(stm32_data.feedback_stm32status),
+              stm32_data.command_u1, stm32_data.command_u2,
+              stm32_data.feedback_u1, stm32_data.feedback_u2,
+              stm32_data.feedback_pwm1, stm32_data.feedback_pwm2,
+              stm32_data.RC_X, stm32_data.RC_Y, stm32_data.RC_Mz,
+              stm32_data.voltage_b1, stm32_data.voltage_b2,
+              stm32_data.voltage_b3);
+
+          _estimator_db.update_measurement_table(
+              estimator_RTdata.Measurement(0), estimator_RTdata.Measurement(1),
+              estimator_RTdata.Measurement(2), estimator_RTdata.Measurement(3),
+              estimator_RTdata.Measurement(4), estimator_RTdata.Measurement(5));
+          _estimator_db.update_state_table(
+              estimator_RTdata.State(0), estimator_RTdata.State(1),
+              estimator_RTdata.State(2), estimator_RTdata.State(3),
+              estimator_RTdata.State(4), estimator_RTdata.State(5));
+          _estimator_db.update_error_table(
+              estimator_RTdata.p_error(0), estimator_RTdata.p_error(1),
+              estimator_RTdata.p_error(2), estimator_RTdata.v_error(0),
+              estimator_RTdata.v_error(1), estimator_RTdata.v_error(2));
+
+          _controller_db.update_setpoint_table(
+              tracker_RTdata.setpoint(0), tracker_RTdata.setpoint(1),
+              tracker_RTdata.setpoint(2), tracker_RTdata.v_setpoint(0),
+              tracker_RTdata.v_setpoint(1), tracker_RTdata.v_setpoint(2));
+          _controller_db.update_TA_table<num_thruster>(
+              controller_RTdata.tau(0), controller_RTdata.tau(1),
+              controller_RTdata.tau(2), controller_RTdata.BalphaU(0),
+              controller_RTdata.BalphaU(1), controller_RTdata.BalphaU(2),
+              controller_RTdata.command_alpha_deg,
+              controller_RTdata.command_rotation);
+
+          _planner_db.update_latticeplanner_table(
+              Planning_Marine_state.x, Planning_Marine_state.y,
+              Planning_Marine_state.theta, Planning_Marine_state.kappa,
+              Planning_Marine_state.speed, Planning_Marine_state.dspeed);
 
           break;
         }
         case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
-          _sqlite.update_gps_table(gps_data);
-          _sqlite.update_stm32_table(stm32_data);
-          _sqlite.update_estimator_table(estimator_RTdata);
-          _sqlite.update_controller_table(controller_RTdata, tracker_RTdata);
-          // _sqlite.update_surroundings_table(SpokeProcess_RTdata);
+          _gps_db.update_table(gps_data.UTC, gps_data.latitude,
+                               gps_data.longitude, gps_data.heading,
+                               gps_data.pitch, gps_data.roll, gps_data.altitude,
+                               gps_data.Ve, gps_data.Vn, gps_data.roti,
+                               gps_data.status, gps_data.UTM_x, gps_data.UTM_y,
+                               gps_data.UTM_zone);
+          _stm32_db.update_table(
+              static_cast<int>(stm32_data.linkstatus),
+              static_cast<int>(stm32_data.feedback_stm32status),
+              stm32_data.command_u1, stm32_data.command_u2,
+              stm32_data.feedback_u1, stm32_data.feedback_u2,
+              stm32_data.feedback_pwm1, stm32_data.feedback_pwm2,
+              stm32_data.RC_X, stm32_data.RC_Y, stm32_data.RC_Mz,
+              stm32_data.voltage_b1, stm32_data.voltage_b2,
+              stm32_data.voltage_b3);
+
+          _estimator_db.update_measurement_table(
+              estimator_RTdata.Measurement(0), estimator_RTdata.Measurement(1),
+              estimator_RTdata.Measurement(2), estimator_RTdata.Measurement(3),
+              estimator_RTdata.Measurement(4), estimator_RTdata.Measurement(5));
+          _estimator_db.update_state_table(
+              estimator_RTdata.State(0), estimator_RTdata.State(1),
+              estimator_RTdata.State(2), estimator_RTdata.State(3),
+              estimator_RTdata.State(4), estimator_RTdata.State(5));
+          _estimator_db.update_error_table(
+              estimator_RTdata.p_error(0), estimator_RTdata.p_error(1),
+              estimator_RTdata.p_error(2), estimator_RTdata.v_error(0),
+              estimator_RTdata.v_error(1), estimator_RTdata.v_error(2));
+
+          _controller_db.update_setpoint_table(
+              tracker_RTdata.setpoint(0), tracker_RTdata.setpoint(1),
+              tracker_RTdata.setpoint(2), tracker_RTdata.v_setpoint(0),
+              tracker_RTdata.v_setpoint(1), tracker_RTdata.v_setpoint(2));
+          _controller_db.update_TA_table<num_thruster>(
+              controller_RTdata.tau(0), controller_RTdata.tau(1),
+              controller_RTdata.tau(2), controller_RTdata.BalphaU(0),
+              controller_RTdata.BalphaU(1), controller_RTdata.BalphaU(2),
+              controller_RTdata.command_alpha_deg,
+              controller_RTdata.command_rotation);
+
+          std::size_t size_spokedata = sizeof(MarineRadar_RTdata.spokedata) /
+                                       sizeof(MarineRadar_RTdata.spokedata[0]);
+          _marineradar_db.update_table(MarineRadar_RTdata.spoke_azimuth_deg,
+                                       MarineRadar_RTdata.spoke_samplerange_m,
+                                       size_spokedata,
+                                       MarineRadar_RTdata.spokedata);
+
+          _perception_db.update_spoke_table(
+              SpokeProcess_RTdata.surroundings_bearing_rad,
+              SpokeProcess_RTdata.surroundings_range_m,
+              SpokeProcess_RTdata.surroundings_x_m,
+              SpokeProcess_RTdata.surroundings_y_m);
+          _perception_db.update_detection_table(
+              TargetDetection_RTdata.target_x, TargetDetection_RTdata.target_y,
+              TargetDetection_RTdata.target_square_radius);
+          _perception_db.update_trackingtarget_table<max_num_targets>(
+              static_cast<int>(TargetTracker_RTdata.spoke_state),
+              TargetTracker_RTdata.targets_state,
+              TargetTracker_RTdata.targets_intention,
+              TargetTracker_RTdata.targets_x, TargetTracker_RTdata.targets_y,
+              TargetTracker_RTdata.targets_square_radius,
+              TargetTracker_RTdata.targets_vx, TargetTracker_RTdata.targets_vy,
+              TargetTracker_RTdata.targets_CPA_x,
+              TargetTracker_RTdata.targets_CPA_y,
+              TargetTracker_RTdata.targets_TCPA);
 
           break;
         }

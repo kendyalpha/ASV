@@ -19,7 +19,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 find_package(Threads REQUIRED)
 
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../../../common/logging/src/easylogging++.cc")  
+	"${PROJECT_SOURCE_DIR}/../../../../../common/logging/src/easylogging++.cc")  
 
 # 指定生成目标
 add_executable (testwind testwind.cc)
