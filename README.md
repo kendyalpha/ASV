@@ -30,3 +30,11 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 5. Message broker
 6. Unit test framework (boost.test)
 7. export shared library
+
+
+近期:
+1. 完成每种测试的后处理程序
+2. 航海雷达参数 json
+3. database细节
+4. Frenet planner 细节(测试加速度以及限制条件对结果的影响)
+5. 论文中两张图
