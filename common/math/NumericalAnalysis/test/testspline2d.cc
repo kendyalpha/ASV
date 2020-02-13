@@ -9,7 +9,7 @@
 */
 #include <cstdlib>
 #include "../include/spline.h"
-#include "common/fileIO/include/utilityio.h"
+#include "common/plotting/include/gnuplot-iostream.h"
 
 using namespace ASV;
 
@@ -65,19 +65,60 @@ int main() {
     std::cout << dtheta / ds << std::endl;
   }
 
-  common::write2csvfile("../data/x.csv", X);
-  common::write2csvfile("../data/y.csv", Y);
-  common::write2csvfile("../data/s.csv", common::convertstdvector2EigenMat(
-                                             arclength, arclength.size(), 1));
-  common::write2csvfile("../data/rx.csv",
-                        common::convertstdvector2EigenMat(rx, rx.size(), 1));
-  common::write2csvfile("../data/ry.csv",
-                        common::convertstdvector2EigenMat(ry, ry.size(), 1));
-  common::write2csvfile("../data/yaw.csv", common::convertstdvector2EigenMat(
-                                               ryaw, ryaw.size(), 1));
-  common::write2csvfile("../data/k.csv",
-                        common::convertstdvector2EigenMat(rk, rk.size(), 1));
-  common::write2csvfile("../data/dk.csv",
-                        common::convertstdvector2EigenMat(rdk, rdk.size(), 1));
+  Gnuplot gp;
+
+  std::vector<std::pair<double, double> > xy_pts_A;
+  std::vector<std::pair<double, double> > xy_pts_B;
+
+  gp << "set multiplot layout 2, 2 \n";
+  gp << "set title 'Polynomial interpolation using spline' \n";
+  gp << "plot"
+        " '-' with points ps 2 lw 2 title 'waypoints',"
+        " '-' with lines lw 2 title 'interpolation'\n";
+  for (int i = 0; i != X.rows(); ++i) {
+    xy_pts_A.push_back(std::make_pair(X(i), Y(i)));
+  }
+
+  for (std::size_t i = 0; i != rx.size(); ++i) {
+    xy_pts_B.push_back(std::make_pair(rx[i], ry[i]));
+  }
+  gp.send1d(xy_pts_A);
+  gp.send1d(xy_pts_B);
+  // gp << "set xrange [0:20] \n";
+  // gp << "set yrange [0:20] \n";
+
+  gp << "set title 'cuvature' \n";
+  gp << "set xrange [0:40] \n";
+
+  gp << "plot"
+        " '-' with lines lw 2\n";
+  xy_pts_A.clear();
+  for (std::size_t i = 0; i != arclength.size(); ++i) {
+    xy_pts_A.push_back(std::make_pair(arclength[i], rk[i]));
+  }
+  gp.send1d(xy_pts_A);
+
+  gp << "set title 'yaw' \n";
+  gp << "set xrange [0:40] \n";
+  gp << "plot"
+        " '-' with lines lw 2\n";
+  xy_pts_A.clear();
+  for (std::size_t i = 0; i != arclength.size(); ++i) {
+    xy_pts_A.push_back(std::make_pair(arclength[i], ryaw[i]));
+  }
+  gp.send1d(xy_pts_A);
+
+  gp << "set title 'dk' \n";
+  gp << "set xrange [0:40] \n";
+  gp << "plot"
+        " '-' with lines lw 2\n";
+  xy_pts_A.clear();
+  for (std::size_t i = 0; i != arclength.size(); ++i) {
+    xy_pts_A.push_back(std::make_pair(arclength[i], rdk[i]));
+  }
+  gp.send1d(xy_pts_A);
+
+  gp << "unset multiplot\n";
+
   return EXIT_SUCCESS;
 }

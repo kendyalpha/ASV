@@ -27,11 +27,21 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} "/usr/lib")
+
+set(RARE_LIBRARIES ${RARE_LIBRARIES} 
+	"boost_system"
+	"boost_filesystem"
+	"boost_iostreams"
+	"util"
+	)
 # 指定生成目标
 
 add_executable (testspline testspline.cc)
 target_include_directories(testspline PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testspline ${RARE_LIBRARIES})
 
 add_executable (testspline2d testspline2d.cc)
 target_include_directories(testspline2d PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testspline2d ${RARE_LIBRARIES})
+
 

@@ -9,8 +9,10 @@
 */
 #include <cstdlib>
 #include "../include/spline.h"
-#include "common/fileIO/include/utilityio.h"
+#include "common/plotting/include/gnuplot-iostream.h"
+
 using namespace ASV;
+
 int main() {
   Eigen::VectorXd X(5);
   Eigen::VectorXd Y(5);
@@ -27,12 +29,29 @@ int main() {
     y[j] = s(_t);
   }
 
-  common::write2csvfile("../data/x.csv", X);
-  common::write2csvfile("../data/y.csv", Y);
-  common::write2csvfile("../data/spline_x.csv",
-                        common::convertstdvector2EigenMat(x, 300, 1));
-  common::write2csvfile("../data/spline_y.csv",
-                        common::convertstdvector2EigenMat(y, 300, 1));
+  Gnuplot gp;
+
+  std::vector<std::pair<double, double> > xy_pts_A;
+  for (int i = 0; i != X.rows(); ++i) {
+    xy_pts_A.push_back(std::make_pair(X(i), Y(i)));
+  }
+
+  std::vector<std::pair<double, double> > xy_pts_B;
+  for (std::size_t i = 0; i != x.size(); ++i) {
+    xy_pts_B.push_back(std::make_pair(x[i], y[i]));
+  }
+
+  // gp << "set xrange [-2:2]\nset yrange [-2:2]\n";
+
+  gp << "set title 'spline interpolation'\n";
+  gp << "set xlabel 'X'\n";
+  gp << "set ylabel 'Y'\n";
+
+  gp << "plot"
+        " '-' with points ps 2 lw 2 title 'waypoints',"
+        " '-' with lines lw 2 title 'interpolation'\n";
+  gp.send1d(xy_pts_A);
+  gp.send1d(xy_pts_B);
 
   // Eigen::Matrix<double, 6, 1> a;
   // a << 1, 1, 1, 1, 1, 1;

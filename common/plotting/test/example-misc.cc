@@ -396,6 +396,95 @@ void demo_image() {
   pause_if_needed();
 }
 
+void demo_multiplots() {
+  // multiple plot in one graphs
+
+  Gnuplot gp;
+  gp << "reset\n";
+  gp << "set style function lines \n";
+  gp << "set size 1.0, 1.0 \n";
+  gp << "set origin 0.0, 0.0 \n";
+  gp << "set multiplot \n";
+  gp << "set size 0.5,0.5 \n";
+  gp << "set origin 0.0,0.5 \n";
+  gp << "set grid \n";
+  gp << "unset key\n ";
+  gp << "set angles radians\n ";
+  gp << "set samples 250\n ";
+
+  // Plot Magnitude Response
+  gp << "set title 'Second Order System Transfer Function - Magnitude'\n ";
+  gp << "mag(w) = -10*log10( (1-w**2)**2 + 4*(zeta*w)**2)\n";
+  gp << "set dummy w\n ";
+  gp << "set logscale x\n ";
+  gp << "set xlabel 'Frequency (w/wn)'\n ";
+  gp << "set ylabel 'Magnitude (dB)' offset 1,0\n ";
+  gp << "set label 1 'Damping =.1,.2,.3,.4,.5,.707,1.0,2.0' at .14,17 \n ";
+  gp << "set xrange [.1:10]\n ";
+  gp << "set yrange [-40:20]\n ";
+  gp << "plot zeta=.1,mag(w), zeta=.2,mag(w), zeta=.3,mag(w), "
+        "zeta=.4,mag(w), zeta=.5,mag(w), zeta=.707,mag(w), zeta=1.0,mag(w), "
+        "zeta=2.0,mag(w),-6\n ";
+  // Plot Phase Response
+  gp << "set size 0.5,0.5\n";
+  gp << "set origin 0.0,0.0\n";
+  gp << "set title 'Second Order System Transfer Function - Phase'\n";
+  gp << "set label 1 ''\n";
+  gp << "set ylabel ' Phase(deg) ' offset 1,0\n";
+  gp << "set ytics -180, 30, 0 \n";
+  gp << "set yrange [-180:0]\n";
+  gp << "tmp(w) = (-180/pi)*atan( 2*zeta*w/(1-w**2) )\n ";
+
+  // Fix for atan function wrap problem
+  gp << "tmp1(w)= w<1?tmp(w):(tmp(w)-180)\n";
+  gp << "phi(w)=zeta==1?(-2*(180/pi)*atan(w)):tmp1(w)\n";
+  gp << "plot zeta=.1,phi(w), zeta=.2,phi(w), zeta=.3,phi(w), zeta=.4,phi(w), "
+        "zeta=.5,phi(w),  zeta=.707,phi(w), zeta=1,phi(w), zeta=2.0,phi(w), "
+        "-90\n";
+
+  // Plot Step Response
+  gp << "set size 0.5,0.5 \n";
+  gp << "set origin 0.5,0.5 \n";
+  gp << "set dummy wnt \n";
+  gp << "unset logscale x\n ";
+  gp << "set title 'Second Order System - Unit Step Response' \n";
+  gp << "set ylabel ' Amplitude y(wnt) ' offset 1,0  \n";
+  gp << "set xlabel 'Normalized Time (wnt)' \n";
+  gp << "set xrange [0:20] \n";
+  gp << "set xtics 0,5,20 \n";
+  gp << "set yrange [0:2.0] \n";
+  gp << "set ytics 0, .5, 2.0 \n";
+  gp << "set mytics 5 \n";
+  gp << "set mxtics 10 \n";
+  gp << "wdwn(zeta)=sqrt(1-zeta**2) \n";
+  gp << "shift(zeta) = atan(wdwn(zeta)/zeta) \n";
+  gp << "alpha(zeta)=zeta>1?sqrt(zeta**2-1.0):0 \n";
+  gp << "tau1(zeta)=1/(zeta-alpha(zeta)) \n";
+  gp << "tau2(zeta)=1/(zeta+alpha(zeta)) \n";
+  gp << "c1(zeta)=(zeta + alpha(zeta))/(2*alpha(zeta)) \n";
+  gp << "c2(zeta)=c1(zeta)-1 \n";
+  gp << "y1(wnt)=zeta==1?1 - exp(-wnt)*(wnt + 1):0 \n";
+  gp << "y2(wnt)=zeta<1?(1 - (exp(-zeta*wnt)/wdwn(zeta))*sin(wdwn(zeta)*wnt + "
+        "shift(zeta))):y1(wnt) \n";
+  gp << "y(wnt)=zeta>1?1-c1(zeta)*exp(-wnt/tau1(zeta))+c2(zeta)*exp(-wnt/"
+        "tau2(zeta)):y2(wnt) \n";
+  gp << "plot zeta=.1,y(wnt), zeta=.2,y(wnt), zeta=.3,y(wnt), zeta=.4,y(wnt), "
+        "zeta=.5,y(wnt), zeta=.707,y(wnt), zeta=1,y(wnt), zeta=2,y(wnt)\n";
+
+  // Plot Impulse Response
+  gp << "set origin .5,0.\n";
+  gp << "set title 'Second Order System - Unit Impulse Response'\n";
+  gp << "y(wnt)=exp(-zeta*wnt) * sin(wdwn(zeta)*wnt) / wdwn(zeta)\n";
+  gp << "set yrange [-1. :1.]\n";
+  gp << "set ytics -1,.5,1.\n";
+  gp << "plot zeta=.1,y(wnt), zeta=.2,y(wnt), zeta=.3,y(wnt), "
+        "zeta=.4,y(wnt), zeta=.5,y(wnt), zeta=.707,y(wnt), zeta=1,y(wnt),  "
+        "zeta=2,y(wnt)\n";
+
+  gp << "unset multiplot\n";
+  pause_if_needed();
+}
+
 int main(int argc, char **argv) {
   std::map<std::string, void (*)(void)> demos;
 
@@ -412,6 +501,7 @@ int main(int argc, char **argv) {
   demos["nan"] = demo_NaN;
   demos["segments"] = demo_segments;
   demos["image"] = demo_image;
+  demos["multiplot"] = demo_multiplots;
 
   if (argc < 2) {
     printf("Usage: %s <demo_name>\n", argv[0]);
