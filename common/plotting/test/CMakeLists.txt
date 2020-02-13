@@ -15,7 +15,29 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 	"${PROJECT_SOURCE_DIR}/../include"
 	)
 
-add_executable(example-data-1d example-data-2d.cc)
-target_include_directories(example-data-1d PUBLIC ${HEADER_DIRECTORY})
-target_link_libraries(example-data-1d boost_system boost_filesystem boost_iostreams)
 
+
+set(RARE_LIBRARIES ${RARE_LIBRARIES} 
+	"boost_system"
+	"boost_filesystem"
+	"boost_iostreams"
+	"util"
+	)
+
+add_executable(example-data-1d example-data-1d.cc)
+target_include_directories(example-data-1d PUBLIC ${HEADER_DIRECTORY})
+target_link_libraries(example-data-1d ${RARE_LIBRARIES})
+
+add_executable(example-data-2d example-data-2d.cc)
+target_include_directories(example-data-2d PUBLIC ${HEADER_DIRECTORY})
+target_link_libraries(example-data-2d ${RARE_LIBRARIES})
+
+
+add_executable(example-interactive example-interactive.cc)
+target_include_directories(example-interactive PUBLIC ${HEADER_DIRECTORY})
+target_link_libraries(example-interactive ${RARE_LIBRARIES})
+
+
+add_executable(example-misc example-misc.cc)
+target_include_directories(example-misc PUBLIC ${HEADER_DIRECTORY})
+target_link_libraries(example-misc ${RARE_LIBRARIES})

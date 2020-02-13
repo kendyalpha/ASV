@@ -22,7 +22,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # thread库
-find_package(Boost COMPONENTS  unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 # 添加 include 子目录
 
