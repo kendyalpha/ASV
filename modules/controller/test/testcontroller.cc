@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 * testcontroller.cc:
-* unit test for thrust allocation
+* unit test for controller
 * This header file can be read by C++ compilers
 *
 * by Hu.ZH(CrossOcean.ai)

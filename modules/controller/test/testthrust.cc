@@ -10,6 +10,7 @@
 
 #include "../include/thrustallocation.h"
 #include "common/fileIO/include/utilityio.h"
+#include "common/plotting/include/gnuplot-iostream.h"
 
 using namespace ASV::control;
 using namespace ASV::common;

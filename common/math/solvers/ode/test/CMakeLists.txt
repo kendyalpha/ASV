@@ -36,11 +36,17 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 	"/usr/lib"
     )
 
-
+set(RARE_LIBRARIES ${RARE_LIBRARIES} 
+	"boost_system"
+	"boost_filesystem"
+	"boost_iostreams"
+	"util"
+	)
 # 指定生成目标
 
 add_executable (test_runge_kutta4 runge_kutta4.cc )
 target_include_directories(test_runge_kutta4 PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(test_runge_kutta4 ${RARE_LIBRARIES})
 
 
 add_executable (testintegrate integrate.cc )

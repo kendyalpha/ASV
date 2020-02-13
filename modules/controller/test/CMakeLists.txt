@@ -49,11 +49,19 @@ find_library(MOSEK_LIBRARY mosek64 HINTS ${LIBRARY_DIRECTORY})
 target_link_libraries(testmosek PUBLIC ${MOSEK_LIBRARY})
 
 
+
+set(RARE_LIBRARIES ${RARE_LIBRARIES} 
+	"boost_system"
+	"boost_filesystem"
+	"boost_iostreams"
+	"util"
+	)
 add_executable (testthrust testthrust.cc ${SOURCE_FILES})
 target_include_directories(testthrust PRIVATE ${HEADER_DIRECTORY})
 find_library(MOSEK_LIBRARY mosek64 HINTS ${LIBRARY_DIRECTORY})
 target_link_libraries(testthrust PUBLIC ${MOSEK_LIBRARY})
 target_link_libraries(testthrust PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(testthrust PUBLIC ${RARE_LIBRARIES})
 
 
 add_executable (testcontroller testcontroller.cc  ${SOURCE_FILES})

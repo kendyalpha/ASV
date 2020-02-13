@@ -20,7 +20,7 @@
 
 #include <iostream>
 #include "../include/odesolver.h"
-#include "common/fileIO/include/utilityio.h"
+#include "common/plotting/include/gnuplot-iostream.h"
 
 using namespace boost::numeric::odeint;
 
@@ -51,12 +51,19 @@ int main() {
       rk4;
 
   int total_step = 100;
-  Eigen::MatrixXd save_x(total_step, 2);
+  std::vector<std::pair<double, double> > xy_pts_A;
 
   for (int i = 0; i != total_step; ++i) {
     mysys.setT(1);
     rk4.do_step(mysys, x, 0.0, 0.1);
-    save_x.row(i) = x.transpose();
+    xy_pts_A.push_back(std::make_pair(i, x(1)));
   }
-  ASV::common::write2csvfile("../data/x.csv", save_x);
+
+  Gnuplot gp;
+  gp << "set title 'ODE'\n";
+  gp << "set xlabel 'sampling instant'\n";
+  gp << "set ylabel 'x'\n";
+  gp << "plot"
+        " '-' with lines lw 2\n";
+  gp.send1d(xy_pts_A);
 }
