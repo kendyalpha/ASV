@@ -15,6 +15,107 @@
 using namespace ASV::control;
 using namespace ASV::common;
 
+// illustrate the results using gnuplot
+void plotTAresults(const Eigen::MatrixXd &plot_u,
+                   const Eigen::MatrixXi &plot_rotation,
+                   const Eigen::MatrixXd &plot_alpha,
+                   const Eigen::MatrixXi &plot_alpha_deg,
+                   const Eigen::MatrixXd &plot_Balphau,
+                   const Eigen::MatrixXd &plot_tau) {
+  Gnuplot gp;
+  std::vector<std::pair<double, double> > xy_pts_A;
+  std::vector<std::pair<double, double> > xy_pts_B;
+
+  int m = plot_u.rows();  // # of thrusters
+  int totalstep = plot_u.cols();
+
+  // the first window: estimated and desired thrust
+  gp << "set term x11 0\n";
+  gp << "set multiplot layout 3, 1 title 'Comparision of estimated and desired "
+        "force' font ',14'\n";
+  std::vector<std::string> label_names = {"F_x(N)", "F_y(N)", "M_z(N*m)"};
+
+  for (int i = 0; i != 3; ++i) {
+    gp << "set xtics out\n";
+    gp << "set ytics out\n";
+    gp << "set ylabel '" << label_names[i] << "'\n";
+    gp << "plot"
+          " '-' with lines lt 1 lw 2 lc rgb 'violet' title 'estimated',"
+          " '-' with lines lt 2 lw 2 lc rgb 'black' title 'desired'\n";
+    xy_pts_A.clear();
+    xy_pts_B.clear();
+    for (int j = 0; j != totalstep; ++j) {
+      xy_pts_A.push_back(std::make_pair(j, plot_Balphau(i, j)));
+      xy_pts_B.push_back(std::make_pair(j, plot_tau(i, j)));
+    }
+    gp.send1d(xy_pts_A);
+    gp.send1d(xy_pts_B);
+  }
+  gp << "unset multiplot\n";
+
+  // the second window: rotation
+  gp << "set term x11 1\n";
+  gp << "set multiplot layout " << m << ", 1 title 'rotation' font ',14'\n";
+
+  for (int i = 0; i != m; ++i) {
+    gp << "set xtics out\n";
+    gp << "set ytics out\n";
+    gp << "set ylabel 'rpm" << i << "'\n";
+    gp << "plot"
+          " '-' with lines lt 1 lw 2 lc rgb 'black'\n";
+
+    xy_pts_A.clear();
+    for (int j = 0; j != totalstep; ++j) {
+      xy_pts_A.push_back(std::make_pair(j, plot_rotation(i, j)));
+    }
+    gp.send1d(xy_pts_A);
+  }
+
+  gp << "unset multiplot\n";
+
+  // the third window: u
+  gp << "set term x11 2\n";
+  gp << "set multiplot layout " << m << ", 1 title 'u' font ',14'\n";
+
+  for (int i = 0; i != m; ++i) {
+    gp << "set xtics out\n";
+    gp << "set ytics out\n";
+    gp << "set ylabel 'u" << i << "(N)'\n";
+    gp << "plot"
+          " '-' with lines lt 1 lw 2 lc rgb 'black'\n";
+
+    xy_pts_A.clear();
+    for (int j = 0; j != totalstep; ++j) {
+      xy_pts_A.push_back(std::make_pair(j, plot_u(i, j)));
+    }
+    gp.send1d(xy_pts_A);
+  }
+
+  gp << "unset multiplot\n";
+
+  // the third window: alpha
+  gp << "set term x11 3\n";
+  gp << "set multiplot layout " << m << ", 1 title 'alpha' font ',14'\n";
+
+  for (int i = 0; i != m; ++i) {
+    gp << "set xtics out\n";
+    gp << "set ytics out\n";
+    gp << "set ylabel 'alpha" << i << "(deg)'\n";
+    gp << "plot"
+          " '-' with lines lt 1 lw 2 lc rgb 'violet' title 'alpha',"
+          " '-' with lines lt 2 lw 2 lc rgb 'black' title 'alpha-deg'\n";
+    xy_pts_A.clear();
+    xy_pts_B.clear();
+    for (int j = 0; j != totalstep; ++j) {
+      xy_pts_A.push_back(std::make_pair(j, (180 / M_PI) * plot_alpha(i, j)));
+      xy_pts_B.push_back(std::make_pair(j, plot_alpha_deg(i, j)));
+    }
+    gp.send1d(xy_pts_A);
+    gp.send1d(xy_pts_B);
+  }
+  gp << "unset multiplot\n";
+}  // plotTAresults
+
 // test thrust allocation for 4 propellers (fully actuated)
 void testonestepthrustallocation() {
   const int m = 4;
@@ -172,7 +273,7 @@ void test_multiplethrusterallocation() {
   thrustallocationdata _thrustallocationdata{
       500,             // Q_surge
       500,             // Q_sway
-      1000,            // Q_yaw
+      500,             // Q_yaw
       num_tunnel,      // num_tunnel
       num_azimuth,     // num_azimuth
       num_mainrudder,  // num_mainrudder
@@ -277,20 +378,8 @@ void test_multiplethrusterallocation() {
     save_rotation.col(i) = _controllerRTdata.command_rotation;
   }
 
-  save_tau = save_tau.transpose().eval();
-  save_u = save_u.transpose().eval();
-  save_alpha = save_alpha.transpose().eval();
-  save_alpha_deg = save_alpha_deg.transpose().eval();
-  save_Balphau = save_Balphau.transpose().eval();
-  save_rotation = save_rotation.transpose().eval();
-  // save data to csv file
-  std::string _name("../data/");
-  write2csvfile(_name + "tau.csv", save_tau);
-  write2csvfile(_name + "u.csv", save_u);
-  write2csvfile(_name + "alpha.csv", save_alpha);
-  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  write2csvfile(_name + "Balpha.csv", save_Balphau);
-  write2csvfile(_name + "rotation.csv", save_rotation);
+  plotTAresults(save_u, save_rotation, save_alpha, save_alpha_deg, save_Balphau,
+                save_tau);
 }
 
 // test thrust allocation for twin-fixed propeller (underactuated)
@@ -412,20 +501,8 @@ void test_twinfixed() {
     save_rotation.col(i) = _controllerRTdata.command_rotation;
   }
 
-  save_tau = save_tau.transpose().eval();
-  save_u = save_u.transpose().eval();
-  save_alpha = save_alpha.transpose().eval();
-  save_alpha_deg = save_alpha_deg.transpose().eval();
-  save_Balphau = save_Balphau.transpose().eval();
-  save_rotation = save_rotation.transpose().eval();
-  // save data to csv file
-  std::string _name("../data/");
-  write2csvfile(_name + "tau.csv", save_tau);
-  write2csvfile(_name + "u.csv", save_u);
-  write2csvfile(_name + "alpha.csv", save_alpha);
-  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  write2csvfile(_name + "Balpha.csv", save_Balphau);
-  write2csvfile(_name + "rotation.csv", save_rotation);
+  plotTAresults(save_u, save_rotation, save_alpha, save_alpha_deg, save_Balphau,
+                save_tau);
 }
 
 void testrudder() {
@@ -560,20 +637,8 @@ void testrudder() {
     save_rotation.col(i) = _controllerRTdata.command_rotation;
   }
 
-  save_tau = save_tau.transpose().eval();
-  save_u = save_u.transpose().eval();
-  save_alpha = save_alpha.transpose().eval();
-  save_alpha_deg = save_alpha_deg.transpose().eval();
-  save_Balphau = save_Balphau.transpose().eval();
-  save_rotation = save_rotation.transpose().eval();
-  // save data to csv file
-  std::string _name("../data/");
-  write2csvfile(_name + "tau.csv", save_tau);
-  write2csvfile(_name + "u.csv", save_u);
-  write2csvfile(_name + "alpha.csv", save_alpha);
-  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  write2csvfile(_name + "Balpha.csv", save_Balphau);
-  write2csvfile(_name + "rotation.csv", save_rotation);
+  plotTAresults(save_u, save_rotation, save_alpha, save_alpha_deg, save_Balphau,
+                save_tau);
 }
 
 void testbiling() {
@@ -750,20 +815,8 @@ void testbiling() {
     save_rotation.col(i) = _controllerRTdata.command_rotation;
   }
 
-  save_tau = save_tau.transpose().eval();
-  save_u = save_u.transpose().eval();
-  save_alpha = save_alpha.transpose().eval();
-  save_alpha_deg = save_alpha_deg.transpose().eval();
-  save_Balphau = save_Balphau.transpose().eval();
-  save_rotation = save_rotation.transpose().eval();
-  // save data to csv file
-  std::string _name("../data/");
-  write2csvfile(_name + "tau.csv", save_tau);
-  write2csvfile(_name + "u.csv", save_u);
-  write2csvfile(_name + "alpha.csv", save_alpha);
-  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  write2csvfile(_name + "Balpha.csv", save_Balphau);
-  write2csvfile(_name + "rotation.csv", save_rotation);
+  plotTAresults(save_u, save_rotation, save_alpha, save_alpha_deg, save_Balphau,
+                save_tau);
 }
 
 void testoutboard() {
@@ -876,30 +929,18 @@ void testoutboard() {
     save_rotation.col(i) = _controllerRTdata.command_rotation;
   }
 
-  save_tau = save_tau.transpose().eval();
-  save_u = save_u.transpose().eval();
-  save_alpha = save_alpha.transpose().eval();
-  save_alpha_deg = save_alpha_deg.transpose().eval();
-  save_Balphau = save_Balphau.transpose().eval();
-  save_rotation = save_rotation.transpose().eval();
-  // save data to csv file
-  std::string _name("../data/");
-  write2csvfile(_name + "tau.csv", save_tau);
-  write2csvfile(_name + "u.csv", save_u);
-  write2csvfile(_name + "alpha.csv", save_alpha);
-  write2csvfile(_name + "alpha_deg.csv", save_alpha_deg);
-  write2csvfile(_name + "Balpha.csv", save_Balphau);
-  write2csvfile(_name + "rotation.csv", save_rotation);
+  plotTAresults(save_u, save_rotation, save_alpha, save_alpha_deg, save_Balphau,
+                save_tau);
 }
 
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
 
-  test_multiplethrusterallocation();
+  // test_multiplethrusterallocation();
   // testrudder();
   // test_twinfixed();
-  // testbiling();
+  testbiling();
   // testoutboard();
 
   LOG(INFO) << "Shutting down.";

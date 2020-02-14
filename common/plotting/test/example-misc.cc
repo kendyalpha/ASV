@@ -396,6 +396,37 @@ void demo_image() {
   pause_if_needed();
 }
 
+void demo_multiwindows() {
+  Gnuplot gp;
+
+  // the first window
+  gp << "set term x11 0\n";
+  gp << "set multiplot layout 3, 1 title 'Multiplot layout 3, 1' font ',14'\n";
+  gp << "set tmargin 2\n";
+  gp << "set title 'Plot 1'\n";
+  gp << "unset key\n";
+  gp << "plot sin(x)/x\n";
+
+  gp << "set title 'Plot 2'\n";
+  gp << "unset key\n";
+  gp << "plot log(x)\n";
+
+  gp << "set style histogram columns\n";
+  gp << "set style fill solid\n";
+  gp << "set key autotitle column\n";
+  gp << " set boxwidth 0.8\n";
+  gp << "set tics scale 0\n";
+  gp << "set title 'Plot 3'\n";
+  gp << "plot sin(x)\n";
+  gp << "unset multiplot\n";
+
+  // the second window
+  gp << "set term x11 1\n";
+  gp << "plot cos(x)\n";
+
+  pause_if_needed();
+}
+
 void demo_multiplots() {
   // multiple plot in one graphs
 
@@ -502,6 +533,7 @@ int main(int argc, char **argv) {
   demos["segments"] = demo_segments;
   demos["image"] = demo_image;
   demos["multiplot"] = demo_multiplots;
+  demos["multiwindows"] = demo_multiwindows;
 
   if (argc < 2) {
     printf("Usage: %s <demo_name>\n", argv[0]);
