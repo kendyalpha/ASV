@@ -40,9 +40,15 @@ set(SOURCE_FILES ${SOURCE_FILES}
 
 
 # 指定生成目标
-
+set(RARE_LIBRARIES ${RARE_LIBRARIES} 
+	"boost_system"
+	"boost_filesystem"
+	"boost_iostreams"
+	"util"
+	)
 add_executable (testFrenetTrajectoryGenerator testFrenetTrajectoryGenerator.cc ${SOURCE_FILES} )
 target_include_directories(testFrenetTrajectoryGenerator PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testFrenetTrajectoryGenerator PRIVATE ${RARE_LIBRARIES})
 
 add_executable (testtransform testtransform.cc ${SOURCE_FILES} )
 target_include_directories(testtransform PRIVATE ${HEADER_DIRECTORY})

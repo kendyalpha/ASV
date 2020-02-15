@@ -30,7 +30,7 @@ void plotTAresults(const Eigen::MatrixXd &plot_u,
   int totalstep = plot_u.cols();
 
   // the first window: estimated and desired thrust
-  gp << "set term x11 0\n";
+  gp << "set terminal x11 size 1000, 1200 0\n";
   gp << "set multiplot layout 3, 1 title 'Comparision of estimated and desired "
         "force' font ',14'\n";
   std::vector<std::string> label_names = {"F_x(N)", "F_y(N)", "M_z(N*m)"};

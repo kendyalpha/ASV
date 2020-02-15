@@ -40,8 +40,16 @@ set(SOURCE_FILES ${SOURCE_FILES}
 	"${PROJECT_SOURCE_DIR}/../../../common/logging/src/easylogging++.cc")    
 # 指定生成目标
 
+set(RARE_LIBRARIES ${RARE_LIBRARIES} 
+	"boost_system"
+	"boost_filesystem"
+	"boost_iostreams"
+	"util"
+	)
 add_executable (testkalman testkalman.cc)
 target_include_directories(testkalman PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testkalman ${RARE_LIBRARIES})
+
 
 add_executable (testestimator testestimator.cc)
 target_include_directories(testestimator PRIVATE ${HEADER_DIRECTORY})

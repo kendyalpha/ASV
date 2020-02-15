@@ -1,10 +1,54 @@
 
 #include "common/fileIO/include/utilityio.h"
 #include "common/math/miscellaneous/include/eigenmvnd.hpp"
+#include "common/plotting/include/gnuplot-iostream.h"
 #include "modules/estimator/include/kalmanfilter.h"
 
 using namespace ASV;
 using namespace ASV::common;
+
+// illustrate the results using gnuplot
+void plotKalmanresults(const Eigen::MatrixXd &plot_true_x,
+                       const Eigen::MatrixXd &plot_observed_z,
+                       const Eigen::MatrixXd &plot_estimated_x,
+                       const Eigen::MatrixXd &plot_Eigen_P) {
+  Gnuplot gp;
+  std::vector<std::pair<double, double> > xy_pts_A;
+  std::vector<std::pair<double, double> > xy_pts_B;
+  int totalstep = plot_true_x.cols();
+  gp << "set multiplot layout 1, 2 title 'Kalman filtering' font ',14'\n";
+
+  gp << "set size square\n";
+  gp << "set xtics out\n";
+  gp << "set ytics out\n";
+  gp << "set ylabel 'x'\n";
+  gp << "plot"
+        " '-' with lines lt 1 lw 2 lc rgb 'violet' title 'Kalman',"
+        " '-' with lines lt 2 lw 2 lc rgb 'black' title 'observed'\n";
+  xy_pts_A.clear();
+  xy_pts_B.clear();
+  for (int j = 0; j != totalstep; ++j) {
+    xy_pts_A.push_back(std::make_pair(j, plot_estimated_x(0, j)));
+    xy_pts_B.push_back(std::make_pair(j, plot_observed_z(0, j)));
+  }
+  gp.send1d(xy_pts_A);
+  gp.send1d(xy_pts_B);
+
+  gp << "set size square\n";
+  gp << "set xtics out\n";
+  gp << "set ytics out\n";
+  gp << "set ylabel 'P'\n";
+  gp << "plot"
+        " '-' with lines lt 1 lw 2 lc rgb 'violet'\n";
+  xy_pts_A.clear();
+  for (int j = 0; j != totalstep; ++j) {
+    xy_pts_A.push_back(std::make_pair(j, plot_Eigen_P(0, j)));
+  }
+  gp.send1d(xy_pts_A);
+
+  gp << "unset multiplot\n";
+
+}  // plotKalmanresults
 
 void test1d() { /* Set Matrix and Vector for Kalman Filter: */
   Eigen::MatrixXd A(1, 1);
@@ -91,15 +135,7 @@ void test2d() {
     PEigen(0, i + 1) = filter2.getMaxEigenP();
   }
 
-  x_noise = x_noise.transpose().eval();
-  z = z.transpose().eval();
-  save_x = save_x.transpose().eval();
-  PEigen = PEigen.transpose().eval();
-
-  write2csvfile("../data/truex.csv", x_noise);
-  write2csvfile("../data/observed.csv", z);
-  write2csvfile("../data/kalman.csv", save_x);
-  write2csvfile("../data/EigenP.csv", PEigen);
+  plotKalmanresults(x_noise, z, save_x, PEigen);
 }
 
 void test3d() {

@@ -10,6 +10,7 @@
 #include "../include/LatticePlanner.h"
 #include "common/communication/include/tcpserver.h"
 #include "common/fileIO/include/utilityio.h"
+#include "common/plotting/include/gnuplot-iostream.h"
 #include "common/timer/include/timecounter.h"
 
 #include <random>
@@ -20,6 +21,72 @@ union trajectorymsg {
   double double_msg[200];
   char char_msg[1600];
 };
+
+// illustrate the lattice planner at a time instant
+void realtimeplotting(const double vessel_x, const double vessel_y,
+                      const double vessel_heading, const double vessel_speed,
+                      const std::vector<double> &_cart_obstacle_x,
+                      const std::vector<double> &_cart_obstacle_y,
+                      const Eigen::VectorXd &_cart_best_x,
+                      const Eigen::VectorXd &_cart_best_y,
+                      const Eigen::VectorXd &_cart_best_speed) {
+  static std::vector<double> vessel_profile_x({2.0, 1.1, -1.0, -1.0, 1.1});
+  static std::vector<double> vessel_profile_y({0.0, 0.8, 0.8, -0.8, -0.8});
+
+  Gnuplot gp;
+  gp << "reset\n";
+  gp << "set terminal x11 size 1200, 600 0\n";
+  gp << "set multiplot layout 1, 2 title 'Lattice Planner' font ',14'\n";
+
+  // the first subplot
+  gp << "set title 'Lattice generator'\n";
+  gp << "set size ratio -1\n";
+  gp << "set xlabel 'E (m)'\n";
+  gp << "set ylabel 'N (m)'\n";
+
+  std::vector<std::pair<double, double> > xy_pts_A;
+  std::vector<std::pair<double, double> > xy_pts_B;
+  std::vector<std::pair<double, double> > xy_pts_C;
+
+  double cvalue = std::cos(vessel_heading);
+  double svalue = std::sin(vessel_heading);
+
+  for (std::size_t i = 0; i != vessel_profile_x.size(); ++i) {
+    double x =
+        vessel_x + cvalue * vessel_profile_x[i] - svalue * vessel_profile_y[i];
+    double y =
+        vessel_y + svalue * vessel_profile_x[i] + cvalue * vessel_profile_y[i];
+
+    gp << " " << y << ", " << x << " to";
+  }
+  gp << " "
+     << vessel_y + svalue * vessel_profile_x[0] + cvalue * vessel_profile_y[0]
+     << ", "
+     << vessel_x + cvalue * vessel_profile_x[0] - svalue * vessel_profile_y[0]
+     << "\n";
+  gp << "set object 1 fc rgb 'blue' fillstyle solid 0.2 noborder\n";
+
+  for (std::size_t i = 0; i != _cart_obstacle_x.size(); ++i) {
+    xy_pts_A.push_back(
+        std::make_pair(-_cart_obstacle_y[i], _cart_obstacle_x[i]));
+  }
+  for (int i = 0; i != _cart_best_x.size(); ++i) {
+    xy_pts_B.push_back(std::make_pair(-_cart_best_y(i), _cart_best_x(i)));
+    xy_pts_C.push_back(std::make_pair(i, _cart_best_speed(i)));
+  }
+
+  gp << "plot " << gp.file1d(xy_pts_A) << " with points title 'obstacles'\n";
+  gp << "plot " << gp.file1d(xy_pts_B) << " with lines title 'best path'\n";
+
+  // the second subplot
+  gp << "set title 'best speed'\n";
+  gp << "set size ratio -1\n";
+  gp << "set xlabel 'Time (s)'\n";
+  gp << "set ylabel 'speed (m/s)'\n";
+  gp << "plot " << gp.file1d(xy_pts_C) << " with lines title 'speed'\n";
+
+  gp << "unset multiplot\n";
+}  // realtimeplotting
 
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
@@ -160,6 +227,11 @@ int main() {
 
     _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
                             send_size);
+
+    realtimeplotting(estimate_marinestate.x, estimate_marinestate.y,
+                     estimate_marinestate.theta, estimate_marinestate.speed,
+                     cart_ob_x, cart_ob_y, cart_bestX, cart_bestY,
+                     cart_bestspeed);
 
     if ((std::pow(estimate_marinestate.x - cart_rx(cart_rx.size() - 1), 2) +
          std::pow(estimate_marinestate.y + cart_ry(cart_ry.size() - 1), 2)) <=

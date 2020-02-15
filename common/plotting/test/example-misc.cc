@@ -114,6 +114,47 @@ void demo_binary() {
   pause_if_needed();
 }
 
+void demo_2Dpolygon() {
+  Gnuplot gp;
+
+  double position_x = 1;
+  double position_y = -2;
+  double heading = -M_PI / 2;
+
+  std::vector<double> vessel_profile_x({2.0, 1.1, -1.0, -1.0, 1.1});
+  std::vector<double> vessel_profile_y({0.0, 0.8, 0.8, -0.8, -0.8});
+  double cvalue = std::cos(heading);
+  double svalue = std::sin(heading);
+
+  gp << "reset\n";
+  gp << "set xrange [-4:4]\n";
+  gp << "set yrange [-4:4]\n";
+  gp << "set size ratio -1\n";
+  gp << "set object 1 polygon from";
+  for (std::size_t i = 0; i != vessel_profile_x.size(); ++i) {
+    double x = position_x + cvalue * vessel_profile_x[i] -
+               svalue * vessel_profile_y[i];
+    double y = position_y + svalue * vessel_profile_x[i] +
+               cvalue * vessel_profile_y[i];
+
+    gp << " " << y << ", " << x << " to";
+  }
+  gp << " "
+     << position_y + svalue * vessel_profile_x[0] + cvalue * vessel_profile_y[0]
+     << ", "
+     << position_x + cvalue * vessel_profile_x[0] - svalue * vessel_profile_y[0]
+     << "\n";
+  gp << "set object 1 fc rgb 'blue' fillstyle solid 0.25 noborder\n";
+  gp << "set xlabel 'Y'\n";
+  gp << "set ylabel 'X'\n";
+
+  std::vector<std::pair<double, double> > xy_pts_A;
+  xy_pts_A.push_back(std::make_pair(position_y, position_x));
+  gp << "plot " << gp.file1d(xy_pts_A) << " with points title 'CoG'\n";
+
+  pause_if_needed();
+}
+
 void demo_tmpfile() {
   Gnuplot gp;
 
@@ -400,7 +441,7 @@ void demo_multiwindows() {
   Gnuplot gp;
 
   // the first window
-  gp << "set term x11 0\n";
+  gp << "set terminal x11 size 600, 600 0\n";
   gp << "set multiplot layout 3, 1 title 'Multiplot layout 3, 1' font ',14'\n";
   gp << "set tmargin 2\n";
   gp << "set title 'Plot 1'\n";
@@ -421,7 +462,7 @@ void demo_multiwindows() {
   gp << "unset multiplot\n";
 
   // the second window
-  gp << "set term x11 1\n";
+  gp << "set terminal x11 size 600, 600 1\n";
   gp << "plot cos(x)\n";
 
   pause_if_needed();
@@ -534,6 +575,7 @@ int main(int argc, char **argv) {
   demos["image"] = demo_image;
   demos["multiplot"] = demo_multiplots;
   demos["multiwindows"] = demo_multiwindows;
+  demos["2Dpolygon"] = demo_2Dpolygon;
 
   if (argc < 2) {
     printf("Usage: %s <demo_name>\n", argv[0]);
