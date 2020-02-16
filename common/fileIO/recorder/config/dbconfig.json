@@ -1,5 +1,4 @@
 {
-  
   "GPS":[    
     ["UTC", "DOUBLE"],
     ["latitude", "DOUBLE"],

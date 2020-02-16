@@ -17,7 +17,7 @@ int main() {
   LOG(INFO) << "The program has started!";
 
   const std::string folderp = "../../data/";
-  const std::string config_path = "../../include/dbconfig.json";
+  const std::string config_path = "../../config/dbconfig.json";
 
   // GPS
   ASV::messages::gpsRTdata gps_data{
