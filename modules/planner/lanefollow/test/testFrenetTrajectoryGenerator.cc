@@ -8,7 +8,6 @@
 ***********************************************************************
 */
 #include "../include/LatticePlanner.h"
-#include "common/communication/include/tcpserver.h"
 #include "common/fileIO/include/utilityio.h"
 #include "common/plotting/include/gnuplot-iostream.h"
 #include "common/timer/include/timecounter.h"
@@ -17,14 +16,10 @@
 
 using namespace ASV;
 
-union trajectorymsg {
-  double double_msg[200];
-  char char_msg[1600];
-};
-
 // illustrate the lattice planner at a time instant
-void realtimeplotting(const double vessel_x, const double vessel_y,
-                      const double vessel_heading, const double vessel_speed,
+void realtimeplotting(Gnuplot &gp1, Gnuplot &gp2, const double vessel_x,
+                      const double vessel_y, const double vessel_heading,
+                      const double vessel_speed,
                       const std::vector<double> &_cart_obstacle_x,
                       const std::vector<double> &_cart_obstacle_y,
                       const Eigen::VectorXd &_cart_best_x,
@@ -33,38 +28,33 @@ void realtimeplotting(const double vessel_x, const double vessel_y,
   static std::vector<double> vessel_profile_x({2.0, 1.1, -1.0, -1.0, 1.1});
   static std::vector<double> vessel_profile_y({0.0, 0.8, 0.8, -0.8, -0.8});
 
-  Gnuplot gp;
-  gp << "reset\n";
-  gp << "set terminal x11 size 1200, 600 0\n";
-  gp << "set multiplot layout 1, 2 title 'Lattice Planner' font ',14'\n";
-
-  // the first subplot
-  gp << "set title 'Lattice generator'\n";
-  gp << "set size ratio -1\n";
-  gp << "set xlabel 'E (m)'\n";
-  gp << "set ylabel 'N (m)'\n";
+  double cvalue = std::cos(vessel_heading);
+  double svalue = std::sin(vessel_heading);
 
   std::vector<std::pair<double, double> > xy_pts_A;
   std::vector<std::pair<double, double> > xy_pts_B;
   std::vector<std::pair<double, double> > xy_pts_C;
 
-  double cvalue = std::cos(vessel_heading);
-  double svalue = std::sin(vessel_heading);
+  // the first subplot
+  double area = 10;
+  gp1 << "set xrange [" << vessel_y - area << ":" << vessel_y + area << "]\n";
+  gp1 << "set yrange [" << vessel_x - area << ":" << vessel_x + area << "]\n";
 
+  gp1 << "set object 1 polygon from";
   for (std::size_t i = 0; i != vessel_profile_x.size(); ++i) {
     double x =
         vessel_x + cvalue * vessel_profile_x[i] - svalue * vessel_profile_y[i];
     double y =
         vessel_y + svalue * vessel_profile_x[i] + cvalue * vessel_profile_y[i];
 
-    gp << " " << y << ", " << x << " to";
+    gp1 << " " << y << ", " << x << " to";
   }
-  gp << " "
-     << vessel_y + svalue * vessel_profile_x[0] + cvalue * vessel_profile_y[0]
-     << ", "
-     << vessel_x + cvalue * vessel_profile_x[0] - svalue * vessel_profile_y[0]
-     << "\n";
-  gp << "set object 1 fc rgb 'blue' fillstyle solid 0.2 noborder\n";
+  gp1 << " "
+      << vessel_y + svalue * vessel_profile_x[0] + cvalue * vessel_profile_y[0]
+      << ", "
+      << vessel_x + cvalue * vessel_profile_x[0] - svalue * vessel_profile_y[0]
+      << "\n";
+  gp1 << "set object 1 fc rgb 'blue' fillstyle solid 0.2 noborder\n";
 
   for (std::size_t i = 0; i != _cart_obstacle_x.size(); ++i) {
     xy_pts_A.push_back(
@@ -75,17 +65,18 @@ void realtimeplotting(const double vessel_x, const double vessel_y,
     xy_pts_C.push_back(std::make_pair(i, _cart_best_speed(i)));
   }
 
-  gp << "plot " << gp.file1d(xy_pts_A) << " with points title 'obstacles'\n";
-  gp << "plot " << gp.file1d(xy_pts_B) << " with lines title 'best path'\n";
+  gp1 << "plot " << gp1.file1d(xy_pts_A)
+      << " with points pointsize 3 title 'obstacles', " << gp1.file1d(xy_pts_B)
+      << " with linespoints linetype 1 lw 2 lc rgb '#0060ad' pointtype 7 "
+         "pointsize 1 title 'best path'\n";
 
   // the second subplot
-  gp << "set title 'best speed'\n";
-  gp << "set size ratio -1\n";
-  gp << "set xlabel 'Time (s)'\n";
-  gp << "set ylabel 'speed (m/s)'\n";
-  gp << "plot " << gp.file1d(xy_pts_C) << " with lines title 'speed'\n";
+  gp2 << "plot " << gp2.file1d(xy_pts_C)
+      << " with lines lt 1 lw 2 lc rgb 'red' title 'speed'\n";
 
-  gp << "unset multiplot\n";
+  gp1.flush();
+  gp2.flush();
+
 }  // realtimeplotting
 
 int main() {
@@ -164,15 +155,23 @@ int main() {
   planning::LatticePlanner _trajectorygenerator(_latticedata, _collisiondata);
   _trajectorygenerator.regenerate_target_course(marine_WX, marine_WY);
 
-  // socket
-  tcpserver _tcpserver("9340");
-  const int recv_size = 10;
-  const int send_size = 1600;
-  char recv_buffer[recv_size];
-  trajectorymsg _sendmsg = {0.0, 0.0, 0.0, 0.0, 0.0};
-
   // timer
   common::timecounter _timer;
+
+  // plotting
+  Gnuplot gp1;
+  Gnuplot gp2;
+
+  gp1 << "set terminal x11 size 800, 800 0\n";
+  gp1 << "set grid \n";
+  gp1 << "set title 'Lattice generator'\n";
+  gp1 << "set xlabel 'E (m)'\n";
+  gp1 << "set ylabel 'N (m)'\n";
+
+  gp2 << "set terminal x11 size 800, 400 1\n";
+  gp2 << "set title 'best speed'\n";
+  gp2 << "set xlabel 'Time (s)'\n";
+  gp2 << "set ylabel 'speed (m/s)'\n";
 
   for (int i = 0; i != 500; ++i) {
     if (i < 10)
@@ -202,36 +201,8 @@ int main() {
     auto cart_bestX = _trajectorygenerator.getbestX();
     auto cart_bestY = _trajectorygenerator.getbestY();
     auto cart_bestspeed = _trajectorygenerator.getbestSpeed();
-
-    _sendmsg.double_msg[0] = estimate_marinestate.x;      // vessel x
-    _sendmsg.double_msg[1] = estimate_marinestate.y;      // vessel y
-    _sendmsg.double_msg[2] = estimate_marinestate.theta;  // vessel heading
-    _sendmsg.double_msg[3] = estimate_marinestate.speed;  // vessel speed
-
     auto cart_ob_x = _trajectorygenerator.getobstacle_x();
     auto cart_ob_y = _trajectorygenerator.getobstacle_y();
-
-    _sendmsg.double_msg[4] = cart_ob_x.size();  // the length of vector
-    for (int j = 0; j != cart_ob_x.size(); j++) {
-      _sendmsg.double_msg[2 * j + 5] = cart_ob_x[j];   // obstacle x
-      _sendmsg.double_msg[2 * j + 6] = -cart_ob_y[j];  // obstacle y
-    }
-
-    int index = 2 * cart_ob_x.size() + 5;
-    _sendmsg.double_msg[index] = cart_bestX.size();  // the length of vector
-    for (int j = 0; j != cart_bestX.size(); j++) {
-      _sendmsg.double_msg[3 * j + index + 1] = cart_bestX(j);      // best X
-      _sendmsg.double_msg[3 * j + index + 2] = -cart_bestY(j);     // best Y
-      _sendmsg.double_msg[3 * j + index + 3] = cart_bestspeed(j);  // best speed
-    }
-
-    _tcpserver.selectserver(recv_buffer, _sendmsg.char_msg, recv_size,
-                            send_size);
-
-    realtimeplotting(estimate_marinestate.x, estimate_marinestate.y,
-                     estimate_marinestate.theta, estimate_marinestate.speed,
-                     cart_ob_x, cart_ob_y, cart_bestX, cart_bestY,
-                     cart_bestspeed);
 
     if ((std::pow(estimate_marinestate.x - cart_rx(cart_rx.size() - 1), 2) +
          std::pow(estimate_marinestate.y + cart_ry(cart_ry.size() - 1), 2)) <=
@@ -240,16 +211,13 @@ int main() {
       break;
     }
 
+    realtimeplotting(gp1, gp2, estimate_marinestate.x, estimate_marinestate.y,
+                     estimate_marinestate.theta, estimate_marinestate.speed,
+                     cart_ob_x, cart_ob_y, cart_bestX, cart_bestY,
+                     cart_bestspeed);
+
     long int et = _timer.timeelapsed();
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     // std::cout << "each: " << et << std::endl;
   }
-
-  // utilityio _utilityio;
-  // _utilityio.write2csvfile("../data/x.csv", X);
-  // _utilityio.write2csvfile("../data/y.csv", Y);
-  // _utilityio.write2csvfile("../data/rx.csv", _trajectorygenerator.getrx());
-  // _utilityio.write2csvfile("../data/ry.csv", _trajectorygenerator.getry());
-  // _utilityio.write2csvfile("../data/yaw.csv",
-  // _trajectorygenerator.getryaw()); _utilityio.write2csvfile("../data/k.csv",
-  // _trajectorygenerator.getrk());
 }

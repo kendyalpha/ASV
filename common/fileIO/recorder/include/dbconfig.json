@@ -1,0 +1,82 @@
+{
+  
+  "GPS":[    
+    ["UTC", "DOUBLE"],
+    ["latitude", "DOUBLE"],
+    ["longitude", "DOUBLE"],
+    ["heading", "DOUBLE"],
+    ["pitch", "DOUBLE"],
+    ["roll", "DOUBLE"],
+    ["altitude", "DOUBLE"],
+    ["Ve", "DOUBLE"],
+    ["Vn", "DOUBLE"],
+    ["roti", "DOUBLE"],
+    ["status", "INT"],
+    ["UTM_x", "DOUBLE"],
+    ["UTM_y", "DOUBLE"],
+    ["UTM_zone", "TEXT"]
+  ],
+  "wind":{
+    "speed":"DOUBLE",
+    "orientation" :"DOUBLE"
+  },
+  "stm32":{
+     "stm32_link": "INT",
+     "stm32_status": "INT",
+     "command_u1": "DOUBLE",
+     "command_u2": "DOUBLE",
+     "feedback_u1": "DOUBLE",
+     "feedback_u2": "DOUBLE",
+     "feedback_pwm1": "INT",
+     "feedback_pwm2": "INT",
+     "RC_X": "DOUBLE", 
+     "RC_Y": "DOUBLE",  
+     "RC_Mz": "DOUBLE",
+     "voltage_b1": "DOUBLE", 
+     "voltage_b2": "DOUBLE", 
+     "voltage_b3": "DOUBLE"
+  },
+  "marineradar":{
+    "azimuth_deg": "DOUBLE",
+    "sample_range":"DOUBLE",
+    "SpokeData": "BLOB"
+  },
+  "estimator":{
+    "measurement":{
+      "meas_x": "DOUBLE",
+      "meas_y": "DOUBLE",
+      "meas_theta": "DOUBLE",
+      "meas_u": "DOUBLE",
+      "meas_v": "DOUBLE",
+      "meas_r": "DOUBLE"
+    },
+    "state":{
+      "state_x": "DOUBLE",
+      "state_y": "DOUBLE",
+      "state_theta": "DOUBLE",
+      "state_u": "DOUBLE",
+      "state_v": "DOUBLE",
+      "state_r": "DOUBLE",
+      "curvature": "DOUBLE",
+      "speed": "DOUBLE",
+      "dspeed": "DOUBLE"
+    },
+    "error":{
+      "perror_x": "DOUBLE",
+      "perror_y": "DOUBLE",
+      "perror_mz": "DOUBLE",
+      "verror_x": "DOUBLE",
+      "verror_y": "DOUBLE",
+      "verror_mz": "DOUBLE"
+    }             
+  },
+  "planner": {
+
+
+  },
+  "controller": {
+
+
+  }  
+
+}

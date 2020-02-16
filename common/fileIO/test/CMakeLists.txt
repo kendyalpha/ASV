@@ -45,5 +45,3 @@ target_include_directories(testjson PRIVATE ${HEADER_DIRECTORY})
 
 add_executable (testcsv testcsv.cc)
 target_include_directories(testcsv PRIVATE ${HEADER_DIRECTORY})
-
-

@@ -1,4 +1,14 @@
-#include "../include/datarecorder.h"
+/*
+***********************************************************************
+* testrecorder.cc:
+* uint test for data recorder
+* This header file can be read by C++ compilers
+*
+* by Hu.ZH(CrossOcean.ai)
+***********************************************************************
+*/
+
+#include "../include/newdatarecorder.h"
 #include "modules/messages/sensors/gpsimu/include/gpsdata.h"
 
 int main() {
@@ -7,6 +17,7 @@ int main() {
   LOG(INFO) << "The program has started!";
 
   const std::string folderp = "../../data/";
+  const std::string config_path = "../../include/dbconfig.json";
 
   // GPS
   ASV::messages::gpsRTdata gps_data{
@@ -25,7 +36,7 @@ int main() {
       13,   // UTM_y
       "0n"  // UTM_zone
   };
-  ASV::common::gps_db gps_db(folderp);
+  ASV::common::gps_db gps_db(folderp, config_path);
   gps_db.create_table();
   gps_db.update_table(gps_data.UTC, gps_data.latitude, gps_data.longitude,
                       gps_data.heading, gps_data.pitch, gps_data.roll,
@@ -34,12 +45,12 @@ int main() {
                       gps_data.UTM_y, gps_data.UTM_zone);
 
   // wind
-  ASV::common::wind_db wind_db(folderp);
+  ASV::common::wind_db wind_db(folderp, config_path);
   wind_db.create_table();
   wind_db.update_table(1, 2);
 
   // stm32
-  ASV::common::stm32_db stm32_db(folderp);
+  ASV::common::stm32_db stm32_db(folderp, config_path);
   stm32_db.create_table();
   stm32_db.update_table(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
 
@@ -51,57 +62,57 @@ int main() {
       _value, _value, _value, _value, _value, _value, _value,
       _value, _value, _value, _value, _value, _value, _value,
       _value, _value, _value, 0xca,   0x01,   0x30,   0x45};
-  ASV::common::marineradar_db marineradar_db(folderp);
+  ASV::common::marineradar_db marineradar_db(folderp, config_path);
   marineradar_db.create_table();
   marineradar_db.update_table(10, 20, size_array, spokedata);
 
   // estimator
-  ASV::common::estimator_db estimator_db(folderp);
+  ASV::common::estimator_db estimator_db(folderp, config_path);
   estimator_db.create_table();
   estimator_db.update_measurement_table(1, 2, 3, 4, 5, 6);
   estimator_db.update_state_table(1, 2, 3, 4, 5, 6, 7, 8, 9);
   estimator_db.update_error_table(6, 5, 4, 3, 2, 1);
 
-  // planner
-  ASV::common::planner_db planner_db(folderp);
-  planner_db.create_table();
-  planner_db.update_routeplanner_table(1, 2, 3, 4, 5, 6);
-  planner_db.update_latticeplanner_table(1, 2, 3, 4, 5, 6);
+  // // planner
+  // ASV::common::planner_db planner_db(folderp);
+  // planner_db.create_table();
+  // planner_db.update_routeplanner_table(1, 2, 3, 4, 5, 6);
+  // planner_db.update_latticeplanner_table(1, 2, 3, 4, 5, 6);
 
-  // controller
-  constexpr int m = 4;
-  Eigen::Matrix<int, m, 1> azimuth;
-  Eigen::Matrix<int, m, 1> rotation;
-  azimuth << 100, 200, 300, 400;
-  rotation << 900, 800, 700, 600;
+  // // controller
+  // constexpr int m = 4;
+  // Eigen::Matrix<int, m, 1> azimuth;
+  // Eigen::Matrix<int, m, 1> rotation;
+  // azimuth << 100, 200, 300, 400;
+  // rotation << 900, 800, 700, 600;
 
-  ASV::common::controller_db controller_db(folderp);
-  controller_db.create_table();
-  controller_db.update_setpoint_table(1, 0, 2, 3, 4, 5);
-  controller_db.update_TA_table<m>(1, 0, 2, 3, 4, 5, azimuth, rotation);
+  // ASV::common::controller_db controller_db(folderp);
+  // controller_db.create_table();
+  // controller_db.update_setpoint_table(1, 0, 2, 3, 4, 5);
+  // controller_db.update_TA_table<m>(1, 0, 2, 3, 4, 5, azimuth, rotation);
 
-  // perception
-  ASV::common::perception_db perception_db(folderp);
-  perception_db.create_table();
-  perception_db.update_spoke_table(
-      std::vector<double>({1, 2, 3, 4}), std::vector<double>({1, 2, 3, 4}),
-      std::vector<double>({1, 2, 3, 4}), std::vector<double>({1, 2, 3, 4}));
-  perception_db.update_detection_table(std::vector<double>({1, 2, 3, 4}),
-                                       std::vector<double>({1, 2, 3, 4}),
-                                       std::vector<double>({1, 2, 3, 4}));
-  perception_db.update_trackingtarget_table<20>(
-      20,                                    // spoke_state
-      Eigen::Matrix<int, 20, 1>::Zero(),     // targets_state
-      Eigen::Matrix<int, 20, 1>::Zero(),     // targets_intention
-      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_x
-      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_y
-      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_square_radius
-      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_vx
-      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_vy
-      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_CPA_x
-      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_CPA_y
-      Eigen::Matrix<double, 20, 1>::Zero()   // targets_TCPA
-  );
+  // // perception
+  // ASV::common::perception_db perception_db(folderp);
+  // perception_db.create_table();
+  // perception_db.update_spoke_table(
+  //     std::vector<double>({1, 2, 3, 4}), std::vector<double>({1, 2, 3, 4}),
+  //     std::vector<double>({1, 2, 3, 4}), std::vector<double>({1, 2, 3, 4}));
+  // perception_db.update_detection_table(std::vector<double>({1, 2, 3, 4}),
+  //                                      std::vector<double>({1, 2, 3, 4}),
+  //                                      std::vector<double>({1, 2, 3, 4}));
+  // perception_db.update_trackingtarget_table<20>(
+  //     20,                                    // spoke_state
+  //     Eigen::Matrix<int, 20, 1>::Zero(),     // targets_state
+  //     Eigen::Matrix<int, 20, 1>::Zero(),     // targets_intention
+  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_x
+  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_y
+  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_square_radius
+  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_vx
+  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_vy
+  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_CPA_x
+  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_CPA_y
+  //     Eigen::Matrix<double, 20, 1>::Zero()   // targets_TCPA
+  // );
 
   LOG(INFO) << "Shutting down.";
 }

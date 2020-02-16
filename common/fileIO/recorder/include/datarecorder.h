@@ -17,6 +17,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include "common/fileIO/include/json.hpp"
 #include "common/logging/include/easylogging++.h"
 
 #define VARIABLENAME4DB(variable) #variable
