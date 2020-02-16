@@ -16,67 +16,122 @@
     ["UTM_y", "DOUBLE"],
     ["UTM_zone", "TEXT"]
   ],
-  "wind":{
-    "speed":"DOUBLE",
-    "orientation" :"DOUBLE"
-  },
-  "stm32":{
-     "stm32_link": "INT",
-     "stm32_status": "INT",
-     "command_u1": "DOUBLE",
-     "command_u2": "DOUBLE",
-     "feedback_u1": "DOUBLE",
-     "feedback_u2": "DOUBLE",
-     "feedback_pwm1": "INT",
-     "feedback_pwm2": "INT",
-     "RC_X": "DOUBLE", 
-     "RC_Y": "DOUBLE",  
-     "RC_Mz": "DOUBLE",
-     "voltage_b1": "DOUBLE", 
-     "voltage_b2": "DOUBLE", 
-     "voltage_b3": "DOUBLE"
-  },
-  "marineradar":{
-    "azimuth_deg": "DOUBLE",
-    "sample_range":"DOUBLE",
-    "SpokeData": "BLOB"
-  },
+  "wind":[
+    ["speed", "DOUBLE"],
+    ["orientation", "DOUBLE"]
+  ],
+  "stm32":[
+     ["stm32_link", "INT"],
+     ["stm32_status", "INT"],
+     ["command_u1", "DOUBLE"],
+     ["command_u2", "DOUBLE"],
+     ["feedback_u1", "DOUBLE"],
+     ["feedback_u2", "DOUBLE"],
+     ["feedback_pwm1", "INT"],
+     ["feedback_pwm2", "INT"],
+     ["RC_X", "DOUBLE"], 
+     ["RC_Y", "DOUBLE"],  
+     ["RC_Mz", "DOUBLE"],
+     ["voltage_b1", "DOUBLE"], 
+     ["voltage_b2", "DOUBLE"], 
+     ["voltage_b3", "DOUBLE"]
+  ],
+  "marineradar":[
+      ["azimuth_deg", "DOUBLE"],
+      ["sample_range", "DOUBLE"],
+      ["SpokeData", "BLOB"]
+  ],
   "estimator":{
-    "measurement":{
-      "meas_x": "DOUBLE",
-      "meas_y": "DOUBLE",
-      "meas_theta": "DOUBLE",
-      "meas_u": "DOUBLE",
-      "meas_v": "DOUBLE",
-      "meas_r": "DOUBLE"
-    },
-    "state":{
-      "state_x": "DOUBLE",
-      "state_y": "DOUBLE",
-      "state_theta": "DOUBLE",
-      "state_u": "DOUBLE",
-      "state_v": "DOUBLE",
-      "state_r": "DOUBLE",
-      "curvature": "DOUBLE",
-      "speed": "DOUBLE",
-      "dspeed": "DOUBLE"
-    },
-    "error":{
-      "perror_x": "DOUBLE",
-      "perror_y": "DOUBLE",
-      "perror_mz": "DOUBLE",
-      "verror_x": "DOUBLE",
-      "verror_y": "DOUBLE",
-      "verror_mz": "DOUBLE"
-    }             
+    "measurement":[
+      ["meas_x", "DOUBLE"],
+      ["meas_y", "DOUBLE"],
+      ["meas_theta", "DOUBLE"],
+      ["meas_u", "DOUBLE"],
+      ["meas_v", "DOUBLE"],
+      ["meas_r", "DOUBLE"]
+    ],
+    "state":[
+      ["state_x", "DOUBLE"],
+      ["state_y", "DOUBLE"],
+      ["state_theta", "DOUBLE"],
+      ["state_u", "DOUBLE"],
+      ["state_v", "DOUBLE"],
+      ["state_r", "DOUBLE"],
+      ["curvature", "DOUBLE"],
+      ["speed", "DOUBLE"],
+      ["dspeed", "DOUBLE"]
+    ],
+    "error":[
+      ["perror_x", "DOUBLE"],
+      ["perror_y", "DOUBLE"],
+      ["perror_mz", "DOUBLE"],
+      ["verror_x", "DOUBLE"],
+      ["verror_y", "DOUBLE"],
+      ["verror_mz", "DOUBLE"]
+    ]             
   },
   "planner": {
-
-
+    "routeplanner":[
+      ["speed", "DOUBLE"],
+      ["captureradius", "DOUBLE"],
+      ["WPX", "DOUBLE"],
+      ["WPY", "DOUBLE"],
+      ["WPLONG", "DOUBLE"],
+      ["WPLAT", "DOUBLE"]
+    ],
+    "latticeplanner":[
+      ["lattice_x", "DOUBLE"],
+      ["lattice_y", "DOUBLE"],
+      ["lattice_theta", "DOUBLE"],
+      ["lattice_kappa", "DOUBLE"],
+      ["lattice_speed", "DOUBLE"],
+      ["lattice_dspeed", "DOUBLE"]
+    ]
   },
   "controller": {
-
-
-  }  
-
+    "setpoint":[
+      ["set_x", "DOUBLE"],
+      ["set_y", "DOUBLE"],
+      ["set_theta", "DOUBLE"],
+      ["set_u", "DOUBLE"],
+      ["set_v", "DOUBLE"],
+      ["set_r", "DOUBLE"]
+    ],
+    "TA":[
+      ["desired_Fx", "DOUBLE"],
+      ["desired_Fy", "DOUBLE"],
+      ["desired_Mz", "DOUBLE"],
+      ["est_Fx", "DOUBLE"],
+      ["est_Fy", "DOUBLE"],
+      ["est_Mz", "DOUBLE"],
+      ["Azimuth", "BLOB"],
+      ["Rotation", "BLOB"]
+    ]
+  },
+  "perception":{
+     "SpokeProcess":[
+        ["surroundings_bearing_rad", "BLOB"],
+        ["surroundings_range_m", "BLOB"],
+        ["surroundings_x_m", "BLOB"],
+        ["surroundings_y_m", "BLOB"]
+     ],
+     "DetectedTarget":[
+        ["detected_target_x","BLOB"],
+        ["detected_target_y","BLOB"],
+        ["detected_target_radius","BLOB"]
+     ],
+     "TrackingTarget":[
+        ["spoke_state", "INT"],
+        ["targets_state", "BLOB"],
+        ["targets_intention", "BLOB"],
+        ["targets_x", "BLOB"],
+        ["targets_y", "BLOB"],
+        ["targets_square_radius", "BLOB"],
+        ["targets_vx", "BLOB"],
+        ["targets_vy", "BLOB"],
+        ["targets_CPA_x", "BLOB"],
+        ["targets_CPA_y", "BLOB"],
+        ["targets_TCPA", "BLOB"]
+     ]
+  }
 }

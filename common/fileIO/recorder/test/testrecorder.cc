@@ -8,7 +8,7 @@
 ***********************************************************************
 */
 
-#include "../include/newdatarecorder.h"
+#include "../include/datarecorder.h"
 #include "modules/messages/sensors/gpsimu/include/gpsdata.h"
 
 int main() {
@@ -73,46 +73,46 @@ int main() {
   estimator_db.update_state_table(1, 2, 3, 4, 5, 6, 7, 8, 9);
   estimator_db.update_error_table(6, 5, 4, 3, 2, 1);
 
-  // // planner
-  // ASV::common::planner_db planner_db(folderp);
-  // planner_db.create_table();
-  // planner_db.update_routeplanner_table(1, 2, 3, 4, 5, 6);
-  // planner_db.update_latticeplanner_table(1, 2, 3, 4, 5, 6);
+  // planner
+  ASV::common::planner_db planner_db(folderp, config_path);
+  planner_db.create_table();
+  planner_db.update_routeplanner_table(1, 2, 3, 4, 5, 6);
+  planner_db.update_latticeplanner_table(1, 2, 3, 4, 5, 6);
 
-  // // controller
-  // constexpr int m = 4;
-  // Eigen::Matrix<int, m, 1> azimuth;
-  // Eigen::Matrix<int, m, 1> rotation;
-  // azimuth << 100, 200, 300, 400;
-  // rotation << 900, 800, 700, 600;
+  // controller
+  constexpr int m = 4;
+  Eigen::Matrix<int, m, 1> azimuth;
+  Eigen::Matrix<int, m, 1> rotation;
+  azimuth << 100, 200, 300, 400;
+  rotation << 900, 800, 700, 600;
 
-  // ASV::common::controller_db controller_db(folderp);
-  // controller_db.create_table();
-  // controller_db.update_setpoint_table(1, 0, 2, 3, 4, 5);
-  // controller_db.update_TA_table<m>(1, 0, 2, 3, 4, 5, azimuth, rotation);
+  ASV::common::controller_db controller_db(folderp, config_path);
+  controller_db.create_table();
+  controller_db.update_setpoint_table(1, 0, 2, 3, 4, 5);
+  controller_db.update_TA_table<m>(1, 0, 2, 3, 4, 5, azimuth, rotation);
 
-  // // perception
-  // ASV::common::perception_db perception_db(folderp);
-  // perception_db.create_table();
-  // perception_db.update_spoke_table(
-  //     std::vector<double>({1, 2, 3, 4}), std::vector<double>({1, 2, 3, 4}),
-  //     std::vector<double>({1, 2, 3, 4}), std::vector<double>({1, 2, 3, 4}));
-  // perception_db.update_detection_table(std::vector<double>({1, 2, 3, 4}),
-  //                                      std::vector<double>({1, 2, 3, 4}),
-  //                                      std::vector<double>({1, 2, 3, 4}));
-  // perception_db.update_trackingtarget_table<20>(
-  //     20,                                    // spoke_state
-  //     Eigen::Matrix<int, 20, 1>::Zero(),     // targets_state
-  //     Eigen::Matrix<int, 20, 1>::Zero(),     // targets_intention
-  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_x
-  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_y
-  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_square_radius
-  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_vx
-  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_vy
-  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_CPA_x
-  //     Eigen::Matrix<double, 20, 1>::Zero(),  // targets_CPA_y
-  //     Eigen::Matrix<double, 20, 1>::Zero()   // targets_TCPA
-  // );
+  // perception
+  ASV::common::perception_db perception_db(folderp, config_path);
+  perception_db.create_table();
+  perception_db.update_spoke_table(
+      std::vector<double>({1, 2, 3, 4}), std::vector<double>({1, 2, 3, 4}),
+      std::vector<double>({1, 2, 3, 4}), std::vector<double>({1, 2, 3, 4}));
+  perception_db.update_detection_table(std::vector<double>({1, 2, 3, 4}),
+                                       std::vector<double>({1, 2, 3, 4}),
+                                       std::vector<double>({1, 2, 3, 4}));
+  perception_db.update_trackingtarget_table<20>(
+      20,                                    // spoke_state
+      Eigen::Matrix<int, 20, 1>::Zero(),     // targets_state
+      Eigen::Matrix<int, 20, 1>::Zero(),     // targets_intention
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_x
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_y
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_square_radius
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_vx
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_vy
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_CPA_x
+      Eigen::Matrix<double, 20, 1>::Zero(),  // targets_CPA_y
+      Eigen::Matrix<double, 20, 1>::Zero()   // targets_TCPA
+  );
 
   LOG(INFO) << "Shutting down.";
 }
