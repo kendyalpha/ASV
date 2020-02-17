@@ -79,11 +79,21 @@ class gps_db : public master_db {
     }
   }  // create_table
 
-  void update_table(double UTC = 0, double latitude = 0, double longitude = 0,
-                    double heading = 0, double pitch = 0, double roll = 0,
-                    double altitude = 0, double Ve = 0, double Vn = 0,
-                    double roti = 0, int status = 0, double UTM_x = 0,
-                    double UTM_y = 0, const std::string &UTM_zone = "") {
+  void update_table(double UTC = 0,                   //
+                    double latitude = 0,              //
+                    double longitude = 0,             //
+                    double heading = 0,               //
+                    double pitch = 0,                 //
+                    double roll = 0,                  //
+                    double altitude = 0,              //
+                    double Ve = 0,                    //
+                    double Vn = 0,                    //
+                    double roti = 0,                  //
+                    int status = 0,                   //
+                    double UTM_x = 0,                 //
+                    double UTM_y = 0,                 //
+                    const std::string &UTM_zone = ""  //
+  ) {
     try {
       std::string str = "INSERT INTO GPS";
       str += insert_string;
@@ -169,7 +179,9 @@ class wind_db : public master_db {
     }
   }  // create_table
 
-  void update_table(double speed = 0, double orientation = 0) {
+  void update_table(double speed = 0,       //
+                    double orientation = 0  //
+  ) {
     try {
       std::string str = "INSERT INTO wind";
       str += insert_string;
@@ -231,13 +243,21 @@ class stm32_db : public master_db {
     }
   }  // create_table
 
-  void update_table(int stm32_link = 0, int stm32_status = 0,
-                    double command_u1 = 0, double command_u2 = 0,
-                    double feedback_u1 = 0, double feedback_u2 = 0,
-                    int feedback_pwm1 = 0, int feedback_pwm2 = 0,
-                    double RC_X = 0, double RC_Y = 0, double RC_Mz = 0,
-                    double voltage_b1 = 0, double voltage_b2 = 0,
-                    double voltage_b3 = 0) {
+  void update_table(int stm32_link = 0,      //
+                    int stm32_status = 0,    //
+                    double command_u1 = 0,   //
+                    double command_u2 = 0,   //
+                    double feedback_u1 = 0,  //
+                    double feedback_u2 = 0,  //
+                    int feedback_pwm1 = 0,   //
+                    int feedback_pwm2 = 0,   //
+                    double RC_X = 0,         //
+                    double RC_Y = 0,         //
+                    double RC_Mz = 0,        //
+                    double voltage_b1 = 0,   //
+                    double voltage_b2 = 0,   //
+                    double voltage_b3 = 0    //
+  ) {
     try {
       std::string str = "INSERT INTO stm32";
       str += insert_string;
@@ -324,9 +344,11 @@ class marineradar_db : public master_db {
     }
   }  // create_table
 
-  void update_table(double azimuth_deg, double sample_range,
-                    const std::size_t size_spokedata,
-                    const uint8_t *spokedata) {
+  void update_table(double azimuth_deg,                //
+                    double sample_range,               //
+                    const std::size_t size_spokedata,  //
+                    const uint8_t *spokedata           //
+  ) {
     try {
       std::string str = "INSERT INTO radar";
       str += insert_string;
@@ -428,9 +450,13 @@ class estimator_db : public master_db {
     }
   }  // create_table
 
-  void update_measurement_table(double meas_x = 0, double meas_y = 0,
-                                double meas_theta = 0, double meas_u = 0,
-                                double meas_v = 0, double meas_r = 0) {
+  void update_measurement_table(double meas_x = 0,      //
+                                double meas_y = 0,      //
+                                double meas_theta = 0,  //
+                                double meas_u = 0,      //
+                                double meas_v = 0,      //
+                                double meas_r = 0       //
+  ) {
     try {
       std::string str = "INSERT INTO measurement";
       str += insert_string_measurement;
@@ -455,11 +481,16 @@ class estimator_db : public master_db {
     }
   }  // update_measurement_table
 
-  void update_state_table(double state_x = 0, double state_y = 0,
-                          double state_theta = 0, double state_u = 0,
-                          double state_v = 0, double state_r = 0,
-                          double curvature = 0, double speed = 0,
-                          double dspeed = 0) {
+  void update_state_table(double state_x = 0,      //
+                          double state_y = 0,      //
+                          double state_theta = 0,  //
+                          double state_u = 0,      //
+                          double state_v = 0,      //
+                          double state_r = 0,      //
+                          double curvature = 0,    //
+                          double speed = 0,        //
+                          double dspeed = 0        //
+  ) {
     try {
       std::string str = "INSERT INTO state";
       str += insert_string_state;
@@ -490,9 +521,13 @@ class estimator_db : public master_db {
     }
   }  // update_state_table
 
-  void update_error_table(double perror_x = 0, double perror_y = 0,
-                          double perror_mz = 0, double verror_x = 0,
-                          double verror_y = 0, double verror_mz = 0) {
+  void update_error_table(double perror_x = 0,   //
+                          double perror_y = 0,   //
+                          double perror_mz = 0,  //
+                          double verror_x = 0,   //
+                          double verror_y = 0,   //
+                          double verror_mz = 0   //
+  ) {
     try {
       std::string str = "INSERT INTO error";
       str += insert_string_error;
@@ -586,9 +621,13 @@ class planner_db : public master_db {
     }
   }  // create_table
 
-  void update_routeplanner_table(double speed = 0, double captureradius = 0,
-                                 double WPX = 0, double WPY = 0,
-                                 double WPLONG = 0, double WPLAT = 0) {
+  void update_routeplanner_table(double speed = 0,          //
+                                 double captureradius = 0,  //
+                                 double WPX = 0,            //
+                                 double WPY = 0,            //
+                                 double WPLONG = 0,         //
+                                 double WPLAT = 0           //
+  ) {
     try {
       std::string str = "INSERT INTO routeplanner";
       str += insert_string_routeplanner;
@@ -613,11 +652,13 @@ class planner_db : public master_db {
     }
   }  // update_routeplanner_table
 
-  void update_latticeplanner_table(double lattice_x = 0, double lattice_y = 0,
-                                   double lattice_theta = 0,
-                                   double lattice_kappa = 0,
-                                   double lattice_speed = 0,
-                                   double lattice_dspeed = 0) {
+  void update_latticeplanner_table(double lattice_x = 0,      //
+                                   double lattice_y = 0,      //
+                                   double lattice_theta = 0,  //
+                                   double lattice_kappa = 0,  //
+                                   double lattice_speed = 0,  //
+                                   double lattice_dspeed = 0  //
+  ) {
     try {
       std::string str = "INSERT INTO latticeplanner";
       str += insert_string_latticeplanner;
@@ -711,9 +752,13 @@ class controller_db : public master_db {
     }
   }  // create_table
 
-  void update_setpoint_table(double set_x = 0, double set_y = 0,
-                             double set_theta = 0, double set_u = 0,
-                             double set_v = 0, double set_r = 0) {
+  void update_setpoint_table(double set_x = 0,      //
+                             double set_y = 0,      //
+                             double set_theta = 0,  //
+                             double set_u = 0,      //
+                             double set_v = 0,      //
+                             double set_r = 0       //
+  ) {
     try {
       std::string str = "INSERT INTO setpoint";
       str += insert_string_setpoint;
@@ -739,10 +784,15 @@ class controller_db : public master_db {
   }  // update_setpoint_table
 
   template <int num_thruster>
-  void update_TA_table(double desired_Fx, double desired_Fy, double desired_Mz,
-                       double est_Fx, double est_Fy, double est_Mz,
-                       const Eigen::Matrix<int, num_thruster, 1> &_alpha,
-                       const Eigen::Matrix<int, num_thruster, 1> &_rpm) {
+  void update_TA_table(double desired_Fx,                                  //
+                       double desired_Fy,                                  //
+                       double desired_Mz,                                  //
+                       double est_Fx,                                      //
+                       double est_Fy,                                      //
+                       double est_Mz,                                      //
+                       const Eigen::Matrix<int, num_thruster, 1> &_alpha,  //
+                       const Eigen::Matrix<int, num_thruster, 1> &_rpm     //
+  ) {
     try {
       std::string str = "INSERT INTO TA";
       str += insert_string_TA;
@@ -844,10 +894,12 @@ class perception_db : public master_db {
     }
   }  // create_table
 
-  void update_spoke_table(const std::vector<double> &surroundings_bearing_rad,
-                          const std::vector<double> &surroundings_range_m,
-                          const std::vector<double> &surroundings_x_m,
-                          const std::vector<double> &surroundings_y_m) {
+  void update_spoke_table(
+      const std::vector<double> &surroundings_bearing_rad,  //
+      const std::vector<double> &surroundings_range_m,      //
+      const std::vector<double> &surroundings_x_m,          //
+      const std::vector<double> &surroundings_y_m           //
+  ) {
     try {
       std::string str = "INSERT INTO SpokeProcess";
       str += insert_string_spoke;

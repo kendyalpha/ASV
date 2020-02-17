@@ -46,3 +46,9 @@ target_link_libraries(testrecorder PUBLIC ${SQLITE3_LIBRARY})
 target_link_libraries(testrecorder PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 
 
+add_executable (testparser testparser.cc)
+target_include_directories(testparser PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testparser PUBLIC ${SQLITE3_LIBRARY})
+target_link_libraries(testparser PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+
+
