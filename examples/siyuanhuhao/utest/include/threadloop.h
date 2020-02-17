@@ -18,8 +18,7 @@ namespace ASV {
 
 class threadloop : public StateMonitor {
  public:
-  threadloop()
-      : StateMonitor(), _jsonparse("./../../properties/property.json") {
+  threadloop() : StateMonitor(), _jsonparse(parameter_json_path) {
     // // write prettified JSON to another file
     // std::ofstream o("pretty.json");
     // o << std::setw(4) << j << std::endl;
@@ -769,13 +768,13 @@ class threadloop : public StateMonitor {
   // loop to save real time data using sqlite3 and modern_sqlite3_cpp_wrapper
   void sqlloop() {
     std::string sqlpath = _jsonparse.getsqlitepath();
-    common::gps_db _gps_db(sqlpath);
-    common::stm32_db _stm32_db(sqlpath);
-    common::marineradar_db _marineradar_db(sqlpath);
-    common::estimator_db _estimator_db(sqlpath);
-    common::planner_db _planner_db(sqlpath);
-    common::controller_db _controller_db(sqlpath);
-    common::perception_db _perception_db(sqlpath);
+    common::gps_db _gps_db(sqlpath, db_config_path);
+    common::stm32_db _stm32_db(sqlpath, db_config_path);
+    common::marineradar_db _marineradar_db(sqlpath, db_config_path);
+    common::estimator_db _estimator_db(sqlpath, db_config_path);
+    common::planner_db _planner_db(sqlpath, db_config_path);
+    common::controller_db _controller_db(sqlpath, db_config_path);
+    common::perception_db _perception_db(sqlpath, db_config_path);
 
     _gps_db.create_table();
     _stm32_db.create_table();
@@ -893,6 +892,16 @@ class threadloop : public StateMonitor {
               Planning_Marine_state.theta, Planning_Marine_state.kappa,
               Planning_Marine_state.speed, Planning_Marine_state.dspeed);
 
+          if (RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::READY) {
+            _planner_db.update_routeplanner_table(
+                RoutePlanner_RTdata.speed,
+                RoutePlanner_RTdata.los_capture_radius,
+                RoutePlanner_RTdata.setpoints_X,
+                RoutePlanner_RTdata.setpoints_Y,
+                RoutePlanner_RTdata.setpoints_longitude,
+                RoutePlanner_RTdata.setpoints_latitude);
+          }
+
           break;
         }
         case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
@@ -936,6 +945,21 @@ class threadloop : public StateMonitor {
               controller_RTdata.command_alpha_deg,
               controller_RTdata.command_rotation);
 
+          _planner_db.update_latticeplanner_table(
+              Planning_Marine_state.x, Planning_Marine_state.y,
+              Planning_Marine_state.theta, Planning_Marine_state.kappa,
+              Planning_Marine_state.speed, Planning_Marine_state.dspeed);
+
+          if (RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::READY) {
+            _planner_db.update_routeplanner_table(
+                RoutePlanner_RTdata.speed,
+                RoutePlanner_RTdata.los_capture_radius,
+                RoutePlanner_RTdata.setpoints_X,
+                RoutePlanner_RTdata.setpoints_Y,
+                RoutePlanner_RTdata.setpoints_longitude,
+                RoutePlanner_RTdata.setpoints_latitude);
+          }
+
           std::size_t size_spokedata = sizeof(MarineRadar_RTdata.spokedata) /
                                        sizeof(MarineRadar_RTdata.spokedata[0]);
           _marineradar_db.update_table(MarineRadar_RTdata.spoke_azimuth_deg,
@@ -943,24 +967,29 @@ class threadloop : public StateMonitor {
                                        size_spokedata,
                                        MarineRadar_RTdata.spokedata);
 
-          _perception_db.update_spoke_table(
-              SpokeProcess_RTdata.surroundings_bearing_rad,
-              SpokeProcess_RTdata.surroundings_range_m,
-              SpokeProcess_RTdata.surroundings_x_m,
-              SpokeProcess_RTdata.surroundings_y_m);
-          _perception_db.update_detection_table(
-              TargetDetection_RTdata.target_x, TargetDetection_RTdata.target_y,
-              TargetDetection_RTdata.target_square_radius);
-          _perception_db.update_trackingtarget_table<max_num_targets>(
-              static_cast<int>(TargetTracker_RTdata.spoke_state),
-              TargetTracker_RTdata.targets_state,
-              TargetTracker_RTdata.targets_intention,
-              TargetTracker_RTdata.targets_x, TargetTracker_RTdata.targets_y,
-              TargetTracker_RTdata.targets_square_radius,
-              TargetTracker_RTdata.targets_vx, TargetTracker_RTdata.targets_vy,
-              TargetTracker_RTdata.targets_CPA_x,
-              TargetTracker_RTdata.targets_CPA_y,
-              TargetTracker_RTdata.targets_TCPA);
+          if (TargetTracker_RTdata.spoke_state ==
+              ASV::perception::SPOKESTATE::LEAVE_ALARM_ZONE) {
+            _perception_db.update_spoke_table(
+                SpokeProcess_RTdata.surroundings_bearing_rad,
+                SpokeProcess_RTdata.surroundings_range_m,
+                SpokeProcess_RTdata.surroundings_x_m,
+                SpokeProcess_RTdata.surroundings_y_m);
+            _perception_db.update_detection_table(
+                TargetDetection_RTdata.target_x,
+                TargetDetection_RTdata.target_y,
+                TargetDetection_RTdata.target_square_radius);
+            _perception_db.update_trackingtarget_table<max_num_targets>(
+                static_cast<int>(TargetTracker_RTdata.spoke_state),
+                TargetTracker_RTdata.targets_state,
+                TargetTracker_RTdata.targets_intention,
+                TargetTracker_RTdata.targets_x, TargetTracker_RTdata.targets_y,
+                TargetTracker_RTdata.targets_square_radius,
+                TargetTracker_RTdata.targets_vx,
+                TargetTracker_RTdata.targets_vy,
+                TargetTracker_RTdata.targets_CPA_x,
+                TargetTracker_RTdata.targets_CPA_y,
+                TargetTracker_RTdata.targets_TCPA);
+          }
 
           break;
         }

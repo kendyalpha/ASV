@@ -41,7 +41,14 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 	"/usr/lib")
 
 
-
+set(RARE_LIBRARIES ${RARE_LIBRARIES} 
+	"boost_system"
+	"boost_filesystem"
+	"boost_iostreams"
+	"util"
+	)
 # 指定生成目标
 add_executable (testsimulator testsimulator.cc)
 target_include_directories(testsimulator PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testsimulator ${RARE_LIBRARIES})
+

@@ -31,6 +31,18 @@
 #include "modules/simulator/include/simulator.h"
 
 namespace ASV {
+
+const std::string parameter_json_path = "./../../properties/property.json";
+const std::string db_config_path =
+    "./../../../../../common/fileIO/recorder/config/config.json";
+
+constexpr int num_thruster = 2;
+constexpr int dim_controlspace = 3;
+constexpr USEKALMAN indicator_kalman = USEKALMAN::KALMANOFF;
+constexpr control::ACTUATION indicator_actuation =
+    control::ACTUATION::UNDERACTUATED;
+constexpr int max_num_targets = 20;
+
 // constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_DP;
 // constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_LOS;
 // constexpr common::TESTMODE testmode = common::TESTMODE::SIMULATION_FRENET;
@@ -40,13 +52,6 @@ namespace ASV {
 // constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_LOS;
 // constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_FRENET;
 constexpr common::TESTMODE testmode = common::TESTMODE::EXPERIMENT_AVOIDANCE;
-
-constexpr int num_thruster = 2;
-constexpr int dim_controlspace = 3;
-constexpr USEKALMAN indicator_kalman = USEKALMAN::KALMANOFF;
-constexpr control::ACTUATION indicator_actuation =
-    control::ACTUATION::UNDERACTUATED;
-constexpr int max_num_targets = 20;
 
 }  // namespace ASV
 

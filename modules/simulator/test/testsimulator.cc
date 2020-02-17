@@ -8,7 +8,7 @@
 */
 
 #include "../include/simulator.h"
-#include "common/fileIO/include/utilityio.h"
+#include "common/plotting/include/gnuplot-iostream.h"
 
 using namespace ASV;
 
@@ -40,14 +40,32 @@ int main() {
   Eigen::Vector3d u = Eigen::Vector3d::Zero();
 
   int total_step = 5000;
-  Eigen::MatrixXd save_x(total_step, 6);
+  Eigen::MatrixXd save_x(6, total_step);
 
   simulation::simulator _simulator(0.1, _vessel, x);
 
   for (int i = 0; i != total_step; ++i) {
     u = -P * x.head(3);
     x = _simulator.simulator_onestep(0, u).getX();
-    save_x.row(i) = x.transpose();
+    save_x.col(i) = x;
   }
-  common::write2csvfile("../data/x.csv", save_x);
+
+  Gnuplot gp;
+  std::vector<std::pair<double, double> > xy_pts_A;
+  gp << "set terminal x11 size 800, 1000 0\n";
+  gp << "set multiplot layout 3, 1 title 'Simulation results' font ',14'\n";
+  std::vector<std::string> label_names = {"X", "Y", "theta"};
+  for (int i = 0; i != 3; ++i) {
+    gp << "set xtics out\n";
+    gp << "set ytics out\n";
+    gp << "set ylabel '" << label_names[i] << "'\n";
+    gp << "plot"
+          " '-' with lines lt 1 lw 3 lc rgb 'violet' \n";
+    xy_pts_A.clear();
+    for (int j = 0; j != total_step; ++j) {
+      xy_pts_A.push_back(std::make_pair(j, save_x(i, j)));
+    }
+    gp.send1d(xy_pts_A);
+  }
+  gp << "unset multiplot\n";
 }

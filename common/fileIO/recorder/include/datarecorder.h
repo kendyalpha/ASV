@@ -22,13 +22,32 @@
 
 namespace ASV::common {
 
+class master_db {
+ public:
+  explicit master_db(const std::string &_DB_folder_path)
+      : dbpath(_DB_folder_path + "master.db") {
+    sqlite::database db(dbpath);
+
+    db << "CREATE TABLE IF NOT EXISTS info "
+          "(ID INTEGER PRIMARY KEY, DATETIME TEXT NOT NULL);";
+    db << "INSERT OR IGNORE INTO info (ID, DATETIME)"
+          " VALUES(1, julianday('now'));";
+  }
+  virtual ~master_db() = default;
+
+ private:
+  std::string dbpath;
+
+};  // end class master_db
+
 /********************************* messages **********************************/
 /*sensors(GPS, IMU, marine radar, etc)          */
-class gps_db {
+class gps_db : public master_db {
  public:
   explicit gps_db(const std::string &_DB_folder_path,
                   const std::string &_config_name)
-      : dbpath(_DB_folder_path + "gps.db"),
+      : master_db(_DB_folder_path),
+        dbpath(_DB_folder_path + "gps.db"),
         config_name(_config_name),
         insert_string(""),
         db(dbpath) {}
@@ -113,11 +132,12 @@ class gps_db {
 
 };  // end class gps_db
 
-class wind_db {
+class wind_db : public master_db {
  public:
   explicit wind_db(const std::string &_DB_folder_path,
                    const std::string &_config_name)
-      : dbpath(_DB_folder_path + "wind.db"),
+      : master_db(_DB_folder_path),
+        dbpath(_DB_folder_path + "wind.db"),
         config_name(_config_name),
         insert_string(""),
         db(dbpath) {}
@@ -174,11 +194,12 @@ class wind_db {
 
 };  // end class wind_db
 
-class stm32_db {
+class stm32_db : public master_db {
  public:
   explicit stm32_db(const std::string &_DB_folder_path,
                     const std::string &_config_name)
-      : dbpath(_DB_folder_path + "stm32.db"),
+      : master_db(_DB_folder_path),
+        dbpath(_DB_folder_path + "stm32.db"),
         config_name(_config_name),
         insert_string(""),
         db(dbpath) {}
@@ -265,11 +286,12 @@ class stm32_db {
 
 };  // end class stm32_db
 
-class marineradar_db {
+class marineradar_db : public master_db {
  public:
   explicit marineradar_db(const std::string &_DB_folder_path,
                           const std::string &_config_name)
-      : dbpath(_DB_folder_path + "marineradar.db"),
+      : master_db(_DB_folder_path),
+        dbpath(_DB_folder_path + "marineradar.db"),
         config_name(_config_name),
         insert_string(""),
         db(dbpath) {}
@@ -328,11 +350,12 @@ class marineradar_db {
 
 /********************************* Modules **********************************/
 /* perception, planner, controller, estimator(GPS, IMU, marine radar, etc) */
-class estimator_db {
+class estimator_db : public master_db {
  public:
   explicit estimator_db(const std::string &_DB_folder_path,
                         const std::string &_config_name)
-      : dbpath(_DB_folder_path + "estimator.db"),
+      : master_db(_DB_folder_path),
+        dbpath(_DB_folder_path + "estimator.db"),
         config_name(_config_name),
         insert_string_measurement(""),
         insert_string_state(""),
@@ -504,11 +527,12 @@ class estimator_db {
 
 };  // end class estimator_db
 
-class planner_db {
+class planner_db : public master_db {
  public:
   explicit planner_db(const std::string &_DB_folder_path,
                       const std::string &_config_name)
-      : dbpath(_DB_folder_path + "planner.db"),
+      : master_db(_DB_folder_path),
+        dbpath(_DB_folder_path + "planner.db"),
         config_name(_config_name),
         insert_string_routeplanner(""),
         insert_string_latticeplanner(""),
@@ -628,11 +652,12 @@ class planner_db {
 
 };  // end class planner_db
 
-class controller_db {
+class controller_db : public master_db {
  public:
   explicit controller_db(const std::string &_DB_folder_path,
                          const std::string &_config_name)
-      : dbpath(_DB_folder_path + "controller.db"),
+      : master_db(_DB_folder_path),
+        dbpath(_DB_folder_path + "controller.db"),
         config_name(_config_name),
         insert_string_setpoint(""),
         insert_string_TA(""),
@@ -742,11 +767,12 @@ class controller_db {
 
 };  // end class controller_db
 
-class perception_db {
+class perception_db : public master_db {
  public:
   explicit perception_db(const std::string &_DB_folder_path,
                          const std::string &_config_name)
-      : dbpath(_DB_folder_path + "perception.db"),
+      : master_db(_DB_folder_path),
+        dbpath(_DB_folder_path + "perception.db"),
         config_name(_config_name),
         insert_string_spoke(""),
         insert_string_detectedtarget(""),

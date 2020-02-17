@@ -8,8 +8,8 @@
 ****************************************************************************
 */
 
-#include <sqlite_modern_cpp.h>
 #include "common/communication/include/tcpserver.h"
+#include "common/fileIO/recorder/include/datarecorder.h"
 #include "modules/messages/sensors/marine_radar/include/MarineRadar.h"
 
 using namespace ASV::messages;
@@ -50,12 +50,6 @@ using namespace sqlite;
 //   }
 // }
 
-void readsqlitedata() {
-  database db("radar.db");
-  std::vector<uint8_t> numbers_test;
-  db << "SELECT numbers from radar where id = ?;" << 1 >> numbers_test;
-}
-
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
@@ -65,19 +59,18 @@ int main() {
   _MarineRadar.StartMarineRadar();
 
   // sqlite3
-  database db("radar.db");
-  db << "CREATE TABLE radar (id integer primary key autoincrement not "
-        "null, angle real, range real, numbers BLOB);";
+  const std::string config_path =
+      "../../../../common/fileIO/recorder/config/dbconfig.json";
+  ASV::common::marineradar_db marineradar_db("radar.db", config_path);
+  marineradar_db.create_table();
 
   while (1) {
     auto MarineRadar_RTdata = _MarineRadar.getMarineRadarRTdata();
 
-    db << "INSERT INTO radar (angle, range, numbers) VALUES (?, ?, ?)"
-       << MarineRadar_RTdata.spoke_azimuth_deg
-       << MarineRadar_RTdata.spoke_samplerange_m
-       << std::vector<uint8_t>(
-              &MarineRadar_RTdata.spokedata[0],
-              &MarineRadar_RTdata.spokedata[SAMPLES_PER_SPOKE / 2]);
+    marineradar_db.update_table(MarineRadar_RTdata.spoke_azimuth_deg,
+                                MarineRadar_RTdata.spoke_samplerange_m,
+                                SAMPLES_PER_SPOKE / 2,
+                                MarineRadar_RTdata.spokedata);
 
     std::cout << "spoke_azimuth_deg: " << MarineRadar_RTdata.spoke_azimuth_deg
               << std::endl;
