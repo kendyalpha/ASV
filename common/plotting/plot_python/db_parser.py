@@ -7,10 +7,60 @@
 # ****************************************************************************
 # */
 
-
+import struct
 import sqlite3
 import json
 import pandas as pd
+
+
+def parse_controller(db_path, db_config_path, num_thruster):
+    # Read the db config file
+    with open(db_config_path) as f:
+        dbconfig = json.load(f)
+
+    # connect to sqlite database
+    db_conn = sqlite3.connect(db_path)
+    # create a cursor to execute SQL commands
+    db_cursor = db_conn.cursor()
+
+    #  retrieve data from database
+    db_cursor.execute("SELECT * FROM TA")
+    TA_rows = db_cursor.fetchall()
+    db_cursor.execute("SELECT * FROM setpoint")
+    setpoint_rows = db_cursor.fetchall()
+
+    db_conn.commit()
+    db_conn.close()
+
+    # thrust allocation dataframe
+    TA_items = ['ID', 'DATETIME']
+    for i in dbconfig['controller']['TA']:
+        TA_items.append(i[0])
+    TA_data = pd.DataFrame(TA_rows)
+    TA_data.columns = TA_items
+    TA_data['DATETIME'] = TA_data['DATETIME'].astype(float)
+
+    # parse the BLOB data
+    unpack_formats = '=' + str(num_thruster) + 'i'
+    azimuth = []
+    rotation = []
+    for onerow in TA_data['Azimuth']:
+        azimuth.append(struct.unpack(unpack_formats, onerow))
+    for onerow in TA_data['Rotation']:
+        rotation.append(struct.unpack(unpack_formats, onerow))
+
+    TA_data['Azimuth'] = azimuth
+    TA_data['Rotation'] = rotation
+
+    # setpoint dataframe
+    setpoint_items = ['ID', 'DATETIME']
+    for i in dbconfig['controller']['setpoint']:
+        setpoint_items.append(i[0])
+    setpoint_data = pd.DataFrame(setpoint_rows)
+    setpoint_data.columns = setpoint_items
+    setpoint_data['DATETIME'] = setpoint_data['DATETIME'].astype(float)
+
+    return TA_data, setpoint_data
 
 
 def parse_estimator(db_path, db_config_path):
@@ -57,3 +107,38 @@ def parse_estimator(db_path, db_config_path):
     error_data['DATETIME'] = error_data['DATETIME'].astype(float)
 
     return measurement_data, state_data, error_data
+
+
+def parse_marineradar(db_path, db_config_path, num_spokedata):
+    # Read the db config file
+    with open(db_config_path) as f:
+        dbconfig = json.load(f)
+
+    # connect to sqlite database
+    db_conn = sqlite3.connect(db_path)
+    # create a cursor to execute SQL commands
+    db_cursor = db_conn.cursor()
+
+    #  retrieve data from database
+    db_cursor.execute("SELECT * FROM radar")
+    radar_rows = db_cursor.fetchall()
+    db_conn.commit()
+    db_conn.close()
+
+    # radar dataframe
+    radar_items = ['ID', 'DATETIME']
+    for i in dbconfig['marineradar']:
+        radar_items.append(i[0])
+    radar_data = pd.DataFrame(radar_rows)
+    radar_data.columns = radar_items
+    radar_data['DATETIME'] = radar_data['DATETIME'].astype(float)
+
+    # parse the BLOB data
+    unpack_formats = '=' + str(num_spokedata) + 'B'  # unsigned char
+    spokedata = []
+    for onerow in radar_data['SpokeData']:
+        spokedata.append(struct.unpack(unpack_formats, onerow))
+
+    radar_data['SpokeData'] = spokedata
+
+    return radar_data

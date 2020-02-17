@@ -16,7 +16,6 @@ measurement_data, state_data, error_data = db_parser.parse_estimator(
     '../../fileIO/recorder/data/estimator.db',
     '../../fileIO/recorder/config/dbconfig.json')
 
-
 timestamp0 = min(measurement_data["DATETIME"].loc[0],
                  state_data["DATETIME"].loc[0],
                  error_data["DATETIME"].loc[0])
