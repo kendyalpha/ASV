@@ -4,6 +4,8 @@
 * database using sqlite3 and sqlite modern cpp wrapper
 * This header file can be read by C++ compilers
 *
+* db_config.json is used to construct the tables in database
+* databasedata.h is used to update the data in database
 * by Hu.ZH(CrossOcean.ai)
 ***********************************************************************
 */
@@ -13,12 +15,12 @@
 
 #include <sqlite_modern_cpp.h>
 #include <common/math/eigen/Eigen/Core>
-#include <string>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
 #include "common/fileIO/include/json.hpp"
 #include "common/logging/include/easylogging++.h"
+#include "databasedata.h"
 
 namespace ASV::common {
 
@@ -79,53 +81,39 @@ class gps_db : public master_db {
     }
   }  // create_table
 
-  void update_table(double UTC = 0,                   //
-                    double latitude = 0,              //
-                    double longitude = 0,             //
-                    double heading = 0,               //
-                    double pitch = 0,                 //
-                    double roll = 0,                  //
-                    double altitude = 0,              //
-                    double Ve = 0,                    //
-                    double Vn = 0,                    //
-                    double roti = 0,                  //
-                    int status = 0,                   //
-                    double UTM_x = 0,                 //
-                    double UTM_y = 0,                 //
-                    const std::string &UTM_zone = ""  //
-  ) {
+  void update_table(const gps_db_data &update_data) {
     try {
       std::string str = "INSERT INTO GPS";
       str += insert_string;
       str += "VALUES(julianday('now')";
       str += ", ";
-      str += std::to_string(UTC);
+      str += std::to_string(update_data.UTC);
       str += ", ";
-      str += std::to_string(latitude);
+      str += std::to_string(update_data.latitude);
       str += ", ";
-      str += std::to_string(longitude);
+      str += std::to_string(update_data.longitude);
       str += ", ";
-      str += std::to_string(heading);
+      str += std::to_string(update_data.heading);
       str += ", ";
-      str += std::to_string(pitch);
+      str += std::to_string(update_data.pitch);
       str += ", ";
-      str += std::to_string(roll);
+      str += std::to_string(update_data.roll);
       str += ", ";
-      str += std::to_string(altitude);
+      str += std::to_string(update_data.altitude);
       str += ", ";
-      str += std::to_string(Ve);
+      str += std::to_string(update_data.Ve);
       str += ", ";
-      str += std::to_string(Vn);
+      str += std::to_string(update_data.Vn);
       str += ", ";
-      str += std::to_string(roti);
+      str += std::to_string(update_data.roti);
       str += ", ";
-      str += std::to_string(status);
+      str += std::to_string(update_data.status);
       str += ", ";
-      str += std::to_string(UTM_x);
+      str += std::to_string(update_data.UTM_x);
       str += ", ";
-      str += std::to_string(UTM_y);
+      str += std::to_string(update_data.UTM_y);
       str += ", '";
-      str += UTM_zone;
+      str += update_data.UTM_zone;
       str += "');";
 
       db << str;

@@ -9,7 +9,6 @@
 */
 
 #include "../include/datarecorder.h"
-#include "modules/messages/sensors/gpsimu/include/gpsdata.h"
 
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
@@ -19,8 +18,10 @@ int main() {
   const std::string folderp = "../../data/";
   const std::string config_path = "../../config/dbconfig.json";
 
-  // GPS
-  ASV::messages::gpsRTdata gps_data{
+  ASV::common::gps_db gps_db(folderp, config_path);
+  gps_db.create_table();
+  gps_db.update_table(ASV::common::gps_db_data{
+      0,    // local_time
       1,    // UTC
       2,    // latitude
       3,    // longitude
@@ -35,14 +36,7 @@ int main() {
       12,   // UTM_x
       13,   // UTM_y
       "0n"  // UTM_zone
-  };
-  ASV::common::gps_db gps_db(folderp, config_path);
-  gps_db.create_table();
-  gps_db.update_table(gps_data.UTC, gps_data.latitude, gps_data.longitude,
-                      gps_data.heading, gps_data.pitch, gps_data.roll,
-                      gps_data.altitude, gps_data.Ve, gps_data.Vn,
-                      gps_data.roti, gps_data.status, gps_data.UTM_x,
-                      gps_data.UTM_y, gps_data.UTM_zone);
+  });
 
   // wind
   ASV::common::wind_db wind_db(folderp, config_path);

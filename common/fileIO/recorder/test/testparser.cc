@@ -12,5 +12,8 @@
 
 int main() {
   const std::string folderp = "../../data/";
-  ASV::common::master_parser master_parser(folderp);
+  const std::string config_path = "../../config/dbconfig.json";
+
+  ASV::common::GPS_parser GPS_parser(folderp, config_path);
+  auto read_gps = GPS_parser.parse_table(0, 10);
 }
