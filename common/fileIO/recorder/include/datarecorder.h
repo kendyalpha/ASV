@@ -14,7 +14,6 @@
 #define _DATARECORDER_H_
 
 #include <sqlite_modern_cpp.h>
-#include <common/math/eigen/Eigen/Core>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
@@ -167,17 +166,15 @@ class wind_db : public master_db {
     }
   }  // create_table
 
-  void update_table(double speed = 0,       //
-                    double orientation = 0  //
-  ) {
+  void update_table(const wind_db_data &update_data) {
     try {
       std::string str = "INSERT INTO wind";
       str += insert_string;
       str += "VALUES(julianday('now')";
       str += ", ";
-      str += std::to_string(speed);
+      str += std::to_string(update_data.speed);
       str += ", ";
-      str += std::to_string(orientation);
+      str += std::to_string(update_data.orientation);
       str += ");";
 
       db << str;
@@ -231,53 +228,39 @@ class stm32_db : public master_db {
     }
   }  // create_table
 
-  void update_table(int stm32_link = 0,      //
-                    int stm32_status = 0,    //
-                    double command_u1 = 0,   //
-                    double command_u2 = 0,   //
-                    double feedback_u1 = 0,  //
-                    double feedback_u2 = 0,  //
-                    int feedback_pwm1 = 0,   //
-                    int feedback_pwm2 = 0,   //
-                    double RC_X = 0,         //
-                    double RC_Y = 0,         //
-                    double RC_Mz = 0,        //
-                    double voltage_b1 = 0,   //
-                    double voltage_b2 = 0,   //
-                    double voltage_b3 = 0    //
-  ) {
+  void update_table(const stm32_db_data &update_data) {
     try {
       std::string str = "INSERT INTO stm32";
       str += insert_string;
       str += "VALUES(julianday('now')";
       str += ", ";
-      str += std::to_string(stm32_link);
+      str += std::to_string(update_data.stm32_link);
       str += ", ";
-      str += std::to_string(stm32_status);
+      str += std::to_string(update_data.stm32_status);
       str += ", ";
-      str += std::to_string(command_u1);
+      str += std::to_string(update_data.command_u1);
       str += ", ";
-      str += std::to_string(command_u2);
+      str += std::to_string(update_data.command_u2);
       str += ", ";
-      str += std::to_string(feedback_u1);
+      str += std::to_string(update_data.feedback_u1);
       str += ", ";
-      str += std::to_string(feedback_u2);
+      str += std::to_string(update_data.feedback_u2);
       str += ", ";
-      str += std::to_string(feedback_pwm1);
+      str += std::to_string(update_data.feedback_pwm1);
       str += ", ";
-      str += std::to_string(feedback_pwm2);
+      str += std::to_string(update_data.feedback_pwm2);
       str += ", ";
-      str += std::to_string(RC_X);
+      str += std::to_string(update_data.RC_X);
       str += ", ";
-      str += std::to_string(RC_Y);
+      str += std::to_string(update_data.RC_Y);
       str += ", ";
-      str += std::to_string(RC_Mz);
+      str += std::to_string(update_data.RC_Mz);
       str += ", ";
-      str += std::to_string(voltage_b1);
+      str += std::to_string(update_data.voltage_b1);
       str += ", ";
-      str += std::to_string(voltage_b2);
+      str += std::to_string(update_data.voltage_b2);
       str += ", ";
-      str += std::to_string(voltage_b3);
+      str += std::to_string(update_data.voltage_b3);
       str += ");";
 
       db << str;
@@ -332,18 +315,14 @@ class marineradar_db : public master_db {
     }
   }  // create_table
 
-  void update_table(double azimuth_deg,                //
-                    double sample_range,               //
-                    const std::size_t size_spokedata,  //
-                    const uint8_t *spokedata           //
-  ) {
+  void update_table(const marineradar_db_data &update_data) {
     try {
       std::string str = "INSERT INTO radar";
       str += insert_string;
       str += "VALUES(julianday('now'),? ,? ,? )";
 
-      std::vector<uint8_t> data(&spokedata[0], &spokedata[size_spokedata]);
-      db << str << azimuth_deg << sample_range << data;
+      db << str << update_data.azimuth_deg << update_data.sample_range
+         << update_data.spokedata;
 
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-marineradar") << e.what();
@@ -438,29 +417,23 @@ class estimator_db : public master_db {
     }
   }  // create_table
 
-  void update_measurement_table(double meas_x = 0,      //
-                                double meas_y = 0,      //
-                                double meas_theta = 0,  //
-                                double meas_u = 0,      //
-                                double meas_v = 0,      //
-                                double meas_r = 0       //
-  ) {
+  void update_measurement_table(const est_measurement_db_data &update_data) {
     try {
       std::string str = "INSERT INTO measurement";
       str += insert_string_measurement;
       str += "VALUES(julianday('now')";
       str += ", ";
-      str += std::to_string(meas_x);
+      str += std::to_string(update_data.meas_x);
       str += ", ";
-      str += std::to_string(meas_y);
+      str += std::to_string(update_data.meas_y);
       str += ", ";
-      str += std::to_string(meas_theta);
+      str += std::to_string(update_data.meas_theta);
       str += ", ";
-      str += std::to_string(meas_u);
+      str += std::to_string(update_data.meas_u);
       str += ", ";
-      str += std::to_string(meas_v);
+      str += std::to_string(update_data.meas_v);
       str += ", ";
-      str += std::to_string(meas_r);
+      str += std::to_string(update_data.meas_r);
       str += ");";
 
       db << str;
@@ -469,38 +442,29 @@ class estimator_db : public master_db {
     }
   }  // update_measurement_table
 
-  void update_state_table(double state_x = 0,      //
-                          double state_y = 0,      //
-                          double state_theta = 0,  //
-                          double state_u = 0,      //
-                          double state_v = 0,      //
-                          double state_r = 0,      //
-                          double curvature = 0,    //
-                          double speed = 0,        //
-                          double dspeed = 0        //
-  ) {
+  void update_state_table(const est_state_db_data &update_data) {
     try {
       std::string str = "INSERT INTO state";
       str += insert_string_state;
       str += "VALUES(julianday('now')";
       str += ", ";
-      str += std::to_string(state_x);
+      str += std::to_string(update_data.state_x);
       str += ", ";
-      str += std::to_string(state_y);
+      str += std::to_string(update_data.state_y);
       str += ", ";
-      str += std::to_string(state_theta);
+      str += std::to_string(update_data.state_theta);
       str += ", ";
-      str += std::to_string(state_u);
+      str += std::to_string(update_data.state_u);
       str += ", ";
-      str += std::to_string(state_v);
+      str += std::to_string(update_data.state_v);
       str += ", ";
-      str += std::to_string(state_r);
+      str += std::to_string(update_data.state_r);
       str += ", ";
-      str += std::to_string(curvature);
+      str += std::to_string(update_data.curvature);
       str += ", ";
-      str += std::to_string(speed);
+      str += std::to_string(update_data.speed);
       str += ", ";
-      str += std::to_string(dspeed);
+      str += std::to_string(update_data.dspeed);
       str += ");";
 
       db << str;
@@ -509,29 +473,23 @@ class estimator_db : public master_db {
     }
   }  // update_state_table
 
-  void update_error_table(double perror_x = 0,   //
-                          double perror_y = 0,   //
-                          double perror_mz = 0,  //
-                          double verror_x = 0,   //
-                          double verror_y = 0,   //
-                          double verror_mz = 0   //
-  ) {
+  void update_error_table(const est_error_db_data &update_data) {
     try {
       std::string str = "INSERT INTO error";
       str += insert_string_error;
       str += "VALUES(julianday('now')";
       str += ", ";
-      str += std::to_string(perror_x);
+      str += std::to_string(update_data.perror_x);
       str += ", ";
-      str += std::to_string(perror_y);
+      str += std::to_string(update_data.perror_y);
       str += ", ";
-      str += std::to_string(perror_mz);
+      str += std::to_string(update_data.perror_mz);
       str += ", ";
-      str += std::to_string(verror_x);
+      str += std::to_string(update_data.verror_x);
       str += ", ";
-      str += std::to_string(verror_y);
+      str += std::to_string(update_data.verror_y);
       str += ", ";
-      str += std::to_string(verror_mz);
+      str += std::to_string(update_data.verror_mz);
       str += ");";
 
       db << str;
@@ -609,29 +567,23 @@ class planner_db : public master_db {
     }
   }  // create_table
 
-  void update_routeplanner_table(double speed = 0,          //
-                                 double captureradius = 0,  //
-                                 double WPX = 0,            //
-                                 double WPY = 0,            //
-                                 double WPLONG = 0,         //
-                                 double WPLAT = 0           //
-  ) {
+  void update_routeplanner_table(const plan_route_db_data &update_data) {
     try {
       std::string str = "INSERT INTO routeplanner";
       str += insert_string_routeplanner;
       str += "VALUES(julianday('now')";
       str += ", ";
-      str += std::to_string(speed);
+      str += std::to_string(update_data.speed);
       str += ", ";
-      str += std::to_string(captureradius);
+      str += std::to_string(update_data.captureradius);
       str += ", ";
-      str += std::to_string(WPX);
+      str += std::to_string(update_data.WPX);
       str += ", ";
-      str += std::to_string(WPY);
+      str += std::to_string(update_data.WPY);
       str += ", ";
-      str += std::to_string(WPLONG);
+      str += std::to_string(update_data.WPLONG);
       str += ", ";
-      str += std::to_string(WPLAT);
+      str += std::to_string(update_data.WPLAT);
       str += ");";
 
       db << str;
@@ -640,29 +592,23 @@ class planner_db : public master_db {
     }
   }  // update_routeplanner_table
 
-  void update_latticeplanner_table(double lattice_x = 0,      //
-                                   double lattice_y = 0,      //
-                                   double lattice_theta = 0,  //
-                                   double lattice_kappa = 0,  //
-                                   double lattice_speed = 0,  //
-                                   double lattice_dspeed = 0  //
-  ) {
+  void update_latticeplanner_table(const plan_lattice_db_data &update_data) {
     try {
       std::string str = "INSERT INTO latticeplanner";
       str += insert_string_latticeplanner;
       str += "VALUES(julianday('now')";
       str += ", ";
-      str += std::to_string(lattice_x);
+      str += std::to_string(update_data.lattice_x);
       str += ", ";
-      str += std::to_string(lattice_y);
+      str += std::to_string(update_data.lattice_y);
       str += ", ";
-      str += std::to_string(lattice_theta);
+      str += std::to_string(update_data.lattice_theta);
       str += ", ";
-      str += std::to_string(lattice_kappa);
+      str += std::to_string(update_data.lattice_kappa);
       str += ", ";
-      str += std::to_string(lattice_speed);
+      str += std::to_string(update_data.lattice_speed);
       str += ", ";
-      str += std::to_string(lattice_dspeed);
+      str += std::to_string(update_data.lattice_dspeed);
       str += ");";
 
       db << str;
@@ -740,29 +686,23 @@ class controller_db : public master_db {
     }
   }  // create_table
 
-  void update_setpoint_table(double set_x = 0,      //
-                             double set_y = 0,      //
-                             double set_theta = 0,  //
-                             double set_u = 0,      //
-                             double set_v = 0,      //
-                             double set_r = 0       //
-  ) {
+  void update_setpoint_table(const control_setpoint_db_data &update_data) {
     try {
       std::string str = "INSERT INTO setpoint";
       str += insert_string_setpoint;
       str += "VALUES(julianday('now')";
       str += ", ";
-      str += std::to_string(set_x);
+      str += std::to_string(update_data.set_x);
       str += ", ";
-      str += std::to_string(set_y);
+      str += std::to_string(update_data.set_y);
       str += ", ";
-      str += std::to_string(set_theta);
+      str += std::to_string(update_data.set_theta);
       str += ", ";
-      str += std::to_string(set_u);
+      str += std::to_string(update_data.set_u);
       str += ", ";
-      str += std::to_string(set_v);
+      str += std::to_string(update_data.set_v);
       str += ", ";
-      str += std::to_string(set_r);
+      str += std::to_string(update_data.set_r);
       str += ");";
 
       db << str;
@@ -771,25 +711,14 @@ class controller_db : public master_db {
     }
   }  // update_setpoint_table
 
-  template <int num_thruster>
-  void update_TA_table(double desired_Fx,                                  //
-                       double desired_Fy,                                  //
-                       double desired_Mz,                                  //
-                       double est_Fx,                                      //
-                       double est_Fy,                                      //
-                       double est_Mz,                                      //
-                       const Eigen::Matrix<int, num_thruster, 1> &_alpha,  //
-                       const Eigen::Matrix<int, num_thruster, 1> &_rpm     //
-  ) {
+  void update_TA_table(const control_TA_db_data &update_data) {
     try {
       std::string str = "INSERT INTO TA";
       str += insert_string_TA;
       str += "VALUES(julianday('now'),? ,? ,? ,? ,? ,? ,? ,?)";
-
-      std::vector<int> alpha(_alpha.data(), _alpha.data() + num_thruster);
-      std::vector<int> rpm(_rpm.data(), _rpm.data() + num_thruster);
-      db << str << desired_Fx << desired_Fy << desired_Mz << est_Fx << est_Fy
-         << est_Mz << alpha << rpm;
+      db << str << update_data.desired_Fx << update_data.desired_Fy
+         << update_data.desired_Mz << update_data.est_Fx << update_data.est_Fy
+         << update_data.est_Mz << update_data.alpha << update_data.rpm;
 
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-controller") << e.what();
@@ -882,77 +811,46 @@ class perception_db : public master_db {
     }
   }  // create_table
 
-  void update_spoke_table(
-      const std::vector<double> &surroundings_bearing_rad,  //
-      const std::vector<double> &surroundings_range_m,      //
-      const std::vector<double> &surroundings_x_m,          //
-      const std::vector<double> &surroundings_y_m           //
-  ) {
+  void update_spoke_table(const perception_spoke_db_data &update_data) {
     try {
       std::string str = "INSERT INTO SpokeProcess";
       str += insert_string_spoke;
       str += "VALUES(julianday('now'), ?, ?, ?, ?)";
 
-      db << str << surroundings_bearing_rad << surroundings_range_m
-         << surroundings_x_m << surroundings_y_m;
+      db << str << update_data.surroundings_bearing_rad
+         << update_data.surroundings_range_m << update_data.surroundings_x_m
+         << update_data.surroundings_y_m;
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-perception") << e.what();
     }
   }  // update_spoke_table
 
-  void update_detection_table(
-      const std::vector<double> &detected_target_x,
-      const std::vector<double> &detected_target_y,
-      const std::vector<double> &detected_target_radius) {
+  void update_detection_table(const perception_detection_db_data &update_data) {
     try {
       std::string str = "INSERT INTO DetectedTarget";
       str += insert_string_detectedtarget;
       str += "VALUES(julianday('now'), ?, ?, ?)";
 
-      db << str << detected_target_x << detected_target_y
-         << detected_target_radius;
+      db << str << update_data.detected_target_x
+         << update_data.detected_target_y << update_data.detected_target_radius;
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-perception") << e.what();
     }
   }  // update_detection_table
 
-  template <int num_target>
   void update_trackingtarget_table(
-      const int spoke_state,
-      const Eigen::Matrix<int, num_target, 1> &targets_state,
-      const Eigen::Matrix<int, num_target, 1> &targets_intention,
-      const Eigen::Matrix<double, num_target, 1> &targets_x,
-      const Eigen::Matrix<double, num_target, 1> &targets_y,
-      const Eigen::Matrix<double, num_target, 1> &targets_square_radius,
-      const Eigen::Matrix<double, num_target, 1> &targets_vx,
-      const Eigen::Matrix<double, num_target, 1> &targets_vy,
-      const Eigen::Matrix<double, num_target, 1> &targets_CPA_x,
-      const Eigen::Matrix<double, num_target, 1> &targets_CPA_y,
-      const Eigen::Matrix<double, num_target, 1> &targets_TCPA) {
+      const perception_trackingtarget_db_data &update_data) {
     try {
       std::string str = "INSERT INTO TrackingTarget";
       str += insert_string_trackingtarget;
       str += "VALUES(julianday('now'),? ,? ,? ,? ,? ,? ,? ,?, ?, ?, ?)";
 
-      db << str << spoke_state
-         << std::vector<int>(targets_state.data(),
-                             targets_state.data() + num_target)
-         << std::vector<int>(targets_intention.data(),
-                             targets_intention.data() + num_target)
-         << std::vector<double>(targets_x.data(), targets_x.data() + num_target)
-         << std::vector<double>(targets_y.data(), targets_y.data() + num_target)
-         << std::vector<double>(targets_square_radius.data(),
-                                targets_square_radius.data() + num_target)
-         << std::vector<double>(targets_vx.data(),
-                                targets_vx.data() + num_target)
-         << std::vector<double>(targets_vy.data(),
-                                targets_vy.data() + num_target)
-         << std::vector<double>(targets_CPA_x.data(),
-                                targets_CPA_x.data() + num_target)
-         << std::vector<double>(targets_CPA_y.data(),
-                                targets_CPA_y.data() + num_target)
-         << std::vector<double>(targets_TCPA.data(),
-                                targets_TCPA.data() + num_target);
+      db << str << update_data.spoke_state << update_data.targets_state
+         << update_data.targets_intention << update_data.targets_x
+         << update_data.targets_y << update_data.targets_square_radius
+         << update_data.targets_vx << update_data.targets_vy
+         << update_data.targets_CPA_x << update_data.targets_CPA_y
+         << update_data.targets_TCPA;
 
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-perception") << e.what();
