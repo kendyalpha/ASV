@@ -50,4 +50,24 @@ int main() {
       estimator_parser.parse_measurement_table(starting_time, end_time);
   auto read_error = estimator_parser.parse_error_table(starting_time, end_time);
   auto read_state = estimator_parser.parse_state_table(starting_time, end_time);
+
+  // planner
+  ASV::common::planner_parser planner_parser(folderp, config_path);
+  auto read_route = planner_parser.parse_route_table(starting_time, end_time);
+  auto read_lattice =
+      planner_parser.parse_lattice_table(starting_time, end_time);
+
+  // control
+  ASV::common::control_parser control_parser(folderp, config_path);
+  auto read_setpoint =
+      control_parser.parse_setpoint_table(starting_time, end_time);
+  auto read_TA = control_parser.parse_TA_table(starting_time, end_time);
+
+  // perception
+  ASV::common::perception_parser perception_parser(folderp, config_path);
+  auto read_spoke =
+      perception_parser.parse_spoke_table(starting_time, end_time);
+  auto read_detection =
+      perception_parser.parse_detection_table(starting_time, end_time);
+  auto read_TT = perception_parser.parse_TT_table(starting_time, end_time);
 }

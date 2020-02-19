@@ -419,6 +419,358 @@ class estimator_parser : public master_parser {
 
 };  // end class estimator_parser
 
+class planner_parser : public master_parser {
+ public:
+  explicit planner_parser(const std::string &_DB_folder_path,
+                          const std::string &_config_name)
+      : master_parser(_DB_folder_path),
+        config_name(_config_name),
+        db(_DB_folder_path + "planner.db") {}
+
+  ~planner_parser() {}
+
+  std::vector<plan_route_db_data> parse_route_table(const double start_time,
+                                                    const double end_time) {
+    // parse config file
+    std::string parse_string = "select DATETIME";
+    std::ifstream in(config_name);
+    nlohmann::json file;
+    in >> file;
+    auto db_config =
+        file["planner"]["routeplanner"]
+            .get<std::vector<std::pair<std::string, std::string>>>();
+    for (auto const &value : db_config) parse_string += ", " + value.first;
+    parse_string += " from routeplanner where ID= ?;";
+
+    //
+    std::vector<plan_route_db_data> v_plan_route_db_data;
+
+    // loop through the database
+    int max_id = 0;
+    db << "select MAX(ID) from routeplanner;" >> max_id;
+    for (int i = 0; i != max_id; i++) {
+      db << parse_string << i + 1 >>
+          [&](std::string local_time, double speed, double captureradius,
+              double WPX, double WPY, double WPLONG, double WPLAT) {
+            double _local_time_s =
+                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
+              v_plan_route_db_data.push_back(plan_route_db_data{
+                  _local_time_s,  // local_time
+                  speed,          // speed
+                  captureradius,  // captureradius
+                  WPX,            // WPX
+                  WPY,            // WPY
+                  WPLONG,         // WPLONG
+                  WPLAT           // WPLAT
+              });
+            }
+          };
+    }
+    return v_plan_route_db_data;
+  }  // parse_route_table
+
+  std::vector<plan_lattice_db_data> parse_lattice_table(const double start_time,
+                                                        const double end_time) {
+    // parse config file
+    std::string parse_string = "select DATETIME";
+    std::ifstream in(config_name);
+    nlohmann::json file;
+    in >> file;
+    auto db_config =
+        file["planner"]["latticeplanner"]
+            .get<std::vector<std::pair<std::string, std::string>>>();
+    for (auto const &value : db_config) parse_string += ", " + value.first;
+    parse_string += " from latticeplanner where ID= ?;";
+
+    //
+    std::vector<plan_lattice_db_data> v_plan_lattice_db_data;
+
+    // loop through the database
+    int max_id = 0;
+    db << "select MAX(ID) from latticeplanner;" >> max_id;
+    for (int i = 0; i != max_id; i++) {
+      db << parse_string << i + 1 >>
+          [&](std::string local_time, double lattice_x, double lattice_y,
+              double lattice_theta, double lattice_kappa, double lattice_speed,
+              double lattice_dspeed) {
+            double _local_time_s =
+                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
+              v_plan_lattice_db_data.push_back(plan_lattice_db_data{
+                  _local_time_s,  // local_time
+                  lattice_x,      // lattice_x
+                  lattice_y,      // lattice_y
+                  lattice_theta,  // lattice_theta
+                  lattice_kappa,  // lattice_kappa
+                  lattice_speed,  // lattice_speed
+                  lattice_dspeed  // lattice_dspeed
+              });
+            }
+          };
+    }
+    return v_plan_lattice_db_data;
+  }  // parse_lattice_table
+
+ private:
+  std::string config_name;
+  sqlite::database db;
+
+};  // end class planner_parser
+
+class control_parser : public master_parser {
+ public:
+  explicit control_parser(const std::string &_DB_folder_path,
+                          const std::string &_config_name)
+      : master_parser(_DB_folder_path),
+        config_name(_config_name),
+        db(_DB_folder_path + "controller.db") {}
+
+  ~control_parser() {}
+
+  std::vector<control_setpoint_db_data> parse_setpoint_table(
+      const double start_time, const double end_time) {
+    // parse config file
+    std::string parse_string = "select DATETIME";
+    std::ifstream in(config_name);
+    nlohmann::json file;
+    in >> file;
+    auto db_config =
+        file["controller"]["setpoint"]
+            .get<std::vector<std::pair<std::string, std::string>>>();
+    for (auto const &value : db_config) parse_string += ", " + value.first;
+    parse_string += " from setpoint where ID= ?;";
+
+    //
+    std::vector<control_setpoint_db_data> v_control_setpoint_db_data;
+
+    // loop through the database
+    int max_id = 0;
+    db << "select MAX(ID) from setpoint;" >> max_id;
+    for (int i = 0; i != max_id; i++) {
+      db << parse_string << i + 1 >>
+          [&](std::string local_time, double set_x, double set_y,
+              double set_theta, double set_u, double set_v, double set_r) {
+            double _local_time_s =
+                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
+              v_control_setpoint_db_data.push_back(control_setpoint_db_data{
+                  _local_time_s,  // local_time
+                  set_x,          // set_x
+                  set_y,          // set_y
+                  set_theta,      // set_theta
+                  set_u,          // set_u
+                  set_v,          // set_v
+                  set_r           // set_r
+              });
+            }
+          };
+    }
+    return v_control_setpoint_db_data;
+  }  // parse_setpoint_table
+
+  std::vector<control_TA_db_data> parse_TA_table(const double start_time,
+                                                 const double end_time) {
+    // parse config file
+    std::string parse_string = "select DATETIME";
+    std::ifstream in(config_name);
+    nlohmann::json file;
+    in >> file;
+    auto db_config =
+        file["controller"]["TA"]
+            .get<std::vector<std::pair<std::string, std::string>>>();
+    for (auto const &value : db_config) parse_string += ", " + value.first;
+    parse_string += " from TA where ID= ?;";
+
+    //
+    std::vector<control_TA_db_data> v_control_TA_db_data;
+
+    // loop through the database
+    int max_id = 0;
+    db << "select MAX(ID) from TA;" >> max_id;
+    for (int i = 0; i != max_id; i++) {
+      db << parse_string << i + 1 >>
+          [&](std::string local_time, double desired_Fx, double desired_Fy,
+              double desired_Mz, double est_Fx, double est_Fy, double est_Mz,
+              std::vector<int> alpha, std::vector<int> rpm) {
+            double _local_time_s =
+                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
+              v_control_TA_db_data.push_back(control_TA_db_data{
+                  _local_time_s,  // local_time
+                  desired_Fx,     // desired_Fx
+                  desired_Fy,     // desired_Fy
+                  desired_Mz,     // desired_Mz
+                  est_Fx,         // est_Fx
+                  est_Fy,         // est_Fy
+                  est_Mz,         // est_Mz
+                  alpha,          // alpha
+                  rpm             // rpm
+              });
+            }
+          };
+    }
+    return v_control_TA_db_data;
+  }  // parse_TA_table
+
+ private:
+  std::string config_name;
+  sqlite::database db;
+
+};  // end class control_parser
+
+class perception_parser : public master_parser {
+ public:
+  explicit perception_parser(const std::string &_DB_folder_path,
+                             const std::string &_config_name)
+      : master_parser(_DB_folder_path),
+        config_name(_config_name),
+        db(_DB_folder_path + "perception.db") {}
+
+  ~perception_parser() {}
+
+  std::vector<perception_spoke_db_data> parse_spoke_table(
+      const double start_time, const double end_time) {
+    // parse config file
+    std::string parse_string = "select DATETIME";
+    std::ifstream in(config_name);
+    nlohmann::json file;
+    in >> file;
+    auto db_config =
+        file["perception"]["SpokeProcess"]
+            .get<std::vector<std::pair<std::string, std::string>>>();
+    for (auto const &value : db_config) parse_string += ", " + value.first;
+    parse_string += " from SpokeProcess where ID= ?;";
+
+    //
+    std::vector<perception_spoke_db_data> v_perception_spoke_db_data;
+
+    // loop through the database
+    int max_id = 0;
+    db << "select MAX(ID) from SpokeProcess;" >> max_id;
+    for (int i = 0; i != max_id; i++) {
+      db << parse_string << i + 1 >>
+          [&](std::string local_time,
+              std::vector<double> surroundings_bearing_rad,
+              std::vector<double> surroundings_range_m,
+              std::vector<double> surroundings_x_m,
+              std::vector<double> surroundings_y_m) {
+            double _local_time_s =
+                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
+              v_perception_spoke_db_data.push_back(perception_spoke_db_data{
+                  _local_time_s,             // local_time
+                  surroundings_bearing_rad,  // surroundings_bearing_rad
+                  surroundings_range_m,      // surroundings_range_m
+                  surroundings_x_m,          // surroundings_x_m
+                  surroundings_y_m           // surroundings_y_m
+              });
+            }
+          };
+    }
+    return v_perception_spoke_db_data;
+  }  // parse_spoke_table
+
+  std::vector<perception_detection_db_data> parse_detection_table(
+      const double start_time, const double end_time) {
+    // parse config file
+    std::string parse_string = "select DATETIME";
+    std::ifstream in(config_name);
+    nlohmann::json file;
+    in >> file;
+    auto db_config =
+        file["perception"]["DetectedTarget"]
+            .get<std::vector<std::pair<std::string, std::string>>>();
+    for (auto const &value : db_config) parse_string += ", " + value.first;
+    parse_string += " from DetectedTarget where ID= ?;";
+
+    //
+    std::vector<perception_detection_db_data> v_perception_detection_db_data;
+
+    // loop through the database
+    int max_id = 0;
+    db << "select MAX(ID) from DetectedTarget;" >> max_id;
+    for (int i = 0; i != max_id; i++) {
+      db << parse_string << i + 1 >>
+          [&](std::string local_time, std::vector<double> detected_target_x,
+              std::vector<double> detected_target_y,
+              std::vector<double> detected_target_radius) {
+            double _local_time_s =
+                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
+              v_perception_detection_db_data.push_back(
+                  perception_detection_db_data{
+                      _local_time_s,          // local_time
+                      detected_target_x,      // detected_target_x
+                      detected_target_y,      // detected_target_y
+                      detected_target_radius  // detected_target_radius
+                  });
+            }
+          };
+    }
+    return v_perception_detection_db_data;
+  }  // parse_detection_table
+
+  std::vector<perception_trackingtarget_db_data> parse_TT_table(
+      const double start_time, const double end_time) {
+    // parse config file
+    std::string parse_string = "select DATETIME";
+    std::ifstream in(config_name);
+    nlohmann::json file;
+    in >> file;
+    auto db_config =
+        file["perception"]["TrackingTarget"]
+            .get<std::vector<std::pair<std::string, std::string>>>();
+    for (auto const &value : db_config) parse_string += ", " + value.first;
+    parse_string += " from TrackingTarget where ID= ?;";
+
+    //
+    std::vector<perception_trackingtarget_db_data> v_perception_TT_db_data;
+
+    // loop through the database
+    int max_id = 0;
+    db << "select MAX(ID) from TrackingTarget;" >> max_id;
+    for (int i = 0; i != max_id; i++) {
+      db << parse_string << i + 1 >>
+          [&](std::string local_time, int spoke_state,
+              std::vector<int> targets_state,
+              std::vector<int> targets_intention, std::vector<double> targets_x,
+              std::vector<double> targets_y,
+              std::vector<double> targets_square_radius,
+              std::vector<double> targets_vx, std::vector<double> targets_vy,
+              std::vector<double> targets_CPA_x,
+              std::vector<double> targets_CPA_y,
+              std::vector<double> targets_TCPA) {
+            double _local_time_s =
+                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
+              v_perception_TT_db_data.push_back(
+                  perception_trackingtarget_db_data{
+                      _local_time_s,          // local_time
+                      spoke_state,            // spoke_state
+                      targets_state,          // targets_state
+                      targets_intention,      // targets_intention
+                      targets_x,              // targets_x
+                      targets_y,              // targets_y
+                      targets_square_radius,  // targets_square_radius
+                      targets_vx,             // targets_vx
+                      targets_vy,             // targets_vy
+                      targets_CPA_x,          // targets_CPA_x
+                      targets_CPA_y,          // targets_CPA_y
+                      targets_TCPA            // targets_TCPA
+                  });
+            }
+          };
+    }
+    return v_perception_TT_db_data;
+  }  // parse_TT_table
+
+ private:
+  std::string config_name;
+  sqlite::database db;
+
+};  // end class perception_parser
+
 }  // namespace ASV::common
 
 #endif /* _DATAPARSER_H_ */
