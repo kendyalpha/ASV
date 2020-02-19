@@ -2,7 +2,7 @@
 cmake_minimum_required (VERSION 3.10)
 
 # 项目信息
-project (testrecorder)
+project (DataRecorder)
 set(CMAKE_CXX_STANDARD 17)
 
 

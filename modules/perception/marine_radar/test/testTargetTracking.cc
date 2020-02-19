@@ -13,22 +13,9 @@
 #include <chrono>
 #include <thread>
 #include "../include/TargetTracking.h"
-#include "common/plotting/include/matplotlibcpp.h"
+#include "common/plotting/include/gnuplot-iostream.h"
 
-void generatecircle(const double center_x, const double center_y,
-                    const double radius, std::vector<double>& _circle_x,
-                    std::vector<double>& _circle_y) {
-  const int n = 120;
-  _circle_x.resize(n);
-  _circle_y.resize(n);
-  for (int i = 0; i < n; ++i) {
-    double t = 2 * M_PI * i / n;
-    _circle_x.at(i) = center_x + radius * std::cos(t);
-    _circle_y.at(i) = center_y + radius * std::sin(t);
-  }
-}
-
-void testClusteringAndBall() {
+void testClusteringAndEnvelope() {
   using namespace ASV::perception;
 
   ClusteringData Clustering_Data{
@@ -42,8 +29,8 @@ void testClusteringAndBall() {
   };
 
   TrackingTargetData TrackingTarget_Data{
-      1,    // min_squared_radius
-      4,    // max_squared_radius
+      0,    // min_squared_radius
+      100,  // max_squared_radius
       1,    // speed_threhold
       20,   // max_speed
       5,    // max_acceleration
@@ -94,29 +81,34 @@ void testClusteringAndBall() {
           .getTargetDetectionRTdata();
 
   // plotting
-  // Set the size of output image = 1200x780 pixels
-  matplotlibcpp::figure_size(800, 780);
+  Gnuplot gp;
+  gp << "set terminal x11 size 1000, 1000 0\n";
+  gp << "set title 'Clustering and MiniBall results'\n";
+  gp << "set xrange [-2:4]\n";
+  gp << "set yrange [0:10]\n";
+  gp << "set size ratio -1\n";
 
+  gp << "plot ";
+  std::vector<std::tuple<double, double, double>> x_y_radius;
   for (std::size_t index = 0; index != TargetDetection_RTdata.target_x.size();
        ++index) {
-    std::vector<double> circle_x;
-    std::vector<double> circle_y;
+    x_y_radius.clear();
+    x_y_radius.push_back(
+        {TargetDetection_RTdata.target_x[index],
+         TargetDetection_RTdata.target_y[index],
+         std::sqrt(TargetDetection_RTdata.target_square_radius[index])});
 
-    generatecircle(
-        TargetDetection_RTdata.target_x[index],
-        TargetDetection_RTdata.target_y[index],
-        std::sqrt(TargetDetection_RTdata.target_square_radius[index]), circle_x,
-        circle_y);
-    // Plot line from given x and y data. Color is selected automatically.
-    matplotlibcpp::plot(circle_x, circle_y, "-");
+    gp << gp.file1d(x_y_radius)
+       << " with circles title 'envelope' lc rgb 'blue' fs transparent solid "
+          "0.15 noborder,";
   }
-  matplotlibcpp::plot(p_data_x, p_data_y, ".");
 
-  matplotlibcpp::title("Clustering and MiniBall results");
-  matplotlibcpp::axis("equal");
-  matplotlibcpp::show();
+  std::vector<std::pair<double, double>> xy_pts_A;
+  for (std::size_t i = 0; i != p_data_x.size(); ++i)
+    xy_pts_A.push_back(std::make_pair(p_data_x[i], p_data_y[i]));
+  gp << gp.file1d(xy_pts_A) << " with points pt 1 title 'points'\n";
 
-}  // testClusteringAndBall
+}  // testClusteringAndEnvelope
 
 void testSpokeAndCluster() {
   using namespace ASV::perception;
@@ -243,33 +235,9 @@ void testSpokeAndCluster() {
   //   printf("%x\n", _value);
   // }
 
-  // plotting
-  // Set the size of output image = 1200x780 pixels
-  matplotlibcpp::figure_size(800, 780);
-
-  for (std::size_t index = 0; index != TargetDetection_RTdata.target_x.size();
-       ++index) {
-    std::vector<double> circle_x;
-    std::vector<double> circle_y;
-
-    generatecircle(
-        TargetDetection_RTdata.target_x[index],
-        TargetDetection_RTdata.target_y[index],
-        std::sqrt(TargetDetection_RTdata.target_square_radius[index]), circle_x,
-        circle_y);
-    // Plot line from given x and y data. Color is selected automatically.
-    matplotlibcpp::plot(circle_y, circle_x, "-");
-  }
-  matplotlibcpp::plot(SpokeProcess_RTdata.surroundings_y_m,
-                      SpokeProcess_RTdata.surroundings_x_m, ".");
-
-  matplotlibcpp::title("Clustering and MiniBall results");
-  matplotlibcpp::axis("equal");
-  matplotlibcpp::show();
-
 }  // testSpokeAndCluster
 
 int main() {
   // testSpokeAndCluster();
-  testClusteringAndBall();
+  testClusteringAndEnvelope();
 }

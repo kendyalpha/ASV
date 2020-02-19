@@ -11,7 +11,7 @@
 #include <iostream>
 #include "../include/RadarFiltering.h"
 #include "common/math/miscellaneous/include/eigenmvnd.hpp"
-#include "common/plotting/include/matplotlibcpp.h"
+#include "common/plotting/include/gnuplot-iostream.h"
 
 using namespace ASV;
 
@@ -37,7 +37,7 @@ int main() {
 
   // generate multivariate normal distribution to simulate gaussian noise
   common::math::eigenmvnd normal_Q(Eigen::VectorXd::Zero(2),
-                                   0.02 * Eigen::MatrixXd::Identity(2, 2),
+                                   0.05 * Eigen::MatrixXd::Identity(2, 2),
                                    totalnum);
   Eigen::MatrixXd sample_normal_Q = normal_Q.perform_mvnd().get_mvnd_matrix();
 
@@ -65,22 +65,54 @@ int main() {
   }
 
   // plotting
-  // Set the size of output image = 1200x780 pixels
-  matplotlibcpp::figure_size(1600, 700);
-  matplotlibcpp::subplot(1, 2, 1);
-  matplotlibcpp::plot(true_x, true_y, "r-");
-  matplotlibcpp::plot(meas_x, meas_y, ".");
-  matplotlibcpp::plot(est_x, est_y, "g--");
+  Gnuplot gp;
 
-  matplotlibcpp::axis("equal");
+  std::vector<std::pair<double, double>> xy_pts_A;
+  std::vector<std::pair<double, double>> xy_pts_B;
+  std::vector<std::pair<double, double>> xy_pts_C;
+  std::vector<std::pair<double, double>> xy_pts_D;
 
-  matplotlibcpp::subplot(1, 2, 2);
-  matplotlibcpp::plot(true_vx, "r-");
-  matplotlibcpp::plot(est_vx, "r--");
-  matplotlibcpp::plot(true_vy, "g-");
-  matplotlibcpp::plot(est_vy, "g--");
+  for (std::size_t i = 0; i != true_x.size(); ++i)
+    xy_pts_A.push_back(std::make_pair(true_x[i], true_y[i]));
+  for (std::size_t i = 0; i != meas_x.size(); ++i)
+    xy_pts_B.push_back(std::make_pair(meas_x[i], meas_y[i]));
+  for (std::size_t i = 0; i != est_x.size(); ++i)
+    xy_pts_C.push_back(std::make_pair(est_x[i], est_y[i]));
+  // the first window
+  gp << "set terminal x11 size 1500, 1000 0\n";
+  gp << "set multiplot layout 2, 1 title 'Radar Filtering' font ',14'\n";
+  gp << "set title 'Plot 1'\n";
+  gp << "plot " << gp.file1d(xy_pts_A)
+     << " with lines lt 1 lw 2 lc rgb 'red' title 'true',"
+     << gp.file1d(xy_pts_B)
+     << " with linespoints lt 2 lw 2 lc rgb 'black' title 'meas',"
+     << gp.file1d(xy_pts_C)
+     << " with linespoints pt 2 lw 1 lc rgb 'blue' title 'esti'\n";
 
-  matplotlibcpp::title("Alpha-Beta Filtering");
+  // second window
+  xy_pts_A.clear();
+  xy_pts_B.clear();
+  xy_pts_C.clear();
+  xy_pts_D.clear();
 
-  matplotlibcpp::show();
+  for (std::size_t i = 0; i != true_vx.size(); ++i)
+    xy_pts_A.push_back(std::make_pair(i, true_vx[i]));
+  for (std::size_t i = 0; i != est_vx.size(); ++i)
+    xy_pts_B.push_back(std::make_pair(i, est_vx[i]));
+  for (std::size_t i = 0; i != true_vy.size(); ++i)
+    xy_pts_C.push_back(std::make_pair(i, true_vy[i]));
+  for (std::size_t i = 0; i != est_vy.size(); ++i)
+    xy_pts_D.push_back(std::make_pair(i, est_vy[i]));
+
+  gp << "set title 'Plot 2'\n";
+  gp << "plot " << gp.file1d(xy_pts_A)
+     << " with lines lt 1 lw 2 lc rgb 'red' title 'true-vx',"
+     << gp.file1d(xy_pts_B)
+     << " with lines lt 2 lw 2 lc rgb 'red' title 'est-vx',"
+     << gp.file1d(xy_pts_C)
+     << " with lines lt 3 lw 2 lc rgb 'black' title 'true-vy',"
+     << gp.file1d(xy_pts_D)
+     << " with lines lt 4 lw 2 lc rgb 'black' title 'est-vy'\n";
+
+  gp << "unset multiplot\n";
 }

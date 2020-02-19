@@ -791,54 +791,120 @@ class threadloop : public StateMonitor {
         case common::TESTMODE::SIMULATION_FRENET: {
           // simulation
           _estimator_db.update_measurement_table(
-              estimator_RTdata.Measurement(0), estimator_RTdata.Measurement(1),
-              estimator_RTdata.Measurement(2), estimator_RTdata.Measurement(3),
-              estimator_RTdata.Measurement(4), estimator_RTdata.Measurement(5));
-          _estimator_db.update_state_table(
-              estimator_RTdata.State(0), estimator_RTdata.State(1),
-              estimator_RTdata.State(2), estimator_RTdata.State(3),
-              estimator_RTdata.State(4), estimator_RTdata.State(5));
-          _estimator_db.update_error_table(
-              estimator_RTdata.p_error(0), estimator_RTdata.p_error(1),
-              estimator_RTdata.p_error(2), estimator_RTdata.v_error(0),
-              estimator_RTdata.v_error(1), estimator_RTdata.v_error(2));
+              common::est_measurement_db_data{
+                  -1,                               // local_time
+                  estimator_RTdata.Measurement(0),  // meas_x
+                  estimator_RTdata.Measurement(1),  // meas_y
+                  estimator_RTdata.Measurement(2),  // meas_theta
+                  estimator_RTdata.Measurement(3),  // meas_u
+                  estimator_RTdata.Measurement(4),  // meas_v
+                  estimator_RTdata.Measurement(5)   // meas_r
+              });
+          _estimator_db.update_state_table(common::est_state_db_data{
+              -1,                                // local_time
+              estimator_RTdata.State(0),         // state_x
+              estimator_RTdata.State(1),         // state_y
+              estimator_RTdata.State(2),         // state_theta
+              estimator_RTdata.State(3),         // state_u
+              estimator_RTdata.State(4),         // state_v
+              estimator_RTdata.State(5),         // state_r
+              estimator_RTdata.Marine_state(3),  // curvature
+              estimator_RTdata.Marine_state(4),  // speed
+              estimator_RTdata.Marine_state(5)   // dspeed
+          });
+          _estimator_db.update_error_table(common::est_error_db_data{
+              -1,                           // local_time
+              estimator_RTdata.p_error(0),  // perror_x
+              estimator_RTdata.p_error(1),  // perror_y
+              estimator_RTdata.p_error(2),  // perror_mz
+              estimator_RTdata.v_error(0),  // verror_x
+              estimator_RTdata.v_error(1),  // verror_y
+              estimator_RTdata.v_error(2)   // verror_mz
+          });
 
-          _controller_db.update_setpoint_table(
-              tracker_RTdata.setpoint(0), tracker_RTdata.setpoint(1),
-              tracker_RTdata.setpoint(2), tracker_RTdata.v_setpoint(0),
-              tracker_RTdata.v_setpoint(1), tracker_RTdata.v_setpoint(2));
-          _controller_db.update_TA_table<num_thruster>(
-              controller_RTdata.tau(0), controller_RTdata.tau(1),
-              controller_RTdata.tau(2), controller_RTdata.BalphaU(0),
-              controller_RTdata.BalphaU(1), controller_RTdata.BalphaU(2),
-              controller_RTdata.command_alpha_deg,
-              controller_RTdata.command_rotation);
+          _controller_db.update_setpoint_table(common::control_setpoint_db_data{
+              -1,                            // local_time
+              tracker_RTdata.setpoint(0),    // set_x
+              tracker_RTdata.setpoint(1),    // set_y
+              tracker_RTdata.setpoint(2),    // set_theta
+              tracker_RTdata.v_setpoint(0),  // set_u
+              tracker_RTdata.v_setpoint(1),  // set_v
+              tracker_RTdata.v_setpoint(2)   // set_r
+          });
+          _controller_db.update_TA_table(common::control_TA_db_data{
+              -1,                            // local_time
+              controller_RTdata.tau(0),      // desired_Fx
+              controller_RTdata.tau(1),      // desired_Fy
+              controller_RTdata.tau(2),      // desired_Mz
+              controller_RTdata.BalphaU(0),  // est_Fx
+              controller_RTdata.BalphaU(1),  // est_Fy
+              controller_RTdata.BalphaU(2),  // est_Mz
+              std::vector<int>(controller_RTdata.command_alpha_deg.data(),
+                               controller_RTdata.command_alpha_deg.data() +
+                                   num_thruster),  // alpha
+              std::vector<int>(controller_RTdata.command_rotation.data(),
+                               controller_RTdata.command_rotation.data() +
+                                   num_thruster)  // rpm
+          });
           break;
         }
         case common::TESTMODE::SIMULATION_AVOIDANCE: {
           _estimator_db.update_measurement_table(
-              estimator_RTdata.Measurement(0), estimator_RTdata.Measurement(1),
-              estimator_RTdata.Measurement(2), estimator_RTdata.Measurement(3),
-              estimator_RTdata.Measurement(4), estimator_RTdata.Measurement(5));
-          _estimator_db.update_state_table(
-              estimator_RTdata.State(0), estimator_RTdata.State(1),
-              estimator_RTdata.State(2), estimator_RTdata.State(3),
-              estimator_RTdata.State(4), estimator_RTdata.State(5));
-          _estimator_db.update_error_table(
-              estimator_RTdata.p_error(0), estimator_RTdata.p_error(1),
-              estimator_RTdata.p_error(2), estimator_RTdata.v_error(0),
-              estimator_RTdata.v_error(1), estimator_RTdata.v_error(2));
+              common::est_measurement_db_data{
+                  -1,                               // local_time
+                  estimator_RTdata.Measurement(0),  // meas_x
+                  estimator_RTdata.Measurement(1),  // meas_y
+                  estimator_RTdata.Measurement(2),  // meas_theta
+                  estimator_RTdata.Measurement(3),  // meas_u
+                  estimator_RTdata.Measurement(4),  // meas_v
+                  estimator_RTdata.Measurement(5)   // meas_r
+              });
+          _estimator_db.update_state_table(common::est_state_db_data{
+              -1,                                // local_time
+              estimator_RTdata.State(0),         // state_x
+              estimator_RTdata.State(1),         // state_y
+              estimator_RTdata.State(2),         // state_theta
+              estimator_RTdata.State(3),         // state_u
+              estimator_RTdata.State(4),         // state_v
+              estimator_RTdata.State(5),         // state_r
+              estimator_RTdata.Marine_state(3),  // curvature
+              estimator_RTdata.Marine_state(4),  // speed
+              estimator_RTdata.Marine_state(5)   // dspeed
+          });
+          _estimator_db.update_error_table(common::est_error_db_data{
+              -1,                           // local_time
+              estimator_RTdata.p_error(0),  // perror_x
+              estimator_RTdata.p_error(1),  // perror_y
+              estimator_RTdata.p_error(2),  // perror_mz
+              estimator_RTdata.v_error(0),  // verror_x
+              estimator_RTdata.v_error(1),  // verror_y
+              estimator_RTdata.v_error(2)   // verror_mz
+          });
 
-          _controller_db.update_setpoint_table(
-              tracker_RTdata.setpoint(0), tracker_RTdata.setpoint(1),
-              tracker_RTdata.setpoint(2), tracker_RTdata.v_setpoint(0),
-              tracker_RTdata.v_setpoint(1), tracker_RTdata.v_setpoint(2));
-          _controller_db.update_TA_table<num_thruster>(
-              controller_RTdata.tau(0), controller_RTdata.tau(1),
-              controller_RTdata.tau(2), controller_RTdata.BalphaU(0),
-              controller_RTdata.BalphaU(1), controller_RTdata.BalphaU(2),
-              controller_RTdata.command_alpha_deg,
-              controller_RTdata.command_rotation);
+          _controller_db.update_setpoint_table(common::control_setpoint_db_data{
+              -1,                            // local_time
+              tracker_RTdata.setpoint(0),    // set_x
+              tracker_RTdata.setpoint(1),    // set_y
+              tracker_RTdata.setpoint(2),    // set_theta
+              tracker_RTdata.v_setpoint(0),  // set_u
+              tracker_RTdata.v_setpoint(1),  // set_v
+              tracker_RTdata.v_setpoint(2)   // set_r
+          });
+          _controller_db.update_TA_table(common::control_TA_db_data{
+              -1,                            // local_time
+              controller_RTdata.tau(0),      // desired_Fx
+              controller_RTdata.tau(1),      // desired_Fy
+              controller_RTdata.tau(2),      // desired_Mz
+              controller_RTdata.BalphaU(0),  // est_Fx
+              controller_RTdata.BalphaU(1),  // est_Fy
+              controller_RTdata.BalphaU(2),  // est_Mz
+              std::vector<int>(controller_RTdata.command_alpha_deg.data(),
+                               controller_RTdata.command_alpha_deg.data() +
+                                   num_thruster),  // alpha
+              std::vector<int>(controller_RTdata.command_rotation.data(),
+                               controller_RTdata.command_rotation.data() +
+                                   num_thruster)  // rpm
+          });
           // _sqlite.update_surroundings_table(SpokeProcess_RTdata);
           break;
         }
@@ -847,125 +913,248 @@ class threadloop : public StateMonitor {
         case common::TESTMODE::EXPERIMENT_FRENET: {
           // experiment
 
-          _gps_db.update_table(gps_data.UTC, gps_data.latitude,
-                               gps_data.longitude, gps_data.heading,
-                               gps_data.pitch, gps_data.roll, gps_data.altitude,
-                               gps_data.Ve, gps_data.Vn, gps_data.roti,
-                               gps_data.status, gps_data.UTM_x, gps_data.UTM_y,
-                               gps_data.UTM_zone);
-          _stm32_db.update_table(
-              static_cast<int>(stm32_data.linkstatus),
-              static_cast<int>(stm32_data.feedback_stm32status),
-              stm32_data.command_u1, stm32_data.command_u2,
-              stm32_data.feedback_u1, stm32_data.feedback_u2,
-              stm32_data.feedback_pwm1, stm32_data.feedback_pwm2,
-              stm32_data.RC_X, stm32_data.RC_Y, stm32_data.RC_Mz,
-              stm32_data.voltage_b1, stm32_data.voltage_b2,
-              stm32_data.voltage_b3);
+          _gps_db.update_table(common::gps_db_data{
+              0,                   // local_time
+              gps_data.UTC,        // UTC
+              gps_data.latitude,   // latitude
+              gps_data.longitude,  // longitude
+              gps_data.heading,    // heading
+              gps_data.pitch,      // pitch
+              gps_data.roll,       // roll
+              gps_data.altitude,   // altitude
+              gps_data.Ve,         // Ve
+              gps_data.Vn,         // Vn
+              gps_data.roti,       // roti
+              gps_data.status,     // status
+              gps_data.UTM_x,      // UTM_x
+              gps_data.UTM_y,      // UTM_y
+              gps_data.UTM_zone    // UTM_zone
+          });
+          _stm32_db.update_table(common::stm32_db_data{
+              0,                                        // local_time
+              static_cast<int>(stm32_data.linkstatus),  // stm32_link
+              static_cast<int>(
+                  stm32_data.feedback_stm32status),  // stm32_status
+              stm32_data.command_u1,                 // command_u1
+              stm32_data.command_u2,                 // command_u2
+              stm32_data.feedback_u1,                // feedback_u1
+              stm32_data.feedback_u2,                // feedback_u2
+              stm32_data.feedback_pwm1,              // feedback_pwm1
+              stm32_data.feedback_pwm2,              // feedback_pwm2
+              stm32_data.RC_X,                       // RC_X
+              stm32_data.RC_Y,                       // RC_Y
+              stm32_data.RC_Mz,                      // RC_Mz
+              stm32_data.voltage_b1,                 // voltage_b1
+              stm32_data.voltage_b2,                 // voltage_b2
+              stm32_data.voltage_b3                  // voltage_b3
+          });
 
           _estimator_db.update_measurement_table(
-              estimator_RTdata.Measurement(0), estimator_RTdata.Measurement(1),
-              estimator_RTdata.Measurement(2), estimator_RTdata.Measurement(3),
-              estimator_RTdata.Measurement(4), estimator_RTdata.Measurement(5));
-          _estimator_db.update_state_table(
-              estimator_RTdata.State(0), estimator_RTdata.State(1),
-              estimator_RTdata.State(2), estimator_RTdata.State(3),
-              estimator_RTdata.State(4), estimator_RTdata.State(5));
-          _estimator_db.update_error_table(
-              estimator_RTdata.p_error(0), estimator_RTdata.p_error(1),
-              estimator_RTdata.p_error(2), estimator_RTdata.v_error(0),
-              estimator_RTdata.v_error(1), estimator_RTdata.v_error(2));
+              common::est_measurement_db_data{
+                  -1,                               // local_time
+                  estimator_RTdata.Measurement(0),  // meas_x
+                  estimator_RTdata.Measurement(1),  // meas_y
+                  estimator_RTdata.Measurement(2),  // meas_theta
+                  estimator_RTdata.Measurement(3),  // meas_u
+                  estimator_RTdata.Measurement(4),  // meas_v
+                  estimator_RTdata.Measurement(5)   // meas_r
+              });
+          _estimator_db.update_state_table(common::est_state_db_data{
+              -1,                                // local_time
+              estimator_RTdata.State(0),         // state_x
+              estimator_RTdata.State(1),         // state_y
+              estimator_RTdata.State(2),         // state_theta
+              estimator_RTdata.State(3),         // state_u
+              estimator_RTdata.State(4),         // state_v
+              estimator_RTdata.State(5),         // state_r
+              estimator_RTdata.Marine_state(3),  // curvature
+              estimator_RTdata.Marine_state(4),  // speed
+              estimator_RTdata.Marine_state(5)   // dspeed
+          });
+          _estimator_db.update_error_table(common::est_error_db_data{
+              -1,                           // local_time
+              estimator_RTdata.p_error(0),  // perror_x
+              estimator_RTdata.p_error(1),  // perror_y
+              estimator_RTdata.p_error(2),  // perror_mz
+              estimator_RTdata.v_error(0),  // verror_x
+              estimator_RTdata.v_error(1),  // verror_y
+              estimator_RTdata.v_error(2)   // verror_mz
+          });
 
-          _controller_db.update_setpoint_table(
-              tracker_RTdata.setpoint(0), tracker_RTdata.setpoint(1),
-              tracker_RTdata.setpoint(2), tracker_RTdata.v_setpoint(0),
-              tracker_RTdata.v_setpoint(1), tracker_RTdata.v_setpoint(2));
-          _controller_db.update_TA_table<num_thruster>(
-              controller_RTdata.tau(0), controller_RTdata.tau(1),
-              controller_RTdata.tau(2), controller_RTdata.BalphaU(0),
-              controller_RTdata.BalphaU(1), controller_RTdata.BalphaU(2),
-              controller_RTdata.command_alpha_deg,
-              controller_RTdata.command_rotation);
+          _controller_db.update_setpoint_table(common::control_setpoint_db_data{
+              -1,                            // local_time
+              tracker_RTdata.setpoint(0),    // set_x
+              tracker_RTdata.setpoint(1),    // set_y
+              tracker_RTdata.setpoint(2),    // set_theta
+              tracker_RTdata.v_setpoint(0),  // set_u
+              tracker_RTdata.v_setpoint(1),  // set_v
+              tracker_RTdata.v_setpoint(2)   // set_r
+          });
+          _controller_db.update_TA_table(common::control_TA_db_data{
+              -1,                            // local_time
+              controller_RTdata.tau(0),      // desired_Fx
+              controller_RTdata.tau(1),      // desired_Fy
+              controller_RTdata.tau(2),      // desired_Mz
+              controller_RTdata.BalphaU(0),  // est_Fx
+              controller_RTdata.BalphaU(1),  // est_Fy
+              controller_RTdata.BalphaU(2),  // est_Mz
+              std::vector<int>(controller_RTdata.command_alpha_deg.data(),
+                               controller_RTdata.command_alpha_deg.data() +
+                                   num_thruster),  // alpha
+              std::vector<int>(controller_RTdata.command_rotation.data(),
+                               controller_RTdata.command_rotation.data() +
+                                   num_thruster)  // rpm
+          });
 
-          _planner_db.update_latticeplanner_table(
-              Planning_Marine_state.x, Planning_Marine_state.y,
-              Planning_Marine_state.theta, Planning_Marine_state.kappa,
-              Planning_Marine_state.speed, Planning_Marine_state.dspeed);
+          _planner_db.update_latticeplanner_table(common::plan_lattice_db_data{
+              -1,                           // local_time
+              Planning_Marine_state.x,      // lattice_x
+              Planning_Marine_state.y,      // lattice_y
+              Planning_Marine_state.theta,  // lattice_theta
+              Planning_Marine_state.kappa,  // lattice_kappa
+              Planning_Marine_state.speed,  // lattice_speed
+              Planning_Marine_state.dspeed  // lattice_dspeed
+          });
 
           if (RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::READY) {
-            _planner_db.update_routeplanner_table(
-                RoutePlanner_RTdata.speed,
-                RoutePlanner_RTdata.los_capture_radius,
-                RoutePlanner_RTdata.setpoints_X,
-                RoutePlanner_RTdata.setpoints_Y,
-                RoutePlanner_RTdata.setpoints_longitude,
-                RoutePlanner_RTdata.setpoints_latitude);
+            _planner_db.update_routeplanner_table(common::plan_route_db_data{
+                -1,                                       // local_time
+                RoutePlanner_RTdata.speed,                // speed
+                RoutePlanner_RTdata.los_capture_radius,   // captureradius
+                RoutePlanner_RTdata.setpoints_X,          // WPX
+                RoutePlanner_RTdata.setpoints_Y,          // WPY
+                RoutePlanner_RTdata.setpoints_longitude,  // WPLONG
+                RoutePlanner_RTdata.setpoints_latitude    // WPLAT
+            });
           }
 
           break;
         }
         case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
-          _gps_db.update_table(gps_data.UTC, gps_data.latitude,
-                               gps_data.longitude, gps_data.heading,
-                               gps_data.pitch, gps_data.roll, gps_data.altitude,
-                               gps_data.Ve, gps_data.Vn, gps_data.roti,
-                               gps_data.status, gps_data.UTM_x, gps_data.UTM_y,
-                               gps_data.UTM_zone);
-          _stm32_db.update_table(
-              static_cast<int>(stm32_data.linkstatus),
-              static_cast<int>(stm32_data.feedback_stm32status),
-              stm32_data.command_u1, stm32_data.command_u2,
-              stm32_data.feedback_u1, stm32_data.feedback_u2,
-              stm32_data.feedback_pwm1, stm32_data.feedback_pwm2,
-              stm32_data.RC_X, stm32_data.RC_Y, stm32_data.RC_Mz,
-              stm32_data.voltage_b1, stm32_data.voltage_b2,
-              stm32_data.voltage_b3);
-
+          _gps_db.update_table(common::gps_db_data{
+              0,                   // local_time
+              gps_data.UTC,        // UTC
+              gps_data.latitude,   // latitude
+              gps_data.longitude,  // longitude
+              gps_data.heading,    // heading
+              gps_data.pitch,      // pitch
+              gps_data.roll,       // roll
+              gps_data.altitude,   // altitude
+              gps_data.Ve,         // Ve
+              gps_data.Vn,         // Vn
+              gps_data.roti,       // roti
+              gps_data.status,     // status
+              gps_data.UTM_x,      // UTM_x
+              gps_data.UTM_y,      // UTM_y
+              gps_data.UTM_zone    // UTM_zone
+          });
+          _stm32_db.update_table(common::stm32_db_data{
+              0,                                        // local_time
+              static_cast<int>(stm32_data.linkstatus),  // stm32_link
+              static_cast<int>(
+                  stm32_data.feedback_stm32status),  // stm32_status
+              stm32_data.command_u1,                 // command_u1
+              stm32_data.command_u2,                 // command_u2
+              stm32_data.feedback_u1,                // feedback_u1
+              stm32_data.feedback_u2,                // feedback_u2
+              stm32_data.feedback_pwm1,              // feedback_pwm1
+              stm32_data.feedback_pwm2,              // feedback_pwm2
+              stm32_data.RC_X,                       // RC_X
+              stm32_data.RC_Y,                       // RC_Y
+              stm32_data.RC_Mz,                      // RC_Mz
+              stm32_data.voltage_b1,                 // voltage_b1
+              stm32_data.voltage_b2,                 // voltage_b2
+              stm32_data.voltage_b3                  // voltage_b3
+          });
           _estimator_db.update_measurement_table(
-              estimator_RTdata.Measurement(0), estimator_RTdata.Measurement(1),
-              estimator_RTdata.Measurement(2), estimator_RTdata.Measurement(3),
-              estimator_RTdata.Measurement(4), estimator_RTdata.Measurement(5));
-          _estimator_db.update_state_table(
-              estimator_RTdata.State(0), estimator_RTdata.State(1),
-              estimator_RTdata.State(2), estimator_RTdata.State(3),
-              estimator_RTdata.State(4), estimator_RTdata.State(5));
-          _estimator_db.update_error_table(
-              estimator_RTdata.p_error(0), estimator_RTdata.p_error(1),
-              estimator_RTdata.p_error(2), estimator_RTdata.v_error(0),
-              estimator_RTdata.v_error(1), estimator_RTdata.v_error(2));
+              common::est_measurement_db_data{
+                  -1,                               // local_time
+                  estimator_RTdata.Measurement(0),  // meas_x
+                  estimator_RTdata.Measurement(1),  // meas_y
+                  estimator_RTdata.Measurement(2),  // meas_theta
+                  estimator_RTdata.Measurement(3),  // meas_u
+                  estimator_RTdata.Measurement(4),  // meas_v
+                  estimator_RTdata.Measurement(5)   // meas_r
+              });
+          _estimator_db.update_state_table(common::est_state_db_data{
+              -1,                                // local_time
+              estimator_RTdata.State(0),         // state_x
+              estimator_RTdata.State(1),         // state_y
+              estimator_RTdata.State(2),         // state_theta
+              estimator_RTdata.State(3),         // state_u
+              estimator_RTdata.State(4),         // state_v
+              estimator_RTdata.State(5),         // state_r
+              estimator_RTdata.Marine_state(3),  // curvature
+              estimator_RTdata.Marine_state(4),  // speed
+              estimator_RTdata.Marine_state(5)   // dspeed
+          });
+          _estimator_db.update_error_table(common::est_error_db_data{
+              -1,                           // local_time
+              estimator_RTdata.p_error(0),  // perror_x
+              estimator_RTdata.p_error(1),  // perror_y
+              estimator_RTdata.p_error(2),  // perror_mz
+              estimator_RTdata.v_error(0),  // verror_x
+              estimator_RTdata.v_error(1),  // verror_y
+              estimator_RTdata.v_error(2)   // verror_mz
+          });
 
-          _controller_db.update_setpoint_table(
-              tracker_RTdata.setpoint(0), tracker_RTdata.setpoint(1),
-              tracker_RTdata.setpoint(2), tracker_RTdata.v_setpoint(0),
-              tracker_RTdata.v_setpoint(1), tracker_RTdata.v_setpoint(2));
-          _controller_db.update_TA_table<num_thruster>(
-              controller_RTdata.tau(0), controller_RTdata.tau(1),
-              controller_RTdata.tau(2), controller_RTdata.BalphaU(0),
-              controller_RTdata.BalphaU(1), controller_RTdata.BalphaU(2),
-              controller_RTdata.command_alpha_deg,
-              controller_RTdata.command_rotation);
+          _controller_db.update_setpoint_table(common::control_setpoint_db_data{
+              -1,                            // local_time
+              tracker_RTdata.setpoint(0),    // set_x
+              tracker_RTdata.setpoint(1),    // set_y
+              tracker_RTdata.setpoint(2),    // set_theta
+              tracker_RTdata.v_setpoint(0),  // set_u
+              tracker_RTdata.v_setpoint(1),  // set_v
+              tracker_RTdata.v_setpoint(2)   // set_r
+          });
+          _controller_db.update_TA_table(common::control_TA_db_data{
+              -1,                            // local_time
+              controller_RTdata.tau(0),      // desired_Fx
+              controller_RTdata.tau(1),      // desired_Fy
+              controller_RTdata.tau(2),      // desired_Mz
+              controller_RTdata.BalphaU(0),  // est_Fx
+              controller_RTdata.BalphaU(1),  // est_Fy
+              controller_RTdata.BalphaU(2),  // est_Mz
+              std::vector<int>(controller_RTdata.command_alpha_deg.data(),
+                               controller_RTdata.command_alpha_deg.data() +
+                                   num_thruster),  // alpha
+              std::vector<int>(controller_RTdata.command_rotation.data(),
+                               controller_RTdata.command_rotation.data() +
+                                   num_thruster)  // rpm
+          });
 
-          _planner_db.update_latticeplanner_table(
-              Planning_Marine_state.x, Planning_Marine_state.y,
-              Planning_Marine_state.theta, Planning_Marine_state.kappa,
-              Planning_Marine_state.speed, Planning_Marine_state.dspeed);
+          _planner_db.update_latticeplanner_table(common::plan_lattice_db_data{
+              -1,                           // local_time
+              Planning_Marine_state.x,      // lattice_x
+              Planning_Marine_state.y,      // lattice_y
+              Planning_Marine_state.theta,  // lattice_theta
+              Planning_Marine_state.kappa,  // lattice_kappa
+              Planning_Marine_state.speed,  // lattice_speed
+              Planning_Marine_state.dspeed  // lattice_dspeed
+          });
 
           if (RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::READY) {
-            _planner_db.update_routeplanner_table(
-                RoutePlanner_RTdata.speed,
-                RoutePlanner_RTdata.los_capture_radius,
-                RoutePlanner_RTdata.setpoints_X,
-                RoutePlanner_RTdata.setpoints_Y,
-                RoutePlanner_RTdata.setpoints_longitude,
-                RoutePlanner_RTdata.setpoints_latitude);
+            _planner_db.update_routeplanner_table(common::plan_route_db_data{
+                -1,                                       // local_time
+                RoutePlanner_RTdata.speed,                // speed
+                RoutePlanner_RTdata.los_capture_radius,   // captureradius
+                RoutePlanner_RTdata.setpoints_X,          // WPX
+                RoutePlanner_RTdata.setpoints_Y,          // WPY
+                RoutePlanner_RTdata.setpoints_longitude,  // WPLONG
+                RoutePlanner_RTdata.setpoints_latitude    // WPLAT
+            });
           }
 
           std::size_t size_spokedata = sizeof(MarineRadar_RTdata.spokedata) /
                                        sizeof(MarineRadar_RTdata.spokedata[0]);
-          _marineradar_db.update_table(MarineRadar_RTdata.spoke_azimuth_deg,
-                                       MarineRadar_RTdata.spoke_samplerange_m,
-                                       size_spokedata,
-                                       MarineRadar_RTdata.spokedata);
+          _marineradar_db.update_table(common::marineradar_db_data{
+              0,                                       // local_time
+              MarineRadar_RTdata.spoke_azimuth_deg,    // azimuth_deg
+              MarineRadar_RTdata.spoke_samplerange_m,  // sample_range
+              std::vector<uint8_t>(
+                  &MarineRadar_RTdata.spokedata[0],
+                  &MarineRadar_RTdata.spokedata[size_spokedata])  // spokedata
+          });
 
           if (TargetTracker_RTdata.spoke_state ==
               ASV::perception::SPOKESTATE::LEAVE_ALARM_ZONE) {

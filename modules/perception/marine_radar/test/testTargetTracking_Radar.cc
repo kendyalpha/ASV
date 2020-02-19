@@ -1,29 +1,15 @@
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/opencv.hpp>
+/*
+****************************************************************************
+* testTargetTracking_Radar.cc:
+* unit test for Target Tracking using Radar data
+* This header file can be read by C++ compilers
+*
+* by Hu.ZH(CrossOcean.ai)
+****************************************************************************
+*/
 
-#include <sqlite_modern_cpp.h>
-#include "common/plotting/include/matplotlibcpp.h"
-#include "modules/perception/marine_radar/include/TargetTracking.h"
-
-using namespace cv;
 #include <iostream>
 #include <thread>
-
-void generatecircle(const double center_x, const double center_y,
-                    const double radius, std::vector<double>& _circle_x,
-                    std::vector<double>& _circle_y) {
-  const int n = 120;
-  _circle_x.resize(n);
-  _circle_y.resize(n);
-  for (int i = 0; i < n; ++i) {
-    double t = 2 * M_PI * i / n;
-    _circle_x.at(i) = center_x + radius * std::cos(t);
-    _circle_y.at(i) = center_y + radius * std::sin(t);
-  }
-}
 
 int main() {
   sqlite::database db("../../data/radar_new.db");

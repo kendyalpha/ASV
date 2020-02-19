@@ -67,11 +67,14 @@ int main() {
   while (1) {
     auto MarineRadar_RTdata = _MarineRadar.getMarineRadarRTdata();
 
-    marineradar_db.update_table(MarineRadar_RTdata.spoke_azimuth_deg,
-                                MarineRadar_RTdata.spoke_samplerange_m,
-                                SAMPLES_PER_SPOKE / 2,
-                                MarineRadar_RTdata.spokedata);
-
+    marineradar_db.update_table(ASV::common::marineradar_db_data{
+        0,                                       // local_time
+        MarineRadar_RTdata.spoke_azimuth_deg,    // azimuth_deg
+        MarineRadar_RTdata.spoke_samplerange_m,  // sample_range
+        std::vector<uint8_t>(
+            &MarineRadar_RTdata.spokedata[0],
+            &MarineRadar_RTdata.spokedata[SAMPLES_PER_SPOKE / 2])  // spokedata
+    });
     std::cout << "spoke_azimuth_deg: " << MarineRadar_RTdata.spoke_azimuth_deg
               << std::endl;
     for (int i = 0; i != (SAMPLES_PER_SPOKE / 2); ++i) {

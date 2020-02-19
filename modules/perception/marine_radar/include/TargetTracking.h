@@ -170,6 +170,10 @@ class TargetTracking : public RadarFiltering {
 
     RemoveImpossibleRadius(TargetDetection_RTdata);
 
+    return *this;
+  }  // TestClustering
+
+  TargetTracking &TestSituationAware() {
     std::vector<double> _detected_target_x{0, 3, 3, 3, 8};
     std::vector<double> _detected_target_y{0, 1, 2, 5, 7};
     std::vector<double> _detected_target_radius{1, 2, 1, 1, 3};
@@ -237,7 +241,7 @@ class TargetTracking : public RadarFiltering {
               << std::endl;
 
     return *this;
-  }  // AutoTracking
+  }  // TestSituationAware
 
   TargetDetectionRTdata getTargetDetectionRTdata() const noexcept {
     return TargetDetection_RTdata;

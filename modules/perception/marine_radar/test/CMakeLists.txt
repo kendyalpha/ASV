@@ -37,22 +37,32 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 
 # thread库
 find_package(Threads MODULE REQUIRED)
-find_package(PythonLibs 2.7)
 find_library(CLUSTER_LIBRARY pyclustering HINTS ${LIBRARY_DIRECTORY})
-
+set(RARE_LIBRARIES ${RARE_LIBRARIES} 
+	"boost_system"
+	"boost_filesystem"
+	"boost_iostreams"
+	"util"
+	)
 # 指定生成目标
 add_executable (testTargetDetection testTargetTracking.cc )
 target_include_directories(testTargetDetection PRIVATE ${HEADER_DIRECTORY})
-target_include_directories(testTargetDetection PRIVATE ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(testTargetDetection PUBLIC ${PYTHON_LIBRARIES})
 target_link_libraries(testTargetDetection PUBLIC ${CLUSTER_LIBRARY})
 target_link_libraries(testTargetDetection PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(testTargetDetection PUBLIC ${RARE_LIBRARIES})
 
 
 
 add_executable (testRadarFiltering testRadarFiltering.cc )
 target_include_directories(testRadarFiltering PRIVATE ${HEADER_DIRECTORY})
-target_include_directories(testRadarFiltering PRIVATE ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(testRadarFiltering PUBLIC ${PYTHON_LIBRARIES})
 target_link_libraries(testRadarFiltering PUBLIC ${CLUSTER_LIBRARY})
 target_link_libraries(testRadarFiltering PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(testRadarFiltering PUBLIC ${RARE_LIBRARIES})
+
+
+add_executable (testTargetTracking_Radar testTargetTracking_Radar.cc )
+target_include_directories(testTargetTracking_Radar PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testTargetTracking_Radar PUBLIC ${SQLITE3_LIBRARY})
+target_link_libraries(testTargetTracking_Radar PUBLIC ${CLUSTER_LIBRARY})
+target_link_libraries(testTargetTracking_Radar PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(testTargetTracking_Radar PUBLIC ${RARE_LIBRARIES})
