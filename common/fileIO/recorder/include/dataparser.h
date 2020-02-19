@@ -13,11 +13,10 @@
 
 #include <sqlite_modern_cpp.h>
 #include <stdlib.h>
+#include <fstream>
 #include <string>
 
 #include "common/fileIO/include/json.hpp"
-#include "common/logging/include/easylogging++.h"
-
 #include "databasedata.h"
 
 namespace ASV::common {
@@ -34,6 +33,11 @@ class master_parser {
 
  protected:
   double timestamp0;
+
+  double convertJulianday2Second(double Julianday) {
+    return 86400.0 * Julianday;
+  }  // convertJulianday2Second
+
 };  // end class master_parser
 
 class GPS_parser : public master_parser {
@@ -70,8 +74,8 @@ class GPS_parser : public master_parser {
               double longitude, double heading, double pitch, double roll,
               double altitude, double Ve, double Vn, double roti, int status,
               double UTM_x, double UTM_y, std::string UTM_zone) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_gps_db_data.push_back(gps_db_data{
                   _local_time_s,  // local_time
@@ -134,8 +138,8 @@ class wind_parser : public master_parser {
     for (int i = 0; i != max_id; i++) {
       db << parse_string << i + 1 >>
           [&](std::string local_time, double speed, double orientation) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_wind_db_data.push_back(wind_db_data{
                   _local_time_s,  // local_time
@@ -189,8 +193,8 @@ class stm32_parser : public master_parser {
               double feedback_u2, int feedback_pwm1, int feedback_pwm2,
               double RC_X, double RC_Y, double RC_Mz, double voltage_b1,
               double voltage_b2, double voltage_b3) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_stm32_db_data.push_back(stm32_db_data{
                   _local_time_s,  // local_time
@@ -254,8 +258,8 @@ class marineradar_parser : public master_parser {
       db << parse_string << i + 1 >>
           [&](std::string local_time, double azimuth_deg, double sample_range,
               std::vector<uint8_t> spokedata) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_marineradar_db_data.push_back(marineradar_db_data{
                   _local_time_s,  // local_time
@@ -308,8 +312,8 @@ class estimator_parser : public master_parser {
       db << parse_string << i + 1 >>
           [&](std::string local_time, double meas_x, double meas_y,
               double meas_theta, double meas_u, double meas_v, double meas_r) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_est_measurement_db_data.push_back(est_measurement_db_data{
                   _local_time_s,  // local_time
@@ -350,8 +354,8 @@ class estimator_parser : public master_parser {
           [&](std::string local_time, double state_x, double state_y,
               double state_theta, double state_u, double state_v,
               double state_r, double curvature, double speed, double dspeed) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_est_state_db_data.push_back(est_state_db_data{
                   _local_time_s,  // local_time
@@ -395,8 +399,8 @@ class estimator_parser : public master_parser {
                                          double perror_x, double perror_y,
                                          double perror_mz, double verror_x,
                                          double verror_y, double verror_mz) {
-        double _local_time_s =
-            86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+        double _local_time_s = master_parser::convertJulianday2Second(
+            atof(local_time.c_str()) - master_parser::timestamp0);
         if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
           v_est_error_db_data.push_back(est_error_db_data{
               _local_time_s,  // local_time
@@ -452,8 +456,8 @@ class planner_parser : public master_parser {
       db << parse_string << i + 1 >>
           [&](std::string local_time, double speed, double captureradius,
               double WPX, double WPY, double WPLONG, double WPLAT) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_plan_route_db_data.push_back(plan_route_db_data{
                   _local_time_s,  // local_time
@@ -494,8 +498,8 @@ class planner_parser : public master_parser {
           [&](std::string local_time, double lattice_x, double lattice_y,
               double lattice_theta, double lattice_kappa, double lattice_speed,
               double lattice_dspeed) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_plan_lattice_db_data.push_back(plan_lattice_db_data{
                   _local_time_s,  // local_time
@@ -551,8 +555,8 @@ class control_parser : public master_parser {
       db << parse_string << i + 1 >>
           [&](std::string local_time, double set_x, double set_y,
               double set_theta, double set_u, double set_v, double set_r) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_control_setpoint_db_data.push_back(control_setpoint_db_data{
                   _local_time_s,  // local_time
@@ -593,8 +597,8 @@ class control_parser : public master_parser {
           [&](std::string local_time, double desired_Fx, double desired_Fy,
               double desired_Mz, double est_Fx, double est_Fy, double est_Mz,
               std::vector<int> alpha, std::vector<int> rpm) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_control_TA_db_data.push_back(control_TA_db_data{
                   _local_time_s,  // local_time
@@ -655,8 +659,8 @@ class perception_parser : public master_parser {
               std::vector<double> surroundings_range_m,
               std::vector<double> surroundings_x_m,
               std::vector<double> surroundings_y_m) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_perception_spoke_db_data.push_back(perception_spoke_db_data{
                   _local_time_s,             // local_time
@@ -695,8 +699,8 @@ class perception_parser : public master_parser {
           [&](std::string local_time, std::vector<double> detected_target_x,
               std::vector<double> detected_target_y,
               std::vector<double> detected_target_radius) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_perception_detection_db_data.push_back(
                   perception_detection_db_data{
@@ -741,8 +745,8 @@ class perception_parser : public master_parser {
               std::vector<double> targets_CPA_x,
               std::vector<double> targets_CPA_y,
               std::vector<double> targets_TCPA) {
-            double _local_time_s =
-                86400 * (atof(local_time.c_str()) - master_parser::timestamp0);
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_perception_TT_db_data.push_back(
                   perception_trackingtarget_db_data{

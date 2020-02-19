@@ -39,8 +39,8 @@ int main() {
   auto read_marineradar =
       marineradar_parser.parse_table(starting_time, end_time);
 
-  std::cout << read_marineradar.size() << std::endl;
   for (auto const &value : read_marineradar) {
+    std::cout << value.local_time << std::endl;
     for (auto const &data : value.spokedata) printf("0x%u\n", data);
   }
 
@@ -70,4 +70,7 @@ int main() {
   auto read_detection =
       perception_parser.parse_detection_table(starting_time, end_time);
   auto read_TT = perception_parser.parse_TT_table(starting_time, end_time);
+  for (auto const &value : read_TT) {
+    std::cout << value.local_time << std::endl;
+  }
 }
