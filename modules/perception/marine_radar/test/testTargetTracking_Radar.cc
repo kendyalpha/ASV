@@ -10,9 +10,39 @@
 
 #include <iostream>
 #include <thread>
+#include "../include/TargetTracking.h"
+#include "common/fileIO/recorder/include/dataparser.h"
+#include "common/plotting/include/gnuplot-iostream.h"
+
+// real time heatmap for target tracking
+void readtime_heatmap(
+    Gnuplot &gp, const std::vector<std::tuple<double, double, int>> &x_y_z) {
+  gp << "plot " << gp.file1d(x_y_z) << " with image\n";
+  gp.flush();
+
+}  // readtime_heatmap
+
+// real time plotting for target tracking
+void readtime_tracking(
+    Gnuplot &gp, const std::vector<std::pair<double, double>> &x_y,
+    const std::vector<std::tuple<double, double, double>> &x_y_radius_detect,
+    const std::vector<std::tuple<double, double, double>> &x_y_radius_target) {
+  gp << "plot " << gp.file1d(x_y_radius)
+     << " with circles title 'envelope' lc rgb 'blue' fs transparent solid "
+        "0.15 noborder,"
+     << gp.file1d(x_y) << "with points pt 1 title ''\n";
+  gp.flush();
+
+}  // readtime_tracking
 
 int main() {
-  sqlite::database db("../../data/radar_new.db");
+  // read data from database
+  const std::string config_path =
+      "../../../../../common/fileIO/recorder/config/dbconfig.json";
+  const std::string db_folder = "../../data/";
+  ASV::common::marineradar_parser marineradar_parser(db_folder, config_path);
+  auto read_marineradar = marineradar_parser.parse_table(0, 100);
+
   // Spoke Processing
   ASV::perception::SpokeProcessdata SpokeProcess_data{
       0.1,  // sample_time
@@ -49,44 +79,34 @@ int main() {
   ASV::perception::TargetTracking<> Target_Tracking(
       Alarm_Zone, SpokeProcess_data, TrackingTarget_Data, Clustering_Data);
 
-  cv::Mat Alarm_image;
+  // plotting
+  Gnuplot gp_heatmap;
+  gp_heatmap << "set terminal x11 size 1000, 1000 0\n";
+  gp_heatmap << "set title 'Radar Spoke'\n";
+  gp_heatmap << "set tic scale 0\n";
+  gp_heatmap << "set palette rgbformula 33,13,10\n";  // rainbow
+  gp_heatmap << "set cbrange [0:255]\n";
+  gp_heatmap << "set cblabel 'Score'\n";
 
-  std::vector<double> surroundings_bearing_rad;
-  std::vector<double> surroundings_range_m;
-  std::vector<double> surroundings_x_m;
-  std::vector<double> surroundings_y_m;
-  std::vector<double> target_x;
-  std::vector<double> target_y;
-  std::vector<double> target_radius;
-  double spoke_azimuth_deg;
-  double spoke_samplerange_m;
-  std::vector<uint8_t> spokedata;
+  std::vector<std::tuple<double, double, int>> x_y_z_heatmap;
 
-  double timestamp0 = 0;
-  db << "SELECT DATETIME from radar where id = ?;" << 100 >>
-      [&](std::string str_datetime) { timestamp0 = std::stod(str_datetime); };
+  Gnuplot gp_TT;
+  gp_TT << "set terminal x11 size 1000, 1000 1\n";
+  gp_TT << "set title 'Target Tracking'\n";
+  gp_TT << "set xlabel 'Y(m)'\n";
+  gp_TT << "set ylabel 'X(m)'\n";
+  gp_TT << "set size ratio -1\n";
+  gp_TT << "set xrange [-60:20]\n";
+  std::vector<std::tuple<double, double, double>> x_y_radius;
+  std::vector<std::pair<double, double>> x_y;
 
-  double timestamp = 0;
+  //
 
-  for (int _id = 200; _id != 117000; ++_id) {
-    std::string str_datetime;
-
-    db << "SELECT DATETIME, azimuth, sample_range, spokedata from radar where "
-          "id = ?;"
-       << _id >>
-        std::tie(str_datetime, spoke_azimuth_deg, spoke_samplerange_m,
-                 spokedata);
-
-    // db << "SELECT bearing_rad, range_m, x_m, y_m from spoke where id = "
-    //       "?;"
-    //    << _id >>
-    //     std::tie(surroundings_bearing_rad, surroundings_range_m,
-    //              surroundings_x_m, surroundings_y_m);
-
-    // db << "SELECT target_x, target_y, target_radius from target where id = "
-    //       "?;"
-    //    << _id >>
-    //     std::tie(target_x, target_y, target_radius);
+  for (std::size_t i = 0; i != read_marineradar.size(); ++i) {
+    double localtime = read_marineradar[i].local_time;
+    double spoke_azimuth_deg = read_marineradar[i].azimuth_deg;
+    double spoke_samplerange_m = read_marineradar[i].sample_range;
+    std::vector<uint8_t> spokedata = read_marineradar[i].spokedata;
 
     auto TargetTracking_RTdata =
         Target_Tracking
@@ -94,12 +114,50 @@ int main() {
                           spoke_samplerange_m)
             .getTargetTrackerRTdata();
 
-    timestamp = (std::stod(str_datetime) - timestamp0) * 86400;
-
     static double previous_spokea_zimuth = 0;
 
     if (previous_spokea_zimuth != spoke_azimuth_deg) {
       previous_spokea_zimuth = spoke_azimuth_deg;
+
+      switch (TargetTracking_RTdata.spoke_state) : {
+          case ASV::perception::SPOKESTATE::OUTSIDE_ALARM_ZONE: {
+            break;
+          }
+          case ASV::perception::SPOKESTATE::ENTER_ALARM_ZONE:
+          case ASV::perception::SPOKESTATE::IN_ALARM_ZONE: {
+            // prepare the data for heatmap
+            for (std::size_t j = 0; j != spokedata.size(); ++j)
+              x_y_z_heatmap.push_back({spoke_azimuth_deg,
+                                       j * spoke_samplerange_m,
+                                       static_cast<int>(spokedata[j])});
+            break;
+          }
+          case ASV::perception::SPOKESTATE::LEAVE_ALARM_ZONE: {
+            std::cout << "leave the alarm zone!\n";
+
+            // heatmap
+
+            readtime_heatmap(gp_heatmap, x_y_z_heatmap);
+
+            x_y_z_heatmap.clear();
+
+            // target tracking
+            auto SpokeProcess_RTdata = Target_Tracking.getSpokeProcessRTdata();
+            auto TargetDetection_RTdata =
+                Target_Tracking.getTargetDetectionRTdata();
+
+            for (std::size_t j = 0;
+                 j != SpokeProcess_RTdata.surroundings_x_m.size(); ++j)
+              x_y.push_back(
+                  std::make_pair(SpokeProcess_RTdata.surroundings_y_m[j],
+                                 SpokeProcess_RTdata.surroundings_x_m[j]));
+            readtime_tracking(gp_TT, x_y, x_y_radius);
+            x_y.clear();
+            x_y_radius.clear();
+
+            break;
+          }
+        }
 
       if (static_cast<int>(TargetTracking_RTdata.spoke_state) >= 1) {
         if (TargetTracking_RTdata.spoke_state ==
@@ -170,12 +228,14 @@ int main() {
           // cv::namedWindow("colorMap", cv::WINDOW_NORMAL);
           // cv::imshow("colorMap", img_color);
           // cv::resizeWindow("colorMap", 2000, 700);
-          // waitKey(0);
 
-          // Alarm_image = cv::Mat();
+          waitKey(0);
         }
       }
     }
+
+    std::cout << "time: " << localtime << " azimuth: " << spoke_azimuth_deg
+              << std::endl;
   }
 
   return 0;

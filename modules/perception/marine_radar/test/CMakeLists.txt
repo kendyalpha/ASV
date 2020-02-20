@@ -37,6 +37,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
 
 # thread库
 find_package(Threads MODULE REQUIRED)
+find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
 find_library(CLUSTER_LIBRARY pyclustering HINTS ${LIBRARY_DIRECTORY})
 set(RARE_LIBRARIES ${RARE_LIBRARIES} 
 	"boost_system"

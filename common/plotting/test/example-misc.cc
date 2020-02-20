@@ -437,6 +437,27 @@ void demo_image() {
   pause_if_needed();
 }
 
+void demo_heatmap() {
+  Gnuplot gp;
+
+  gp << "set tic scale 0\n";
+  gp << "set palette rgbformula 33,13,10\n";
+  gp << "set cbrange [0:5]\n";
+  gp << "set cblabel 'Score'\n";
+  // gp << "unset cbtics\n";
+  gp << "set title 'Heat Map generated from a stream of XYZ values'\n";
+  std::vector<std::tuple<double, double, double>> x_y_z = {
+      {0, 0, 5}, {0, 1, 4}, {0, 2, 3}, {0, 3, 1}, {0, 4, 0},
+      {1, 0, 2}, {1, 1, 2}, {1, 2, 0}, {1, 3, 0}, {1, 4, 1},
+      {2, 0, 0}, {2, 1, 0}, {2, 2, 0}, {2, 3, 1}, {2, 4, 0},
+      {3, 0, 0}, {3, 1, 0}, {3, 2, 0}, {3, 3, 2}, {3, 4, 3},
+      {4, 0, 0}, {4, 1, 1}, {4, 2, 2}, {4, 3, 3}, {4, 4, 3}};
+
+  gp << "plot " << gp.file1d(x_y_z) << " with image\n";
+
+  pause_if_needed();
+}  // demo_heatmap
+
 void demo_multiwindows() {
   Gnuplot gp;
 
@@ -595,6 +616,7 @@ int main(int argc, char **argv) {
   demos["multiwindows"] = demo_multiwindows;
   demos["2Dpolygon"] = demo_2Dpolygon;
   demos["2Dcircle"] = demo_2dcircle;
+  demos["heatmap"] = demo_heatmap;
 
   if (argc < 2) {
     printf("Usage: %s <demo_name>\n", argv[0]);

@@ -83,8 +83,12 @@ int main() {
       Eigen::Matrix<double, 6, 6>::Identity()     // R
   };
 
-  common::gps_db gps_db("../data/");
-  common::estimator_db estimator_db("../data/");
+  const std::string db_folder = "../../data/";
+  const std::string config_path =
+      "../../../../common/fileIO/recorder/config/dbconfig.json";
+
+  common::gps_db gps_db(db_folder, config_path);
+  common::estimator_db estimator_db(db_folder, config_path);
 
   gps_db.create_table();
   estimator_db.create_table();
@@ -124,25 +128,53 @@ int main() {
 
       long int et = _timer.timeelapsed();
 
-      gps_db.update_table(gps_data.UTC, gps_data.latitude, gps_data.longitude,
-                          gps_data.heading, gps_data.pitch, gps_data.roll,
-                          gps_data.altitude, gps_data.Ve, gps_data.Vn,
-                          gps_data.roti, gps_data.status, gps_data.UTM_x,
-                          gps_data.UTM_y, gps_data.UTM_zone);
-      estimator_db.update_measurement_table(
-          _estimatorRTdata.Measurement(0), _estimatorRTdata.Measurement(1),
-          _estimatorRTdata.Measurement(2), _estimatorRTdata.Measurement(3),
-          _estimatorRTdata.Measurement(4), _estimatorRTdata.Measurement(5));
-      estimator_db.update_state_table(
-          _estimatorRTdata.State(0), _estimatorRTdata.State(1),
-          _estimatorRTdata.State(2), _estimatorRTdata.State(3),
-          _estimatorRTdata.State(4), _estimatorRTdata.State(5),
-          _estimatorRTdata.Marine_state(3), _estimatorRTdata.Marine_state(4),
-          _estimatorRTdata.Marine_state(5));
-      estimator_db.update_error_table(
-          _estimatorRTdata.p_error(0), _estimatorRTdata.p_error(1),
-          _estimatorRTdata.p_error(2), _estimatorRTdata.v_error(0),
-          _estimatorRTdata.v_error(1), _estimatorRTdata.v_error(2));
+      gps_db.update_table(common::gps_db_data{
+          0,                   // local_time
+          gps_data.UTC,        // UTC
+          gps_data.latitude,   // latitude
+          gps_data.longitude,  // longitude
+          gps_data.heading,    // heading
+          gps_data.pitch,      // pitch
+          gps_data.roll,       // roll
+          gps_data.altitude,   // altitude
+          gps_data.Ve,         // Ve
+          gps_data.Vn,         // Vn
+          gps_data.roti,       // roti
+          gps_data.status,     // status
+          gps_data.UTM_x,      // UTM_x
+          gps_data.UTM_y,      // UTM_y
+          gps_data.UTM_zone    // UTM_zone
+      });
+      estimator_db.update_measurement_table(common::est_measurement_db_data{
+          -1,                               // local_time
+          _estimatorRTdata.Measurement(0),  // meas_x
+          _estimatorRTdata.Measurement(1),  // meas_y
+          _estimatorRTdata.Measurement(2),  // meas_theta
+          _estimatorRTdata.Measurement(3),  // meas_u
+          _estimatorRTdata.Measurement(4),  // meas_v
+          _estimatorRTdata.Measurement(5)   // meas_r
+      });
+      estimator_db.update_state_table(common::est_state_db_data{
+          -1,                                // local_time
+          _estimatorRTdata.State(0),         // state_x
+          _estimatorRTdata.State(1),         // state_y
+          _estimatorRTdata.State(2),         // state_theta
+          _estimatorRTdata.State(3),         // state_u
+          _estimatorRTdata.State(4),         // state_v
+          _estimatorRTdata.State(5),         // state_r
+          _estimatorRTdata.Marine_state(3),  // curvature
+          _estimatorRTdata.Marine_state(4),  // speed
+          _estimatorRTdata.Marine_state(5)   // dspeed
+      });
+      estimator_db.update_error_table(common::est_error_db_data{
+          -1,                           // local_time
+          _estimatorRTdata.p_error(0),  // perror_x
+          _estimatorRTdata.p_error(1),  // perror_y
+          _estimatorRTdata.p_error(2),  // perror_mz
+          _estimatorRTdata.v_error(0),  // verror_x
+          _estimatorRTdata.v_error(1),  // verror_y
+          _estimatorRTdata.v_error(2)   // verror_mz
+      });
 
       std::cout << "UTC:      " << gps_data.UTC << std::endl;
       std::cout << "latitude:   " << std::fixed << setprecision(7)
