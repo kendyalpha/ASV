@@ -1158,26 +1158,64 @@ class threadloop : public StateMonitor {
 
           if (TargetTracker_RTdata.spoke_state ==
               ASV::perception::SPOKESTATE::LEAVE_ALARM_ZONE) {
-            _perception_db.update_spoke_table(
-                SpokeProcess_RTdata.surroundings_bearing_rad,
-                SpokeProcess_RTdata.surroundings_range_m,
-                SpokeProcess_RTdata.surroundings_x_m,
-                SpokeProcess_RTdata.surroundings_y_m);
+            _perception_db.update_spoke_table(common::perception_spoke_db_data{
+                -1,  // local_time
+                SpokeProcess_RTdata
+                    .surroundings_bearing_rad,  // surroundings_bearing_rad
+                SpokeProcess_RTdata
+                    .surroundings_range_m,             // surroundings_range_m
+                SpokeProcess_RTdata.surroundings_x_m,  // surroundings_x_m
+                SpokeProcess_RTdata.surroundings_y_m   // surroundings_y_m
+            });
             _perception_db.update_detection_table(
-                TargetDetection_RTdata.target_x,
-                TargetDetection_RTdata.target_y,
-                TargetDetection_RTdata.target_square_radius);
-            _perception_db.update_trackingtarget_table<max_num_targets>(
-                static_cast<int>(TargetTracker_RTdata.spoke_state),
-                TargetTracker_RTdata.targets_state,
-                TargetTracker_RTdata.targets_intention,
-                TargetTracker_RTdata.targets_x, TargetTracker_RTdata.targets_y,
-                TargetTracker_RTdata.targets_square_radius,
-                TargetTracker_RTdata.targets_vx,
-                TargetTracker_RTdata.targets_vy,
-                TargetTracker_RTdata.targets_CPA_x,
-                TargetTracker_RTdata.targets_CPA_y,
-                TargetTracker_RTdata.targets_TCPA);
+                common::perception_detection_db_data{
+                    -1,                               // local_time
+                    TargetDetection_RTdata.target_x,  // detected_target_x
+                    TargetDetection_RTdata.target_y,  // detected_target_y
+                    TargetDetection_RTdata
+                        .target_square_radius  // detected_target_radius
+                });
+            _perception_db.update_trackingtarget_table(
+                common::perception_trackingtarget_db_data{
+                    -1,  // local_time
+                    static_cast<int>(
+                        TargetTracker_RTdata.spoke_state),  // spoke_state
+                    std::vector<int>(TargetTracker_RTdata.targets_state.data(),
+                                     TargetTracker_RTdata.targets_state.data() +
+                                         max_num_targets),  // targets_state
+                    std::vector<int>(
+                        TargetTracker_RTdata.targets_intention.data(),
+                        TargetTracker_RTdata.targets_intention.data() +
+                            max_num_targets),  // targets_intention
+                    std::vector<double>(TargetTracker_RTdata.targets_x.data(),
+                                        TargetTracker_RTdata.targets_x.data() +
+                                            max_num_targets),  // targets_x
+                    std::vector<double>(TargetTracker_RTdata.targets_y.data(),
+                                        TargetTracker_RTdata.targets_y.data() +
+                                            max_num_targets),  // targets_y
+                    std::vector<double>(
+                        TargetTracker_RTdata.targets_square_radius.data(),
+                        TargetTracker_RTdata.targets_square_radius.data() +
+                            max_num_targets),  // targets_square_radius
+                    std::vector<double>(TargetTracker_RTdata.targets_vx.data(),
+                                        TargetTracker_RTdata.targets_vx.data() +
+                                            max_num_targets),  // targets_vx
+                    std::vector<double>(TargetTracker_RTdata.targets_vy.data(),
+                                        TargetTracker_RTdata.targets_vy.data() +
+                                            max_num_targets),  // targets_vy
+                    std::vector<double>(
+                        TargetTracker_RTdata.targets_CPA_x.data(),
+                        TargetTracker_RTdata.targets_CPA_x.data() +
+                            max_num_targets),  // targets_CPA_x
+                    std::vector<double>(
+                        TargetTracker_RTdata.targets_CPA_y.data(),
+                        TargetTracker_RTdata.targets_CPA_y.data() +
+                            max_num_targets),  // targets_CPA_y
+                    std::vector<double>(
+                        TargetTracker_RTdata.targets_TCPA.data(),
+                        TargetTracker_RTdata.targets_TCPA.data() +
+                            max_num_targets)  // targets_TCPA
+                });
           }
 
           break;

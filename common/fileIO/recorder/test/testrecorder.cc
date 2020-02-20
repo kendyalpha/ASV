@@ -242,9 +242,8 @@ int main() {
           std::vector<double>(
               targets_CPA_y.data(),
               targets_CPA_y.data() + num_target),  // targets_CPA_y
-          std::vector<double>(
-              targets_TCPA.data(),
-              targets_TCPA.data() + num_target),  // targets_TCPA
+          std::vector<double>(targets_TCPA.data(),
+                              targets_TCPA.data() + num_target)  // targets_TCPA
       });
 
   LOG(INFO) << "Shutting down.";
