@@ -11,13 +11,13 @@
 #ifndef JSONPARSE_H
 #define JSONPARSE_H
 #include <cmath>
-#include <common/fileIO/include/json.hpp>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
+#include "common/fileIO/include/json.hpp"
 #include "common/fileIO/include/utilityio.h"
 #include "common/property/include/vesseldata.h"
 #include "modules/controller/include/controllerdata.h"
@@ -25,6 +25,7 @@
 #include "modules/perception/marine_radar/include/TargetTrackingData.h"
 #include "modules/planner/common/include/plannerdata.h"
 #include "modules/planner/lanefollow/include/LatticePlannerdata.h"
+
 /*
 global coordinate (GLOBAL), which is an inertial reference frame;
 body-fixed coordinate (BODY); whose origin located at the stern
@@ -61,6 +62,7 @@ class jsonparse {
   auto getClusteringdata() const noexcept { return Clustering_Data; }
 
   std::string getsqlitepath() const noexcept { return dbpath; }
+  std::string getdbconfigpath() const noexcept { return db_config_path; }
   std::string getgpsport() const noexcept { return gps_port; }
   std::string getguiport() const noexcept { return gui_port; }
   std::string getremotecontrolport() const noexcept { return rc_port; }
@@ -90,7 +92,8 @@ class jsonparse {
   // json file = json::parse(in);
   nlohmann::json file;
 
-  std::string dbpath;  // directory for database file
+  std::string dbpath;          // directory for database file
+  std::string db_config_path;  // path for config of database
 
   unsigned long gps_baudrate = 9600;
   std::string gps_port;
@@ -532,7 +535,8 @@ class jsonparse {
     utctime.pop_back();
     dbpath = file["project_directory"].get<std::string>() +
              file["dbpath"].get<std::string>() + utctime + "/";
-
+    db_config_path = file["project_directory"].get<std::string>() +
+                     file["dbconfig"].get<std::string>();
   }  // parsesqlitedata
 
   void paresecomcenter() {
@@ -594,11 +598,12 @@ class jsonparse {
     std::vector<double> radar_atennna =
         file["sensors"]["marine_radar"]["antenna"].get<std::vector<double>>();
 
+    // SpokeProcessdata
     SpokeProcess_data.radar_x = radar_atennna[0];
     SpokeProcess_data.radar_y = radar_atennna[1];
-
     SpokeProcess_data.sample_time =
         file["perception"]["sample_time"].get<double>();
+
     // AlarmZone
     Alarm_Zone.start_range_m =
         file["perception"]["alarm_zone"]["start_range_m"].get<double>();
@@ -612,6 +617,34 @@ class jsonparse {
         M_PI / 180.0;
     Alarm_Zone.sensitivity_threhold =
         file["perception"]["alarm_zone"]["sensitivity_threhold"].get<uint8_t>();
+
+    // TrackingTargetData
+    TrackingTarget_Data.min_squared_radius = std::pow(
+        file["perception"]["TargetTracking"]["min_radius"].get<double>(), 2);
+    TrackingTarget_Data.max_squared_radius = std::pow(
+        file["perception"]["TargetTracking"]["max_radius"].get<double>(), 2);
+    TrackingTarget_Data.speed_threhold =
+        file["perception"]["TargetTracking"]["speed_threhold"].get<double>();
+    TrackingTarget_Data.max_speed =
+        file["perception"]["TargetTracking"]["max_speed"].get<double>();
+    TrackingTarget_Data.max_acceleration =
+        file["perception"]["TargetTracking"]["max_acceleration"].get<double>();
+    TrackingTarget_Data.max_roti =
+        file["perception"]["TargetTracking"]["max_roti"].get<double>();
+    TrackingTarget_Data.safe_distance =
+        file["perception"]["TargetTracking"]["safe_distance"].get<double>();
+    TrackingTarget_Data.K_radius =
+        file["perception"]["TargetTracking"]["loss_K_radius"].get<double>();
+    TrackingTarget_Data.K_delta_speed =
+        file["perception"]["TargetTracking"]["loss_K_deltaspeed"].get<double>();
+    TrackingTarget_Data.K_delta_yaw =
+        file["perception"]["TargetTracking"]["loss_K_deltayaw"].get<double>();
+    // ClusteringData
+    Clustering_Data.p_radius =
+        file["perception"]["Clustering"]["radius"].get<double>();
+    Clustering_Data.p_minumum_neighbors =
+        file["perception"]["Clustering"]["p_minumum_neighbors"]
+            .get<std::size_t>();
 
   }  // parseSpokedata
 
@@ -733,8 +766,21 @@ std::ostream& operator<<(std::ostream& os, const jsonparse<_m, _n>& _jp) {
   os << _jp.Alarm_Zone.width_bearing_rad << std::endl;
   os << (unsigned)_jp.Alarm_Zone.sensitivity_threhold << std::endl;
 
+  os << "TargetTracking:\n";
+  os << _jp.TrackingTarget_Data.min_squared_radius << std::endl;
+  os << _jp.TrackingTarget_Data.max_squared_radius << std::endl;
+  os << _jp.TrackingTarget_Data.speed_threhold << std::endl;
+  os << _jp.TrackingTarget_Data.max_speed << std::endl;
+  os << _jp.TrackingTarget_Data.max_acceleration << std::endl;
+  os << _jp.TrackingTarget_Data.max_roti << std::endl;
+  os << _jp.TrackingTarget_Data.safe_distance << std::endl;
+  os << _jp.TrackingTarget_Data.K_radius << std::endl;
+  os << _jp.TrackingTarget_Data.K_delta_speed << std::endl;
+  os << _jp.TrackingTarget_Data.K_delta_yaw << std::endl;
+
   os << "dbpath:\n";
   os << _jp.dbpath << std::endl;
+  os << _jp.db_config_path << std::endl;
 
   os << "Frenet:\n";
   os << _jp.latticedata_input.SAMPLE_TIME << std::endl;

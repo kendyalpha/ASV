@@ -27,10 +27,12 @@ void readtime_tracking(
     Gnuplot &gp, const std::vector<std::pair<double, double>> &x_y,
     const std::vector<std::tuple<double, double, double>> &x_y_radius_detect,
     const std::vector<std::tuple<double, double, double>> &x_y_radius_target) {
-  gp << "plot " << gp.file1d(x_y_radius)
+  gp << "plot " << gp.file1d(x_y_radius_detect)
      << " with circles title 'envelope' lc rgb 'blue' fs transparent solid "
         "0.15 noborder,"
-     << gp.file1d(x_y) << "with points pt 1 title ''\n";
+     << gp.file1d(x_y_radius_target)
+     << " with circles title 'targets' lw 2 lc rgb 'red'," << gp.file1d(x_y)
+     << "with points pt 1 lc rgb 'black' title 'spoke'\n";
   gp.flush();
 
 }  // readtime_tracking
@@ -41,7 +43,7 @@ int main() {
       "../../../../../common/fileIO/recorder/config/dbconfig.json";
   const std::string db_folder = "../../data/";
   ASV::common::marineradar_parser marineradar_parser(db_folder, config_path);
-  auto read_marineradar = marineradar_parser.parse_table(0, 100);
+  auto read_marineradar = marineradar_parser.parse_table(10, 200);
 
   // Spoke Processing
   ASV::perception::SpokeProcessdata SpokeProcess_data{
@@ -76,7 +78,9 @@ int main() {
       2     // p_minumum_neighbors
   };
 
-  ASV::perception::TargetTracking<> Target_Tracking(
+  const int max_num_targets = 20;
+
+  ASV::perception::TargetTracking<max_num_targets> Target_Tracking(
       Alarm_Zone, SpokeProcess_data, TrackingTarget_Data, Clustering_Data);
 
   // plotting
@@ -87,6 +91,8 @@ int main() {
   gp_heatmap << "set palette rgbformula 33,13,10\n";  // rainbow
   gp_heatmap << "set cbrange [0:255]\n";
   gp_heatmap << "set cblabel 'Score'\n";
+  gp_heatmap << "set xrange [180:360]\n";
+  gp_heatmap << "set yrange [0:100]\n";
 
   std::vector<std::tuple<double, double, int>> x_y_z_heatmap;
 
@@ -97,11 +103,12 @@ int main() {
   gp_TT << "set ylabel 'X(m)'\n";
   gp_TT << "set size ratio -1\n";
   gp_TT << "set xrange [-60:20]\n";
-  std::vector<std::tuple<double, double, double>> x_y_radius;
-  std::vector<std::pair<double, double>> x_y;
 
-  //
+  std::vector<std::pair<double, double>> x_y_spoke;
+  std::vector<std::tuple<double, double, double>> x_y_radius_detect;
+  std::vector<std::tuple<double, double, double>> x_y_radius_target;
 
+  // calculation
   for (std::size_t i = 0; i != read_marineradar.size(); ++i) {
     double localtime = read_marineradar[i].local_time;
     double spoke_azimuth_deg = read_marineradar[i].azimuth_deg;
@@ -110,7 +117,7 @@ int main() {
 
     auto TargetTracking_RTdata =
         Target_Tracking
-            .AutoTracking(&spokedata[0], 512, spoke_azimuth_deg,
+            .AutoTracking(&spokedata[0], spokedata.size(), spoke_azimuth_deg,
                           spoke_samplerange_m)
             .getTargetTrackerRTdata();
 
@@ -119,124 +126,69 @@ int main() {
     if (previous_spokea_zimuth != spoke_azimuth_deg) {
       previous_spokea_zimuth = spoke_azimuth_deg;
 
-      switch (TargetTracking_RTdata.spoke_state) : {
-          case ASV::perception::SPOKESTATE::OUTSIDE_ALARM_ZONE: {
-            break;
-          }
-          case ASV::perception::SPOKESTATE::ENTER_ALARM_ZONE:
-          case ASV::perception::SPOKESTATE::IN_ALARM_ZONE: {
-            // prepare the data for heatmap
-            for (std::size_t j = 0; j != spokedata.size(); ++j)
-              x_y_z_heatmap.push_back({spoke_azimuth_deg,
-                                       j * spoke_samplerange_m,
-                                       static_cast<int>(spokedata[j])});
-            break;
-          }
-          case ASV::perception::SPOKESTATE::LEAVE_ALARM_ZONE: {
-            std::cout << "leave the alarm zone!\n";
-
-            // heatmap
-
-            readtime_heatmap(gp_heatmap, x_y_z_heatmap);
-
-            x_y_z_heatmap.clear();
-
-            // target tracking
-            auto SpokeProcess_RTdata = Target_Tracking.getSpokeProcessRTdata();
-            auto TargetDetection_RTdata =
-                Target_Tracking.getTargetDetectionRTdata();
-
-            for (std::size_t j = 0;
-                 j != SpokeProcess_RTdata.surroundings_x_m.size(); ++j)
-              x_y.push_back(
-                  std::make_pair(SpokeProcess_RTdata.surroundings_y_m[j],
-                                 SpokeProcess_RTdata.surroundings_x_m[j]));
-            readtime_tracking(gp_TT, x_y, x_y_radius);
-            x_y.clear();
-            x_y_radius.clear();
-
-            break;
-          }
+      switch (TargetTracking_RTdata.spoke_state) {
+        case ASV::perception::SPOKESTATE::OUTSIDE_ALARM_ZONE: {
+          break;
         }
-
-      if (static_cast<int>(TargetTracking_RTdata.spoke_state) >= 1) {
-        if (TargetTracking_RTdata.spoke_state ==
-            ASV::perception::SPOKESTATE::ENTER_ALARM_ZONE) {
-          std::cout << "enter the alarm zone!\n";
+        case ASV::perception::SPOKESTATE::ENTER_ALARM_ZONE:
+        case ASV::perception::SPOKESTATE::IN_ALARM_ZONE: {
+          // prepare the data for heatmap
+          for (std::size_t j = 0; j != spokedata.size(); ++j)
+            x_y_z_heatmap.push_back({spoke_azimuth_deg, j * spoke_samplerange_m,
+                                     static_cast<int>(spokedata[j])});
+          break;
         }
-
-        cv::Mat t_image(1, 64, CV_8UC1, &spokedata[0]);
-        Alarm_image.push_back(t_image);
-
-        if (TargetTracking_RTdata.spoke_state ==
-            ASV::perception::SPOKESTATE::LEAVE_ALARM_ZONE) {
+        case ASV::perception::SPOKESTATE::LEAVE_ALARM_ZONE: {
           std::cout << "leave the alarm zone!\n";
+          std::cout << "index | target state | targets_x | targets_y | "
+                       "targets_vx | targets_vy |\n";
+          for (int j = 0; j != max_num_targets; ++j) {
+            std::cout << j << " | " << TargetTracking_RTdata.targets_state(j)
+                      << " | " << TargetTracking_RTdata.targets_x(j) << " | "
+                      << TargetTracking_RTdata.targets_y(j) << " | "
+                      << TargetTracking_RTdata.targets_vx(j) << " | "
+                      << TargetTracking_RTdata.targets_vy(j) << std::endl;
+          }
+          // heatmap
+          readtime_heatmap(gp_heatmap, x_y_z_heatmap);
+          x_y_z_heatmap.clear();
+
+          // target tracking
           auto SpokeProcess_RTdata = Target_Tracking.getSpokeProcessRTdata();
           auto TargetDetection_RTdata =
               Target_Tracking.getTargetDetectionRTdata();
 
-          matplotlibcpp::figure_size(800, 780);
+          for (std::size_t j = 0;
+               j != SpokeProcess_RTdata.surroundings_x_m.size(); ++j)
+            x_y_spoke.push_back(
+                std::make_pair(SpokeProcess_RTdata.surroundings_y_m[j],
+                               SpokeProcess_RTdata.surroundings_x_m[j]));
 
-          matplotlibcpp::plot(SpokeProcess_RTdata.surroundings_y_m,
-                              SpokeProcess_RTdata.surroundings_x_m, ".");
-          for (std::size_t index = 0;
-               index != TargetDetection_RTdata.target_x.size(); ++index) {
-            std::vector<double> circle_x;
-            std::vector<double> circle_y;
+          for (std::size_t j = 0; j != TargetDetection_RTdata.target_x.size();
+               ++j)
+            x_y_radius_detect.push_back(
+                {TargetDetection_RTdata.target_y[j],
+                 TargetDetection_RTdata.target_x[j],
+                 std::sqrt(TargetDetection_RTdata.target_square_radius[j])});
 
-            generatecircle(
-                TargetDetection_RTdata.target_x[index],
-                TargetDetection_RTdata.target_y[index],
-                std::sqrt(TargetDetection_RTdata.target_square_radius[index]),
-                circle_x, circle_y);
+          for (int j = 0; j != max_num_targets; ++j)
+            x_y_radius_target.push_back(
+                {TargetTracking_RTdata.targets_y(j),
+                 TargetTracking_RTdata.targets_x(j),
+                 std::sqrt(TargetTracking_RTdata.targets_square_radius(j))});
 
-            matplotlibcpp::plot(circle_y, circle_x, "-");
-          }
+          readtime_tracking(gp_TT, x_y_spoke, x_y_radius_detect,
+                            x_y_radius_target);
+          x_y_spoke.clear();
+          x_y_radius_detect.clear();
+          x_y_radius_target.clear();
 
-          std::cout << "index | target state | targets_x | targets_y | "
-                       "targets_vx | targets_vy |\n";
-          for (int index = 0; index != 20; ++index) {
-            std::cout << index << " | "
-                      << TargetTracking_RTdata.targets_state(index) << " | "
-                      << TargetTracking_RTdata.targets_x(index) << " | "
-                      << TargetTracking_RTdata.targets_y(index) << " | "
-                      << TargetTracking_RTdata.targets_vx(index) << " | "
-                      << TargetTracking_RTdata.targets_vy(index) << std::endl;
-
-            std::vector<double> circle_x;
-            std::vector<double> circle_y;
-
-            generatecircle(
-                TargetTracking_RTdata.targets_x[index],
-                TargetTracking_RTdata.targets_y[index],
-                std::sqrt(TargetTracking_RTdata.targets_square_radius[index]),
-                circle_x, circle_y);
-
-            matplotlibcpp::plot(circle_y, circle_x, "-");
-          }
-
-          matplotlibcpp::title("Clustering and MiniBall results");
-          matplotlibcpp::xlabel("Y(m)");
-          matplotlibcpp::ylabel("X(m)");
-          matplotlibcpp::axis("equal");
-          matplotlibcpp::xlim(-60, 20);
-          matplotlibcpp::show();
-
-          // // plotting
-          // cv::Mat img_color;
-          // cv::applyColorMap(Alarm_image, img_color, cv::COLORMAP_OCEAN);
-          // cv::namedWindow("colorMap", cv::WINDOW_NORMAL);
-          // cv::imshow("colorMap", img_color);
-          // cv::resizeWindow("colorMap", 2000, 700);
-
-          waitKey(0);
+          std::cin.get();
+          break;
         }
-      }
-    }
-
-    std::cout << "time: " << localtime << " azimuth: " << spoke_azimuth_deg
-              << std::endl;
-  }
+      }  // end switch
+    }    // end if
+  }      // end for loop
 
   return 0;
 }

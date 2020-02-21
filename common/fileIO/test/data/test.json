@@ -1,7 +1,8 @@
 {
   "vesselname": "Biling",
-  "project_directory":"/home/scar1et/Coding/ASV",
+  "project_directory":"/home/scar1et/Coding/ASV/",
   "dbpath": "data/",
+  "dbconfig":"common/fileIO/recorder/config/dbconfig.json",
   "property": {
     "L":3,
     "B":2,
@@ -152,7 +153,23 @@
       "end_range_m": 20,
       "center_bearing_deg": 0,
       "width_bearing_deg": 60,
-      "sensitivity_threhold":200
+      "sensitivity_threhold": 200
+    },
+    "TargetTracking":{
+      "min_radius": 1,
+      "max_radius": 3,
+      "speed_threhold": 1,
+      "max_speed": 10,
+      "max_acceleration": 2,
+      "max_roti": 1,
+      "safe_distance": 2,
+      "loss_K_radius": 1,
+      "loss_K_deltaspeed": 3,
+      "loss_K_deltayaw": 2
+    },
+    "Clustering":{
+      "radius": 1,
+      "p_minumum_neighbors":3
     }
   },
   "simulator": {

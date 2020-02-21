@@ -55,12 +55,3 @@ target_include_directories(testMarineRadar PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testMarineRadar PUBLIC ${NRPCLIENT_LIBRARY})
 target_link_libraries(testMarineRadar PUBLIC ${NRPPPI_LIBRARY})
 target_link_libraries(testMarineRadar PUBLIC ${SQLITE3_LIBRARY})
-
-
-# add_executable (testTargetDetection testTargetDetection.cc )
-# target_include_directories(testTargetDetection PRIVATE ${HEADER_DIRECTORY})
-# target_link_libraries(testTargetDetection PUBLIC ${NRPCLIENT_LIBRARY})
-# target_link_libraries(testTargetDetection PUBLIC ${NRPPPI_LIBRARY})
-# target_link_libraries(testTargetDetection PUBLIC ${SQLITE3_LIBRARY})
-# target_link_libraries(testTargetDetection PUBLIC ${CLUSTER_LIBRARY})
-# target_link_libraries(testTargetDetection PUBLIC ${CMAKE_THREAD_LIBS_INIT})

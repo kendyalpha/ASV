@@ -53,7 +53,6 @@ target_link_libraries(testTargetDetection PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(testTargetDetection PUBLIC ${RARE_LIBRARIES})
 
 
-
 add_executable (testRadarFiltering testRadarFiltering.cc )
 target_include_directories(testRadarFiltering PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testRadarFiltering PUBLIC ${CLUSTER_LIBRARY})

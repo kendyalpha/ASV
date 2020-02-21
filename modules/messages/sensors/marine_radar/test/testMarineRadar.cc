@@ -61,7 +61,8 @@ int main() {
   // sqlite3
   const std::string config_path =
       "../../../../common/fileIO/recorder/config/dbconfig.json";
-  ASV::common::marineradar_db marineradar_db("radar.db", config_path);
+  ASV::common::marineradar_db marineradar_db("../../data/radar.db",
+                                             config_path);
   marineradar_db.create_table();
 
   while (1) {

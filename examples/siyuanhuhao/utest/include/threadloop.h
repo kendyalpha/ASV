@@ -768,6 +768,8 @@ class threadloop : public StateMonitor {
   // loop to save real time data using sqlite3 and modern_sqlite3_cpp_wrapper
   void sqlloop() {
     std::string sqlpath = _jsonparse.getsqlitepath();
+    std::string db_config_path = _jsonparse.getdbconfigpath();
+
     common::gps_db _gps_db(sqlpath, db_config_path);
     common::stm32_db _stm32_db(sqlpath, db_config_path);
     common::marineradar_db _marineradar_db(sqlpath, db_config_path);

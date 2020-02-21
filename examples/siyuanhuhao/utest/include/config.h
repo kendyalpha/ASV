@@ -33,9 +33,6 @@
 namespace ASV {
 
 const std::string parameter_json_path = "./../../properties/property.json";
-const std::string db_config_path =
-    "./../../../../../common/fileIO/recorder/config/config.json";
-
 constexpr int num_thruster = 2;
 constexpr int dim_controlspace = 3;
 constexpr USEKALMAN indicator_kalman = USEKALMAN::KALMANOFF;
