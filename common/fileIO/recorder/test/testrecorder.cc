@@ -19,7 +19,7 @@ int main() {
   const std::string config_path = "../../config/dbconfig.json";
 
   // GPS
-  ASV::common::gps_db gps_db(folderp, config_path);
+  ASV::common::gps_db gps_db(folderp, config_path, "1");
   gps_db.create_table();
   for (int i = 0; i != 10; ++i)
     gps_db.update_table(ASV::common::gps_db_data{
@@ -43,11 +43,13 @@ int main() {
   // wind
   ASV::common::wind_db wind_db(folderp, config_path);
   wind_db.create_table();
-  wind_db.update_table(ASV::common::wind_db_data{
-      0,  // local_time
-      1,  // speed
-      2   // orientation
-  });
+  wind_db.update_table(
+      ASV::common::wind_db_data{
+          0,  // local_time
+          1,  // speed
+          2   // orientation
+      },
+      "3333");
 
   // stm32
   ASV::common::stm32_db stm32_db(folderp, config_path);

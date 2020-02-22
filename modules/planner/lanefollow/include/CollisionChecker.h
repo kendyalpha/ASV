@@ -126,7 +126,7 @@ class CollisionChecker {
 
  private:
   CollisionData collisiondata;
-  // obstacles (static and dynamic)
+  // obstacles (including static and dynamic ones)
   std::vector<double> previous_obstacle_x;  // in the Cartesian coordinate
   std::vector<double> previous_obstacle_y;  // in the Cartesian coordinate
   std::vector<double> obstacle_x;           // in the Cartesian coordinate
