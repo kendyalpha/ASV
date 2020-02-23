@@ -102,9 +102,11 @@ class gps_db : public master_db {
       str += ", ";
       str += std::to_string(update_data.UTC);
       str += ", ";
-      str += std::to_string(update_data.latitude);
+      str +=
+          master_db::to_string_with_precision<double>(update_data.latitude, 7);
       str += ", ";
-      str += std::to_string(update_data.longitude);
+      str +=
+          master_db::to_string_with_precision<double>(update_data.longitude, 7);
       str += ", ";
       str += std::to_string(update_data.heading);
       str += ", ";
@@ -451,15 +453,15 @@ class estimator_db : public master_db {
       str += "VALUES(";
       str += _datetime;
       str += ", ";
-      str += std::to_string(update_data.meas_x);
+      str += master_db::to_string_with_precision<double>(update_data.meas_x, 3);
       str += ", ";
-      str += std::to_string(update_data.meas_y);
+      str += master_db::to_string_with_precision<double>(update_data.meas_y, 3);
       str += ", ";
       str += std::to_string(update_data.meas_theta);
       str += ", ";
-      str += std::to_string(update_data.meas_u);
+      str += master_db::to_string_with_precision<double>(update_data.meas_u, 3);
       str += ", ";
-      str += std::to_string(update_data.meas_v);
+      str += master_db::to_string_with_precision<double>(update_data.meas_v, 3);
       str += ", ";
       str += std::to_string(update_data.meas_r);
       str += ");";
@@ -478,15 +480,19 @@ class estimator_db : public master_db {
       str += "VALUES(";
       str += _datetime;
       str += ", ";
-      str += std::to_string(update_data.state_x);
+      str +=
+          master_db::to_string_with_precision<double>(update_data.state_x, 3);
       str += ", ";
-      str += std::to_string(update_data.state_y);
+      str +=
+          master_db::to_string_with_precision<double>(update_data.state_y, 3);
       str += ", ";
       str += std::to_string(update_data.state_theta);
       str += ", ";
-      str += std::to_string(update_data.state_u);
+      str +=
+          master_db::to_string_with_precision<double>(update_data.state_u, 3);
       str += ", ";
-      str += std::to_string(update_data.state_v);
+      str +=
+          master_db::to_string_with_precision<double>(update_data.state_v, 3);
       str += ", ";
       str += std::to_string(update_data.state_r);
       str += ", ";
@@ -511,15 +517,19 @@ class estimator_db : public master_db {
       str += "VALUES(";
       str += _datetime;
       str += ", ";
-      str += std::to_string(update_data.perror_x);
+      str +=
+          master_db::to_string_with_precision<double>(update_data.perror_x, 3);
       str += ", ";
-      str += std::to_string(update_data.perror_y);
+      str +=
+          master_db::to_string_with_precision<double>(update_data.perror_y, 3);
       str += ", ";
       str += std::to_string(update_data.perror_mz);
       str += ", ";
-      str += std::to_string(update_data.verror_x);
+      str +=
+          master_db::to_string_with_precision<double>(update_data.verror_x, 3);
       str += ", ";
-      str += std::to_string(update_data.verror_y);
+      str +=
+          master_db::to_string_with_precision<double>(update_data.verror_y, 3);
       str += ", ";
       str += std::to_string(update_data.verror_mz);
       str += ");";

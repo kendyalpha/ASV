@@ -12,7 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include "../include/eigenmvnd.hpp"
-#include "common/plotting/include/matplotlibcpp.h"
+#include "common/plotting/include/gnuplot-iostream.h"
 
 /**
   Take a pair of un-correlated variances.
@@ -43,19 +43,16 @@ int main() {
       normX_solver.perform_mvnd().get_mvnd_matrix();
 
   // plotting
-  // Set the size of output image = 1200x780 pixels
-  matplotlibcpp::figure_size(800, 780);
-
-  std::vector<double> vx;
-  std::vector<double> vy;
+  Gnuplot gp;
+  gp << "set terminal x11 size 1000, 1000 0\n";
+  gp << "set title 'normal distribution'\n";
+  gp << "set size ratio -1\n";
+  std::vector<std::pair<double, double>> xy_pts_A;
 
   for (int i = 0; i != sample_normal_Q.cols(); ++i) {
-    vx.push_back(sample_normal_Q(0, i));
-    vy.push_back(sample_normal_Q(1, i));
+    xy_pts_A.push_back(
+        std::make_pair(sample_normal_Q(0, i), sample_normal_Q(1, i)));
   }
-
-  matplotlibcpp::plot(vx, vy, ".");
-
-  matplotlibcpp::title("Normal distribution");
-  matplotlibcpp::show();
+  gp << "plot '-' with points notitle\n";
+  gp.send1d(xy_pts_A);
 }
