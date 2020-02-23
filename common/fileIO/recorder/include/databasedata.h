@@ -101,12 +101,18 @@ struct est_error_db_data {
 
 struct plan_route_db_data {
   double local_time;
+  double setpoints_X;
+  double setpoints_Y;
+  double setpoints_heading;
+  double setpoints_longitude;
+  double setpoints_latitude;
   double speed;
   double captureradius;
-  double WPX;
-  double WPY;
-  double WPLONG;
-  double WPLAT;
+  std::string utm_zone;
+  std::vector<double> WPX;
+  std::vector<double> WPY;
+  std::vector<double> WPLONG;
+  std::vector<double> WPLAT;
 };  // plan_route_db_data
 
 struct plan_lattice_db_data {

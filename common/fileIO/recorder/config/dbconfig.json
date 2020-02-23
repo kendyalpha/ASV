@@ -71,12 +71,18 @@
   },
   "planner": {
     "routeplanner":[
+      ["setpoints_X", "DOUBLE"],
+      ["setpoints_Y", "DOUBLE"],
+      ["setpoints_heading", "DOUBLE"],
+      ["setpoints_longitude", "DOUBLE"],
+      ["setpoints_latitude", "DOUBLE"],
       ["speed", "DOUBLE"],
       ["captureradius", "DOUBLE"],
-      ["WPX", "DOUBLE"],
-      ["WPY", "DOUBLE"],
-      ["WPLONG", "DOUBLE"],
-      ["WPLAT", "DOUBLE"]
+      ["utm_zone","TEXT"],
+      ["WPX", "BLOB"],
+      ["WPY", "BLOB"],
+      ["WPLONG", "BLOB"],
+      ["WPLAT", "BLOB"]
     ],
     "latticeplanner":[
       ["lattice_x", "DOUBLE"],

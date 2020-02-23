@@ -14,6 +14,7 @@
 #define _DATARECORDER_H_
 
 #include <sqlite_modern_cpp.h>
+#include <sstream>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
@@ -36,6 +37,15 @@ class master_db {
               ");";
   }
   virtual ~master_db() = default;
+
+ protected:
+  template <typename T>
+  std::string to_string_with_precision(const T a_value, const int n = 6) {
+    std::ostringstream out;
+    out.precision(n);
+    out << std::fixed << a_value;
+    return out.str();
+  }
 
  private:
   std::string dbpath;
@@ -112,9 +122,9 @@ class gps_db : public master_db {
       str += ", ";
       str += std::to_string(update_data.status);
       str += ", ";
-      str += std::to_string(update_data.UTM_x);
+      str += master_db::to_string_with_precision<double>(update_data.UTM_x, 3);
       str += ", ";
-      str += std::to_string(update_data.UTM_y);
+      str += master_db::to_string_with_precision<double>(update_data.UTM_y, 3);
       str += ", '";
       str += update_data.UTM_zone;
       str += "');";
@@ -599,20 +609,23 @@ class planner_db : public master_db {
       str += "VALUES(";
       str += _datetime;
       str += ", ";
+      str += std::to_string(update_data.setpoints_X);
+      str += ", ";
+      str += std::to_string(update_data.setpoints_Y);
+      str += ", ";
+      str += std::to_string(update_data.setpoints_heading);
+      str += ", ";
+      str += std::to_string(update_data.setpoints_longitude);
+      str += ", ";
+      str += std::to_string(update_data.setpoints_latitude);
+      str += ", ";
       str += std::to_string(update_data.speed);
       str += ", ";
       str += std::to_string(update_data.captureradius);
-      str += ", ";
-      str += std::to_string(update_data.WPX);
-      str += ", ";
-      str += std::to_string(update_data.WPY);
-      str += ", ";
-      str += std::to_string(update_data.WPLONG);
-      str += ", ";
-      str += std::to_string(update_data.WPLAT);
-      str += ");";
+      str += ", ?, ?, ?, ?, ?); ";
 
-      db << str;
+      db << str << update_data.utm_zone << update_data.WPX << update_data.WPY
+         << update_data.WPLONG << update_data.WPLAT;
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-planner") << e.what();
     }
@@ -751,7 +764,7 @@ class controller_db : public master_db {
       str += insert_string_TA;
       str += "VALUES(";
       str += _datetime;
-      str += ",? ,? ,? ,? ,? ,? ,? ,?)";
+      str += ",? ,? ,? ,? ,? ,? ,? ,?);";
       db << str << update_data.desired_Fx << update_data.desired_Fy
          << update_data.desired_Mz << update_data.est_Fx << update_data.est_Fy
          << update_data.est_Mz << update_data.alpha << update_data.rpm;
@@ -855,7 +868,7 @@ class perception_db : public master_db {
       str += insert_string_spoke;
       str += "VALUES(";
       str += _datetime;
-      str += ", ?, ?, ?, ?)";
+      str += ", ?, ?, ?, ?);";
 
       db << str << update_data.surroundings_bearing_rad
          << update_data.surroundings_range_m << update_data.surroundings_x_m
@@ -873,7 +886,7 @@ class perception_db : public master_db {
       str += insert_string_detectedtarget;
       str += "VALUES(";
       str += _datetime;
-      str += ", ?, ?, ?)";
+      str += ", ?, ?, ?);";
 
       db << str << update_data.detected_target_x
          << update_data.detected_target_y << update_data.detected_target_radius;
@@ -890,7 +903,7 @@ class perception_db : public master_db {
       str += insert_string_trackingtarget;
       str += "VALUES(";
       str += _datetime;
-      str += ",? ,? ,? ,? ,? ,? ,? ,?, ?, ?, ?)";
+      str += ",? ,? ,? ,? ,? ,? ,? ,?, ?, ?, ?);";
 
       db << str << update_data.spoke_state << update_data.targets_state
          << update_data.targets_intention << update_data.targets_x

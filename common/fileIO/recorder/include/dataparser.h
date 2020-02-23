@@ -454,19 +454,29 @@ class planner_parser : public master_parser {
     db << "select MAX(ID) from routeplanner;" >> max_id;
     for (int i = 0; i != max_id; i++) {
       db << parse_string << i + 1 >>
-          [&](std::string local_time, double speed, double captureradius,
-              double WPX, double WPY, double WPLONG, double WPLAT) {
+          [&](std::string local_time, double setpoints_X, double setpoints_Y,
+              double setpoints_heading, double setpoints_longitude,
+              double setpoints_latitude, double speed, double captureradius,
+              std::string utm_zone, std::vector<double> WPX,
+              std::vector<double> WPY, std::vector<double> WPLONG,
+              std::vector<double> WPLAT) {
             double _local_time_s = master_parser::convertJulianday2Second(
                 atof(local_time.c_str()) - master_parser::timestamp0);
             if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
               v_plan_route_db_data.push_back(plan_route_db_data{
-                  _local_time_s,  // local_time
-                  speed,          // speed
-                  captureradius,  // captureradius
-                  WPX,            // WPX
-                  WPY,            // WPY
-                  WPLONG,         // WPLONG
-                  WPLAT           // WPLAT
+                  _local_time_s,        // local_time
+                  setpoints_X,          // setpoints_X
+                  setpoints_Y,          // setpoints_Y
+                  setpoints_heading,    // setpoints_heading
+                  setpoints_longitude,  // setpoints_longitude
+                  setpoints_latitude,   // setpoints_latitude
+                  speed,                // speed
+                  captureradius,        // captureradius
+                  utm_zone,             // utm_zone
+                  WPX,                  // WPX
+                  WPY,                  // WPY
+                  WPLONG,               // WPLONG
+                  WPLAT                 // WPLAT
               });
             }
           };

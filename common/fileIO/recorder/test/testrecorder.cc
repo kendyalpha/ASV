@@ -129,13 +129,19 @@ int main() {
   ASV::common::planner_db planner_db(folderp, config_path);
   planner_db.create_table();
   planner_db.update_routeplanner_table(ASV::common::plan_route_db_data{
-      -1,  // local_time
-      1,   // speed
-      2,   // captureradius
-      3,   // WPX
-      4,   // WPY
-      5,   // WPLONG
-      6    // WPLAT
+      -1,            // local_time
+      1,             // setpoints_X
+      2,             // setpoints_Y
+      3,             // setpoints_heading
+      4,             // setpoints_longitude
+      5,             // setpoints_latitude
+      1,             // speed
+      2,             // captureradius
+      "3434",        // utm_zone
+      {2, 3, 5, 1},  // WPX
+      {4, 4, 4, 4},  // WPY
+      {5},           // WPLONG
+      {6}            // WPLAT
   });
   planner_db.update_latticeplanner_table(ASV::common::plan_lattice_db_data{
       -1,  // local_time
