@@ -50,9 +50,11 @@ add_executable (testFrenetTrajectoryGenerator testFrenetTrajectoryGenerator.cc $
 target_include_directories(testFrenetTrajectoryGenerator PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testFrenetTrajectoryGenerator PRIVATE ${RARE_LIBRARIES})
 
-add_executable (testtransform testtransform.cc ${SOURCE_FILES} )
-target_include_directories(testtransform PRIVATE ${HEADER_DIRECTORY})
 
 add_executable (test_experiment test_experimental.cc ${SOURCE_FILES} )
 target_include_directories(test_experiment PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(test_experiment PUBLIC ${SQLITE3_LIBRARY})
+
+
+add_executable (testtransform testtransform.cc ${SOURCE_FILES} )
+target_include_directories(testtransform PRIVATE ${HEADER_DIRECTORY})

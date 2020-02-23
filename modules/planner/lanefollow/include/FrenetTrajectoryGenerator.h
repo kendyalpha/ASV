@@ -66,7 +66,7 @@ class FrenetTrajectoryGenerator {
 
     std::tie(_cart_state.y, _cart_state.theta, _cart_state.kappa) =
         common::math::Marine2Cart(marine_y, marine_theta, marine_kappa);
-    Cart2Frenet(_cart_state, current_frenetstate);
+    current_frenetstate = Cart2Frenet(_cart_state);
 
     // update the condition
     update_endcondition_FrenetLattice(_targetspeed);
@@ -274,26 +274,16 @@ class FrenetTrajectoryGenerator {
           Eigen::VectorXd t_dspeed(n_zero_Tj);  // dspeed
 
           for (std::size_t ki = 0; ki != n_zero_Tj; ki++) {
-            CartesianState _cartesianstate{
-                0,  // x
-                0,  // y
-                0,  // theta
-                0,  // kappa
-                0,  // speed
-                0   // dspeed
-            };
-            Frenet2Cart(
-                FrenetState{
-                    t_s(ki),        // s
-                    t_s_dot(ki),    // s_dot
-                    t_s_ddot(ki),   // s_ddot
-                    t_d(ki),        // d
-                    t_d_dot(ki),    // d_dot
-                    t_d_ddot(ki),   // d_ddot
-                    t_d_prime(ki),  // d_prime
-                    t_d_pprime(ki)  // d_pprime
-                },
-                _cartesianstate);
+            auto _cartesianstate = Frenet2Cart(FrenetState{
+                t_s(ki),        // s
+                t_s_dot(ki),    // s_dot
+                t_s_ddot(ki),   // s_ddot
+                t_d(ki),        // d
+                t_d_dot(ki),    // d_dot
+                t_d_ddot(ki),   // d_ddot
+                t_d_prime(ki),  // d_prime
+                t_d_pprime(ki)  // d_pprime
+            });
 
             t_x(ki) = _cartesianstate.x;
             t_y(ki) = _cartesianstate.y;
@@ -376,8 +366,8 @@ class FrenetTrajectoryGenerator {
   }  // ClosestRefPoint
 
   // assume that we know the nearest arclength
-  void Cart2Frenet(const CartesianState &_cartstate_v,
-                   FrenetState &_frenetstate) {
+  FrenetState Cart2Frenet(const CartesianState &_cartstate_v) {
+    FrenetState _frenetstate;
     // compute the closest point on the center line
     int n_closestrefpoint =
         ClosestRefPoint(_cartstate_v.x, _cartstate_v.y, cart_RefX, cart_RefY);
@@ -430,11 +420,13 @@ class FrenetTrajectoryGenerator {
     _frenetstate.d_ddot =
         _frenetstate.d_pprime * _frenetstate.s_dot * _frenetstate.s_dot +
         _frenetstate.d_prime * _frenetstate.s_ddot;
+
+    return _frenetstate;
   }  // Cart2Frenet
 
   // Transform from Frenet s,d coordinates to Cartesian x,y
-  void Frenet2Cart(const FrenetState &_frenetstate,
-                   CartesianState &_cartstate_v) {
+  CartesianState Frenet2Cart(const FrenetState &_frenetstate) {
+    CartesianState _cartstate_v;
     // calc global positions;
     double ref_heading = target_Spline2D.compute_yaw(_frenetstate.s);
     double ref_kappa = target_Spline2D.compute_curvature(_frenetstate.s);
@@ -480,6 +472,7 @@ class FrenetTrajectoryGenerator {
             (delta_theta_prime * _frenetstate.d_prime - kappa_r_d_prime) /
             cos_delta_theta;
 
+    return _cartstate_v;
   }  // Frenet2Cart
 
   double CalculateTheta(const double rtheta, const double rkappa,
@@ -490,7 +483,7 @@ class FrenetTrajectoryGenerator {
   double CalculateTheta(const double rtheta, const double d_dot,
                         const double vx) {
     return common::math::Normalizeheadingangle(rtheta + std::asin(d_dot / vx));
-  }
+  }  // CalculateTheta
 
   Eigen::Vector2d CalculateCartesianPoint(
       const double _rtheta, const double _d,
@@ -498,23 +491,17 @@ class FrenetTrajectoryGenerator {
     double _x = _ref_position(0) - _d * std::sin(_rtheta);
     double _y = _ref_position(1) + _d * std::cos(_rtheta);
     return (Eigen::Vector2d() << _x, _y).finished();
+  }  // CalculateCartesianPoint
+
+ public:  // unit test for private function
+  CartesianState Frenet2Cart_TEST(const FrenetState &_frenetstate) {
+    return Frenet2Cart(_frenetstate);
+  }
+  FrenetState Cart2Frenet_TEST(const CartesianState &_cartstate) {
+    return Cart2Frenet(_cartstate);
   }
 
- public:
-  friend void transformf2c(FrenetTrajectoryGenerator &, const FrenetState &,
-                           CartesianState &);
-  friend void transformc2f(FrenetTrajectoryGenerator &, FrenetState &,
-                           const CartesianState &);
-
 };  // FrenetTrajectoryGenerator
-void transformf2c(FrenetTrajectoryGenerator &_tg,
-                  const FrenetState &_frenetstate, CartesianState &_cartstate) {
-  _tg.Frenet2Cart(_frenetstate, _cartstate);
-}
-void transformc2f(FrenetTrajectoryGenerator &_tg, FrenetState &_frenetstate,
-                  const CartesianState &_cartstate) {
-  _tg.Cart2Frenet(_cartstate, _frenetstate);
-}
 
 }  // namespace ASV::planning
 

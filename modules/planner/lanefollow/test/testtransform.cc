@@ -8,15 +8,15 @@
 * by Hu.ZH(CrossOcean.ai)
 ***********************************************************************
 */
+
 #include <iostream>
 #include "../include/FrenetTrajectoryGenerator.h"
 
-using namespace ASV;
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
 
-  planning::LatticeData _latticedata{
+  ASV::planning::LatticeData _latticedata{
       0.1,         // SAMPLE_TIME
       50.0 / 3.6,  // MAX_SPEED
       0.05,        // TARGET_COURSE_ARC_STEP
@@ -29,7 +29,7 @@ int main() {
       0.1          // TRAGET_SPEED_STEP
   };
 
-  planning::CartesianState Before_cartesianstate{
+  ASV::planning::CartesianState Before_cartesianstate{
       1,            // x
       0,            // y
       -M_PI / 3.0,  // theta
@@ -38,7 +38,7 @@ int main() {
       0,            // dspeed
   };
 
-  planning::CartesianState After_cartesianstate{
+  ASV::planning::CartesianState After_cartesianstate{
       0,   // x
       0,   // y
       0,   // theta
@@ -47,7 +47,7 @@ int main() {
       0,   // dspeed
   };
 
-  planning::FrenetState frenetstate{
+  ASV::planning::FrenetState frenetstate{
       10,  // s
       0,   // s_dot
       0,   // s_ddot
@@ -58,9 +58,9 @@ int main() {
       0    // d_pprime
   };
 
-  planning::FrenetTrajectoryGenerator _trajectorygenerator(_latticedata);
-  transformc2f(_trajectorygenerator, frenetstate, Before_cartesianstate);
-  std::cout << "Results of Transformation from Cartesian to Frenet\n";
+  ASV::planning::FrenetTrajectoryGenerator _trajectorygenerator(_latticedata);
+  frenetstate = _trajectorygenerator.Cart2Frenet_TEST(Before_cartesianstate);
+  std::cout << "Results of Transformation from Cartesian to Frenet\n ";
   std::cout << "s: " << frenetstate.s << std::endl;
   std::cout << "s_dot: " << frenetstate.s_dot << std::endl;
   std::cout << "s_ddot: " << frenetstate.s_ddot << std::endl;
@@ -70,7 +70,7 @@ int main() {
   std::cout << "d_prime: " << frenetstate.d_prime << std::endl;
   std::cout << "d_pprime: " << frenetstate.d_pprime << std::endl;
 
-  transformf2c(_trajectorygenerator, frenetstate, After_cartesianstate);
+  After_cartesianstate = _trajectorygenerator.Frenet2Cart_TEST(frenetstate);
   std::cout << "Results of Transformation from Frenet to Cartesian \n";
   std::cout << "x: " << After_cartesianstate.x << std::endl;
   std::cout << "y: " << After_cartesianstate.y << std::endl;
