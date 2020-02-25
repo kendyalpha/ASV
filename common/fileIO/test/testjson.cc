@@ -316,13 +316,137 @@ BOOST_AUTO_TEST_CASE(vessel) {
   }
 
   /*****************************  estimator  *****************************/
-  // ASV::control::estimatordata controllerdata_correct{
-  //     0.1,                                    // sample_time
-  //     3,                                      // los_radius
-  //     2.1,                                    // los_capture_radius
-  //     ASV::control::CONTROLMODE::MANUAL,      // controlmode
-  //     ASV::control::ACTUATION::FULLYACTUATED  // index_actuation
-  // };
+  ASV::localization::estimatordata estimatordata_correct{
+      0.2,  // sample_time
+      vessel_correct.cog -
+          (Eigen::Vector3d() << 0.1, 0, 0).finished(),  // antenna2cog
+      (Eigen::Matrix<double, 6, 6>() << 5e-1, 0, 0, 0, 0, 0, 0, 5e-2, 0, 0, 0,
+       0, 0, 0, 1e-3, 0, 0, 0, 0, 0, 0, 1e-3, 0, 0, 0, 0, 0, 0, 1e-3, 0, 0, 0,
+       0, 0, 0, 1e-7)
+          .finished(),  // Q
+      (Eigen::Matrix<double, 6, 6>() << 2.8e-2, 0, 0, 0, 0, 0, 0, 3.5e-3, 0, 0,
+       0, 0, 0, 0, 1e-4, 0, 0, 0, 0, 0, 0, 9e-4, 0, 0, 0, 0, 0, 0, 4e-4, 0, 0,
+       0, 0, 0, 0, 4.8e-8)
+          .finished()  // R
+  };
+
+  auto estimatordata = _jsonparse.getestimatordata();
+
+  {
+    BOOST_CHECK_CLOSE(estimatordata.sample_time,
+                      estimatordata_correct.sample_time, 1e-7);
+
+    for (int i = 0; i != 3; ++i)
+      BOOST_CHECK_CLOSE(estimatordata.antenna2cog(i),
+                        estimatordata_correct.antenna2cog(i), 1e-7);
+    for (int i = 0; i != 6; ++i) {
+      for (int j = 0; j != 6; ++j) {
+        BOOST_CHECK_CLOSE(estimatordata.Q(i, j), estimatordata_correct.Q(i, j),
+                          1e-9);
+        BOOST_CHECK_CLOSE(estimatordata.R(i, j), estimatordata_correct.R(i, j),
+                          1e-9);
+      }
+    }
+  }
+
+  /*****************************  planner  *****************************/
+  ASV::planning::LatticeData latticedata_correct{
+      0.1,                        // SAMPLE_TIME
+      vessel_correct.surge_v(1),  // MAX_SPEED
+      0.05,                       // TARGET_COURSE_ARC_STEP
+      7.0,                        // MAX_ROAD_WIDTH
+      1,                          // ROAD_WIDTH_STEP
+      5.0,                        // MAXT
+      4.0,                        // MINT
+      0.2,                        // DT
+      1.2,                        // MAX_SPEED_DEVIATION
+      0.3                         // TRAGET_SPEED_STEP
+  };
+
+  ASV::planning::CollisionData collisiondata_correct{
+      vessel_correct.surge_v(1),  // MAX_SPEED
+      1.5 * vessel_correct.x_thrust(1) /
+          vessel_correct.Mass(0, 0),  // MAX_ACCEL
+      1.5 * vessel_correct.x_thrust(0) /
+          vessel_correct.Mass(0, 0),  // MIN_ACCEL
+      1.0,                            // MAX_CURVATURE
+      vessel_correct.L,               // HULL_LENGTH
+      vessel_correct.B,               // HULL_WIDTH
+      2.5                             // ROBOT_RADIUS
+  };
+
+  auto planner_lattice_data = _jsonparse.getlatticedata();
+  auto collision_data = _jsonparse.getcollisiondata();
+
+  {
+    BOOST_CHECK_CLOSE(planner_lattice_data.SAMPLE_TIME,
+                      latticedata_correct.SAMPLE_TIME, 1e-7);
+    BOOST_CHECK_CLOSE(planner_lattice_data.MAX_SPEED,
+                      latticedata_correct.MAX_SPEED, 1e-7);
+    BOOST_CHECK_CLOSE(planner_lattice_data.TARGET_COURSE_ARC_STEP,
+                      latticedata_correct.TARGET_COURSE_ARC_STEP, 1e-7);
+    BOOST_CHECK_CLOSE(planner_lattice_data.MAX_ROAD_WIDTH,
+                      latticedata_correct.MAX_ROAD_WIDTH, 1e-7);
+    BOOST_CHECK_CLOSE(planner_lattice_data.MAXT, latticedata_correct.MAXT,
+                      1e-7);
+    BOOST_CHECK_CLOSE(planner_lattice_data.MINT, latticedata_correct.MINT,
+                      1e-7);
+    BOOST_CHECK_CLOSE(planner_lattice_data.DT, latticedata_correct.DT, 1e-7);
+    BOOST_CHECK_CLOSE(planner_lattice_data.MAX_SPEED_DEVIATION,
+                      latticedata_correct.MAX_SPEED_DEVIATION, 1e-7);
+    BOOST_CHECK_CLOSE(planner_lattice_data.TRAGET_SPEED_STEP,
+                      latticedata_correct.TRAGET_SPEED_STEP, 1e-7);
+  }
+  {
+    BOOST_CHECK_CLOSE(collision_data.MAX_SPEED, collisiondata_correct.MAX_SPEED,
+                      1e-7);
+    BOOST_CHECK_CLOSE(collision_data.MAX_ACCEL, collisiondata_correct.MAX_ACCEL,
+                      1e-7);
+    BOOST_CHECK_CLOSE(collision_data.MIN_ACCEL, collisiondata_correct.MIN_ACCEL,
+                      1e-7);
+    BOOST_CHECK_CLOSE(collision_data.MAX_CURVATURE,
+                      collisiondata_correct.MAX_CURVATURE, 1e-7);
+    BOOST_CHECK_CLOSE(collision_data.HULL_LENGTH,
+                      collisiondata_correct.HULL_LENGTH, 1e-7);
+    BOOST_CHECK_CLOSE(collision_data.HULL_WIDTH,
+                      collisiondata_correct.HULL_WIDTH, 1e-7);
+    BOOST_CHECK_CLOSE(collision_data.ROBOT_RADIUS,
+                      collisiondata_correct.ROBOT_RADIUS, 1e-7);
+  }
+
+  /*****************************  perception  *****************************/
+
+  ASV::perception::ClusteringData Clustering_Data{
+      1,  // p_radius
+      3   // p_minumum_neighbors
+  };
+
+  ASV::perception::SpokeProcessdata SpokeProcess_data{
+      0.1,   // sampletime
+      -1.0,  // radar_x
+      0.0    // radar_y
+  };
+
+  ASV::perception::AlarmZone Alarm_Zone{
+      10,        // start_range_m
+      20,        // end_range_m
+      0,         // center_bearing_rad
+      M_PI / 2,  // width_bearing_rad
+      0xac       // sensitivity_threhold
+  };
+
+  ASV::perception::TrackingTargetData TrackingTarget_Data{
+      1,    // min_squared_radius
+      4,    // max_squared_radius
+      1,    // speed_threhold
+      20,   // max_speed
+      5,    // max_acceleration
+      600,  // max_roti
+      1,    // safe_distance
+      0.8,  // K_radius
+      1,    // K_delta_speed
+      1     // K_delta_yaw;
+  };
 
   // std::cout << _jsonparse << std::endl;
 }
