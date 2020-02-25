@@ -12,7 +12,7 @@
 
 #include <cmath>
 
-namespace ASV {
+namespace ASV::localization {
 class outlierremove {
  public:
   explicit outlierremove(double vmax, double vmin, double sample_time,
@@ -37,6 +37,6 @@ class outlierremove {
   const double delta_min;
   double last_value;
 };  // end class outlierremove
-}  // end namespace ASV
+}  // namespace ASV::localization
 
 #endif /* OUTLIERREMOVE_H */

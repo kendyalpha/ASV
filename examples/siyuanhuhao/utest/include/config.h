@@ -35,7 +35,8 @@ namespace ASV {
 const std::string parameter_json_path = "./../../properties/property.json";
 constexpr int num_thruster = 2;
 constexpr int dim_controlspace = 3;
-constexpr USEKALMAN indicator_kalman = USEKALMAN::KALMANOFF;
+constexpr localization::USEKALMAN indicator_kalman =
+    localization::USEKALMAN::KALMANOFF;
 constexpr control::ACTUATION indicator_actuation =
     control::ACTUATION::UNDERACTUATED;
 constexpr int max_num_targets = 20;

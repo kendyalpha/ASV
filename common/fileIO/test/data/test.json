@@ -68,8 +68,7 @@
     "position": [3.6, 0],
     "thrust_constant": [3E-4, 1E-4],
     "max_delta_rotation": 100,
-    "max_rotation": 1500,
-    "min_rotation": 5
+    "max_rotation": 1500
   },
   "thruster2": {
     "type": "azimuth",
@@ -96,32 +95,33 @@
   "thruster4": {
     "type": "azimuth",
     "position": [0.96, -0.83],
-    "thrust_constant": 2.8E-6,
+    "thrust_constant": 2.8E-5,
     "max_delta_rotation": 100,
-    "max_rotation": 1500,
+    "max_rotation": 1200,
     "min_rotation": 5,
-    "max_delta_alpha": 7,
+    "max_delta_alpha": 20,
     "max_alpha": 190,
     "min_alpha": -10
   },
   "thruster5": {
-    "type": "twinfixed",
-    "position": [0.96, 0.83],
-    "thrust_constant": [3E-4, 1E-4],
-    "max_delta_rotation": 500,
-    "p2n_delay_time": 1.5,
-    "max_rotation": 1500
-  },
-  "thruster6": {
-    "type": "azimuth",
+    "type": "rudder",
     "position": [-0.12, 0],
     "thrust_constant": 2.8E-6,
-    "max_delta_rotation": 100,
-    "max_rotation": 1500,
-    "min_rotation": 5,
-    "max_delta_alpha": 7,
-    "max_alpha": 100,
-    "min_alpha": -100
+    "rudder_constant": 11,
+    "max_delta_rotation": 200,
+    "max_rotation": 200,
+    "min_rotation": 1,
+    "max_delta_varphi": 7,
+    "max_varphi": 30,
+    "min_varphi": -30
+  },
+  "thruster6": {
+    "type": "twinfixed",
+    "position": [-1.9, -0.7],
+    "thrust_constant": [0.0083, 0.0036],
+    "max_delta_rotation": 500,
+    "p2n_delay_time": 1.5,
+    "max_rotation": 220
   },
   "estimator": {
     "sample_time": 1,

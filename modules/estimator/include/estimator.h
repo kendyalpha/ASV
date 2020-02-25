@@ -14,7 +14,7 @@
 #include "lowpass.h"
 #include "outlierremove.h"
 
-namespace ASV {
+namespace ASV::localization {
 
 template <USEKALMAN indicator_kalman, int nlp_x = 1, int nlp_y = 1,
           int nlp_z = 1, int nlp_heading = 1, int nlp_roll = 1,
@@ -351,6 +351,6 @@ class estimator {
   }  // computeRadarState
 
 };  // end class estimator
-}  // end namespace ASV
+}  // namespace ASV::localization
 
 #endif /* _ESTIMATOR_H_ */

@@ -50,7 +50,4 @@ target_link_libraries(testeigenmvnd PUBLIC ${RARE_LIBRARIES})
 
 
 
-add_executable (teste test.cc)
-target_include_directories(teste PRIVATE ${HEADER_DIRECTORY})
-target_link_libraries(teste ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 

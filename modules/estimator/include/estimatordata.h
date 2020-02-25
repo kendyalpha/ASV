@@ -17,7 +17,7 @@
 
 #include "common/property/include/priority.h"
 
-namespace ASV {
+namespace ASV::localization {
 
 enum class USEKALMAN {
   KALMANOFF = 0,  // turn off kalman filtering
@@ -110,6 +110,6 @@ struct sealoadRTdata {
   WINDCOMPENSATION windstatus;
 };
 
-}  // end namespace ASV
+}  // namespace ASV::localization
 
 #endif /*_ESTIMATORDATA_H_*/

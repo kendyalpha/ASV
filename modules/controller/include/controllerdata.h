@@ -48,41 +48,6 @@ struct controllerdata {
   ACTUATION index_actuation;
 };
 
-// real-time data in the controller
-template <int m, int n = 3>
-struct controllerRTdata {
-  // state toggle
-  common::STATETOGGLE state_toggle;
-  // Fx, Fy, Mz (desired force) in the body coordinate
-  Eigen::Matrix<double, n, 1> tau;
-  // Fx, Fy, Mz (estimated generalized thrust) in the body-fixed coordinates
-  Eigen::Matrix<double, n, 1> BalphaU;
-  // N, estimated thrust of all propellers
-  Eigen::Matrix<double, m, 1> command_u;
-  // rpm, rotation of all propellers
-  Eigen::Matrix<int, m, 1> command_rotation;
-  // rad, angle of all propellers (compute the estimated force)
-  Eigen::Matrix<double, m, 1> command_alpha;
-  // deg, angle of all propellers (sent to the actuators)
-  Eigen::Matrix<int, m, 1> command_alpha_deg;
-
-  // N, estimated thrust of all propellers
-  Eigen::Matrix<double, m, 1> feedback_u;
-  // rpm, rotation of all propellers
-  Eigen::Matrix<int, m, 1> feedback_rotation;
-  // rad, angle of all propellers (compute the estimated force)
-  Eigen::Matrix<double, m, 1> feedback_alpha;
-  // deg, angle of all propellers (sent to the actuators)
-  Eigen::Matrix<int, m, 1> feedback_alpha_deg;
-};
-
-// real-time data in the trajecotry tracking
-struct trackerRTdata {
-  TRACKERMODE trackermode;     // FSM of tracker
-  Eigen::Vector3d setpoint;    // x, y, theta in the global coordinate
-  Eigen::Vector3d v_setpoint;  // u, v, r in the body coordinate
-};
-
 struct thrustallocationdata {
   double Q_surge;      // penalty for error in Fx
   double Q_sway;       // penalty for error in Fy
@@ -163,6 +128,41 @@ struct pidcontrollerdata {
   double velocity_allowed_error;
   double min_output;
   double max_output;
+};
+
+// real-time data in the controller
+template <int m, int n = 3>
+struct controllerRTdata {
+  // state toggle
+  common::STATETOGGLE state_toggle;
+  // Fx, Fy, Mz (desired force) in the body coordinate
+  Eigen::Matrix<double, n, 1> tau;
+  // Fx, Fy, Mz (estimated generalized thrust) in the body-fixed coordinates
+  Eigen::Matrix<double, n, 1> BalphaU;
+  // N, estimated thrust of all propellers
+  Eigen::Matrix<double, m, 1> command_u;
+  // rpm, rotation of all propellers
+  Eigen::Matrix<int, m, 1> command_rotation;
+  // rad, angle of all propellers (compute the estimated force)
+  Eigen::Matrix<double, m, 1> command_alpha;
+  // deg, angle of all propellers (sent to the actuators)
+  Eigen::Matrix<int, m, 1> command_alpha_deg;
+
+  // N, estimated thrust of all propellers
+  Eigen::Matrix<double, m, 1> feedback_u;
+  // rpm, rotation of all propellers
+  Eigen::Matrix<int, m, 1> feedback_rotation;
+  // rad, angle of all propellers (compute the estimated force)
+  Eigen::Matrix<double, m, 1> feedback_alpha;
+  // deg, angle of all propellers (sent to the actuators)
+  Eigen::Matrix<int, m, 1> feedback_alpha_deg;
+};
+
+// real-time data in the trajecotry tracking
+struct trackerRTdata {
+  TRACKERMODE trackermode;     // FSM of tracker
+  Eigen::Vector3d setpoint;    // x, y, theta in the global coordinate
+  Eigen::Vector3d v_setpoint;  // u, v, r in the body coordinate
 };
 
 }  // namespace ASV::control

@@ -74,7 +74,7 @@ void test1d() { /* Set Matrix and Vector for Kalman Filter: */
   Eigen::VectorXd U(1);
   U << 0;
   /* Create The Filter */
-  kalmanfilter<1, 1, 1> filter1(A, B, H, Q, R);
+  localization::kalmanfilter<1, 1, 1> filter1(A, B, H, Q, R);
   filter1.setInitial(X0, P0);
   /* This loop simulate the measure/prediction process */
   for (int i = 0; i < 10; ++i) {
@@ -125,7 +125,7 @@ void test2d() {
   Eigen::MatrixXd save_x = Eigen::MatrixXd::Zero(n, _TotalT);
   save_x.col(0) = initx;
   /* Create The Filter */
-  kalmanfilter<l, m, n> filter2(A, B, H, Q, R);
+  localization::kalmanfilter<l, m, n> filter2(A, B, H, Q, R);
   filter2.setInitial(initx, initP);
   PEigen(0) = filter2.getMaxEigenP();
 

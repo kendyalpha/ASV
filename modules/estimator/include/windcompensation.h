@@ -14,7 +14,7 @@
 #include "estimatordata.h"
 #include "lowpass.h"
 
-namespace ASV {
+namespace ASV::localization {
 
 class windcompensation {
  public:

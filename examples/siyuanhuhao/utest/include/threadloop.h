@@ -96,7 +96,7 @@ class threadloop : public StateMonitor {
   };
 
   // realtime parameters of the estimators
-  estimatorRTdata estimator_RTdata{
+  localization::estimatorRTdata estimator_RTdata{
       common::STATETOGGLE::IDLE,            // state_toggle
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
@@ -624,17 +624,17 @@ class threadloop : public StateMonitor {
       case common::TESTMODE::SIMULATION_FRENET:
       case common::TESTMODE::SIMULATION_AVOIDANCE: {
         // simulation
-        estimator<indicator_kalman,  // indicator_kalman
-                  1,                 // nlp_x
-                  1,                 // nlp_y
-                  1,                 // nlp_z
-                  1,                 // nlp_heading
-                  1,                 // nlp_roll
-                  1,                 // nlp_pitch
-                  1,                 // nlp_u
-                  1,                 // nlp_v
-                  1                  // nlp_roti
-                  >
+        localization::estimator<indicator_kalman,  // indicator_kalman
+                                1,                 // nlp_x
+                                1,                 // nlp_y
+                                1,                 // nlp_z
+                                1,                 // nlp_heading
+                                1,                 // nlp_roll
+                                1,                 // nlp_pitch
+                                1,                 // nlp_u
+                                1,                 // nlp_v
+                                1                  // nlp_roti
+                                >
             _estimator(estimator_RTdata, _jsonparse.getvessel(),
                        _jsonparse.getestimatordata());
 
@@ -690,17 +690,17 @@ class threadloop : public StateMonitor {
         //                  experiment                        //
 
         // initializtion
-        estimator<indicator_kalman,  // indicator_kalman
-                  1,                 // nlp_x
-                  1,                 // nlp_y
-                  1,                 // nlp_z
-                  1,                 // nlp_heading
-                  1,                 // nlp_roll
-                  1,                 // nlp_pitch
-                  5,                 // nlp_u
-                  5,                 // nlp_v
-                  1                  // nlp_roti
-                  >
+        localization::estimator<indicator_kalman,  // indicator_kalman
+                                1,                 // nlp_x
+                                1,                 // nlp_y
+                                1,                 // nlp_z
+                                1,                 // nlp_heading
+                                1,                 // nlp_roll
+                                1,                 // nlp_pitch
+                                5,                 // nlp_u
+                                5,                 // nlp_v
+                                1                  // nlp_roti
+                                >
             _estimator(estimator_RTdata, _jsonparse.getvessel(),
                        _jsonparse.getestimatordata());
 
@@ -1019,17 +1019,33 @@ class threadloop : public StateMonitor {
           });
 
           if (RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::READY) {
+            auto num_wp = RoutePlanner_RTdata.Waypoint_X.size();
             _planner_db.update_routeplanner_table(common::plan_route_db_data{
                 -1,                                       // local_time
+                RoutePlanner_RTdata.setpoints_X,          // setpoints_X
+                RoutePlanner_RTdata.setpoints_Y,          // setpoints_Y
+                RoutePlanner_RTdata.setpoints_heading,    // setpoints_heading
+                RoutePlanner_RTdata.setpoints_longitude,  // setpoints_longitude
+                RoutePlanner_RTdata.setpoints_latitude,   // setpoints_latitude
                 RoutePlanner_RTdata.speed,                // speed
                 RoutePlanner_RTdata.los_capture_radius,   // captureradius
-                RoutePlanner_RTdata.setpoints_X,          // WPX
-                RoutePlanner_RTdata.setpoints_Y,          // WPY
-                RoutePlanner_RTdata.setpoints_longitude,  // WPLONG
-                RoutePlanner_RTdata.setpoints_latitude    // WPLAT
+                RoutePlanner_RTdata.utm_zone,             // utm_zone
+                std::vector<double>(
+                    RoutePlanner_RTdata.Waypoint_X.data(),
+                    RoutePlanner_RTdata.Waypoint_X.data() + num_wp),  // WPX
+                std::vector<double>(
+                    RoutePlanner_RTdata.Waypoint_Y.data(),
+                    RoutePlanner_RTdata.Waypoint_Y.data() + num_wp),  // WPY
+                std::vector<double>(
+                    RoutePlanner_RTdata.Waypoint_longitude.data(),
+                    RoutePlanner_RTdata.Waypoint_longitude.data() +
+                        num_wp),  // WPLONG
+                std::vector<double>(
+                    RoutePlanner_RTdata.Waypoint_latitude.data(),
+                    RoutePlanner_RTdata.Waypoint_latitude.data() +
+                        num_wp)  // WPLAT
             });
           }
-
           break;
         }
         case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
@@ -1136,14 +1152,31 @@ class threadloop : public StateMonitor {
           });
 
           if (RoutePlanner_RTdata.state_toggle == common::STATETOGGLE::READY) {
+            auto num_wp = RoutePlanner_RTdata.Waypoint_X.size();
             _planner_db.update_routeplanner_table(common::plan_route_db_data{
                 -1,                                       // local_time
+                RoutePlanner_RTdata.setpoints_X,          // setpoints_X
+                RoutePlanner_RTdata.setpoints_Y,          // setpoints_Y
+                RoutePlanner_RTdata.setpoints_heading,    // setpoints_heading
+                RoutePlanner_RTdata.setpoints_longitude,  // setpoints_longitude
+                RoutePlanner_RTdata.setpoints_latitude,   // setpoints_latitude
                 RoutePlanner_RTdata.speed,                // speed
                 RoutePlanner_RTdata.los_capture_radius,   // captureradius
-                RoutePlanner_RTdata.setpoints_X,          // WPX
-                RoutePlanner_RTdata.setpoints_Y,          // WPY
-                RoutePlanner_RTdata.setpoints_longitude,  // WPLONG
-                RoutePlanner_RTdata.setpoints_latitude    // WPLAT
+                RoutePlanner_RTdata.utm_zone,             // utm_zone
+                std::vector<double>(
+                    RoutePlanner_RTdata.Waypoint_X.data(),
+                    RoutePlanner_RTdata.Waypoint_X.data() + num_wp),  // WPX
+                std::vector<double>(
+                    RoutePlanner_RTdata.Waypoint_Y.data(),
+                    RoutePlanner_RTdata.Waypoint_Y.data() + num_wp),  // WPY
+                std::vector<double>(
+                    RoutePlanner_RTdata.Waypoint_longitude.data(),
+                    RoutePlanner_RTdata.Waypoint_longitude.data() +
+                        num_wp),  // WPLONG
+                std::vector<double>(
+                    RoutePlanner_RTdata.Waypoint_latitude.data(),
+                    RoutePlanner_RTdata.Waypoint_latitude.data() +
+                        num_wp)  // WPLAT
             });
           }
 

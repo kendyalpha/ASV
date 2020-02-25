@@ -56,7 +56,7 @@ int main() {
   };
 
   // realtime parameters of the estimators
-  estimatorRTdata _estimatorRTdata{
+  localization::estimatorRTdata _estimatorRTdata{
       common::STATETOGGLE::IDLE,            // state_toggle
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
@@ -70,13 +70,13 @@ int main() {
       Eigen::Vector3d::Zero()               // BalphaU
   };
 
-  sealoadRTdata _sealoadRTdata{
-      Eigen::Vector3d::Zero(),   // windload
-      WINDCOMPENSATION::WINDOFF  // windstatus
+  localization::sealoadRTdata _sealoadRTdata{
+      Eigen::Vector3d::Zero(),                 // windload
+      localization::WINDCOMPENSATION::WINDOFF  // windstatus
   };
 
   // estimatordata
-  estimatordata estimatordata_input{
+  localization::estimatordata estimatordata_input{
       0.1,                                        // sample_time
       (Eigen::Vector3d() << 2, 0, 0).finished(),  // cog2anntena_position
       Eigen::Matrix<double, 6, 6>::Identity(),    // Q
@@ -95,12 +95,12 @@ int main() {
 
   common::timecounter _timer;
   messages::GPS _gpsimu(115200);  // zone 51 N
-  estimator<USEKALMAN::KALMANOFF> _estimator(_estimatorRTdata, _vessel,
-                                             estimatordata_input);
+  localization::estimator<localization::USEKALMAN::KALMANOFF> _estimator(
+      _estimatorRTdata, _vessel, estimatordata_input);
   _estimator.setvalue(gps_data.UTM_x, gps_data.UTM_y, gps_data.altitude,
                       gps_data.roll, gps_data.pitch, gps_data.heading,
                       gps_data.Ve, gps_data.Vn, gps_data.roti);
-  windcompensation _windcompensation(_sealoadRTdata);
+  localization::windcompensation _windcompensation(_sealoadRTdata);
 
   int count = 0;
   long int totaltime = 0;

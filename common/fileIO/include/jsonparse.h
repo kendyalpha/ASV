@@ -19,6 +19,7 @@
 #include <vector>
 #include "common/fileIO/include/json.hpp"
 #include "common/fileIO/include/utilityio.h"
+#include "common/math/miscellaneous/include/math_utils.h"
 #include "common/property/include/vesseldata.h"
 #include "modules/controller/include/controllerdata.h"
 #include "modules/estimator/include/estimatordata.h"
@@ -74,18 +75,6 @@ class jsonparse {
   unsigned long getrcbaudrate() const noexcept { return rc_baudrate; }
   unsigned long getwindbaudrate() const noexcept { return wind_baudrate; }
   unsigned long getstm32baudrate() const noexcept { return stm32_baudrate; }
-
-  void readjson() {
-    parsejson();
-    parsevesselpropertydata();
-    parsesimulatordata();
-    parsecontrollerdata();
-    parseestimatordata();
-    parsesqlitedata();
-    paresecomcenter();
-    parsefrenetdata();
-    parseSpokedata();
-  }
 
  private:
   std::string jsonname;
@@ -153,7 +142,7 @@ class jsonparse {
   std::vector<control::pidcontrollerdata> pidcontrollerdata_input;
 
   // estimatordata
-  estimatordata estimatordata_input{
+  localization::estimatordata estimatordata_input{
       0.1,                                      // sample_time
       Eigen::Vector3d::Zero(),                  // antenna2cog
       Eigen::Matrix<double, 6, 6>::Identity(),  // Q
@@ -214,6 +203,18 @@ class jsonparse {
       1,    // K_delta_speed
       1     // K_delta_yaw;
   };
+
+  void readjson() {
+    parsejson();
+    parsevesselpropertydata();
+    parsesimulatordata();
+    parsecontrollerdata();
+    parseestimatordata();
+    parsesqlitedata();
+    paresecomcenter();
+    parsefrenetdata();
+    parseSpokedata();
+  }  // readjson
 
   void parsejson() {
     // read a JSON file
@@ -367,15 +368,14 @@ class jsonparse {
             file[str_thruster]["min_rotation"].get<int>();
 
         // alpha
-        double deg2rad = M_PI / 180.0;
         _thrusterdata_input.max_delta_alpha =
-            controllerdata_input.sample_time * deg2rad *
-            file[str_thruster]["max_delta_alpha"].get<double>();
-
+            controllerdata_input.sample_time *
+            math::Degree2Rad(
+                file[str_thruster]["max_delta_alpha"].get<double>());
         _thrusterdata_input.max_alpha =
-            deg2rad * file[str_thruster]["max_alpha"].get<double>();
+            math::Degree2Rad(file[str_thruster]["max_alpha"].get<double>());
         _thrusterdata_input.min_alpha =
-            deg2rad * file[str_thruster]["min_alpha"].get<double>();
+            math::Degree2Rad(file[str_thruster]["min_alpha"].get<double>());
         // thrust
         _thrusterdata_input.max_thrust =
             _thrusterdata_input.K *
@@ -411,14 +411,13 @@ class jsonparse {
             file[str_thruster]["min_rotation"].get<int>();
 
         // varphi
-        _thrusterdata_input.max_delta_varphi = static_cast<int>(
+        _thrusterdata_input.max_delta_varphi =
             std::round(controllerdata_input.sample_time *
-                       file[str_thruster]["max_delta_varphi"].get<double>()));
-
+                       file[str_thruster]["max_delta_varphi"].get<double>());
         _thrusterdata_input.max_varphi =
-            file[str_thruster]["max_varphi"].get<int>();
+            file[str_thruster]["max_varphi"].get<double>();
         _thrusterdata_input.min_varphi =
-            file[str_thruster]["min_varphi"].get<int>();
+            file[str_thruster]["min_varphi"].get<double>();
         // thrust
         _thrusterdata_input.max_thrust =
             _thrusterdata_input.K *

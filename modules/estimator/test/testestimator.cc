@@ -34,7 +34,7 @@ int main() {
   };
 
   // realtime parameters of the estimators
-  estimatorRTdata _estimatorRTdata{
+  localization::estimatorRTdata _estimatorRTdata{
       common::STATETOGGLE::IDLE,            // state_toggle
       Eigen::Matrix3d::Identity(),          // CTB2G
       Eigen::Matrix3d::Identity(),          // CTG2B
@@ -48,13 +48,13 @@ int main() {
       Eigen::Vector3d::Zero()               // BalphaU
   };
 
-  sealoadRTdata _sealoadRTdata{
-      Eigen::Vector3d::Zero(),   // windload
-      WINDCOMPENSATION::WINDOFF  // windstatus
+  localization::sealoadRTdata _sealoadRTdata{
+      Eigen::Vector3d::Zero(),                 // windload
+      localization::WINDCOMPENSATION::WINDOFF  // windstatus
   };
 
   // estimatordata
-  estimatordata estimatordata_input{
+  localization::estimatordata estimatordata_input{
       0.1,                                      // sample_time
       Eigen::Vector3d::Zero(),                  // cog2anntena_position
       Eigen::Matrix<double, 6, 6>::Identity(),  // Q
@@ -71,10 +71,10 @@ int main() {
   double Vn = 0;
   double roti = 0;
 
-  estimator<USEKALMAN::KALMANON> _estimator(_estimatorRTdata, _vessel,
-                                            estimatordata_input);
+  localization::estimator<localization::USEKALMAN::KALMANON> _estimator(
+      _estimatorRTdata, _vessel, estimatordata_input);
 
-  windcompensation _windcompensation(_sealoadRTdata);
+  localization::windcompensation _windcompensation(_sealoadRTdata);
 
   _sealoadRTdata = _windcompensation.computewindload(0, 0).getsealoadRTdata();
 

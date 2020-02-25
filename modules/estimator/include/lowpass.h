@@ -14,7 +14,7 @@
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
 
-namespace ASV {
+namespace ASV::localization {
 
 template <int num_lowpass>
 class lowpass {
@@ -44,6 +44,6 @@ class lowpass {
   vectorlp averagevector;
 };  // end class lowpass
 
-}  // end namespace ASV
+}  // namespace ASV::localization
 
 #endif /* _LOWPASS_H_ */

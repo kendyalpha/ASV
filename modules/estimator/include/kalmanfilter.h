@@ -34,7 +34,7 @@
 #include "common/property/include/vesseldata.h"
 #include "estimatordata.h"
 
-namespace ASV {
+namespace ASV::localization {
 
 // Kalman filtering for linear system
 template <int l = 1, int m = 1, int n = 1>
@@ -202,6 +202,6 @@ class USV_kalmanfilter : public kalmanfilter<3, 6, 6> {
 
 };  // end class USV_kalmanfilter
 
-}  // end namespace ASV
+}  // namespace ASV::localization
 
 #endif /* _KALMANFILTER_H_ */
