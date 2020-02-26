@@ -49,3 +49,10 @@ BOOST_AUTO_TEST_CASE(UTM2marine) {
   BOOST_CHECK_CLOSE(_testdata.x, 4, 1e-8);
   BOOST_CHECK_CLOSE(_testdata.y, 1, 1e-8);
 }
+
+BOOST_AUTO_TEST_CASE(sign) {
+  BOOST_TEST(sgn<double>(100.11) == 1);
+  BOOST_TEST(sgn<double>(-12.23232) == -1);
+  BOOST_TEST(sgn<double>(0) == 0);
+  BOOST_TEST(sgn<int>(23) == 1);
+}

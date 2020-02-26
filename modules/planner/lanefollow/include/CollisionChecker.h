@@ -26,9 +26,9 @@ class CollisionChecker {
       const std::vector<Frenet_path> &_frenet_lattice) {
     std::vector<Frenet_path> collision_free_roi_paths;
     std::vector<Frenet_path> sub_collision_free_roi_paths;
-    std::vector<Frenet_path> constraint_free_paths = _frenet_lattice;
-    // std::vector<Frenet_path> constraint_free_paths =
-    //     check_constraints(_frenet_lattice);
+    // std::vector<Frenet_path> constraint_free_paths = _frenet_lattice;
+    std::vector<Frenet_path> constraint_free_paths =
+        check_constraints(_frenet_lattice);
 
     for (std::size_t i = 0; i != constraint_free_paths.size(); i++) {
       int results = check_collision(constraint_free_paths[i]);
@@ -43,9 +43,9 @@ class CollisionChecker {
         collision_free_roi_paths.emplace_back(constraint_free_paths[i]);
       }
     }
-    // std::cout << constraint_free_paths.size() << " "
-    //           << collision_free_roi_paths.size() << " "
-    //           << sub_collision_free_roi_paths.size() << std::endl;
+    std::cout << constraint_free_paths.size() << " "
+              << collision_free_roi_paths.size() << " "
+              << sub_collision_free_roi_paths.size() << std::endl;
 
     if (collision_free_roi_paths.size() == 0) {
       if (sub_collision_free_roi_paths.size() != 0) {
@@ -102,7 +102,7 @@ class CollisionChecker {
                        const Eigen::VectorXd &_ref_y) {
     // check the reference line
     double max_reference_radius = 9 * std::pow(collisiondata.ROBOT_RADIUS, 2);
-    double min_dist = 100000000;
+    double min_dist = std::numeric_limits<double>::max();
 
     for (unsigned i = 0; i != _ref_x.size(); ++i) {
       double distance =
@@ -136,7 +136,7 @@ class CollisionChecker {
     std::size_t num_path_point =
         static_cast<std::size_t>(_Frenet_path.x.size());
 
-    double min_dist = 10000;
+    double min_dist = std::numeric_limits<double>::max();
     double min_radius = std::pow(collisiondata.ROBOT_RADIUS, 2);
     for (std::size_t j = 0; j != num_path_point; j++) {
       for (std::size_t i = 0; i != obstacle_x.size(); i++) {
@@ -164,6 +164,7 @@ class CollisionChecker {
 
     std::size_t count_max_speed = 0;
     std::size_t count_max_accel = 0;
+    std::size_t count_max_angular_accel = 0;
     std::size_t count_max_curvature = 0;
 
     for (std::size_t i = 0; i != _frenet_lattice.size(); i++) {
@@ -176,6 +177,11 @@ class CollisionChecker {
         count_max_accel++;
         continue;  // Max accel check
       }
+      // if ((_frenet_lattice[i].dspeed.maxCoeff() > collisiondata.MAX_ACCEL) ||
+      //     (_frenet_lattice[i].dspeed.minCoeff() < collisiondata.MIN_ACCEL)) {
+      //   count_max_accel++;
+      //   continue;  // Max accel check
+      // }
       if ((_frenet_lattice[i].kappa.maxCoeff() > collisiondata.MAX_CURVATURE) ||
           (_frenet_lattice[i].kappa.minCoeff() <
            -collisiondata.MAX_CURVATURE)) {

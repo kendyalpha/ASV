@@ -416,28 +416,28 @@ BOOST_AUTO_TEST_CASE(vessel) {
 
   /*****************************  perception  *****************************/
 
-  ASV::perception::ClusteringData Clustering_Data{
+  ASV::perception::ClusteringData Clustering_correct{
       1,  // p_radius
       3   // p_minumum_neighbors
   };
 
-  ASV::perception::SpokeProcessdata SpokeProcess_data{
-      0.1,   // sampletime
-      -1.0,  // radar_x
-      0.0    // radar_y
+  ASV::perception::SpokeProcessdata SpokeProcess_correct{
+      0.1,      // sampletime
+      -1.0,     // radar_x
+      1.222223  // radar_y
   };
 
-  ASV::perception::AlarmZone Alarm_Zone{
+  ASV::perception::AlarmZone Alarm_Zone_correct{
       10,        // start_range_m
       20,        // end_range_m
       0,         // center_bearing_rad
       M_PI / 2,  // width_bearing_rad
-      0xac       // sensitivity_threhold
+      0xc8       // sensitivity_threhold
   };
 
-  ASV::perception::TrackingTargetData TrackingTarget_Data{
+  ASV::perception::TrackingTargetData TrackingTarget_correct{
       1,    // min_squared_radius
-      4,    // max_squared_radius
+      9,    // max_squared_radius
       1,    // speed_threhold
       20,   // max_speed
       5,    // max_acceleration
@@ -448,5 +448,85 @@ BOOST_AUTO_TEST_CASE(vessel) {
       1     // K_delta_yaw;
   };
 
-  // std::cout << _jsonparse << std::endl;
+  {
+    auto Clustering_data = _jsonparse.getClusteringdata();
+
+    BOOST_CHECK_CLOSE(Clustering_data.p_radius, Clustering_correct.p_radius,
+                      1e-7);
+    BOOST_TEST(Clustering_data.p_minumum_neighbors ==
+               Clustering_correct.p_minumum_neighbors);
+  }
+
+  {
+    auto spoke_data = _jsonparse.getSpokeProcessdata();
+
+    BOOST_CHECK_CLOSE(spoke_data.sample_time, SpokeProcess_correct.sample_time,
+                      1e-7);
+    BOOST_CHECK_CLOSE(spoke_data.radar_x, SpokeProcess_correct.radar_x, 1e-7);
+    BOOST_CHECK_CLOSE(spoke_data.radar_y, SpokeProcess_correct.radar_y, 1e-7);
+  }
+
+  {
+    auto Alarm_data = _jsonparse.getalarmzonedata();
+
+    BOOST_CHECK_CLOSE(Alarm_data.start_range_m,
+                      Alarm_Zone_correct.start_range_m, 1e-7);
+    BOOST_CHECK_CLOSE(Alarm_data.end_range_m, Alarm_Zone_correct.end_range_m,
+                      1e-7);
+    BOOST_CHECK_CLOSE(Alarm_data.center_bearing_rad,
+                      Alarm_Zone_correct.center_bearing_rad, 1e-7);
+    BOOST_TEST(Alarm_data.sensitivity_threhold ==
+               Alarm_Zone_correct.sensitivity_threhold);
+  }
+  {
+    auto trackingtarget_data = _jsonparse.getTargetTrackingdata();
+    BOOST_CHECK_CLOSE(trackingtarget_data.min_squared_radius,
+                      TrackingTarget_correct.min_squared_radius, 1e-7);
+    BOOST_CHECK_CLOSE(trackingtarget_data.max_squared_radius,
+                      TrackingTarget_correct.max_squared_radius, 1e-7);
+    BOOST_CHECK_CLOSE(trackingtarget_data.speed_threhold,
+                      TrackingTarget_correct.speed_threhold, 1e-7);
+    BOOST_CHECK_CLOSE(trackingtarget_data.max_speed,
+                      TrackingTarget_correct.max_speed, 1e-7);
+    BOOST_CHECK_CLOSE(trackingtarget_data.max_acceleration,
+                      TrackingTarget_correct.max_acceleration, 1e-7);
+    BOOST_CHECK_CLOSE(trackingtarget_data.max_roti,
+                      TrackingTarget_correct.max_roti, 1e-7);
+    BOOST_CHECK_CLOSE(trackingtarget_data.safe_distance,
+                      TrackingTarget_correct.safe_distance, 1e-7);
+    BOOST_CHECK_CLOSE(trackingtarget_data.K_radius,
+                      TrackingTarget_correct.K_radius, 1e-7);
+    BOOST_CHECK_CLOSE(trackingtarget_data.K_delta_speed,
+                      TrackingTarget_correct.K_delta_speed, 1e-7);
+    BOOST_CHECK_CLOSE(trackingtarget_data.K_delta_yaw,
+                      TrackingTarget_correct.K_delta_yaw, 1e-7);
+  }
+
+  unsigned long gps_baudrate_correct = 115200;
+  std::string gps_port_correct = "/dev/ttyUSB0";
+  unsigned long gui_baudrate_correct = 19200;
+  std::string gui_port_correct = "/dev/ttyUSB1";
+  unsigned long rc_baudrate_correct = 115200;
+  std::string rc_port_correct = "/dev/ttyUSB2";
+  unsigned long wind_baudrate_correct = 9600;
+  std::string wind_port_correct = "/dev/ttyUSB3";
+  unsigned long stm32_baudrate_correct = 115200;
+  std::string stm32_port_correct = "/dev/ttyUSB4";
+
+  {
+    BOOST_TEST(_jsonparse.getgpsbaudrate() == gps_baudrate_correct);
+    BOOST_TEST(_jsonparse.getguibaudrate() == gui_baudrate_correct);
+    BOOST_TEST(_jsonparse.getrcbaudrate() == rc_baudrate_correct);
+    BOOST_TEST(_jsonparse.getwindbaudrate() == wind_baudrate_correct);
+    BOOST_TEST(_jsonparse.getstm32baudrate() == stm32_baudrate_correct);
+
+    BOOST_TEST(_jsonparse.getgpsport() == gps_port_correct);
+    BOOST_TEST(_jsonparse.getguiport() == gui_port_correct);
+    BOOST_TEST(_jsonparse.getremotecontrolport() == rc_port_correct);
+    BOOST_TEST(_jsonparse.getwindport() == wind_port_correct);
+    BOOST_TEST(_jsonparse.getstm32port() == stm32_port_correct);
+  }
+
+  std::cout << "db_config: " << _jsonparse.getdbconfigpath() << std::endl;
+  std::cout << "sqlite_path: " << _jsonparse.getsqlitepath() << std::endl;
 }

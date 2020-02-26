@@ -178,7 +178,7 @@ class jsonparse {
   };
 
   perception::SpokeProcessdata SpokeProcess_data{
-      0.1,   // sampletime
+      0.1,   // sample_time
       -1.0,  // radar_x
       0.0    // radar_y
   };

@@ -1,7 +1,7 @@
 /*
 ***********************************************************************
-* testFrenetTrajectoryGenerator.cc:
-* Utility test for Frenet optimal trajectory generator
+* testParameters.cc:
+* Test for the effect of each parameters
 * This header file can be read by C++ compilers
 *
 * by Hu.ZH(CrossOcean.ai)
@@ -16,9 +16,8 @@
 using namespace ASV;
 
 // illustrate the lattice planner at a time instant
-void realtimeplotting(Gnuplot &gp1, Gnuplot &gp2, const double vessel_x,
+void realtimeplotting(Gnuplot &gp1, const double vessel_x,
                       const double vessel_y, const double vessel_heading,
-                      const double vessel_speed,
                       const std::vector<double> &_cart_obstacle_x,
                       const std::vector<double> &_cart_obstacle_y,
                       const Eigen::VectorXd &_cart_best_x,
@@ -69,12 +68,7 @@ void realtimeplotting(Gnuplot &gp1, Gnuplot &gp2, const double vessel_x,
       << " with linespoints linetype 1 lw 2 lc rgb '#0060ad' pointtype 7 "
          "pointsize 1 title 'best path'\n";
 
-  // the second subplot
-  gp2 << "plot " << gp2.file1d(xy_pts_C)
-      << " with lines lt 1 lw 2 lc rgb 'red' title 'speed'\n";
-
   gp1.flush();
-  gp2.flush();
 
 }  // realtimeplotting
 
@@ -95,7 +89,7 @@ int main() {
   Eigen::VectorXd marine_WX(5);
   Eigen::VectorXd marine_WY(5);
   marine_WX << 0.0, 25, 50, 75, 100;
-  marine_WY << 0.0, 0.0, 0.0, 0.0, 0.0;
+  marine_WY << 0.0, 25, 0.0, -25, 0.0;
 
   // std::vector<double> marine_surrounding_x{50, 50.0, 50.0, 50.0, 48, 50.0,
   //                                          53, 54,   56,   58,   58, 60};
@@ -105,9 +99,8 @@ int main() {
   std::vector<double> marine_surrounding_x{50, 50.0, 50.0, 50.0, 48, 50.0};
   std::vector<double> marine_surrounding_y{-2.0, -1.0, 2.0, 1, 0, 3.0};
 
-  std::vector<double> marine_surrounding_x_test{53, 54, 56, 58, 58, 60};
-  std::vector<double> marine_surrounding_y_test{-2.0, -2.0, -2.0,
-                                                -2.0, -10,  10};
+  std::vector<double> marine_surrounding_x_test{25, 26, 50, 50, 58, 60};
+  std::vector<double> marine_surrounding_y_test{25, 25, -2.0, -1, -10, 10};
 
   planning::LatticeData _latticedata{
       0.1,         // SAMPLE_TIME
@@ -143,12 +136,12 @@ int main() {
   };
 
   planning::CartesianState estimate_marinestate{
-      0,           // x
-      -1,          // y
-      M_PI / 3.0,  // theta
-      0,           // kappa
-      1,           // speed
-      0,           // dspeed
+      -1,           // x
+      0,            // y
+      -0.2 * M_PI,  // theta
+      0,            // kappa
+      1,            // speed
+      0,            // dspeed
   };
 
   planning::LatticePlanner _trajectorygenerator(_latticedata, _collisiondata);
@@ -210,13 +203,12 @@ int main() {
       break;
     }
 
-    realtimeplotting(gp1, gp2, estimate_marinestate.x, estimate_marinestate.y,
-                     estimate_marinestate.theta, estimate_marinestate.speed,
-                     cart_ob_x, cart_ob_y, cart_bestX, cart_bestY,
-                     cart_bestspeed);
+    realtimeplotting(gp1, estimate_marinestate.x, estimate_marinestate.y,
+                     estimate_marinestate.theta, cart_ob_x, cart_ob_y,
+                     cart_bestX, cart_bestY, cart_bestspeed);
 
     long int et = _timer.timeelapsed();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     // std::cout << "each: " << et << std::endl;
   }
 }

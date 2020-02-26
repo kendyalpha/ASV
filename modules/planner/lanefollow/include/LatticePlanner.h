@@ -145,13 +145,15 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
     // if (index <= 1) index = 1;
     // if (index >= max_index) index = max_index;
 
-    int index = 1;
-    next_cartesianstate.x = best_path.x(index);
-    next_cartesianstate.y = best_path.y(index);
-    next_cartesianstate.theta = best_path.yaw(index);
-    next_cartesianstate.kappa = best_path.kappa(index);
-    next_cartesianstate.speed = best_path.speed(index);
-    next_cartesianstate.dspeed = best_path.dspeed(index);
+    if (best_path.x.rows() >= 2) {
+      int index = 1;
+      next_cartesianstate.x = best_path.x(index);
+      next_cartesianstate.y = best_path.y(index);
+      next_cartesianstate.theta = best_path.yaw(index);
+      next_cartesianstate.kappa = best_path.kappa(index);
+      next_cartesianstate.speed = best_path.speed(index);
+      next_cartesianstate.dspeed = best_path.dspeed(index);
+    }
 
   }  // updateNextCartesianStatus
 

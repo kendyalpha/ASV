@@ -152,20 +152,20 @@
       "start_range_m": 10,
       "end_range_m": 20,
       "center_bearing_deg": 0,
-      "width_bearing_deg": 60,
+      "width_bearing_deg": 90,
       "sensitivity_threhold": 200
     },
     "TargetTracking":{
       "min_radius": 1,
       "max_radius": 3,
       "speed_threhold": 1,
-      "max_speed": 10,
-      "max_acceleration": 2,
-      "max_roti": 1,
-      "safe_distance": 2,
-      "loss_K_radius": 1,
-      "loss_K_deltaspeed": 3,
-      "loss_K_deltayaw": 2
+      "max_speed": 20,
+      "max_acceleration": 5,
+      "max_roti": 600,
+      "safe_distance": 1,
+      "loss_K_radius": 0.8,
+      "loss_K_deltaspeed": 1,
+      "loss_K_deltayaw": 1
     },
     "Clustering":{
       "radius": 1,
@@ -187,7 +187,7 @@
     },
     "marine_radar":{
       "number": 1,
-      "antenna":[0.1, 0]
+      "antenna":[-1, 1.222223]
     }
   },
   "comcenter":{

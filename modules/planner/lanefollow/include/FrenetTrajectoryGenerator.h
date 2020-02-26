@@ -382,11 +382,14 @@ class FrenetTrajectoryGenerator {
 
     // delta theta: (TODO: | delta_theta | < pi/2 )
     double delta_theta = _cartstate_v.theta - ref_heading;
-    if (std::abs(delta_theta) >= (0.5 * M_PI))
+    if (std::abs(delta_theta) >= (0.5 * M_PI)) {
+      delta_theta = common::math::sgn<double>(delta_theta) * 0.49 * M_PI;
       CLOG(ERROR, "Frenet") << "extreme situations in heading";
+    }
     double cos_dtheta = std::cos(delta_theta);
     double sin_dtheta = std::sin(delta_theta);
     double tan_dtheta = std::tan(delta_theta);
+
     // d
     _frenetstate.d =
         std::cos(ref_heading) *
@@ -394,8 +397,11 @@ class FrenetTrajectoryGenerator {
         std::sin(ref_heading) * (_cartstate_v.x - cart_RefX(n_closestrefpoint));
     // TODO: larger than zero
     double one_minus_kappa_r_d = 1 - ref_kappa * _frenetstate.d;
-    if (one_minus_kappa_r_d <= 0)
+
+    if (one_minus_kappa_r_d <= 0) {
+      one_minus_kappa_r_d = 0.01;
       CLOG(ERROR, "Frenet") << "extreme situations in Lateral error";
+    }
     // ds/dt
     _frenetstate.s_dot = _cartstate_v.speed * cos_dtheta / one_minus_kappa_r_d;
     // dd/ds
@@ -423,6 +429,57 @@ class FrenetTrajectoryGenerator {
 
     return _frenetstate;
   }  // Cart2Frenet
+
+  // Transform from Frenet s,d coordinates to Cartesian x,y
+  CartesianState Frenet2Cart(const FrenetState &_frenetstate) {
+    CartesianState _cartstate_v;
+    // calc global positions;
+    double ref_heading = target_Spline2D.compute_yaw(_frenetstate.s);
+    double ref_kappa = target_Spline2D.compute_curvature(_frenetstate.s);
+    double ref_kappa_prime = target_Spline2D.compute_dcurvature(_frenetstate.s);
+
+    auto _cart_position = CalculateCartesianPoint(
+        ref_heading, _frenetstate.d,
+        target_Spline2D.compute_position(_frenetstate.s));
+    _cartstate_v.x = _cart_position(0);
+    _cartstate_v.y = _cart_position(1);
+
+    // TODO: larger than zero
+    double one_minus_kappa_r_d = 1 - ref_kappa * _frenetstate.d;
+    if (one_minus_kappa_r_d <= 0) CLOG(ERROR, "Frenet") << "extreme situations";
+    // speed
+    _cartstate_v.speed =
+        std::sqrt(std::pow(_frenetstate.s_dot * one_minus_kappa_r_d, 2) +
+                  std::pow(_frenetstate.d_dot, 2));
+
+    // theta
+    const double tan_delta_theta = _frenetstate.d_prime / one_minus_kappa_r_d;
+    const double delta_theta =
+        std::atan2(_frenetstate.d_prime, one_minus_kappa_r_d);
+    const double cos_delta_theta = std::cos(delta_theta);
+    _cartstate_v.theta =
+        common::math::Normalizeheadingangle(delta_theta + ref_heading);
+
+    // kappa
+    const double kappa_r_d_prime =
+        ref_kappa_prime * _frenetstate.d + ref_kappa * _frenetstate.d_prime;
+    _cartstate_v.kappa =
+        ((kappa_r_d_prime * tan_delta_theta + _frenetstate.d_pprime) *
+             cos_delta_theta * cos_delta_theta / one_minus_kappa_r_d +
+         ref_kappa) *
+        cos_delta_theta / one_minus_kappa_r_d;
+    // a
+    const double delta_theta_prime =
+        _cartstate_v.kappa * one_minus_kappa_r_d / cos_delta_theta - ref_kappa;
+
+    _cartstate_v.dspeed =
+        _frenetstate.s_ddot * one_minus_kappa_r_d / cos_delta_theta +
+        _frenetstate.s_dot * _frenetstate.s_dot *
+            (delta_theta_prime * _frenetstate.d_prime - kappa_r_d_prime) /
+            cos_delta_theta;
+
+    return _cartstate_v;
+  }  // Frenet2Cart
 
   // Transform from Frenet s,d coordinates to Cartesian x,y
   CartesianState Frenet2Cart(const FrenetState &_frenetstate) {

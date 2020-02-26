@@ -89,6 +89,12 @@ double VectorAngle_2d(const double x1, const double y1,  // [x1, y1]
   return std::atan2(det, dot);     // atan2(y, x) or atan2(sin, cos)
 }  // VectorAngle_2d
 
+// returns -1 for negative numbers and +1 for positive numbers.
+template <typename T>
+int sgn(T val) {
+  return (T(0) < val) - (val < T(0));
+}  // sgn
+
 }  // namespace ASV::common::math
 
 #endif /* _MATH_UTILS_H_ */

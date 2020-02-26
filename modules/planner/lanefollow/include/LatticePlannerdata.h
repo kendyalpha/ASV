@@ -24,6 +24,7 @@ struct CartesianState {
   double kappa;
   double speed;   // vx
   double dspeed;  // ax
+  // double angular_accleration;  // heading
 };
 
 // state in the Frenet coodinate
@@ -54,6 +55,7 @@ struct Frenet_path {
   Eigen::VectorXd kappa;
   Eigen::VectorXd speed;
   Eigen::VectorXd dspeed;
+  // Eigen::VectorXd ang_accel;
   double cd;
   double cv;
   double cf;
@@ -75,9 +77,11 @@ struct LatticeData {
 
 struct CollisionData {
   /* constraints */
-  double MAX_SPEED;      // maximum speed [m/s]
-  double MAX_ACCEL;      // maximum acceleration [m/ss]
-  double MIN_ACCEL;      // minimum acceleration [m/ss]
+  double MAX_SPEED;  // maximum speed [m/s]
+  double MAX_ACCEL;  // maximum acceleration [m/ss]
+  double MIN_ACCEL;  // minimum acceleration [m/ss]
+  // double MAX_ANG_ACCEL;  // maximum angular acceleration [rad/ss]
+  // double MIN_ANG_ACCEL;  // minimum angular acceleration [rad/ss]
   double MAX_CURVATURE;  // max curvature [1/m]
 
   /* collision check */
