@@ -26,7 +26,6 @@ struct CartesianState {
   double dspeed;     // ax
   double yaw_rate;   // rad/s
   double yaw_accel;  // rad/s^2
-  // double angular_accleration;  // heading
 };
 
 // state in the Frenet coodinate
@@ -42,11 +41,11 @@ struct FrenetState {
 };
 
 struct Frenet_path {
-  Eigen::VectorXd t;
-  Eigen::VectorXd d;
+  Eigen::VectorXd t;  // time (s)
+  Eigen::VectorXd d;  // lateral error (m)
   Eigen::VectorXd d_dot;
   Eigen::VectorXd d_ddot;
-  Eigen::VectorXd s;
+  Eigen::VectorXd s;  // longitudual error (m)
   Eigen::VectorXd s_dot;
   Eigen::VectorXd s_ddot;
   Eigen::VectorXd d_prime;

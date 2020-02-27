@@ -275,6 +275,7 @@ class Spline2D {
   Eigen::Vector2d compute_position(double _arclength) const {
     return (Eigen::Vector2d() << _SX(_arclength), _SY(_arclength)).finished();
   }  // compute_position
+
   // calculate the curvature based on the arclength
   double compute_curvature(double _arclength) const {
     double dx = _SX.deriv(1, _arclength);
@@ -287,7 +288,8 @@ class Spline2D {
     double kappa = (ddy * dx - ddx * dy) / (dx * dx + dy * dy);
     return kappa;
   }  // compute_curvature
-     // calculate the derivative of curvature to arclength
+
+  // calculate the derivative of curvature to arclength
   double compute_dcurvature(double _arclength) const {
     double dx = _SX.deriv(1, _arclength);
     double ddx = _SX.deriv(2, _arclength);
@@ -307,13 +309,13 @@ class Spline2D {
 
     return dkappa;
   }  // compute_curvature
+
   // calculate the orientation based on the arclength
   double compute_yaw(double _arclength) const {
     double dx = _SX.deriv(1, _arclength);
     double dy = _SY.deriv(1, _arclength);
     return std::atan2(dy, dx);
   }  // compute_yaw
-
   Eigen::VectorXd getarclength() const { return arclength; }
 
  private:

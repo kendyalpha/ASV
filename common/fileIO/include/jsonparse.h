@@ -166,6 +166,8 @@ class jsonparse {
       50.0 / 3.6,  // MAX_SPEED
       4.0,         // MAX_ACCEL
       -3.0,        // MIN_ACCEL
+      2.0,         // MAX_ANG_ACCEL
+      -2.0,        // MIN_ANG_ACCEL
       1.0,         // MAX_CURVATURE
       3,           // HULL_LENGTH
       1,           // HULL_WIDTH
@@ -584,6 +586,11 @@ class jsonparse {
         1.5 * vesseldata_input.x_thrust(1) / vesseldata_input.Mass(0, 0);
     collisiondata_input.MIN_ACCEL =
         1.5 * vesseldata_input.x_thrust(0) / vesseldata_input.Mass(0, 0);
+    collisiondata_input.MAX_ANG_ACCEL =
+        1.5 * vesseldata_input.mz_thrust(1) / vesseldata_input.Mass(2, 2);
+    collisiondata_input.MIN_ANG_ACCEL =
+        1.5 * vesseldata_input.mz_thrust(0) / vesseldata_input.Mass(2, 2);
+
     collisiondata_input.MAX_CURVATURE =
         1 / file["property"]["mini_turn_radius"].get<double>();
 

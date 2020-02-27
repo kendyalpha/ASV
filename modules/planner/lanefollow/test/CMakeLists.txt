@@ -51,11 +51,6 @@ target_include_directories(testFrenetTrajectoryGenerator PRIVATE ${HEADER_DIRECT
 target_link_libraries(testFrenetTrajectoryGenerator PRIVATE ${RARE_LIBRARIES})
 
 
-add_executable (testParameters testParameters.cc ${SOURCE_FILES} )
-target_include_directories(testParameters PRIVATE ${HEADER_DIRECTORY})
-target_link_libraries(testParameters PRIVATE ${RARE_LIBRARIES})
-
-
 add_executable (test_experiment test_experimental.cc ${SOURCE_FILES} )
 target_include_directories(test_experiment PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(test_experiment PUBLIC ${SQLITE3_LIBRARY})

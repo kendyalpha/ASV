@@ -173,6 +173,8 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
     next_cartesianstate.kappa = best_path.kappa(index);
     next_cartesianstate.speed = best_path.speed(index);
     next_cartesianstate.dspeed = best_path.dspeed(index);
+    next_cartesianstate.yaw_rate = best_path.yaw_rate(index);
+    next_cartesianstate.yaw_accel = best_path.yaw_accel(index);
 
   }  // updateNextCartesianStatus
 

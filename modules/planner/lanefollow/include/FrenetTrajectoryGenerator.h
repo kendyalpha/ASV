@@ -505,7 +505,8 @@ class FrenetTrajectoryGenerator {
     double ref_heading = RefHeading(n_closestrefpoint);
 
     // delta theta: (TODO: | delta_theta | < pi/2 )
-    double delta_theta = _cartstate_v.theta - ref_heading;
+    double delta_theta =
+        common::math::Normalizeheadingangle(_cartstate_v.theta - ref_heading);
     if (std::abs(delta_theta) >= (0.5 * M_PI)) {
       delta_theta = common::math::sgn<double>(delta_theta) * 0.49 * M_PI;
       CLOG(ERROR, "Frenet") << "extreme situations in heading";

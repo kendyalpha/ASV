@@ -118,6 +118,8 @@ class threadloop : public StateMonitor {
       0,           // kappa
       2,           // speed
       0,           // dspeed
+      0,           // yaw_rate
+      0            // yaw_accel
   };
 
   // real time GPS/IMU data

@@ -26,13 +26,14 @@ class CollisionChecker {
       const std::vector<Frenet_path> &_frenet_lattice) {
     std::vector<Frenet_path> collision_free_roi_paths;
     std::vector<Frenet_path> sub_collision_free_roi_paths;
+
+    // compute the constraint-free path
     // std::vector<Frenet_path> constraint_free_paths = _frenet_lattice;
     std::vector<Frenet_path> constraint_free_paths =
         check_constraints(_frenet_lattice);
 
     for (std::size_t i = 0; i != constraint_free_paths.size(); i++) {
       int results = check_collision(constraint_free_paths[i]);
-
       if (results == 2) {
         continue;  // collision occurs
       } else if (results == 1)
@@ -53,7 +54,8 @@ class CollisionChecker {
         CLOG(ERROR, "Frenet_Lattice")
             << "Reduce the collision radius";  // TODO: Scenario switch
       } else {
-        collision_free_roi_paths = constraint_free_paths;
+        collision_free_roi_paths =
+            constraint_free_paths;  // TODO: may occur the jerk in yaw rate
         CLOG(ERROR, "Frenet_Lattice")
             << "Collision may occur";  // TODO: Scenario switch
       }
@@ -152,7 +154,7 @@ class CollisionChecker {
         if (_dis < min_dist) min_dist = _dis;
       }
     }
-    if (min_dist <= 0.5 * min_radius) return 2;
+    if (min_dist <= 0.8 * min_radius) return 2;
     if (min_dist <= min_radius)  // collision occurs
       return 1;
     return 0;
@@ -165,7 +167,7 @@ class CollisionChecker {
     std::size_t count_max_speed = 0;
     std::size_t count_max_accel = 0;
     std::size_t count_max_angular_accel = 0;
-    std::size_t count_max_curvature = 0;
+    // std::size_t count_max_curvature = 0;
 
     for (std::size_t i = 0; i != _frenet_lattice.size(); i++) {
       if (_frenet_lattice[i].speed.maxCoeff() > collisiondata.MAX_SPEED) {
@@ -184,18 +186,20 @@ class CollisionChecker {
         count_max_angular_accel++;
         continue;  // Max heading acceleration check
       }
-      if ((_frenet_lattice[i].kappa.maxCoeff() > collisiondata.MAX_CURVATURE) ||
-          (_frenet_lattice[i].kappa.minCoeff() <
-           -collisiondata.MAX_CURVATURE)) {
-        count_max_curvature++;
-        continue;  // Max curvature check
-      }
+      // if ((_frenet_lattice[i].kappa.maxCoeff() > collisiondata.MAX_CURVATURE)
+      // ||
+      //     (_frenet_lattice[i].kappa.minCoeff() <
+      //      -collisiondata.MAX_CURVATURE)) {
+      //   count_max_curvature++;
+      //   continue;  // Max curvature check
+      // }
       constraint_free_paths.emplace_back(_frenet_lattice[i]);
     }
 
-    // std::cout << "max_speed " << count_max_speed << "max_accel "
-    //           << count_max_accel << "MAX_CURVATURE: " << count_max_curvature
-    //           << std::endl;
+    // std::cout << "max_speed " << count_max_speed << " max_accel "
+    //           << count_max_accel
+    //           << " MAX_ANG_ACCEL: " << count_max_angular_accel
+    //           << " MAX_CURVATURE: " << count_max_curvature << std::endl;
     return constraint_free_paths;
   }  // check_constraints
 

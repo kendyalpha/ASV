@@ -369,6 +369,10 @@ BOOST_AUTO_TEST_CASE(vessel) {
           vessel_correct.Mass(0, 0),  // MAX_ACCEL
       1.5 * vessel_correct.x_thrust(0) /
           vessel_correct.Mass(0, 0),  // MIN_ACCEL
+      1.5 * vessel_correct.mz_thrust(1) /
+          vessel_correct.Mass(2, 2),  // MAX_ANG_ACCEL
+      1.5 * vessel_correct.mz_thrust(0) /
+          vessel_correct.Mass(2, 2),  // MIN_ANG_ACCEL
       1.0,                            // MAX_CURVATURE
       vessel_correct.L,               // HULL_LENGTH
       vessel_correct.B,               // HULL_WIDTH
@@ -404,6 +408,10 @@ BOOST_AUTO_TEST_CASE(vessel) {
                       1e-7);
     BOOST_CHECK_CLOSE(collision_data.MIN_ACCEL, collisiondata_correct.MIN_ACCEL,
                       1e-7);
+    BOOST_CHECK_CLOSE(collision_data.MAX_ANG_ACCEL,
+                      collisiondata_correct.MAX_ANG_ACCEL, 1e-7);
+    BOOST_CHECK_CLOSE(collision_data.MIN_ANG_ACCEL,
+                      collisiondata_correct.MIN_ANG_ACCEL, 1e-7);
     BOOST_CHECK_CLOSE(collision_data.MAX_CURVATURE,
                       collisiondata_correct.MAX_CURVATURE, 1e-7);
     BOOST_CHECK_CLOSE(collision_data.HULL_LENGTH,
