@@ -36,6 +36,8 @@ int main() {
       0.11,         // kappa
       2,            // speed
       0,            // dspeed
+      0.22,         // yaw_rate
+      0             // yaw_accel
   };
 
   ASV::planning::CartesianState After_cartesianstate{
@@ -45,6 +47,8 @@ int main() {
       0.,  // kappa
       0,   // speed
       0,   // dspeed
+      0,   // yaw_rate
+      0    // yaw_accel
   };
 
   ASV::planning::FrenetState frenetstate{

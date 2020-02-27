@@ -31,7 +31,9 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
             -M_PI / 3.0,  // theta
             0,            // kappa
             1,            // speed
-            0             // dspeed
+            0,            // dspeed
+            0,            // yaw_rate
+            0             // yaw_accel
         }) {}
 
   LatticePlanner &trajectoryonestep(double marine_x, double marine_y,
@@ -47,13 +49,32 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
     auto t_frenet_paths =
         CollisionChecker::check_paths(FrenetTrajectoryGenerator::frenet_paths);
 
-    // find minimum cost path
-    best_path = findmincostpath(t_frenet_paths);
-
-    updateNextCartesianStatus();
+    if (t_frenet_paths.size() > 0) {
+      // find minimum cost path
+      best_path = findmincostpath(t_frenet_paths);
+      // update the planning state
+      updateNextCartesianStatus();
+    } else
+      CLOG(ERROR, "Frenet_Lattice") << "No best path!";
 
     return *this;
   }  // trajectoryonestep
+
+  void regenerate_target_course(const Eigen::VectorXd &_marine_wx,
+                                const Eigen::VectorXd &_marine_wy,
+                                double initial_target_speed = 1) {
+    double initial_theta = FrenetTrajectoryGenerator::regenerate_target_course(
+        _marine_wx, _marine_wy);
+    next_cartesianstate.x = 0;
+    next_cartesianstate.y = 0;
+    next_cartesianstate.theta = initial_theta;
+    next_cartesianstate.kappa = 0;
+    next_cartesianstate.speed = initial_target_speed;
+    next_cartesianstate.dspeed = 0;
+    next_cartesianstate.yaw_rate = 0;
+    next_cartesianstate.yaw_accel = 0;
+
+  }  // regenerate_target_course
 
   // consider the reference line and obstacle resolution
   void setup_obstacle(const std::vector<double> &_marine_surrounding_x,
@@ -123,7 +144,7 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
 
   Frenet_path findmincostpath(const std::vector<Frenet_path> &_frenetpaths) {
     // find minimum cost path
-    double mincost = 1e6;
+    double mincost = std::numeric_limits<double>::max();
     Frenet_path _best_path = _frenetpaths[0];
     for (std::size_t i = 0; i != _frenetpaths.size(); i++) {
       if (mincost > _frenetpaths[i].cf) {
@@ -145,15 +166,13 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
     // if (index <= 1) index = 1;
     // if (index >= max_index) index = max_index;
 
-    if (best_path.x.rows() >= 2) {
-      int index = 1;
-      next_cartesianstate.x = best_path.x(index);
-      next_cartesianstate.y = best_path.y(index);
-      next_cartesianstate.theta = best_path.yaw(index);
-      next_cartesianstate.kappa = best_path.kappa(index);
-      next_cartesianstate.speed = best_path.speed(index);
-      next_cartesianstate.dspeed = best_path.dspeed(index);
-    }
+    int index = 1;
+    next_cartesianstate.x = best_path.x(index);
+    next_cartesianstate.y = best_path.y(index);
+    next_cartesianstate.theta = best_path.yaw(index);
+    next_cartesianstate.kappa = best_path.kappa(index);
+    next_cartesianstate.speed = best_path.speed(index);
+    next_cartesianstate.dspeed = best_path.dspeed(index);
 
   }  // updateNextCartesianStatus
 

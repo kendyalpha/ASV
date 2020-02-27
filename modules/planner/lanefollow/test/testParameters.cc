@@ -88,8 +88,8 @@ int main() {
 
   Eigen::VectorXd marine_WX(5);
   Eigen::VectorXd marine_WY(5);
-  marine_WX << 0.0, 25, 50, 75, 100;
-  marine_WY << 0.0, 25, 0.0, -25, 0.0;
+  marine_WX << 0.0, -25, -50, -75, -100;
+  marine_WY << 0.0, 0, 0.0, 0, 0.0;
 
   // std::vector<double> marine_surrounding_x{50, 50.0, 50.0, 50.0, 48, 50.0,
   //                                          53, 54,   56,   58,   58, 60};
@@ -119,6 +119,8 @@ int main() {
       4,     // MAX_SPEED
       4.0,   // MAX_ACCEL
       -3.0,  // MIN_ACCEL
+      2.0,   // MAX_ANG_ACCEL
+      -2.0,  // MIN_ANG_ACCEL
       0.2,   // MAX_CURVATURE
       3,     // HULL_LENGTH
       1,     // HULL_WIDTH
@@ -133,6 +135,8 @@ int main() {
       0,           // kappa
       2,           // speed
       0,           // dspeed
+      0,           // yaw_rate
+      0            // yaw_accel
   };
 
   planning::CartesianState estimate_marinestate{
@@ -142,6 +146,8 @@ int main() {
       0,            // kappa
       1,            // speed
       0,            // dspeed
+      0,            // yaw_rate
+      0             // yaw_accel
   };
 
   planning::LatticePlanner _trajectorygenerator(_latticedata, _collisiondata);
@@ -203,12 +209,12 @@ int main() {
       break;
     }
 
-    realtimeplotting(gp1, estimate_marinestate.x, estimate_marinestate.y,
-                     estimate_marinestate.theta, cart_ob_x, cart_ob_y,
-                     cart_bestX, cart_bestY, cart_bestspeed);
+    // realtimeplotting(gp1, estimate_marinestate.x, estimate_marinestate.y,
+    //                  estimate_marinestate.theta, cart_ob_x, cart_ob_y,
+    //                  cart_bestX, cart_bestY, cart_bestspeed);
 
     long int et = _timer.timeelapsed();
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    // std::cout << "each: " << et << std::endl;
+    std::cout << "each: " << et << std::endl;
+    // std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
 }

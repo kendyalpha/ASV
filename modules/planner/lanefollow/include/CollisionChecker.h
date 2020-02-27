@@ -177,11 +177,13 @@ class CollisionChecker {
         count_max_accel++;
         continue;  // Max accel check
       }
-      // if ((_frenet_lattice[i].dspeed.maxCoeff() > collisiondata.MAX_ACCEL) ||
-      //     (_frenet_lattice[i].dspeed.minCoeff() < collisiondata.MIN_ACCEL)) {
-      //   count_max_accel++;
-      //   continue;  // Max accel check
-      // }
+      if ((_frenet_lattice[i].yaw_accel.maxCoeff() >
+           collisiondata.MAX_ANG_ACCEL) ||
+          (_frenet_lattice[i].yaw_accel.minCoeff() <
+           collisiondata.MIN_ANG_ACCEL)) {
+        count_max_angular_accel++;
+        continue;  // Max heading acceleration check
+      }
       if ((_frenet_lattice[i].kappa.maxCoeff() > collisiondata.MAX_CURVATURE) ||
           (_frenet_lattice[i].kappa.minCoeff() <
            -collisiondata.MAX_CURVATURE)) {

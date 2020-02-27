@@ -61,8 +61,16 @@ class FrenetTrajectoryGenerator {
                                               double marine_a,
                                               double _targetspeed) {
     // convert cartesian coordinate to Frenet coodinate
-    CartesianState _cart_state{marine_x,     marine_y,     marine_theta,
-                               marine_kappa, marine_speed, marine_a};
+    CartesianState _cart_state{
+        marine_x,  // x
+        marine_y,  // y
+        marine_theta,
+        marine_kappa,
+        marine_speed,
+        marine_a,
+        0,  // yaw_rate (not used in Cart2Frenet)
+        0   // yaw_accel(not used in Cart2Frenet)
+    };
 
     std::tie(_cart_state.y, _cart_state.theta, _cart_state.kappa) =
         common::math::Marine2Cart(marine_y, marine_theta, marine_kappa);
@@ -71,7 +79,7 @@ class FrenetTrajectoryGenerator {
     // update the condition
     update_endcondition_FrenetLattice(_targetspeed);
 
-    //
+    // generate the lattice
     calc_frenet_lattice(current_frenetstate.d, current_frenetstate.d_dot,
                         current_frenetstate.d_ddot, current_frenetstate.s,
                         current_frenetstate.s_dot, current_frenetstate.s_ddot,
@@ -80,9 +88,18 @@ class FrenetTrajectoryGenerator {
     return *this;
   }  // Generate_Lattice
 
+  Eigen::VectorXd getCartRefX() const noexcept { return cart_RefX; }
+  Eigen::VectorXd getCartRefY() const noexcept { return cart_RefY; }
+  Eigen::VectorXd getRefHeading() const noexcept { return RefHeading; }
+  Eigen::VectorXd getRefKappa() const noexcept { return RefKappa; }
+
+ protected:
+  // Frenet lattice
+  std::vector<Frenet_path> frenet_paths;
+
   // setup a new targe course and re-generate it
-  void regenerate_target_course(const Eigen::VectorXd &_marine_wx,
-                                const Eigen::VectorXd &_marine_wy) {
+  double regenerate_target_course(const Eigen::VectorXd &_marine_wx,
+                                  const Eigen::VectorXd &_marine_wy) {
     auto cart_wy = common::math::Marine2Cart(_marine_wy);
     auto cart_wx = _marine_wx;
 
@@ -98,16 +115,9 @@ class FrenetTrajectoryGenerator {
     }
     target_Spline2D.reinterpolation(cart_wx, cart_wy);
     setup_target_course();
+
+    return RefHeading(0);
   }  // regenerate_target_course
-
-  Eigen::VectorXd getCartRefX() const noexcept { return cart_RefX; }
-  Eigen::VectorXd getCartRefY() const noexcept { return cart_RefY; }
-  Eigen::VectorXd getRefHeading() const noexcept { return RefHeading; }
-  Eigen::VectorXd getRefKappa() const noexcept { return RefKappa; }
-
- protected:
-  // Frenet lattice
-  std::vector<Frenet_path> frenet_paths;
 
  private:
   // constant data in Frenet trajectory generator
@@ -136,6 +146,9 @@ class FrenetTrajectoryGenerator {
   const double KD = 4;
   const double KLAT = 1;
   const double KLON = 10;
+
+  // difference h
+  const double spacing = 0.01;
 
   // assume that target_spline2d is known, we can interpolate the spline2d to
   // obtain the associated (s,x,y,theta, kappa)
@@ -214,6 +227,16 @@ class FrenetTrajectoryGenerator {
         Eigen::VectorXd t_d_ddot(n_zero_Tj);
         Eigen::VectorXd t_d_dddot(n_zero_Tj);
 
+        Eigen::VectorXd t_d_minus_h(n_zero_Tj);
+        Eigen::VectorXd t_d_dot_minus_h(n_zero_Tj);
+        Eigen::VectorXd t_d_ddot_minus_h(n_zero_Tj);
+        Eigen::VectorXd t_d_dddot_minus_h(n_zero_Tj);
+
+        Eigen::VectorXd t_d_plus_h(n_zero_Tj);
+        Eigen::VectorXd t_d_dot_plus_h(n_zero_Tj);
+        Eigen::VectorXd t_d_ddot_plus_h(n_zero_Tj);
+        Eigen::VectorXd t_d_dddot_plus_h(n_zero_Tj);
+
         for (std::size_t ji = 0; ji != n_zero_Tj; ji++) {
           t_d(ji) = _quintic_polynomial.compute_order_derivative<0>(_t(ji));
           t_d_dot(ji) = _quintic_polynomial.compute_order_derivative<1>(_t(ji));
@@ -221,6 +244,24 @@ class FrenetTrajectoryGenerator {
               _quintic_polynomial.compute_order_derivative<2>(_t(ji));
           t_d_dddot(ji) =
               _quintic_polynomial.compute_order_derivative<3>(_t(ji));
+
+          t_d_minus_h(ji) =
+              _quintic_polynomial.compute_order_derivative<0>(_t(ji) - spacing);
+          t_d_dot_minus_h(ji) =
+              _quintic_polynomial.compute_order_derivative<1>(_t(ji) - spacing);
+          t_d_ddot_minus_h(ji) =
+              _quintic_polynomial.compute_order_derivative<2>(_t(ji) - spacing);
+          t_d_dddot_minus_h(ji) =
+              _quintic_polynomial.compute_order_derivative<3>(_t(ji) - spacing);
+
+          t_d_plus_h(ji) =
+              _quintic_polynomial.compute_order_derivative<0>(_t(ji) + spacing);
+          t_d_dot_plus_h(ji) =
+              _quintic_polynomial.compute_order_derivative<1>(_t(ji) + spacing);
+          t_d_ddot_plus_h(ji) =
+              _quintic_polynomial.compute_order_derivative<2>(_t(ji) + spacing);
+          t_d_dddot_plus_h(ji) =
+              _quintic_polynomial.compute_order_derivative<3>(_t(ji) + spacing);
         }
 
         // Longitudinal motion planning (Velocity keeping)
@@ -234,6 +275,20 @@ class FrenetTrajectoryGenerator {
           Eigen::VectorXd t_d_prime(n_zero_Tj);
           Eigen::VectorXd t_d_pprime(n_zero_Tj);
 
+          Eigen::VectorXd t_s_minus_h(n_zero_Tj);
+          Eigen::VectorXd t_s_dot_minus_h(n_zero_Tj);
+          Eigen::VectorXd t_s_ddot_minus_h(n_zero_Tj);
+          Eigen::VectorXd t_s_dddot_minus_h(n_zero_Tj);
+          Eigen::VectorXd t_d_prime_minus_h(n_zero_Tj);
+          Eigen::VectorXd t_d_pprime_minus_h(n_zero_Tj);
+
+          Eigen::VectorXd t_s_plus_h(n_zero_Tj);
+          Eigen::VectorXd t_s_dot_plus_h(n_zero_Tj);
+          Eigen::VectorXd t_s_ddot_plus_h(n_zero_Tj);
+          Eigen::VectorXd t_s_dddot_plus_h(n_zero_Tj);
+          Eigen::VectorXd t_d_prime_plus_h(n_zero_Tj);
+          Eigen::VectorXd t_d_pprime_plus_h(n_zero_Tj);
+
           for (std::size_t ki = 0; ki != n_zero_Tj; ki++) {
             t_s(ki) = _quartic_polynomial.compute_order_derivative<0>(_t(ki));
             t_s_dot(ki) =
@@ -243,9 +298,42 @@ class FrenetTrajectoryGenerator {
             t_s_dddot(ki) =
                 _quartic_polynomial.compute_order_derivative<3>(_t(ki));
             t_d_prime(ki) = t_d_dot(ki) / t_s_dot(ki);
-            t_d_pprime(ki) =
-                (t_d_ddot(ki) * t_s_dot(ki) - t_s_ddot(ki) * t_d_dot(ki)) /
-                std::pow(t_s_dot(ki), 3);
+            t_d_pprime(ki) = (t_d_ddot(ki) - t_s_ddot(ki) * t_d_prime(ki)) /
+                             std::pow(t_s_dot(ki), 2);
+
+            t_s_minus_h(ki) = _quartic_polynomial.compute_order_derivative<0>(
+                _t(ki) - spacing);
+            t_s_dot_minus_h(ki) =
+                _quartic_polynomial.compute_order_derivative<1>(_t(ki) -
+                                                                spacing);
+            t_s_ddot_minus_h(ki) =
+                _quartic_polynomial.compute_order_derivative<2>(_t(ki) -
+                                                                spacing);
+            t_s_dddot_minus_h(ki) =
+                _quartic_polynomial.compute_order_derivative<3>(_t(ki) -
+                                                                spacing);
+            t_d_prime_minus_h(ki) = t_d_dot_minus_h(ki) / t_s_dot_minus_h(ki);
+            t_d_pprime_minus_h(ki) =
+                (t_d_ddot_minus_h(ki) -
+                 t_s_ddot_minus_h(ki) * t_d_prime_minus_h(ki)) /
+                std::pow(t_s_dot_minus_h(ki), 2);
+
+            t_s_plus_h(ki) = _quartic_polynomial.compute_order_derivative<0>(
+                _t(ki) + spacing);
+            t_s_dot_plus_h(ki) =
+                _quartic_polynomial.compute_order_derivative<1>(_t(ki) +
+                                                                spacing);
+            t_s_ddot_plus_h(ki) =
+                _quartic_polynomial.compute_order_derivative<2>(_t(ki) +
+                                                                spacing);
+            t_s_dddot_plus_h(ki) =
+                _quartic_polynomial.compute_order_derivative<3>(_t(ki) +
+                                                                spacing);
+            t_d_prime_plus_h(ki) = t_d_dot_plus_h(ki) / t_s_dot_plus_h(ki);
+            t_d_pprime_plus_h(ki) =
+                (t_d_ddot_plus_h(ki) -
+                 t_s_ddot_plus_h(ki) * t_d_prime_plus_h(ki)) /
+                std::pow(t_s_dot_plus_h(ki), 2);
           }
 
           double Jp = t_d_dddot.squaredNorm();  // square of jerk
@@ -266,31 +354,65 @@ class FrenetTrajectoryGenerator {
           double _cf = KLAT * _cd + KLON * _cv;
 
           // calc global positions;
-          Eigen::VectorXd t_x(n_zero_Tj);       // global x
-          Eigen::VectorXd t_y(n_zero_Tj);       // global y
-          Eigen::VectorXd t_yaw(n_zero_Tj);     // heading
-          Eigen::VectorXd t_kappa(n_zero_Tj);   // curvature
-          Eigen::VectorXd t_speed(n_zero_Tj);   // speed
-          Eigen::VectorXd t_dspeed(n_zero_Tj);  // dspeed
+          Eigen::VectorXd t_x(n_zero_Tj);         // global x
+          Eigen::VectorXd t_y(n_zero_Tj);         // global y
+          Eigen::VectorXd t_yaw(n_zero_Tj);       // heading
+          Eigen::VectorXd t_kappa(n_zero_Tj);     // curvature
+          Eigen::VectorXd t_speed(n_zero_Tj);     // speed
+          Eigen::VectorXd t_dspeed(n_zero_Tj);    // dspeed
+          Eigen::VectorXd t_yawrate(n_zero_Tj);   // yaw rate
+          Eigen::VectorXd t_yawaccel(n_zero_Tj);  // yaw acceleration
 
           for (std::size_t ki = 0; ki != n_zero_Tj; ki++) {
-            auto _cartesianstate = Frenet2Cart(FrenetState{
-                t_s(ki),        // s
-                t_s_dot(ki),    // s_dot
-                t_s_ddot(ki),   // s_ddot
-                t_d(ki),        // d
-                t_d_dot(ki),    // d_dot
-                t_d_ddot(ki),   // d_ddot
-                t_d_prime(ki),  // d_prime
-                t_d_pprime(ki)  // d_pprime
-            });
-
+            // auto _cartesianstate = Frenet2Cart(FrenetState{
+            //     t_s(ki),        // s
+            //     t_s_dot(ki),    // s_dot
+            //     t_s_ddot(ki),   // s_ddot
+            //     t_d(ki),        // d
+            //     t_d_dot(ki),    // d_dot
+            //     t_d_ddot(ki),   // d_ddot
+            //     t_d_prime(ki),  // d_prime
+            //     t_d_pprime(ki)  // d_pprime
+            // });
+            auto _cartesianstate = Frenet2Cart(
+                FrenetState{
+                    t_s_minus_h(ki),        // s
+                    t_s_dot_minus_h(ki),    // s_dot
+                    t_s_ddot_minus_h(ki),   // s_ddot
+                    t_d_minus_h(ki),        // d
+                    t_d_dot_minus_h(ki),    // d_dot
+                    t_d_ddot_minus_h(ki),   // d_ddot
+                    t_d_prime_minus_h(ki),  // d_prime
+                    t_d_pprime_minus_h(ki)  // d_pprime
+                },
+                FrenetState{
+                    t_s(ki),        // s
+                    t_s_dot(ki),    // s_dot
+                    t_s_ddot(ki),   // s_ddot
+                    t_d(ki),        // d
+                    t_d_dot(ki),    // d_dot
+                    t_d_ddot(ki),   // d_ddot
+                    t_d_prime(ki),  // d_prime
+                    t_d_pprime(ki)  // d_pprime
+                },
+                FrenetState{
+                    t_s_plus_h(ki),        // s
+                    t_s_dot_plus_h(ki),    // s_dot
+                    t_s_ddot_plus_h(ki),   // s_ddot
+                    t_d_plus_h(ki),        // d
+                    t_d_dot_plus_h(ki),    // d_dot
+                    t_d_ddot_plus_h(ki),   // d_ddot
+                    t_d_prime_plus_h(ki),  // d_prime
+                    t_d_pprime_plus_h(ki)  // d_pprime
+                });
             t_x(ki) = _cartesianstate.x;
             t_y(ki) = _cartesianstate.y;
             t_yaw(ki) = _cartesianstate.theta;
             t_kappa(ki) = _cartesianstate.kappa;
             t_speed(ki) = _cartesianstate.speed;
             t_dspeed(ki) = _cartesianstate.dspeed;
+            t_yawrate(ki) = _cartesianstate.yaw_rate;
+            t_yawaccel(ki) = _cartesianstate.yaw_accel;
           }
 
           // add to frenet_paths
@@ -310,6 +432,8 @@ class FrenetTrajectoryGenerator {
               t_kappa,     // vector of kappa
               t_speed,     // vector of speed
               t_dspeed,    // vector of dspeed
+              t_yawrate,   // vector of yaw rate
+              t_yawaccel,  // vector of yaw acceleration
               _cd,         // cd
               _cv,         // cv
               _cf          // cf
@@ -444,9 +568,12 @@ class FrenetTrajectoryGenerator {
     _cartstate_v.x = _cart_position(0);
     _cartstate_v.y = _cart_position(1);
 
-    // TODO: larger than zero
+    // The situtation where 1-krd<0 is rare
     double one_minus_kappa_r_d = 1 - ref_kappa * _frenetstate.d;
-    if (one_minus_kappa_r_d <= 0) CLOG(ERROR, "Frenet") << "extreme situations";
+    if (one_minus_kappa_r_d <= 0) {
+      one_minus_kappa_r_d = 0.01;
+      CLOG(ERROR, "Frenet") << "extreme situations";
+    }
     // speed
     _cartstate_v.speed =
         std::sqrt(std::pow(_frenetstate.s_dot * one_minus_kappa_r_d, 2) +
@@ -478,16 +605,23 @@ class FrenetTrajectoryGenerator {
             (delta_theta_prime * _frenetstate.d_prime - kappa_r_d_prime) /
             cos_delta_theta;
 
+    // yaw rate
+    _cartstate_v.yaw_rate = _cartstate_v.kappa * _cartstate_v.speed;
+
+    // yaw acceleration， TODO: the formula computing the yaw_acceleration
+    _cartstate_v.yaw_accel = 0;
+
     return _cartstate_v;
   }  // Frenet2Cart
 
   // Transform from Frenet s,d coordinates to Cartesian x,y
-  CartesianState Frenet2Cart(const FrenetState &_frenetstate) {
+  CartesianState Frenet2Cart(const FrenetState &_frenetstate_minus_h,
+                             const FrenetState &_frenetstate,
+                             const FrenetState &_frenetstate_plus_h) {
     CartesianState _cartstate_v;
-    // calc global positions;
+    // calc global positions at t0
     double ref_heading = target_Spline2D.compute_yaw(_frenetstate.s);
     double ref_kappa = target_Spline2D.compute_curvature(_frenetstate.s);
-    double ref_kappa_prime = target_Spline2D.compute_dcurvature(_frenetstate.s);
 
     auto _cart_position = CalculateCartesianPoint(
         ref_heading, _frenetstate.d,
@@ -495,39 +629,93 @@ class FrenetTrajectoryGenerator {
     _cartstate_v.x = _cart_position(0);
     _cartstate_v.y = _cart_position(1);
 
-    // TODO: larger than zero
+    // calc global positions at t0-h
+    double ref_heading_minus_h =
+        target_Spline2D.compute_yaw(_frenetstate_minus_h.s);
+    double ref_kappa_minus_h =
+        target_Spline2D.compute_curvature(_frenetstate_minus_h.s);
+    auto _cart_position_minus_h = CalculateCartesianPoint(
+        ref_heading_minus_h, _frenetstate_minus_h.d,
+        target_Spline2D.compute_position(_frenetstate_minus_h.s));
+    // calc global positions at t0+h
+    double ref_heading_plus_h =
+        target_Spline2D.compute_yaw(_frenetstate_plus_h.s);
+    double ref_kappa_plus_h =
+        target_Spline2D.compute_curvature(_frenetstate_plus_h.s);
+    auto _cart_position_plus_h = CalculateCartesianPoint(
+        ref_heading_plus_h, _frenetstate_plus_h.d,
+        target_Spline2D.compute_position(_frenetstate_plus_h.s));
+
+    // one_minus_kappa_r_d at t0
     double one_minus_kappa_r_d = 1 - ref_kappa * _frenetstate.d;
-    if (one_minus_kappa_r_d <= 0) CLOG(ERROR, "Frenet") << "extreme situations";
-    // speed
+    if (one_minus_kappa_r_d <= 0) {
+      one_minus_kappa_r_d = 0.01;
+      CLOG(ERROR, "Frenet") << "extreme situations";
+    }
+
+    // one_minus_kappa_r_d at t0-h
+    double one_minus_kappa_r_d_minus_h =
+        1 - ref_kappa_minus_h * _frenetstate_minus_h.d;
+    if (one_minus_kappa_r_d_minus_h <= 0) {
+      one_minus_kappa_r_d_minus_h = 0.01;
+      CLOG(ERROR, "Frenet") << "extreme situations";
+    }
+    // one_minus_kappa_r_d at t0+h
+    double one_minus_kappa_r_d_plus_h =
+        1 - ref_kappa_plus_h * _frenetstate_plus_h.d;
+    if (one_minus_kappa_r_d_plus_h <= 0) {
+      one_minus_kappa_r_d_plus_h = 0.01;
+      CLOG(ERROR, "Frenet") << "extreme situations";
+    }
+
+    // speed at t0
     _cartstate_v.speed =
         std::sqrt(std::pow(_frenetstate.s_dot * one_minus_kappa_r_d, 2) +
                   std::pow(_frenetstate.d_dot, 2));
+    // speed at t0-h
+    double speed_minus_h = std::sqrt(
+        std::pow(_frenetstate_minus_h.s_dot * one_minus_kappa_r_d_minus_h, 2) +
+        std::pow(_frenetstate_minus_h.d_dot, 2));
+    // speed at t0+h
+    double speed_plus_h = std::sqrt(
+        std::pow(_frenetstate_plus_h.s_dot * one_minus_kappa_r_d_plus_h, 2) +
+        std::pow(_frenetstate_plus_h.d_dot, 2));
 
-    // theta
-    const double tan_delta_theta = _frenetstate.d_prime / one_minus_kappa_r_d;
+    // theta at t0
     const double delta_theta =
         std::atan2(_frenetstate.d_prime, one_minus_kappa_r_d);
-    const double cos_delta_theta = std::cos(delta_theta);
     _cartstate_v.theta =
         common::math::Normalizeheadingangle(delta_theta + ref_heading);
+    // theta at t0-h
+    double theta_minus_h = common::math::Normalizeheadingangle(
+        std::atan2(_frenetstate_minus_h.d_prime, one_minus_kappa_r_d_minus_h) +
+        ref_heading_minus_h);
+    // theta at t0+h
+    double theta_plus_h = common::math::Normalizeheadingangle(
+        std::atan2(_frenetstate_plus_h.d_prime, one_minus_kappa_r_d_plus_h) +
+        ref_heading_plus_h);
 
-    // kappa
-    const double kappa_r_d_prime =
-        ref_kappa_prime * _frenetstate.d + ref_kappa * _frenetstate.d_prime;
+    // kappa at t0
+    double ds = std::sqrt(
+        std::pow(_cart_position_plus_h(0) - _cart_position_minus_h(0), 2) +
+        std::pow(_cart_position_plus_h(1) - _cart_position_minus_h(1), 2));
     _cartstate_v.kappa =
-        ((kappa_r_d_prime * tan_delta_theta + _frenetstate.d_pprime) *
-             cos_delta_theta * cos_delta_theta / one_minus_kappa_r_d +
-         ref_kappa) *
-        cos_delta_theta / one_minus_kappa_r_d;
-    // a
-    const double delta_theta_prime =
-        _cartstate_v.kappa * one_minus_kappa_r_d / cos_delta_theta - ref_kappa;
+        common::math::Normalizeheadingangle(theta_plus_h - theta_minus_h) / ds;
 
+    // a
     _cartstate_v.dspeed =
-        _frenetstate.s_ddot * one_minus_kappa_r_d / cos_delta_theta +
-        _frenetstate.s_dot * _frenetstate.s_dot *
-            (delta_theta_prime * _frenetstate.d_prime - kappa_r_d_prime) /
-            cos_delta_theta;
+        firstorderdifference(speed_minus_h, speed_plus_h, spacing);
+
+    // yaw rate
+    _cartstate_v.yaw_rate =
+        common::math::Normalizeheadingangle(theta_plus_h - theta_minus_h) /
+        (2 * spacing);
+
+    // yaw acceleration
+    _cartstate_v.yaw_accel =
+        common::math::Normalizeheadingangle(theta_plus_h + theta_minus_h -
+                                            2 * _cartstate_v.theta) /
+        (spacing * spacing);
 
     return _cartstate_v;
   }  // Frenet2Cart
@@ -549,6 +737,15 @@ class FrenetTrajectoryGenerator {
     double _y = _ref_position(1) + _d * std::cos(_rtheta);
     return (Eigen::Vector2d() << _x, _y).finished();
   }  // CalculateCartesianPoint
+
+  double firstorderdifference(double f_minus_h, double f_plus_h,
+                              double h) noexcept {
+    return (f_plus_h - f_minus_h) / (2 * h);
+  }  // firstorderdifference
+  double secondorderdifference(double f_minus_h, double f, double f_plus_h,
+                               double h) noexcept {
+    return (f_minus_h + f_plus_h - 2 * f) / (h * h);
+  }  // secondorderdifference
 
  public:  // unit test for private function
   CartesianState Frenet2Cart_TEST(const FrenetState &_frenetstate) {

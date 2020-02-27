@@ -126,6 +126,8 @@ int main() {
       4,     // MAX_SPEED
       4.0,   // MAX_ACCEL
       -3.0,  // MIN_ACCEL
+      2.0,   // MAX_ANG_ACCEL
+      -2.0,  // MIN_ANG_ACCEL
       0.2,   // MAX_CURVATURE
       3,     // HULL_LENGTH
       1,     // HULL_WIDTH
@@ -140,15 +142,19 @@ int main() {
       0,           // kappa
       2,           // speed
       0,           // dspeed
+      0,           // yaw_rate
+      0            // yaw_accel
   };
 
   planning::CartesianState estimate_marinestate{
-      0,           // x
-      -1,          // y
-      M_PI / 3.0,  // theta
-      0,           // kappa
-      1,           // speed
-      0,           // dspeed
+      0,            // x
+      -1,           // y
+      -0.2 * M_PI,  // theta
+      0,            // kappa
+      1,            // speed
+      0,            // dspeed
+      0,            // yaw_rate
+      0             // yaw_accel
   };
 
   planning::LatticePlanner _trajectorygenerator(_latticedata, _collisiondata);
