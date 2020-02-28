@@ -10,10 +10,15 @@
 
 #ifndef _PLANNERDATA_H_
 #define _PLANNERDATA_H_
+
 #include <common/math/eigen/Eigen/Core>
 #include <common/math/eigen/Eigen/Dense>
 #include <vector>
 
-namespace ASV::planning {}  // namespace ASV::planning
+namespace ASV::planning {
+
+struct plannerRTdata {};
+
+}  // namespace ASV::planning
 
 #endif /*_PLANNERDATA_H_*/

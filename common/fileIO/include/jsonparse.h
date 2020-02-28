@@ -24,7 +24,7 @@
 #include "modules/controller/include/controllerdata.h"
 #include "modules/estimator/include/estimatordata.h"
 #include "modules/perception/marine_radar/include/TargetTrackingData.h"
-#include "modules/planner/common/include/plannerdata.h"
+// #include "modules/planner/common/include/plannerdata.h"
 #include "modules/planner/lanefollow/include/LatticePlannerdata.h"
 
 /*

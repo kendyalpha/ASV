@@ -32,7 +32,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 
 近期:
-3. Frenet planner 细节(测试加速度以及限制条件对结果的影响)
-4. 论文中两张图
-5. Add IMU
-6. OSQP
+1. 论文中两张图
+2. Add IMU parser
+3. OSQP
+4. Marine radar
