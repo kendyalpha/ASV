@@ -1,0 +1,3 @@
+1582957544.946 <919ED740> [WRITE] setDebugLevel Debugger output log level set to [FATAL] 
+1582957544.946 <919ED740> [WRITE] writeFileHeader Journaller logging to xkf3hm.log for xkf3hm 0.1.0 / 94542 build 3855 on 2020/02/29 06:25:44.946
+1582957544.947 <919ED740> [WRITE] setFlushLevel Flush level switched to [DEBUG] 
