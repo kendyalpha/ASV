@@ -13,7 +13,7 @@ all: $(TARGETS)
 
 example_mti_receive_data: example_mti_receive_data.cpp
 example_mti_parse_logfile: example_mti_parse_logfile.cpp
-example_mtw: example_mtw.cpp conio.c.o
+example_mtw: example_mtw.cpp 
 $(TARGETS):
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LFLAGS)
 

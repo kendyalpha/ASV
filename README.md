@@ -1,4 +1,4 @@
-### Code for ASV (Version 0.2.6)
+### Code for ASV (Version 0.2.7)
 
 We are developing the autonomous surface vehicle, including the environmental perception, behavioral planning, motion planning, path following, feedback control, etc. 
 ASV will be a high performance, flexible architecture which accelerates the development, testing, and deployment of Autonomous Surface Vessels.
