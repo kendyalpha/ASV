@@ -18,31 +18,36 @@ namespace ASV::messages {
 
 // real-time data from the gps/imu sensors
 struct gpsRTdata {
-  double UTC;       // hhmmss.ss  UTC时间
-  double latitude;  // 纬度 dd.dddd格式, -90 ~ 90 (正为北向，负为南向)
-  double longitude;  //经度 ddd.dddd格式，-180 ~ 180 (正为东向，负为西向)
-  double heading;   // 航向角 0 ~ 359.99, 以真北为参考基准
-  double pitch;     // 俯仰角 -90 ~ 90
-  double roll;      // 横滚角 -180 ~ 180
-  double altitude;  // 高度 (m)
-  double Ve;        // 东向速度 (m/s)
-  double Vn;        // 北向速度 (m/s)
-  double roti;      // 转向速率 (degree/min)
-  int status;       // status
-  /**** UTM projection   ****/
-  double UTM_x;          // 投影的 x (m)
-  double UTM_y;          // 投影的 y (m)
+  double UTC;       // hhmmss.ss  UTC time
+  double latitude;  // Format: dd.dddd; -90 ~ 90 (positive to north, negative to
+                    // south)
+  double longitude;  // Format: ddd.dddd;-180 ~ 180 (positive to east, negative
+                     // to west)
+  double heading;    // 0 ~ 359.99, true north
+  double pitch;      // -90 ~ 90
+  double roll;       // -180 ~ 180
+  double altitude;   // (m)
+  double Ve;         // velocity in east direction (m/s)
+  double Vn;         // velocity in north direction (m/s)
+  double roti;       // rate of turn (degree/min)
+  int status;
+
+  double UTM_x;          // X in UTM projection (m)
+  double UTM_y;          // Y in UTM projection (m)
   std::string UTM_zone;  //
 };
 
 // real-time data from the imu sensors
-struct imuRTdata{
-
-  
+struct imuRTdata {
+  double acc_X;  // acceleration in X (m/s^2)
+  double acc_Y;  // acceleration in Y (m/s^2)
+  double acc_Z;  // acceleration in Z (m/s^2)
+  double roll;
+  double pitch;
+  double yaw;
+  double roti;  // rate of turning
 };
 
-
 }  // namespace ASV::messages
-
 
 #endif /* _GPSDATA_H_ */

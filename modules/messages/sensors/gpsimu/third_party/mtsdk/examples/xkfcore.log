@@ -1,3 +1,0 @@
-1582957544.958 <919ED740> [WRITE] setDebugLevel Debugger output log level set to [FATAL] 
-1582957544.958 <919ED740> [WRITE] writeFileHeader Journaller logging to xkfcore.log for xkfcore 1.0.0 / 94542 build 3855 on 2020/02/29 06:25:44.958
-1582957544.958 <919ED740> [WRITE] setFlushLevel Flush level switched to [DEBUG] 

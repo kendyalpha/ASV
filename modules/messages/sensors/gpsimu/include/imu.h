@@ -10,17 +10,22 @@
 #ifndef _IMU_H_
 #define _IMU_H_
 
-#include "common/logging/include/easylogging++.h"
-
 #include <xscommon/xsens_mutex.h>
 #include <xsensdeviceapi.h>
 #include <xstypes/xstime.h>
+
+#include "common/logging/include/easylogging++.h"
+#include "gpsdata.h"
+
+#include <iomanip>
+#include <iostream>
+#include <list>
 
 namespace ASV::messages {
 
 class CallbackHandler : public XsCallback {
  public:
-  CallbackHandler(size_t maxBufferSize = 5)
+  CallbackHandler(std::size_t maxBufferSize = 5)
       : m_maxNumberOfPacketsInBuffer(maxBufferSize),
         m_numberOfPacketsInBuffer(0) {}
 
@@ -55,14 +60,24 @@ class CallbackHandler : public XsCallback {
  private:
   mutable xsens::Mutex m_mutex;
 
-  size_t m_maxNumberOfPacketsInBuffer;
-  size_t m_numberOfPacketsInBuffer;
-  list<XsDataPacket> m_packetBuffer;
+  std::size_t m_maxNumberOfPacketsInBuffer;
+  std::size_t m_numberOfPacketsInBuffer;
+  std::list<XsDataPacket> m_packetBuffer;
 };  // end class CallbackHandler
 
 class imu {
  public:
-  imu(uint16_t m_frequency = 100) : imu_frequency(m_frequency) {}
+  imu(uint16_t m_frequency = 100)
+      : imu_frequency(m_frequency),
+        imu_RTdata({
+            0,  // acc_X
+            0,  // acc_Y
+            0,  // acc_Z
+            0,  // roll
+            0,  // pitch
+            0,  // yaw
+            0   // roti
+        }) {}
   virtual ~imu() = default;
 
   int initializeIMU() {
@@ -71,7 +86,6 @@ class imu {
 
     XsPortInfoArray portInfoArray = XsScanner::scanPorts();
     // Find an MTi device
-    XsPortInfo mtPort;
     for (auto const& portInfo : portInfoArray) {
       if (portInfo.deviceId().isMti() || portInfo.deviceId().isMtig()) {
         mtPort = portInfo;
@@ -126,12 +140,57 @@ class imu {
       CLOG(ERROR, "IMU") << "Could not put device into measurement mode!";
       return -1;
     }
+
+    CLOG(INFO, "IMU") << "Initialization Successful!";
+    return 0;
   }  // initializeIMU
+
+  imu& receivedata() {
+    if (callback.packetAvailable()) {
+      std::cout << std::setw(5) << std::fixed << std::setprecision(2);
+
+      // Retrieve a packet
+      XsDataPacket packet = callback.getNextPacket();
+
+      if (packet.containsCalibratedData()) {
+        XsVector acc = packet.calibratedAcceleration();
+        imu_RTdata.acc_X = acc[0];
+        imu_RTdata.acc_Y = acc[1];
+        imu_RTdata.acc_Z = acc[2];
+
+        // XsVector gyr = packet.calibratedGyroscopeData();
+        // std::cout << " |Gyr X:" << gyr[0] << ", Gyr Y:" << gyr[1]
+        //           << ", Gyr Z:" << gyr[2];
+
+        // XsVector mag = packet.calibratedMagneticField();
+        // std::cout << " |Mag X:" << mag[0] << ", Mag Y:" << mag[1]
+        //           << ", Mag Z:" << mag[2];
+      }
+
+      if (packet.containsOrientation()) {
+        XsEuler euler = packet.orientationEuler();
+        imu_RTdata.roll = euler.roll();
+        imu_RTdata.pitch = euler.pitch();
+        imu_RTdata.yaw = euler.yaw();
+      }
+    }
+    return *this;
+
+  }  // receivedata
+
+  imuRTdata getimuRTdata() const noexcept { return imu_RTdata; }
+
+  void releaseIMU() {
+    control->closePort(mtPort.portName().toStdString());
+    control->destruct();
+  }
 
  private:
   uint16_t imu_frequency;
+  imuRTdata imu_RTdata;
   XsControl* control;
   CallbackHandler callback;
+  XsPortInfo mtPort;
 
 };  // end class imu
 

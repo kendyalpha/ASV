@@ -35,14 +35,14 @@ find_library(XSENSDEVICE_LIBRARY xsensdeviceapi HINTS ${LIBRARY_DIRECTORY})
 find_library(XSENSTYPES_LIBRARY xstypes HINTS ${LIBRARY_DIRECTORY})
 
 # 指定生成目标
-add_executable (testGPS testGPS.cc  ${SOURCE_FILES} )
+add_executable (testGPS testGPS.cc  ${SOURCE_FILES})
 target_include_directories(testGPS PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testGPS ${SERIAL_LIBRARY})
 target_link_libraries(testGPS ${GeographicLib_LIBRARIES})
 
 
 # 指定生成目标
-add_executable (testGPSSave testGPSandSave.cc ${SOURCE_FILES} )
+add_executable (testGPSSave testGPSandSave.cc ${SOURCE_FILES})
 target_include_directories(testGPSSave PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testGPSSave ${SERIAL_LIBRARY})
 target_link_libraries(testGPSSave ${GeographicLib_LIBRARIES})
@@ -66,3 +66,9 @@ target_link_libraries(test_mti_parse_data PUBLIC ${XSENSDEVICE_LIBRARY})
 target_link_libraries(test_mti_parse_data PUBLIC ${XSENSTYPES_LIBRARY})
 target_link_libraries(test_mti_parse_data PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 
+# 指定生成目标
+# add_executable (testIMU testIMU.cc ${SOURCE_FILES})
+# target_include_directories(testIMU PRIVATE ${HEADER_DIRECTORY})
+# target_link_libraries(testIMU PUBLIC ${XSENSDEVICE_LIBRARY})
+# target_link_libraries(testIMU PUBLIC ${XSENSTYPES_LIBRARY})
+# target_link_libraries(testIMU PUBLIC ${CMAKE_THREAD_LIBS_INIT})
