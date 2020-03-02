@@ -32,8 +32,15 @@ struct gpsRTdata {
   /**** UTM projection   ****/
   double UTM_x;          // 投影的 x (m)
   double UTM_y;          // 投影的 y (m)
-  std::string UTM_zone;  // 
+  std::string UTM_zone;  //
 };
+
+// real-time data from the imu sensors
+struct imuRTdata{
+
+  
+};
+
 
 }  // namespace ASV::messages
 
