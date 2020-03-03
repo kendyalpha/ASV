@@ -39,13 +39,16 @@ struct gpsRTdata {
 
 // real-time data from the imu sensors
 struct imuRTdata {
-  double acc_X;  // acceleration in X (m/s^2)
-  double acc_Y;  // acceleration in Y (m/s^2)
-  double acc_Z;  // acceleration in Z (m/s^2)
-  double roll;
-  double pitch;
-  double yaw;
-  double roti;  // rate of turning
+  uint32_t status;
+  double acc_X;      // acceleration in X (m/s^2)
+  double acc_Y;      // acceleration in Y (m/s^2)
+  double acc_Z;      // acceleration in Z (m/s^2)
+  double Ang_vel_X;  // rad/s
+  double Ang_vel_Y;  // rad/s
+  double Ang_vel_Z;  // rad/s
+  double roll;       // deg
+  double pitch;      // deg
+  double yaw;        // deg
 };
 
 }  // namespace ASV::messages

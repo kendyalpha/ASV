@@ -1,6 +1,6 @@
 TARGETS:= example_mti_receive_data example_mti_parse_logfile
 OBJLIBS	= xspublic
-INCLUDE=-I. -Ixspublic
+INCLUDE= -Ixspublic
 CFLAGS=-g $(INCLUDE)
 CXXFLAGS=-std=c++11 $(CFLAGS)
 LFLAGS=-Lxspublic/xscontroller -Lxspublic/xscommon -Lxspublic/xstypes -lxscontroller -lxscommon -lxstypes -lpthread -lrt -ldl

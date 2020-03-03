@@ -5,16 +5,18 @@
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
 //
-//  1.	Redistributions of source code must retain the above copyright notice,
-//  	this list of conditions, and the following disclaimer.
+//  1.  Redistributions of source code must retain the above copyright notice,
+//    this list of conditions, and the following disclaimer.
 //
-//  2.	Redistributions in binary form must reproduce the above copyright
-//  notice, 	this list of conditions, and the following disclaimer in the
-//  documentation 	and/or other materials provided with the distribution.
+//  2.  Redistributions in binary form must reproduce the above copyright
+//  notice,
+//    this list of conditions, and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
 //
-//  3.	Neither the names of the copyright holders nor the names of their
-//  contributors 	may be used to endorse or promote products derived from
-//  this software without 	specific prior written permission.
+//  3.  Neither the names of the copyright holders nor the names of their
+//  contributors
+//    may be used to endorse or promote products derived from this software
+//    without specific prior written permission.
 //
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 //  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -33,10 +35,14 @@
 //
 
 //--------------------------------------------------------------------------------
-// Xsens device API C++ example MTi receive data.
+// Public Xsens device API C++ example MTi receive data.
 //--------------------------------------------------------------------------------
 #include <xscommon/xsens_mutex.h>
-#include <xsensdeviceapi.h>
+#include <xscontroller/xscontrol_def.h>
+#include <xscontroller/xsdevice_def.h>
+#include <xscontroller/xsscanner.h>
+#include <xstypes/xsdatapacket.h>
+#include <xstypes/xsoutputconfigurationarray.h>
 #include <xstypes/xstime.h>
 
 #include <iomanip>
@@ -44,9 +50,13 @@
 #include <list>
 #include <string>
 
+Journaller* gJournal = nullptr;
+
+using namespace std;
+
 class CallbackHandler : public XsCallback {
  public:
-  CallbackHandler(std::size_t maxBufferSize = 5)
+  CallbackHandler(size_t maxBufferSize = 5)
       : m_maxNumberOfPacketsInBuffer(maxBufferSize),
         m_numberOfPacketsInBuffer(0) {}
 
@@ -67,9 +77,9 @@ class CallbackHandler : public XsCallback {
   }
 
  protected:
-  virtual void onLiveDataAvailable(XsDevice*, const XsDataPacket* packet) {
+  void onLiveDataAvailable(XsDevice*, const XsDataPacket* packet) override {
     xsens::Lock locky(&m_mutex);
-    assert(packet != nullptr);
+    assert(packet != 0);
     while (m_numberOfPacketsInBuffer >= m_maxNumberOfPacketsInBuffer)
       (void)getNextPacket();
 
@@ -81,27 +91,27 @@ class CallbackHandler : public XsCallback {
  private:
   mutable xsens::Mutex m_mutex;
 
-  std::size_t m_maxNumberOfPacketsInBuffer;
-  std::size_t m_numberOfPacketsInBuffer;
-  std::list<XsDataPacket> m_packetBuffer;
+  size_t m_maxNumberOfPacketsInBuffer;
+  size_t m_numberOfPacketsInBuffer;
+  list<XsDataPacket> m_packetBuffer;
 };
 
 //--------------------------------------------------------------------------------
 int main(void) {
-  std::cout << "Creating XsControl object..." << std::endl;
+  cout << "Creating XsControl object..." << endl;
   XsControl* control = XsControl::construct();
-  assert(control != nullptr);
+  assert(control != 0);
 
   // Lambda function for error handling
-  auto handleError = [=](std::string errorString) {
+  auto handleError = [=](string errorString) {
     control->destruct();
-    std::cout << errorString << std::endl;
-    std::cout << "Press [ENTER] to continue." << std::endl;
-    std::cin.get();
+    cout << errorString << endl;
+    cout << "Press [ENTER] to continue." << endl;
+    cin.get();
     return -1;
   };
 
-  std::cout << "Scanning for devices..." << std::endl;
+  cout << "Scanning for devices..." << endl;
   XsPortInfoArray portInfoArray = XsScanner::scanPorts();
 
   // Find an MTi device
@@ -115,60 +125,52 @@ int main(void) {
 
   if (mtPort.empty()) return handleError("No MTi device found. Aborting.");
 
-  std::cout << "Found a device with ID: "
-            << mtPort.deviceId().toString().toStdString()
-            << " @ port: " << mtPort.portName().toStdString()
-            << ", baudrate: " << mtPort.baudrate() << std::endl;
+  cout << "Found a device with ID: "
+       << mtPort.deviceId().toString().toStdString()
+       << " @ port: " << mtPort.portName().toStdString()
+       << ", baudrate: " << mtPort.baudrate() << endl;
 
-  std::cout << "Opening port..." << std::endl;
+  cout << "Opening port..." << endl;
   if (!control->openPort(mtPort.portName().toStdString(), mtPort.baudrate()))
     return handleError("Could not open port. Aborting.");
 
   // Get the device object
   XsDevice* device = control->device(mtPort.deviceId());
-  assert(device != nullptr);
+  assert(device != 0);
 
-  std::cout << "Device: " << device->productCode().toStdString()
-            << ", with ID: " << device->deviceId().toString() << " opened."
-            << std::endl;
+  cout << "Device: " << device->productCode().toStdString()
+       << ", with ID: " << device->deviceId().toString() << " opened." << endl;
 
   // Create and attach callback handler to device
   CallbackHandler callback;
   device->addCallbackHandler(&callback);
 
   // Put the device into configuration mode before configuring the device
-  std::cout << "Putting device into configuration mode..." << std::endl;
+  cout << "Putting device into configuration mode..." << endl;
   if (!device->gotoConfig())
     return handleError(
         "Could not put device into configuration mode. Aborting.");
 
-  std::cout << "Configuring the device..." << std::endl;
+  cout << "Configuring the device..." << endl;
 
-  uint16_t m_frequency = 100;
+  // Important for Public XDA!
+  // Call this function if you want to record a mtb file:
 
   XsOutputConfigurationArray configArray;
-
-  configArray.push_back(XsOutputConfiguration(XDI_SubFormatDouble, 0));
-  // configArray.push_back(XsOutputConfiguration(XDI_PacketCounter, 0));
-  configArray.push_back(XsOutputConfiguration(XDI_SampleTimeFine, m_frequency));
+  configArray.push_back(XsOutputConfiguration(XDI_PacketCounter, 0));
+  configArray.push_back(XsOutputConfiguration(XDI_SampleTimeFine, 0));
 
   if (device->deviceId().isImu()) {
     configArray.push_back(XsOutputConfiguration(XDI_DeltaV, 0));
     configArray.push_back(XsOutputConfiguration(XDI_DeltaQ, 0));
     configArray.push_back(XsOutputConfiguration(XDI_MagneticField, 0));
-
   } else if (device->deviceId().isVru() || device->deviceId().isAhrs()) {
-    configArray.push_back(XsOutputConfiguration(XDI_EulerAngles, m_frequency));
-    configArray.push_back(XsOutputConfiguration(XDI_Acceleration, m_frequency));
-    configArray.push_back(XsOutputConfiguration(XDI_RateOfTurn, m_frequency));
-    configArray.push_back(XsOutputConfiguration(XDI_StatusWord, m_frequency));
-
+    configArray.push_back(XsOutputConfiguration(XDI_Quaternion, 0));
   } else if (device->deviceId().isGnss()) {
     configArray.push_back(XsOutputConfiguration(XDI_Quaternion, 0));
     configArray.push_back(XsOutputConfiguration(XDI_LatLon, 0));
     configArray.push_back(XsOutputConfiguration(XDI_AltitudeEllipsoid, 0));
     configArray.push_back(XsOutputConfiguration(XDI_VelocityXYZ, 0));
-
   } else {
     return handleError("Unknown device while configuring. Aborting.");
   }
@@ -176,65 +178,75 @@ int main(void) {
   if (!device->setOutputConfiguration(configArray))
     return handleError("Could not configure MTi device. Aborting.");
 
-  std::cout << "Putting device into measurement mode..." << std::endl;
+  cout << "Putting device into measurement mode..." << endl;
   if (!device->gotoMeasurement())
     return handleError("Could not put device into measurement mode. Aborting.");
 
+  cout << "\nMain loop. Recording data for 10 seconds." << endl;
+  cout << string(79, '-') << endl;
+
   int64_t startTime = XsTime::timeStampNow();
-  while (1) {
+  while (XsTime::timeStampNow() - startTime <= 10000) {
     if (callback.packetAvailable()) {
+      cout << setw(5) << fixed << setprecision(2);
+
       // Retrieve a packet
       XsDataPacket packet = callback.getNextPacket();
-
       if (packet.containsCalibratedData()) {
         XsVector acc = packet.calibratedAcceleration();
-        std::cout << "Acc X:" << acc[0] << ", Acc Y:" << acc[1]
-                  << ", Acc Z:" << acc[2];
+        cout << "\r"
+             << "Acc X:" << acc[0] << ", Acc Y:" << acc[1]
+             << ", Acc Z:" << acc[2];
 
         XsVector gyr = packet.calibratedGyroscopeData();
-        std::cout << " |Gyr X:" << gyr[0] << ", Gyr Y:" << gyr[1]
-                  << ", Gyr Z:" << gyr[2];
+        cout << " |Gyr X:" << gyr[0] << ", Gyr Y:" << gyr[1]
+             << ", Gyr Z:" << gyr[2];
 
         XsVector mag = packet.calibratedMagneticField();
-        std::cout << " |Mag X:" << mag[0] << ", Mag Y:" << mag[1]
-                  << ", Mag Z:" << mag[2];
+        cout << " |Mag X:" << mag[0] << ", Mag Y:" << mag[1]
+             << ", Mag Z:" << mag[2];
       }
 
       if (packet.containsOrientation()) {
         XsQuaternion quaternion = packet.orientationQuaternion();
-        std::cout << "q0:" << quaternion.w() << ", q1:" << quaternion.x()
-                  << ", q2:" << quaternion.y() << ", q3:" << quaternion.z();
+        cout << "\r"
+             << "q0:" << quaternion.w() << ", q1:" << quaternion.x()
+             << ", q2:" << quaternion.y() << ", q3:" << quaternion.z();
 
         XsEuler euler = packet.orientationEuler();
-        std::cout << " |Roll:" << euler.roll() << ", Pitch:" << euler.pitch()
-                  << ", Yaw:" << euler.yaw();
+        cout << " |Roll:" << euler.roll() << ", Pitch:" << euler.pitch()
+             << ", Yaw:" << euler.yaw();
       }
 
       if (packet.containsLatitudeLongitude()) {
         XsVector latLon = packet.latitudeLongitude();
-        std::cout << " |Lat:" << latLon[0] << ", Lon:" << latLon[1];
+        cout << " |Lat:" << latLon[0] << ", Lon:" << latLon[1];
       }
 
-      if (packet.containsAltitude()) std::cout << " |Alt:" << packet.altitude();
+      if (packet.containsAltitude()) cout << " |Alt:" << packet.altitude();
 
       if (packet.containsVelocity()) {
         XsVector vel = packet.velocity(XDI_CoordSysEnu);
-        std::cout << " |E:" << vel[0] << ", N:" << vel[1] << ", U:" << vel[2];
+        cout << " |E:" << vel[0] << ", N:" << vel[1] << ", U:" << vel[2];
       }
+
+      cout << flush;
     }
     XsTime::msleep(0);
   }
+  cout << "\n" << string(79, '-') << "\n";
+  cout << endl;
 
-  std::cout << "Closing port..." << std::endl;
+  cout << "Closing port..." << endl;
   control->closePort(mtPort.portName().toStdString());
 
-  std::cout << "Freeing XsControl object..." << std::endl;
+  cout << "Freeing XsControl object..." << endl;
   control->destruct();
 
-  std::cout << "Successful exit." << std::endl;
+  cout << "Successful exit." << endl;
 
-  std::cout << "Press [ENTER] to continue." << std::endl;
-  std::cin.get();
+  cout << "Press [ENTER] to continue." << endl;
+  cin.get();
 
   return 0;
 }

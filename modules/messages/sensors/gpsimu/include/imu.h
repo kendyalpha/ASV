@@ -11,15 +11,19 @@
 #define _IMU_H_
 
 #include <xscommon/xsens_mutex.h>
-#include <xsensdeviceapi.h>
+#include <xscontroller/xscontrol_def.h>
+#include <xscontroller/xsdevice_def.h>
+#include <xscontroller/xsscanner.h>
+#include <xstypes/xsdatapacket.h>
+#include <xstypes/xsoutputconfigurationarray.h>
 #include <xstypes/xstime.h>
 
 #include "common/logging/include/easylogging++.h"
 #include "gpsdata.h"
 
-#include <iomanip>
-#include <iostream>
 #include <list>
+
+Journaller* gJournal = nullptr;
 
 namespace ASV::messages {
 
@@ -46,7 +50,7 @@ class CallbackHandler : public XsCallback {
   }
 
  protected:
-  virtual void onLiveDataAvailable(XsDevice*, const XsDataPacket* packet) {
+  void onLiveDataAvailable(XsDevice*, const XsDataPacket* packet) override {
     xsens::Lock locky(&m_mutex);
     assert(packet != nullptr);
     while (m_numberOfPacketsInBuffer >= m_maxNumberOfPacketsInBuffer)
@@ -69,14 +73,18 @@ class imu {
  public:
   imu(uint16_t m_frequency = 100)
       : imu_frequency(m_frequency),
+        sleeptime_ms(1000 / m_frequency),
         imu_RTdata({
+            0,  // status
             0,  // acc_X
             0,  // acc_Y
             0,  // acc_Z
+            0,  // Ang_vel_X
+            0,  // Ang_vel_Y
+            0,  // Ang_vel_Z
             0,  // roll
             0,  // pitch
-            0,  // yaw
-            0   // roti
+            0   // yaw
         }) {}
   virtual ~imu() = default;
 
@@ -118,16 +126,13 @@ class imu {
     }
 
     XsOutputConfigurationArray configArray;
-
-    configArray.push_back(
-        XsOutputConfiguration(XDI_SubFormatDouble, imu_frequency));
-    configArray.push_back(
-        XsOutputConfiguration(XDI_SampleTimeFine, imu_frequency));
-    configArray.push_back(
-        XsOutputConfiguration(XDI_EulerAngles, imu_frequency));
-    configArray.push_back(
-        XsOutputConfiguration(XDI_Acceleration, imu_frequency));
-    configArray.push_back(XsOutputConfiguration(XDI_RateOfTurn, imu_frequency));
+    configArray.push_back(XsOutputConfiguration(
+        XDI_EulerAngles | XDI_SubFormatDouble, imu_frequency));
+    configArray.push_back(XsOutputConfiguration(
+        XDI_Acceleration | XDI_SubFormatDouble, imu_frequency));
+    configArray.push_back(XsOutputConfiguration(
+        XDI_RateOfTurn | XDI_SubFormatDouble, imu_frequency));
+    configArray.push_back(XsOutputConfiguration(XDI_StatusByte, imu_frequency));
     configArray.push_back(XsOutputConfiguration(XDI_StatusWord, imu_frequency));
 
     if (!device->setOutputConfiguration(configArray)) {
@@ -147,25 +152,24 @@ class imu {
 
   imu& receivedata() {
     if (callback.packetAvailable()) {
-      std::cout << std::setw(5) << std::fixed << std::setprecision(2);
-
       // Retrieve a packet
       XsDataPacket packet = callback.getNextPacket();
 
-      if (packet.containsCalibratedData()) {
-        XsVector acc = packet.calibratedAcceleration();
-        imu_RTdata.acc_X = acc[0];
-        imu_RTdata.acc_Y = acc[1];
-        imu_RTdata.acc_Z = acc[2];
+      imu_RTdata.status = packet.status();
 
-        // XsVector gyr = packet.calibratedGyroscopeData();
-        // std::cout << " |Gyr X:" << gyr[0] << ", Gyr Y:" << gyr[1]
-        //           << ", Gyr Z:" << gyr[2];
+      XsVector acc = packet.calibratedAcceleration();
+      imu_RTdata.acc_X = acc[0];
+      imu_RTdata.acc_Y = acc[1];
+      imu_RTdata.acc_Z = acc[2];
 
-        // XsVector mag = packet.calibratedMagneticField();
-        // std::cout << " |Mag X:" << mag[0] << ", Mag Y:" << mag[1]
-        //           << ", Mag Z:" << mag[2];
-      }
+      XsVector gyr = packet.calibratedGyroscopeData();
+      imu_RTdata.Ang_vel_X = gyr[0];
+      imu_RTdata.Ang_vel_Y = gyr[1];
+      imu_RTdata.Ang_vel_Z = gyr[2];
+
+      // XsVector mag = packet.calibratedMagneticField();
+      // std::cout << " |Mag X:" << mag[0] << ", Mag Y:" << mag[1]
+      //           << ", Mag Z:" << mag[2];
 
       if (packet.containsOrientation()) {
         XsEuler euler = packet.orientationEuler();
@@ -174,6 +178,8 @@ class imu {
         imu_RTdata.yaw = euler.yaw();
       }
     }
+    XsTime::msleep(sleeptime_ms);
+
     return *this;
 
   }  // receivedata
@@ -187,6 +193,7 @@ class imu {
 
  private:
   uint16_t imu_frequency;
+  uint32_t sleeptime_ms;
   imuRTdata imu_RTdata;
   XsControl* control;
   CallbackHandler callback;

@@ -30,12 +30,20 @@ set(HEADER_DIRECTORY ${HEADER_DIRECTORY}
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} "/usr/lib")
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/easylogging++.cc"                            
 	"${CMAKE_CURRENT_SOURCE_DIR}/testlogger.cc")
 
 
 # 指定生成目标
 # add_executable (testsqlite functions.cc ${HEADER_FILES})
-add_executable (testlog ${SOURCE_FILES})
+add_executable (testlog ${SOURCE_FILES} "${CMAKE_CURRENT_SOURCE_DIR}/../src/easylogging++.cc"   )
 target_include_directories(testlog PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testlog ${CMAKE_THREAD_LIBS_INIT})
+
+
+# Builds static library for Easylogging++
+ADD_LIBRARY(EasyLogging STATIC "${CMAKE_CURRENT_SOURCE_DIR}/../src/easylogging++.cc")
+
+add_executable (testlog1 ${SOURCE_FILES})
+target_include_directories(testlog1 PRIVATE ${HEADER_DIRECTORY})
+target_link_libraries(testlog1 EasyLogging)
+target_link_libraries(testlog1 ${CMAKE_THREAD_LIBS_INIT})

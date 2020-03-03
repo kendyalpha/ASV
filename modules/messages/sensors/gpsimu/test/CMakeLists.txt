@@ -13,14 +13,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
     "/usr/lib"
     "/usr/local/lib"
-    "${PROJECT_SOURCE_DIR}/../third_party/mtsdk/lib/"
    )
     
 # 添加 include 子目录
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../../../../../"
-	"${PROJECT_SOURCE_DIR}/../third_party/mtsdk/include/"
-	"${PROJECT_SOURCE_DIR}/../third_party/mtsdk/include/xsensdeviceapi")
+	"${PROJECT_SOURCE_DIR}/../../../../../")
 
 
 set(SOURCE_FILES ${SOURCE_FILES} 
@@ -31,8 +28,7 @@ find_package (GeographicLib 1.49 REQUIRED)
 find_package(Threads REQUIRED)
 find_library(SERIAL_LIBRARY serial HINTS ${LIBRARY_DIRECTORY})
 find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
-find_library(XSENSDEVICE_LIBRARY xsensdeviceapi HINTS ${LIBRARY_DIRECTORY})
-find_library(XSENSTYPES_LIBRARY xstypes HINTS ${LIBRARY_DIRECTORY})
+
 
 # 指定生成目标
 add_executable (testGPS testGPS.cc  ${SOURCE_FILES})
@@ -60,15 +56,25 @@ target_include_directories(testUTM PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testUTM ${GeographicLib_LIBRARIES})
 
 # 指定生成目标
+
+set(XSENS_LIB_DIR ${XSENS_LIB_DIR} 
+	"${PROJECT_SOURCE_DIR}/../third_party/mtsdk/xspublic")   
+
 add_executable (test_mti_parse_data test_mti_parse_data.cc)
-target_include_directories(test_mti_parse_data PRIVATE ${HEADER_DIRECTORY})
-target_link_libraries(test_mti_parse_data PUBLIC ${XSENSDEVICE_LIBRARY})
-target_link_libraries(test_mti_parse_data PUBLIC ${XSENSTYPES_LIBRARY})
-target_link_libraries(test_mti_parse_data PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_include_directories(test_mti_parse_data PRIVATE ${HEADER_DIRECTORY} ${XSENS_LIB_DIR} )
+target_link_libraries(test_mti_parse_data ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(test_mti_parse_data "${XSENS_LIB_DIR}/xscontroller/libxscontroller.a")
+target_link_libraries(test_mti_parse_data "${XSENS_LIB_DIR}/xscommon/libxscommon.a")
+target_link_libraries(test_mti_parse_data "${XSENS_LIB_DIR}/xstypes/libxstypes.a")
+target_link_libraries(test_mti_parse_data dl)
+
 
 # 指定生成目标
-# add_executable (testIMU testIMU.cc ${SOURCE_FILES})
-# target_include_directories(testIMU PRIVATE ${HEADER_DIRECTORY})
-# target_link_libraries(testIMU PUBLIC ${XSENSDEVICE_LIBRARY})
-# target_link_libraries(testIMU PUBLIC ${XSENSTYPES_LIBRARY})
-# target_link_libraries(testIMU PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+add_executable (testIMU testIMU.cc ${SOURCE_FILES})
+target_include_directories(testIMU PRIVATE ${HEADER_DIRECTORY} ${XSENS_LIB_DIR})
+target_link_libraries(testIMU ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(testIMU "${XSENS_LIB_DIR}/xscontroller/libxscontroller.a")
+target_link_libraries(testIMU "${XSENS_LIB_DIR}/xscommon/libxscommon.a")
+target_link_libraries(testIMU "${XSENS_LIB_DIR}/xstypes/libxstypes.a")
+target_link_libraries(testIMU dl)
+
