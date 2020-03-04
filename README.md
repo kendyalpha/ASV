@@ -15,6 +15,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 * communication: socket TCP/IP, serial communication, checksum, etc
 * controller: PID controller, thrust allocation, actuator, etc
 * planner: Frenet Lattice generator, etc
+* perception: Target tracking of Marine radar, etc
 * math: library involving linear algebra, numerical analysis, etc
 * fileIO: csv parser, Database (SqLite3), JSON, etc
 * sensors: GPS, IMU, Wind, Marine Radar, etc
@@ -33,6 +34,5 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 近期:
 1. 论文中两张图
-2. Add IMU parser
 3. OSQP
 4. Marine radar visulization, target tracking

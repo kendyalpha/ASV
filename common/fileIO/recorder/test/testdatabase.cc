@@ -37,29 +37,60 @@ BOOST_AUTO_TEST_CASE(GPS) {
       "0n"            // UTM_zone
   };
 
+  ASV::common::imu_db_data imu_db_data{
+      0,            // local_time
+      0,            // Acc_X
+      1.11111,      // Acc_Y
+      21.2223,      // Acc_Z
+      121.4444412,  // Ang_vel_X
+      4,            // Ang_vel_Y
+      4,            // Ang_vel_Z
+      232.1,        // roll
+      232.1,        // pitch
+      232.1         // yaw
+  };
+
   ASV::common::gps_db gps_db(folderp, config_path);
   gps_db.create_table();
-  for (int i = 0; i != 10; ++i) gps_db.update_table(gps_db_data);
+  for (int i = 0; i != 10; ++i) {
+    gps_db.update_gps_table(gps_db_data);
+    gps_db.update_imu_table(imu_db_data);
+  }
 
   // parse
   ASV::common::GPS_parser GPS_parser(folderp, config_path);
-  auto read_gps = GPS_parser.parse_table(starting_time, end_time);
+  auto read_gps = GPS_parser.parse_gps_table(starting_time, end_time);
+  auto read_imu = GPS_parser.parse_imu_table(starting_time, end_time);
 
   // TEST
-  BOOST_CHECK_CLOSE(read_gps[0].UTC, gps_db_data.UTC, 1e-7);
-  BOOST_CHECK_CLOSE(read_gps[0].latitude, gps_db_data.latitude, 1e-6);
-  BOOST_CHECK_CLOSE(read_gps[0].longitude, gps_db_data.longitude, 1e-6);
-  BOOST_CHECK_CLOSE(read_gps[0].heading, gps_db_data.heading, 1e-7);
-  BOOST_CHECK_CLOSE(read_gps[0].pitch, gps_db_data.pitch, 1e-7);
-  BOOST_CHECK_CLOSE(read_gps[0].roll, gps_db_data.roll, 1e-7);
-  BOOST_CHECK_CLOSE(read_gps[0].altitude, gps_db_data.altitude, 1e-7);
-  BOOST_CHECK_CLOSE(read_gps[0].Ve, gps_db_data.Ve, 1e-7);
-  BOOST_CHECK_CLOSE(read_gps[0].Vn, gps_db_data.Vn, 1e-7);
-  BOOST_CHECK_CLOSE(read_gps[0].roti, gps_db_data.roti, 1e-7);
-  BOOST_TEST(read_gps[0].status == gps_db_data.status);
-  BOOST_CHECK_CLOSE(read_gps[0].UTM_x, gps_db_data.UTM_x, 1e-2);
-  BOOST_CHECK_CLOSE(read_gps[0].UTM_y, gps_db_data.UTM_y, 1e-2);
-  BOOST_TEST(read_gps[0].UTM_zone == gps_db_data.UTM_zone);
+  {
+    BOOST_CHECK_CLOSE(read_gps[0].UTC, gps_db_data.UTC, 1e-7);
+    BOOST_CHECK_CLOSE(read_gps[0].latitude, gps_db_data.latitude, 1e-6);
+    BOOST_CHECK_CLOSE(read_gps[0].longitude, gps_db_data.longitude, 1e-6);
+    BOOST_CHECK_CLOSE(read_gps[0].heading, gps_db_data.heading, 1e-7);
+    BOOST_CHECK_CLOSE(read_gps[0].pitch, gps_db_data.pitch, 1e-7);
+    BOOST_CHECK_CLOSE(read_gps[0].roll, gps_db_data.roll, 1e-7);
+    BOOST_CHECK_CLOSE(read_gps[0].altitude, gps_db_data.altitude, 1e-7);
+    BOOST_CHECK_CLOSE(read_gps[0].Ve, gps_db_data.Ve, 1e-7);
+    BOOST_CHECK_CLOSE(read_gps[0].Vn, gps_db_data.Vn, 1e-7);
+    BOOST_CHECK_CLOSE(read_gps[0].roti, gps_db_data.roti, 1e-7);
+    BOOST_TEST(read_gps[0].status == gps_db_data.status);
+    BOOST_CHECK_CLOSE(read_gps[0].UTM_x, gps_db_data.UTM_x, 1e-2);
+    BOOST_CHECK_CLOSE(read_gps[0].UTM_y, gps_db_data.UTM_y, 1e-2);
+    BOOST_TEST(read_gps[0].UTM_zone == gps_db_data.UTM_zone);
+  }
+
+  {
+    BOOST_CHECK_CLOSE(read_imu[0].Acc_X, imu_db_data.Acc_X, 1e-6);
+    BOOST_CHECK_CLOSE(read_imu[0].Acc_Y, imu_db_data.Acc_Y, 1e-6);
+    BOOST_CHECK_CLOSE(read_imu[0].Acc_Z, imu_db_data.Acc_Z, 1e-6);
+    BOOST_CHECK_CLOSE(read_imu[0].Ang_vel_X, imu_db_data.Ang_vel_X, 1e-6);
+    BOOST_CHECK_CLOSE(read_imu[0].Ang_vel_Y, imu_db_data.Ang_vel_Y, 1e-6);
+    BOOST_CHECK_CLOSE(read_imu[0].Ang_vel_Z, imu_db_data.Ang_vel_Z, 1e-6);
+    BOOST_CHECK_CLOSE(read_imu[0].roll, imu_db_data.roll, 1e-6);
+    BOOST_CHECK_CLOSE(read_imu[0].pitch, imu_db_data.pitch, 1e-6);
+    BOOST_CHECK_CLOSE(read_imu[0].yaw, imu_db_data.yaw, 1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(wind) {

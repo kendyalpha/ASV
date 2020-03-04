@@ -62,7 +62,8 @@ class gps_db : public master_db {
       : master_db(_DB_folder_path, _datetime),
         dbpath(_DB_folder_path + "gps.db"),
         config_name(_config_name),
-        insert_string(""),
+        insert_gps_string(""),
+        insert_imu_string(""),
         db(dbpath) {}
   ~gps_db() {}
 
@@ -70,33 +71,53 @@ class gps_db : public master_db {
     std::ifstream in(config_name);
     nlohmann::json file;
     in >> file;
-    auto db_config =
-        file["GPS"].get<std::vector<std::pair<std::string, std::string>>>();
+    auto db_gps_config =
+        file["navigation_sensor"]["GPS"]
+            .get<std::vector<std::pair<std::string, std::string>>>();
+    auto db_imu_config =
+        file["navigation_sensor"]["IMU"]
+            .get<std::vector<std::pair<std::string, std::string>>>();
     try {
+      // GPS
       std::string str =
           "CREATE TABLE GPS"
           "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
           " DATETIME    TEXT       NOT NULL";
-      insert_string = "(DATETIME";
+      insert_gps_string = "(DATETIME";
 
-      for (auto const &[name, type] : db_config) {
+      for (auto const &[name, type] : db_gps_config) {
         str += ", " + name + " " + type;
-        insert_string += ", " + name;
+        insert_gps_string += ", " + name;
       }
       str += ");";
-      insert_string += ") ";
+      insert_gps_string += ") ";
 
+      db << str;
+
+      // IMU
+      str =
+          "CREATE TABLE IMU"
+          "(ID          INTEGER PRIMARY KEY AUTOINCREMENT,"
+          " DATETIME    TEXT       NOT NULL";
+      insert_imu_string = "(DATETIME";
+
+      for (auto const &[name, type] : db_imu_config) {
+        str += ", " + name + " " + type;
+        insert_imu_string += ", " + name;
+      }
+      str += ");";
+      insert_imu_string += ") ";
       db << str;
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-GPS") << e.what();
     }
   }  // create_table
 
-  void update_table(const gps_db_data &update_data,
-                    const std::string &_datetime = "julianday('now')") {
+  void update_gps_table(const gps_db_data &update_data,
+                        const std::string &_datetime = "julianday('now')") {
     try {
       std::string str = "INSERT INTO GPS";
-      str += insert_string;
+      str += insert_gps_string;
       str += "VALUES(";
       str += _datetime;
       str += ", ";
@@ -135,12 +156,46 @@ class gps_db : public master_db {
     } catch (sqlite::sqlite_exception &e) {
       CLOG(ERROR, "sql-GPS") << e.what();
     }
-  }  // update_table
+  }  // update_gps_table
+
+  void update_imu_table(const imu_db_data &update_data,
+                        const std::string &_datetime = "julianday('now')") {
+    try {
+      std::string str = "INSERT INTO IMU";
+      str += insert_imu_string;
+      str += "VALUES(";
+      str += _datetime;
+      str += ", ";
+      str += std::to_string(update_data.Acc_X);
+      str += ", ";
+      str += std::to_string(update_data.Acc_Y);
+      str += ", ";
+      str += std::to_string(update_data.Acc_Z);
+      str += ", ";
+      str += std::to_string(update_data.Ang_vel_X);
+      str += ", ";
+      str += std::to_string(update_data.Ang_vel_Y);
+      str += ", ";
+      str += std::to_string(update_data.Ang_vel_Z);
+      str += ", ";
+      str += std::to_string(update_data.roll);
+      str += ", ";
+      str += std::to_string(update_data.pitch);
+      str += ", ";
+      str += std::to_string(update_data.yaw);
+      str += ");";
+
+      db << str;
+    } catch (sqlite::sqlite_exception &e) {
+      CLOG(ERROR, "sql-GPS") << e.what();
+    }
+  }  // update_imu_table
 
  private:
   std::string dbpath;
   std::string config_name;
-  std::string insert_string;
+  std::string insert_gps_string;
+  std::string insert_imu_string;
   sqlite::database db;
 
 };  // end class gps_db

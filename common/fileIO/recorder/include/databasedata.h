@@ -35,6 +35,19 @@ struct gps_db_data {
   std::string UTM_zone;
 };  // gps_db_data
 
+struct imu_db_data {
+  double local_time;
+  double Acc_X;
+  double Acc_Y;
+  double Acc_Z;
+  double Ang_vel_X;
+  double Ang_vel_Y;
+  double Ang_vel_Z;
+  double roll;
+  double pitch;
+  double yaw;
+};  // imu_db_data
+
 struct wind_db_data {
   double local_time;
   double speed;

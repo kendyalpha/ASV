@@ -1,20 +1,34 @@
 {
-  "GPS":[    
-    ["UTC", "DOUBLE"],
-    ["latitude", "DOUBLE"],
-    ["longitude", "DOUBLE"],
-    ["heading", "DOUBLE"],
-    ["pitch", "DOUBLE"],
-    ["roll", "DOUBLE"],
-    ["altitude", "DOUBLE"],
-    ["Ve", "DOUBLE"],
-    ["Vn", "DOUBLE"],
-    ["roti", "DOUBLE"],
-    ["status", "INT"],
-    ["UTM_x", "DOUBLE"],
-    ["UTM_y", "DOUBLE"],
-    ["UTM_zone", "TEXT"]
-  ],
+  "navigation_sensor":
+  {
+    "GPS":[    
+      ["UTC", "DOUBLE"],
+      ["latitude", "DOUBLE"],
+      ["longitude", "DOUBLE"],
+      ["heading", "DOUBLE"],
+      ["pitch", "DOUBLE"],
+      ["roll", "DOUBLE"],
+      ["altitude", "DOUBLE"],
+      ["Ve", "DOUBLE"],
+      ["Vn", "DOUBLE"],
+      ["roti", "DOUBLE"],
+      ["status", "INT"],
+      ["UTM_x", "DOUBLE"],
+      ["UTM_y", "DOUBLE"],
+      ["UTM_zone", "TEXT"]
+    ],
+    "IMU":[
+      ["Acc_X","DOUBLE"],
+      ["Acc_Y","DOUBLE"],
+      ["Acc_Z","DOUBLE"],
+      ["Ang_vel_X","DOUBLE"],
+      ["Ang_vel_Y","DOUBLE"],
+      ["Ang_vel_Z","DOUBLE"],
+      ["roll","DOUBLE"],
+      ["pitch","DOUBLE"],
+      ["yaw","DOUBLE"]
+    ]
+  },
   "wind":[
     ["speed", "DOUBLE"],
     ["orientation", "DOUBLE"]

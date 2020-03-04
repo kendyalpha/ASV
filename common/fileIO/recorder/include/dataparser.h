@@ -50,15 +50,16 @@ class GPS_parser : public master_parser {
 
   ~GPS_parser() {}
 
-  std::vector<gps_db_data> parse_table(const double start_time,
-                                       const double end_time) {
+  std::vector<gps_db_data> parse_gps_table(const double start_time,
+                                           const double end_time) {
     // parse config file
     std::string parse_string = "select DATETIME";
     std::ifstream in(config_name);
     nlohmann::json file;
     in >> file;
     auto db_config =
-        file["GPS"].get<std::vector<std::pair<std::string, std::string>>>();
+        file["navigation_sensor"]["GPS"]
+            .get<std::vector<std::pair<std::string, std::string>>>();
     for (auto const &value : db_config) parse_string += ", " + value.first;
     parse_string += " from GPS where ID= ?;";
 
@@ -98,7 +99,52 @@ class GPS_parser : public master_parser {
           };
     }
     return v_gps_db_data;
-  }
+  }  // parse_gps_table
+
+  std::vector<imu_db_data> parse_imu_table(const double start_time,
+                                           const double end_time) {
+    // parse config file
+    std::string parse_string = "select DATETIME";
+    std::ifstream in(config_name);
+    nlohmann::json file;
+    in >> file;
+    auto db_config =
+        file["navigation_sensor"]["IMU"]
+            .get<std::vector<std::pair<std::string, std::string>>>();
+    for (auto const &value : db_config) parse_string += ", " + value.first;
+    parse_string += " from IMU where ID= ?;";
+
+    //
+    std::vector<imu_db_data> v_imu_db_data;
+
+    // loop through the database
+    int max_id = 0;
+    db << "select MAX(ID) from IMU;" >> max_id;
+    for (int i = 0; i != max_id; i++) {
+      db << parse_string << i + 1 >>
+          [&](std::string local_time, double Acc_X, double Acc_Y, double Acc_Z,
+              double Ang_vel_X, double Ang_vel_Y, double Ang_vel_Z, double roll,
+              double pitch, double yaw) {
+            double _local_time_s = master_parser::convertJulianday2Second(
+                atof(local_time.c_str()) - master_parser::timestamp0);
+            if ((start_time <= _local_time_s) && (_local_time_s <= end_time)) {
+              v_imu_db_data.push_back(imu_db_data{
+                  _local_time_s,  // local_time
+                  Acc_X,          // Acc_X
+                  Acc_Y,          // Acc_Y
+                  Acc_Z,          // Acc_Z
+                  Ang_vel_X,      // Ang_vel_X
+                  Ang_vel_Y,      // Ang_vel_Y
+                  Ang_vel_Z,      // Ang_vel_Z
+                  roll,           // roll
+                  pitch,          // pitch
+                  yaw             // yaw
+              });
+            }
+          };
+    }
+    return v_imu_db_data;
+  }  // parse_imu_table
 
  private:
   std::string config_name;
@@ -150,7 +196,7 @@ class wind_parser : public master_parser {
           };
     }
     return v_wind_db_data;
-  }
+  }  // parse_table
 
  private:
   std::string config_name;
@@ -217,7 +263,7 @@ class stm32_parser : public master_parser {
           };
     }
     return v_stm32_db_data;
-  }
+  }  // parse_table
 
  private:
   std::string config_name;
@@ -271,7 +317,7 @@ class marineradar_parser : public master_parser {
           };
     }
     return v_marineradar_db_data;
-  }
+  }  // parse_table
 
  private:
   std::string config_name;

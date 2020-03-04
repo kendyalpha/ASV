@@ -48,7 +48,7 @@ struct imuRTdata {
   double Ang_vel_Z;  // rad/s
   double roll;       // deg
   double pitch;      // deg
-  double yaw;        // deg
+  double yaw;        // deg: TODO: true north or ?
 };
 
 }  // namespace ASV::messages

@@ -56,20 +56,8 @@ target_include_directories(testUTM PRIVATE ${HEADER_DIRECTORY})
 target_link_libraries(testUTM ${GeographicLib_LIBRARIES})
 
 # 指定生成目标
-
 set(XSENS_LIB_DIR ${XSENS_LIB_DIR} 
 	"${PROJECT_SOURCE_DIR}/../third_party/mtsdk/xspublic")   
-
-add_executable (test_mti_parse_data test_mti_parse_data.cc)
-target_include_directories(test_mti_parse_data PRIVATE ${HEADER_DIRECTORY} ${XSENS_LIB_DIR} )
-target_link_libraries(test_mti_parse_data ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(test_mti_parse_data "${XSENS_LIB_DIR}/xscontroller/libxscontroller.a")
-target_link_libraries(test_mti_parse_data "${XSENS_LIB_DIR}/xscommon/libxscommon.a")
-target_link_libraries(test_mti_parse_data "${XSENS_LIB_DIR}/xstypes/libxstypes.a")
-target_link_libraries(test_mti_parse_data dl)
-
-
-# 指定生成目标
 add_executable (testIMU testIMU.cc ${SOURCE_FILES})
 target_include_directories(testIMU PRIVATE ${HEADER_DIRECTORY} ${XSENS_LIB_DIR})
 target_link_libraries(testIMU ${CMAKE_THREAD_LIBS_INIT})

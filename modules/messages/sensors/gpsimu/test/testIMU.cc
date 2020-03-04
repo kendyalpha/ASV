@@ -11,6 +11,7 @@
 #include <thread>
 #include "../include/imu.h"
 #include "common/timer/include/timecounter.h"
+
 int main() {
   el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically);
   LOG(INFO) << "The program has started!";
