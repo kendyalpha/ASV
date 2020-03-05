@@ -129,6 +129,9 @@ class LatticePlanner : public FrenetTrajectoryGenerator,
     CollisionChecker::update_obstacles(new_surroundings_x, new_surroundings_y);
   }  // setup_obstacle
 
+  std::vector<Frenet_path> getallfrenetpaths() const noexcept {
+    return FrenetTrajectoryGenerator::frenet_paths;
+  }
   CartesianState getnextcartesianstate() const noexcept {
     return next_cartesianstate;
   }

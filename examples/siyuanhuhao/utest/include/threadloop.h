@@ -917,7 +917,7 @@ class threadloop : public StateMonitor {
         case common::TESTMODE::EXPERIMENT_FRENET: {
           // experiment
 
-          _gps_db.update_table(common::gps_db_data{
+          _gps_db.update_gps_table(common::gps_db_data{
               0,                   // local_time
               gps_data.UTC,        // UTC
               gps_data.latitude,   // latitude
@@ -1051,7 +1051,7 @@ class threadloop : public StateMonitor {
           break;
         }
         case common::TESTMODE::EXPERIMENT_AVOIDANCE: {
-          _gps_db.update_table(common::gps_db_data{
+          _gps_db.update_gps_table(common::gps_db_data{
               0,                   // local_time
               gps_data.UTC,        // UTC
               gps_data.latitude,   // latitude

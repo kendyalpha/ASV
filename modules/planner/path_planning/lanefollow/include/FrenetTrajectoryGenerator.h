@@ -623,6 +623,7 @@ class FrenetTrajectoryGenerator {
     // calc global positions at t0
     double ref_heading = target_Spline2D.compute_yaw(_frenetstate.s);
     double ref_kappa = target_Spline2D.compute_curvature(_frenetstate.s);
+    double ref_kappa_prime = target_Spline2D.compute_dcurvature(_frenetstate.s);
 
     auto _cart_position = CalculateCartesianPoint(
         ref_heading, _frenetstate.d,
@@ -635,37 +636,16 @@ class FrenetTrajectoryGenerator {
         target_Spline2D.compute_yaw(_frenetstate_minus_h.s);
     double ref_kappa_minus_h =
         target_Spline2D.compute_curvature(_frenetstate_minus_h.s);
-    auto _cart_position_minus_h = CalculateCartesianPoint(
-        ref_heading_minus_h, _frenetstate_minus_h.d,
-        target_Spline2D.compute_position(_frenetstate_minus_h.s));
+
     // calc global positions at t0+h
     double ref_heading_plus_h =
         target_Spline2D.compute_yaw(_frenetstate_plus_h.s);
     double ref_kappa_plus_h =
         target_Spline2D.compute_curvature(_frenetstate_plus_h.s);
-    auto _cart_position_plus_h = CalculateCartesianPoint(
-        ref_heading_plus_h, _frenetstate_plus_h.d,
-        target_Spline2D.compute_position(_frenetstate_plus_h.s));
 
     // one_minus_kappa_r_d at t0
     double one_minus_kappa_r_d = 1 - ref_kappa * _frenetstate.d;
     if (one_minus_kappa_r_d <= 0) {
-      one_minus_kappa_r_d = 0.01;
-      CLOG(ERROR, "Frenet") << "extreme situations";
-    }
-
-    // one_minus_kappa_r_d at t0-h
-    double one_minus_kappa_r_d_minus_h =
-        1 - ref_kappa_minus_h * _frenetstate_minus_h.d;
-    if (one_minus_kappa_r_d_minus_h <= 0) {
-      one_minus_kappa_r_d_minus_h = 0.01;
-      CLOG(ERROR, "Frenet") << "extreme situations";
-    }
-    // one_minus_kappa_r_d at t0+h
-    double one_minus_kappa_r_d_plus_h =
-        1 - ref_kappa_plus_h * _frenetstate_plus_h.d;
-    if (one_minus_kappa_r_d_plus_h <= 0) {
-      one_minus_kappa_r_d_plus_h = 0.01;
       CLOG(ERROR, "Frenet") << "extreme situations";
     }
 
@@ -673,39 +653,43 @@ class FrenetTrajectoryGenerator {
     _cartstate_v.speed =
         std::sqrt(std::pow(_frenetstate.s_dot * one_minus_kappa_r_d, 2) +
                   std::pow(_frenetstate.d_dot, 2));
-    // speed at t0-h
-    double speed_minus_h = std::sqrt(
-        std::pow(_frenetstate_minus_h.s_dot * one_minus_kappa_r_d_minus_h, 2) +
-        std::pow(_frenetstate_minus_h.d_dot, 2));
-    // speed at t0+h
-    double speed_plus_h = std::sqrt(
-        std::pow(_frenetstate_plus_h.s_dot * one_minus_kappa_r_d_plus_h, 2) +
-        std::pow(_frenetstate_plus_h.d_dot, 2));
 
     // theta at t0
+    const double tan_delta_theta = _frenetstate.d_prime / one_minus_kappa_r_d;
     const double delta_theta =
         std::atan2(_frenetstate.d_prime, one_minus_kappa_r_d);
+    const double cos_delta_theta = std::cos(delta_theta);
     _cartstate_v.theta =
         common::math::Normalizeheadingangle(delta_theta + ref_heading);
     // theta at t0-h
     double theta_minus_h = common::math::Normalizeheadingangle(
-        std::atan2(_frenetstate_minus_h.d_prime, one_minus_kappa_r_d_minus_h) +
+        std::atan2(_frenetstate_minus_h.d_prime,
+                   1 - ref_kappa_minus_h * _frenetstate_minus_h.d) +
         ref_heading_minus_h);
     // theta at t0+h
     double theta_plus_h = common::math::Normalizeheadingangle(
-        std::atan2(_frenetstate_plus_h.d_prime, one_minus_kappa_r_d_plus_h) +
+        std::atan2(_frenetstate_plus_h.d_prime,
+                   1 - ref_kappa_plus_h * _frenetstate_plus_h.d) +
         ref_heading_plus_h);
 
     // kappa at t0
-    double ds = std::sqrt(
-        std::pow(_cart_position_plus_h(0) - _cart_position_minus_h(0), 2) +
-        std::pow(_cart_position_plus_h(1) - _cart_position_minus_h(1), 2));
+    const double kappa_r_d_prime =
+        ref_kappa_prime * _frenetstate.d + ref_kappa * _frenetstate.d_prime;
     _cartstate_v.kappa =
-        common::math::Normalizeheadingangle(theta_plus_h - theta_minus_h) / ds;
+        ((kappa_r_d_prime * tan_delta_theta + _frenetstate.d_pprime) *
+             cos_delta_theta * cos_delta_theta / one_minus_kappa_r_d +
+         ref_kappa) *
+        cos_delta_theta / one_minus_kappa_r_d;
 
     // a
+    const double delta_theta_prime =
+        _cartstate_v.kappa * one_minus_kappa_r_d / cos_delta_theta - ref_kappa;
+
     _cartstate_v.dspeed =
-        firstorderdifference(speed_minus_h, speed_plus_h, spacing);
+        _frenetstate.s_ddot * one_minus_kappa_r_d / cos_delta_theta +
+        _frenetstate.s_dot * _frenetstate.s_dot *
+            (delta_theta_prime * _frenetstate.d_prime - kappa_r_d_prime) /
+            cos_delta_theta;
 
     // yaw rate
     _cartstate_v.yaw_rate =

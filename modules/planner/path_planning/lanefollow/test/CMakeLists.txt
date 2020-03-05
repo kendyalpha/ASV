@@ -28,7 +28,7 @@ find_library(SQLITE3_LIBRARY sqlite3 HINTS ${LIBRARY_DIRECTORY})
 # 添加 include 子目录
 
 set(HEADER_DIRECTORY ${HEADER_DIRECTORY} 
-	"${PROJECT_SOURCE_DIR}/../../../../"
+	"${PROJECT_SOURCE_DIR}/../../../../../"
 	)
 
 set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY} 
@@ -36,7 +36,7 @@ set(LIBRARY_DIRECTORY ${LIBRARY_DIRECTORY}
     )
 
 set(SOURCE_FILES ${SOURCE_FILES} 
-	"${PROJECT_SOURCE_DIR}/../../../../common/logging/src/easylogging++.cc" )
+	"${PROJECT_SOURCE_DIR}/../../../../../common/logging/src/easylogging++.cc" )
 
 
 # 指定生成目标

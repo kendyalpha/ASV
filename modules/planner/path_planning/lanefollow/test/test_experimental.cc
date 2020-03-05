@@ -25,7 +25,7 @@ void parsetest() {
 
   // GPS
   ASV::common::GPS_parser GPS_parser(folderp, config_path);
-  auto read_gps = GPS_parser.parse_table(starting_time, end_time);
+  auto read_gps = GPS_parser.parse_gps_table(starting_time, end_time);
 
   for (auto const &value : read_gps) {
     std::cout << value.local_time << " " << value.UTC << " " << value.UTM_zone
